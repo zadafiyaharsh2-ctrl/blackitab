@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Light mode (default) */
+body {
+  background: linear-gradient(to bottom right, #f3f4f6, #e5e7eb, #d1d5db);
+  color: #1f2937;
+}
+
+/* Dark mode */
+.dark body {
+  background: linear-gradient(to bottom right, #111827, #1f2937, #000000);
+  color: #f3f4f6;
+}
+
+#root {
+  min-height: 100vh;
+}
