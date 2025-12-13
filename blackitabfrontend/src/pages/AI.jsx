@@ -11,7 +11,8 @@ import {
   FaClock,
   FaLightbulb,
   FaSearch,
-  FaTasks
+  FaTasks,
+  FaChalkboardTeacher
 } from 'react-icons/fa';
 
 const AI = () => {
@@ -95,6 +96,19 @@ const AI = () => {
       ],
       color: 'indigo',
       gradient: 'from-indigo-500 to-violet-500'
+    },
+    {
+      icon: FaChalkboardTeacher,
+      title: 'Smart Teacher Assignment',
+      description: 'When a student asks a question with no existing video coverage, our AI instantly identifies the gap. It selects the most appropriate teacher based on subject expertise and assigns them a task to create a video explanation. This ensures the platform\'s knowledge base grows dynamically to solve every student\'s doubt.',
+      benefits: [
+        'Automated gap detection',
+        'Expert teacher matching',
+        'On-demand content creation',
+        'Permanent solution for future students'
+      ],
+      color: 'teal',
+      gradient: 'from-teal-500 to-emerald-600'
     }
   ];
 
@@ -182,7 +196,7 @@ const AI = () => {
             Comprehensive AI Capabilities
           </h2>
           <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'} max-w-3xl mx-auto`}>
-            Six powerful AI features working together to create the ultimate learning companion
+            Seven powerful AI features working together to create the ultimate learning companion
           </p>
         </div>
 

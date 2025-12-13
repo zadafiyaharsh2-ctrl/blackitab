@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { FaHome, FaUsers, FaRobot, FaChartBar, FaUser, FaSignOutAlt, FaBars, FaStore, FaBriefcase, FaSuitcase, FaBook, FaCode, FaLaptopCode, FaTrophy, FaMoon, FaSun, FaSchool } from 'react-icons/fa';
 import { MdReportProblem } from 'react-icons/md';
 import { useTheme } from '../context/ThemeContext';
+import Logo from './Logo';
 
 const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
   const location = useLocation();
@@ -27,11 +28,8 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     <div className={`${isDark ? 'bg-gray-900/95 border-gray-800' : 'bg-white border-gray-200'} backdrop-blur-md border-r shadow-xl h-screen fixed left-0 top-0 flex flex-col transition-all duration-300 ${isOpen ? 'w-64' : 'w-16'} z-50`}>
       <div className={`p-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'} flex items-center justify-between`}>
         {isOpen && (
-          <Link to="/dashboard" className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'} flex items-center gap-2`}>
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <FaCode className="text-sm text-white" />
-            </div>
-            BlackiTab
+          <Link to="/dashboard" className="flex items-center gap-2">
+            <Logo showText={true} className="w-8 h-8" textSize="text-xl" />
           </Link>
         )}
         <button

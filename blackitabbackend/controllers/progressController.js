@@ -231,8 +231,30 @@ exports.getProgressStats = async (req, res) => {
 
         // 5. Get Streak and Points from User model
         const user = await require('../models/User').findById(userId);
-        const streak = user.streak || 0;
+        let streak = user.streak || 0;
         const currentPoints = user.points || 0;
+
+        // Check if streak is broken (if last active was more than 1 day ago)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (user.lastActiveDate) {
+            const lastActive = new Date(user.lastActiveDate);
+            lastActive.setHours(0, 0, 0, 0);
+
+            const diffTime = Math.abs(today - lastActive);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays > 1) {
+                // Streak is broken
+                streak = 0;
+                // Update DB only if it's not already 0 to avoid unnecessary writes
+                if (user.streak !== 0) {
+                    user.streak = 0;
+                    await user.save();
+                }
+            }
+        }
 
         // 6. Calculate Rank
         // Count users with more points than current user

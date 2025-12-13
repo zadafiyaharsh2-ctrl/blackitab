@@ -141,8 +141,8 @@ const TopicSidebar = ({
                 className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-between group
                   ${selectedTopic?._id === topic._id 
                     // If this topic is currently selected:
-                    ? 'bg-purple-50 text-purple-700 border-l-4 border-purple-600 shadow-sm' 
-                    // Selected: Purple background, purple text, left border accent, shadow
+                    ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 shadow-sm' 
+                    // Selected: Blue background, blue text, left border accent, shadow
                     : isDark ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     // Not selected: Gray text, hover effects
                   }`}
@@ -175,7 +175,7 @@ const TopicSidebar = ({
         className={`
           hidden lg:flex absolute top-1/2 transform -translate-y-1/2 z-40
           ${isDark ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200 text-gray-600'} shadow-md rounded-l-lg p-1.5
-          hover:text-purple-600 hover:bg-gray-50 transition-all duration-300
+          hover:text-blue-600 hover:bg-gray-50 transition-all duration-300
           ${isOpen ? 'right-80' : 'right-0'}
         `}
         // Breakdown of classes:

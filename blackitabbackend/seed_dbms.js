@@ -5586,7 +5586,251 @@ const seedDBMS = async () => {
                 "name": "ACID Properties"
             },
             {
-                "name": "Types of Schedules"
+                "name": "Types of Schedules in DBMS",
+                "content": [
+                    {
+                        "type": "heading",
+                        "text": "Types of Schedules in DBMS"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "Scheduling is the process of determining the order in which transactions are executed. When multiple transactions run concurrently, scheduling ensures that operations are executed in a way that prevents conflicts or overlaps between them."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "1. Serial Schedule"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "Schedules in which transactions execute one after another without interleaving., i.e., no transaction starts until a running transaction has ended are called serial schedules."
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "Only one transaction runs at a time.",
+                            "No concurrency issues.",
+                            "Simple and always consistent."
+                        ]
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "Example: Consider the following schedule involving two transactions T1 and T2 denoting a serial schedule since the transactions perform serially in the order T1 -> T2."
+                    },
+                    {
+                        "type": "table",
+                        "headers": ["Transaction T1", "Transaction T2"],
+                        "rows": [
+                            ["R(A)", ""],
+                            ["W(A)", ""],
+                            ["Commit", ""],
+                            ["", "R(A)"],
+                            ["", "W(A)"],
+                            ["", "Commit"]
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "2. Non-Serial Schedule"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "Transactions execute in an interleaved manner in Non-Serial Schedule."
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "Allows concurrency.",
+                            "Must be checked for correctness.",
+                            "May or may not be serializable."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Serializable Scheduling (Concurrency Control)"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "A non-serial schedule that behaves like a serial schedule."
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "**Why Serializable Schedules?**"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "Maintain consistency.",
+                            "Avoid anomalies.",
+                            "Improve performance by allowing concurrency."
+                        ]
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "**Conflict Serializable**: A schedule is conflict serializable if it can be converted into a serial schedule by swapping non-conflicting operations.",
+                            "**View Serializable**: A Schedule is called view serializable if transactions read the same initial values, transactions read values written by the same transactions, and the final write is by the same transaction as the serial schedule."
+                        ]
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "Note: Conflict-serializable schedules are a subset of view-serializable schedules. (Conflict-serializable ⊂ View-serializable.)"
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Non-Serializable Scheduling"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "Schedules that do not preserve serial equivalence and may lead to inconsistencies if not handled carefully. They are classified into the following types:"
+                    },
+                    {
+                        "type": "heading",
+                        "text": "i. Recoverable Schedule"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "Recoverable schedules are those in which a transaction commits only after all transactions whose values it has read have also committed."
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "**Key Point**: If T2 reads a value written by T1, then T2 must commit after T1."
+                    },
+                    {
+                        "type": "table",
+                        "headers": ["Transaction T1", "Transaction T2"],
+                        "rows": [
+                            ["R(A)", ""],
+                            ["W(A)", ""],
+                            ["", "R(A)"],
+                            ["Commit", ""],
+                            ["", "Commit"]
+                        ]
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "This is a recoverable schedule since T1 commits before T2 , that makes the value read by T2 correct."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "ii. Cascading Schedule"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "Failure of one transaction forces all dependent transactions to abort.",
+                            "Happens when transactions read uncommitted data."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "iii. Cascadeless Schedule"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "A transaction only reads committed data.",
+                            "Prevents cascading aborts."
+                        ]
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "**Key Point**: T2 can read the value written by T1 only after T1 commits."
+                    },
+                    {
+                        "type": "table",
+                        "headers": ["Transaction T1", "Transaction T2"],
+                        "rows": [
+                            ["W(A)", ""],
+                            ["Commit", ""],
+                            ["", "R(A)"]
+                        ]
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "This schedule is cascadeless. Since the updated value of A is read by T2 only after the updating transaction i.e. T1 commits."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "iv. Strict Schedule"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "It's a stronger form of cascadeless schedule where a transaction cannot read or write a data item written by another transaction until that transaction commits or aborts."
+                    },
+                    {
+                        "type": "table",
+                        "headers": ["Transaction T1", "Transaction T2"],
+                        "rows": [
+                            ["W(A)", ""],
+                            ["Commit", ""],
+                            ["", "R(A)"],
+                            ["", "W(A)"]
+                        ]
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "This is a strict schedule since T2 reads and writes A which is written by T1 only after the commit of T1."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "v. Non-Recoverable Schedule"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "A schedule where a transaction commits after reading uncommitted data from another transaction. If the writer transaction later aborts, the schedule becomes invalid."
+                    },
+                    {
+                        "type": "table",
+                        "headers": ["Transaction T1", "Transaction T2"],
+                        "rows": [
+                            ["W(A)", ""],
+                            ["", "R(A)"],
+                            ["", "Commit"],
+                            ["Abort", ""]
+                        ]
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "T2 read the value of A written by T1, and committed. T1 later aborted, therefore the value read by T2 is wrong, but since T2 committed, this schedule is non-recoverable."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Summary of Relationships"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "Cascadeless schedules are stricter than recoverable schedules or are a subset of recoverable schedules.",
+                            "Strict schedules are stricter than cascadeless schedules or are a subset of cascadeless schedules.",
+                            "Serial schedules satisfy constraints of all recoverable, cascadeless and strict schedules and hence is a subset of strict schedules."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Question"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "Consider the following schedule:\nS: R1(A), W2(A), Commit2, W1(A), W3(A), Commit3, Commit1"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "**Which of the following is true?**"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "(A) The schedule is view serializable schedule and strict recoverable schedule",
+                            "(B) The schedule is non-serializable schedule and strict recoverable schedule",
+                            "(C) The schedule is non-serializable schedule and is not strict recoverable schedule.",
+                            "(D) The Schedule is serializable schedule and is not strict recoverable schedule"
+                        ]
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "**Solution**: The schedule is view-serializable because it matches the serial order T1 -> T2 -> T3. The schedule is not strict because T1 writes A, and T3 writes A before T1 commits. The schedule is recoverable, but not strict recoverable. **Correct option is D**."
+                    }
+                ]
             },
             {
                 "name": "Concurrency Control"

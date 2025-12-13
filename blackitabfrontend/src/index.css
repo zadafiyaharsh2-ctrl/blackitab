@@ -2,32 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* Custom Scrollbar for Dark Theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 10px;
+  color: #202b3b;
+  /* For horizontal scrollbars */
 }
 
+/* Default: internal elements have transparent tracks */
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Main page scrollbar track should be black */
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: #202b3b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #000000;
+  /* Dark gray thumb */
+  border-radius: 5px;
+  border: 2px solid #202b3b;
+  /* Creates padding effect */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #080029;
+  /* Lighter on hover */
+}
+
+/* Base Styles */
 body {
   margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  @apply bg-gradient-to-br from-gray-900 via-gray-800 to-black min-h-screen text-white;
 }
 
-/* Light mode (default) */
-body {
-  background: linear-gradient(to bottom right, #f3f4f6, #e5e7eb, #d1d5db);
-  color: #1f2937;
-}
-
-/* Dark mode */
-.dark body {
-  background: linear-gradient(to bottom right, #111827, #1f2937, #000000);
-  color: #f3f4f6;
-}
-
-#root {
-  min-height: 100vh;
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
 }

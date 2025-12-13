@@ -141,6 +141,42 @@ exports.getProblemById = async (req, res) => {
     }
 };
 
+// Helper to update streak and points
+const updateUserStreakAndPoints = async (userId, pointsToAdd) => {
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let lastActive = user.lastActiveDate ? new Date(user.lastActiveDate) : null;
+    if (lastActive) lastActive.setHours(0, 0, 0, 0);
+
+    if (!lastActive) {
+        // First time active
+        user.streak = 1;
+        user.lastActiveDate = new Date();
+    } else {
+        const diffTime = Math.abs(today - lastActive);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+            // Consecutive day
+            user.streak += 1;
+            user.lastActiveDate = new Date();
+        } else if (diffDays > 1) {
+            // Streak broken
+            user.streak = 1;
+            user.lastActiveDate = new Date();
+        } else {
+            // Same day, just update time
+            user.lastActiveDate = new Date();
+        }
+    }
+
+    user.points = (user.points || 0) + pointsToAdd;
+    await user.save();
+};
+
 // @desc    Update problem status
 // @route   POST /api/problems/:id/status
 // @access  Private
@@ -161,14 +197,14 @@ exports.updateProblemStatus = async (req, res) => {
         });
 
         if (progress) {
+            const wasCompleted = progress.status === 'completed';
             progress.status = status;
             progress.updatedAt = Date.now();
-            if (status === 'completed' && !progress.completedAt) {
-                progress.completedAt = Date.now();
 
-                // Add points for problem completion
-                const User = require('../models/User');
-                await User.findByIdAndUpdate(req.user.id, { $inc: { points: 20 } });
+            // If just completed for the first time
+            if (status === 'completed' && !wasCompleted) {
+                progress.completedAt = Date.now();
+                await updateUserStreakAndPoints(req.user.id, 20);
             }
             await progress.save();
         } else {
@@ -180,8 +216,7 @@ exports.updateProblemStatus = async (req, res) => {
             });
 
             if (status === 'completed') {
-                const User = require('../models/User');
-                await User.findByIdAndUpdate(req.user.id, { $inc: { points: 20 } });
+                await updateUserStreakAndPoints(req.user.id, 20);
             }
         }
 

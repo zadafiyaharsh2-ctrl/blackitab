@@ -77,7 +77,13 @@ connectDB();
 // Enable CORS (Cross-Origin Resource Sharing)
 // Allows frontend running on http://localhost:5173 to make requests to this server
 // Without this, browser would block requests due to same-origin policy
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://blackitab.netlify.app"
+  ],
+  credentials: true
+}));
 
 // Parse incoming JSON request bodies
 // Converts JSON strings in request body to JavaScript objects

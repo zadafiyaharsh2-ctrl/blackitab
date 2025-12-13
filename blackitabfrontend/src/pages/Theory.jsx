@@ -331,9 +331,83 @@ const Theory = () => {
         // Renders tables with headers, rows, and optional captions
         // Block structure: { type: "table", headers: [...], rows: [[...], [...]], caption: "..." }
         case "table":
+          // Check if table is too wide (more than 5 columns)
+          const shouldSplit = block.headers && block.headers.length > 5;
+          
+          if (shouldSplit) {
+            // Split table into two halves
+            const midPoint = Math.ceil(block.headers.length / 2);
+            const firstHalfHeaders = block.headers.slice(0, midPoint);
+            const secondHalfHeaders = block.headers.slice(midPoint);
+            
+            return (
+              <div key={index} className="my-6">
+                {/* First half of table */}
+                <div className="overflow-x-auto max-w-full mb-4">
+                  <table className="w-full border-collapse border border-gray-700">
+                    <thead className="bg-gray-800">
+                      <tr>
+                        {firstHalfHeaders.map((header, i) => (
+                          <th key={i} className="border border-gray-700 px-4 py-2 text-left font-semibold text-gray-200">
+                            {header}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {block.rows.map((row, rowIndex) => (
+                        <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-gray-900/30" : "bg-gray-800/30"}>
+                          {row.slice(0, midPoint).map((cell, cellIndex) => (
+                            <td key={cellIndex} className="border border-gray-700 px-4 py-2 text-gray-300">
+                              {cell}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {/* Second half of table */}
+                <div className="overflow-x-auto max-w-full">
+                  <table className="w-full border-collapse border border-gray-700">
+                    <thead className="bg-gray-800">
+                      <tr>
+                        {secondHalfHeaders.map((header, i) => (
+                          <th key={i} className="border border-gray-700 px-4 py-2 text-left font-semibold text-gray-200">
+                            {header}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {block.rows.map((row, rowIndex) => (
+                        <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-gray-900/30" : "bg-gray-800/30"}>
+                          {row.slice(midPoint).map((cell, cellIndex) => (
+                            <td key={cellIndex} className="border border-gray-700 px-4 py-2 text-gray-300">
+                              {cell}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {/* Render caption if provided */}
+                {block.caption && (
+                  <p className="text-sm text-gray-600 mt-2 italic text-center">
+                    {block.caption}
+                  </p>
+                )}
+              </div>
+            );
+          }
+          
+          // Normal table rendering for tables with 5 or fewer columns
           return (
-            <div key={index} className="my-6 overflow-x-auto">
-              <table className="min-w-full border-collapse border border-gray-700">
+            <div key={index} className="my-6 overflow-x-auto max-w-full">
+              <table className="w-full border-collapse border border-gray-700">
                 {/* Table header */}
                 <thead className="bg-gray-800">
                   <tr>
@@ -471,7 +545,7 @@ const Theory = () => {
         {loading ? (
           // Loading state: show animated spinner
           <div className="flex justify-center py-20">
-            <div className="animate-spin h-12 w-12 border-b-2 border-purple-600 rounded-full"></div>
+            <div className="animate-spin h-12 w-12 border-b-2 border-blue-600 rounded-full"></div>
           </div>
         ) : (
           // Loaded state: show subject cards in responsive grid
@@ -481,19 +555,19 @@ const Theory = () => {
             {subjects.map((subject) => {
               // Calculate progress for this subject
               const completedCount = Object.keys(completedTopics[subject._id] || {}).length;
-              const totalTopics = 43; // You can fetch this from API or calculate dynamically
+              const totalTopics = subject.topicCount || 0;
               const progressPercentage = totalTopics > 0 ? Math.round((completedCount / totalTopics) * 100) : 0;
               
               return (
                 <div
                   key={subject._id} // Unique key for React list rendering
                   onClick={() => setSelectedSubject(subject)} // Set selected subject on click
-                  className="bg-gray-800/50 backdrop-blur-md rounded-xl shadow-lg hover:shadow-xl cursor-pointer p-6 border border-gray-700 group transition hover:border-purple-500/30"
+                  className="bg-gray-800/50 backdrop-blur-md rounded-xl shadow-lg hover:shadow-xl cursor-pointer p-6 border border-gray-700 group transition hover:border-blue-500/30"
                 >
                   {/* Icon container with hover effect */}
-                  <div className="h-14 w-14 bg-purple-500/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-purple-600 transition">
+                  <div className="h-14 w-14 bg-blue-500/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-600 transition">
                     {/* BookOpen icon that changes color on hover */}
-                    <BookOpen className="text-purple-400 group-hover:text-white h-8 w-8" />
+                    <BookOpen className="text-blue-400 group-hover:text-white h-8 w-8" />
                   </div>
 
                   {/* Subject name */}
@@ -511,7 +585,7 @@ const Theory = () => {
                       <span className="text-gray-400 font-medium">
                         {completedCount}/{totalTopics} topics completed
                       </span>
-                      <span className="text-purple-400 font-bold">
+                      <span className="text-blue-400 font-bold">
                         {progressPercentage}%
                       </span>
                     </div>
@@ -519,14 +593,14 @@ const Theory = () => {
                     {/* Progress bar */}
                     <div className="w-full bg-gray-700 rounded-full h-2">
                       <div
-                        className="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full transition-all duration-500"
+                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
                         style={{ width: `${progressPercentage}%` }}
                       ></div>
                     </div>
                   </div>
 
                   {/* Call-to-action with arrow icon */}
-                  <div className="flex items-center text-purple-400 mt-5 font-semibold group-hover:text-purple-300">
+                  <div className="flex items-center text-blue-400 mt-5 font-semibold group-hover:text-blue-300">
                     {completedCount > 0 ? 'Continue Learning' : 'Start Learning'} <ChevronRight className="ml-2 h-5 w-5" />
                   </div>
                 </div>
@@ -596,7 +670,7 @@ const Theory = () => {
                   </div>
                   <button
                     onClick={handleNextTopic}
-                    className="flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg"
+                    className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg"
                   >
                     <span>Next Topic</span>
                     <ArrowRight className="ml-2 h-5 w-5" />
