@@ -95,6 +95,15 @@ const authController = require('./controllers/authController');
 const theoryController = require('./controllers/theoryController');
 
 // ============================================================================
+// HEALTH CHECK ROUTE
+// ============================================================================
+
+// GET / - Basic health check to confirm server is running
+app.get('/', (req, res) => {
+  res.send('API is running...');
+});
+
+// ============================================================================
 // AUTHENTICATION ROUTES
 // ============================================================================
 
