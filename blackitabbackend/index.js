@@ -27,6 +27,12 @@
 
 // Import Express framework for building web server
 const express = require('express');
+const dns = require('node:dns');
+try {
+  dns.setDefaultResultOrder('ipv4first');
+} catch (e) {
+  console.log('Could not set DNS result order:', e);
+}
 
 // Import CORS middleware to allow cross-origin requests
 // Needed because frontend (port 5173) and backend (port 5000) are on different ports
