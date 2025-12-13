@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FaCog, FaTh, FaBookmark, FaUserTag, FaPlus } from 'react-icons/fa';
+import API_URL from '../config';
 
 const Profile = () => {
   const [user, setUser] = useState(() => {
@@ -16,7 +17,7 @@ const Profile = () => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          const response = await axios.get('http://localhost:5000/api/me', {
+          const response = await axios.get(`${API_URL}/api/me`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (response.data.success) {

@@ -19,6 +19,7 @@ import {
 import { MdReportProblem } from 'react-icons/md';
 import ActivityHeatmap from '../components/ActivityHeatmap';
 import { useTheme } from '../context/ThemeContext';
+import API_URL from '../config';
 
 const Dashboard = () => {
   const { isDark } = useTheme();
@@ -71,14 +72,16 @@ const Dashboard = () => {
         }
 
         // Fetch subjects
-        const subjectsRes = await axios.get('http://localhost:5000/api/subjects');
+        // Fetch subjects
+        const subjectsRes = await axios.get(`${API_URL}/api/subjects`);
         if (subjectsRes.data.success) {
           setSubjects(subjectsRes.data.data);
         }
 
         // Fetch progress stats if logged in
+        // Fetch progress stats if logged in
         if (token) {
-          const progressRes = await axios.get('http://localhost:5000/api/progress/stats', {
+          const progressRes = await axios.get(`${API_URL}/api/progress/stats`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (progressRes.data.success) {
