@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { API_URL } from '../config';
 
 const Signup = ({ onSignupSuccess }) => {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ const Signup = ({ onSignupSuccess }) => {
         }
 
         console.log('Sending register request to backend...');
-        const response = await fetch('http://localhost:5000/api/register', {
+        const response = await fetch(`${API_URL}/api/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -65,7 +66,7 @@ const Signup = ({ onSignupSuccess }) => {
         }
       } else {
         // Step 2: Verify OTP
-        const response = await fetch('http://localhost:5000/api/verify-otp', {
+        const response = await fetch(`${API_URL}/api/verify-otp`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

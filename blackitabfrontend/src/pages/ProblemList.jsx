@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../config';
 import { ArrowLeft, CheckCircle, Circle, Clock, ChevronRight } from 'lucide-react';
 
 const ProblemList = () => {
@@ -18,7 +19,7 @@ const ProblemList = () => {
             Authorization: token ? `Bearer ${token}` : ''
           }
         };
-        const res = await axios.get(`http://localhost:5000/api/problems/chapters/${chapterId}/problems`, config);
+        const res = await axios.get(`${API_URL}/api/problems/chapters/${chapterId}/problems`, config);
         if (res.data.success) {
           setProblems(res.data.data);
         }

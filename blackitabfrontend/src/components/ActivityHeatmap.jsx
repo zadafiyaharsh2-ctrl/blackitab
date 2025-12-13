@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config';
 import { useTheme } from '../context/ThemeContext';
 
 const ActivityHeatmap = () => {
@@ -14,7 +15,7 @@ const ActivityHeatmap = () => {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        const res = await axios.get('http://localhost:5000/api/progress/heatmap', {
+        const res = await axios.get(`${API_URL}/api/progress/heatmap`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 

@@ -21,6 +21,7 @@ import React, { useState, useEffect, useRef } from "react";
 
 // Import axios for making HTTP requests to the backend API
 import axios from "axios";
+import { API_URL } from "../config";
 
 // Import icons from lucide-react library for UI elements
 import { BookOpen, ChevronRight, Menu, CheckCircle, ArrowRight } from "lucide-react";
@@ -78,7 +79,7 @@ const Theory = () => {
     const fetchSubjects = async () => {
       try {
         // Make GET request to subjects API endpoint
-        const res = await axios.get("http://localhost:5000/api/subjects");
+        const res = await axios.get(`${API_URL}/api/subjects`);
         
         // Check if response indicates success
         // Backend returns { success: true, data: [...subjects] }
@@ -105,7 +106,7 @@ const Theory = () => {
           return;
         }
         
-        const res = await axios.get('http://localhost:5000/api/progress', {
+        const res = await axios.get(`${API_URL}/api/progress`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -144,7 +145,7 @@ const Theory = () => {
         // Make GET request to topics API endpoint
         // Uses selectedSubject._id to get topics for specific subject
         const res = await axios.get(
-          `http://localhost:5000/api/subjects/${selectedSubject._id}/topics`
+          `${API_URL}/api/subjects/${selectedSubject._id}/topics`
         );
 
         // Check if response indicates success
@@ -184,7 +185,7 @@ const Theory = () => {
         // Uses selectedTopic._id to get full content for specific topic
         // Backend queries full_data_of_topics collection where topicId matches
         const res = await axios.get(
-          `http://localhost:5000/api/topics/${selectedTopic._id}/full`
+          `${API_URL}/api/topics/${selectedTopic._id}/full`
         );
 
         // Check if response indicates success
@@ -490,7 +491,7 @@ const Theory = () => {
       }
       
       await axios.post(
-        'http://localhost:5000/api/progress/mark-complete',
+        `${API_URL}/api/progress/mark-complete`,
         {
           subjectId: selectedSubject._id,
           topicId: selectedTopic._id

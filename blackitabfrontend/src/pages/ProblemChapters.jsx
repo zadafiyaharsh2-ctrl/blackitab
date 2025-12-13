@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../config';
 import { BookOpen, ArrowLeft, ChevronRight } from 'lucide-react';
 
 const ProblemChapters = () => {
@@ -14,7 +15,7 @@ const ProblemChapters = () => {
     const fetchChapters = async () => {
       try {
         // Fetch chapters
-        const res = await axios.get(`http://localhost:5000/api/problems/subjects/${subjectId}/chapters`);
+        const res = await axios.get(`${API_URL}/api/problems/subjects/${subjectId}/chapters`);
         if (res.data.success) {
           setChapters(res.data.data);
         }
