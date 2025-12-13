@@ -44,6 +44,7 @@ const Signup = ({ onSignupSuccess }) => {
         }
 
         console.log('Sending register request to backend...');
+        console.log('Using API URL:', API_URL);
         const response = await fetch(`${API_URL}/api/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

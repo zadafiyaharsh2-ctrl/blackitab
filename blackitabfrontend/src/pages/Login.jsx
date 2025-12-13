@@ -29,7 +29,8 @@ const Login = ({ onLoginSuccess }) => {
     try {
       if (!otpSent) {
         // Step 1: Login and get OTP
-        const response = await fetch('http://localhost:5000/api/login', {
+        console.log('Using API URL:', API_URL);
+        const response = await fetch(`${API_URL}/api/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

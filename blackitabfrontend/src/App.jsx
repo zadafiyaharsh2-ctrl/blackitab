@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import API_URL from './config';
 import { ThemeProvider } from './context/ThemeContext';
 
 import Login from './pages/Login';
@@ -26,7 +27,9 @@ import Sidebar from './components/Sidebar';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 
+
 function App() {
+  console.log('🚀 app initialized using api url:', API_URL);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
