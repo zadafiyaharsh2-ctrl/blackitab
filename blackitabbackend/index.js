@@ -27,12 +27,6 @@
 
 // Import Express framework for building web server
 const express = require('express');
-const dns = require('node:dns');
-try {
-  dns.setDefaultResultOrder('ipv4first');
-} catch (e) {
-  console.log('Could not set DNS result order:', e);
-}
 
 // Import CORS middleware to allow cross-origin requests
 // Needed because frontend (port 5173) and backend (port 5000) are on different ports
@@ -83,29 +77,7 @@ connectDB();
 // Enable CORS (Cross-Origin Resource Sharing)
 // Allows frontend running on http://localhost:5173 to make requests to this server
 // Without this, browser would block requests due to same-origin policy
-app.use(cors({
-  origin: function (origin, callback) {
-    const allowedOrigins = [
-      "http://localhost:5173",
-      "https://blackitab.netlify.app",
-      "https://blackitab.onrender.com"
-    ];
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-
-    // Check if the origin matches any of the allowed origins
-    // Using loose matching to handle potential trailing slashes
-    if (allowedOrigins.some(o => origin.startsWith(o))) {
-      return callback(null, true);
-    } else {
-      console.log("Blocked by CORS:", origin);
-      return callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
-}));
+app.use(cors());
 
 // Parse incoming JSON request bodies
 // Converts JSON strings in request body to JavaScript objects

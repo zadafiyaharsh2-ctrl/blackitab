@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { API_URL } from '../config';
 import { 
   FaBook, 
   FaCode, 
@@ -72,14 +71,14 @@ const Dashboard = () => {
         }
 
         // Fetch subjects
-        const subjectsRes = await axios.get(`${API_URL}/api/subjects`);
+        const subjectsRes = await axios.get('http://localhost:5000/api/subjects');
         if (subjectsRes.data.success) {
           setSubjects(subjectsRes.data.data);
         }
 
         // Fetch progress stats if logged in
         if (token) {
-          const progressRes = await axios.get(`${API_URL}/api/progress/stats`, {
+          const progressRes = await axios.get('http://localhost:5000/api/progress/stats', {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (progressRes.data.success) {

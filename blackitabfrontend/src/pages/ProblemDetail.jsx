@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { API_URL } from '../config';
 import { ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 
 const ProblemDetail = () => {
@@ -13,7 +12,7 @@ const ProblemDetail = () => {
   useEffect(() => {
     const fetchProblem = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/problems/${problemId}`);
+        const res = await axios.get(`http://localhost:5000/api/problems/${problemId}`);
         if (res.data.success) {
           setProblem(res.data.data);
         }
@@ -100,7 +99,7 @@ const ProblemDetail = () => {
                     alert('Please login to track progress');
                     return;
                   }
-                  await axios.post(`${API_URL}/api/problems/${problemId}/status`, 
+                  await axios.post(`http://localhost:5000/api/problems/${problemId}/status`, 
                     { status: 'completed' },
                     { headers: { Authorization: `Bearer ${token}` } }
                   );

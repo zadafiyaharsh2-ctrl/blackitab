@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { API_URL } from '../config';
 import { useNavigate } from 'react-router-dom';
 import { Code, ChevronRight } from 'lucide-react';
 
@@ -12,7 +11,7 @@ const Problems = () => {
   useEffect(() => {
     const fetchProblemSubjects = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/problems/subjects`);
+        const res = await axios.get('http://localhost:5000/api/problems/subjects');
         if (res.data.success) {
           setProblemSubjects(res.data.data);
         }
