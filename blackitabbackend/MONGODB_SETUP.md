@@ -134,3 +134,4 @@ Example:
 - Encoded: `MyP%40ss%23123`
 - Connection string: `mongodb+srv://user:MyP%40ss%23123@cluster0.xxxxx.mongodb.net/blackitab?retryWrites=true&w=majority`
 
+

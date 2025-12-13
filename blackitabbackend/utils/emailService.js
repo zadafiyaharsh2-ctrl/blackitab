@@ -5,27 +5,27 @@ const nodemailer = require('nodemailer');
  * Uses Gmail SMTP with App Password
  */
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, // true for port 465
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-      ? process.env.EMAIL_PASS.replace(/\s+/g, '')
-      : ''
-  },
-  connectionTimeout: 60 * 1000, // 60 seconds
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // true for port 465
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+            ? process.env.EMAIL_PASS.replace(/\s+/g, '')
+            : ''
+    },
+    connectionTimeout: 60 * 1000, // 60 seconds
 });
 
 /**
  * Verify SMTP connection once at startup
  */
 transporter.verify((error, success) => {
-  if (error) {
-    console.error('❌ Email transporter verification failed:', error.message);
-  } else {
-    console.log('✅ Email transporter is ready');
-  }
+    if (error) {
+        console.error('❌ Email transporter verification failed:', error.message);
+    } else {
+        console.log('✅ Email transporter is ready');
+    }
 });
 
 /**
@@ -34,31 +34,31 @@ transporter.verify((error, success) => {
  * @param {string|number} otp
  */
 const sendOTP = async (email, otp) => {
-  console.log('------------------------------------------------');
-  console.log('📧 EMAIL SERVICE INITIATED');
-  console.log(`Target: ${email}`);
+    console.log('------------------------------------------------');
+    console.log('📧 EMAIL SERVICE INITIATED');
+    console.log(`Target: ${email}`);
 
-  // ✅ DEV MODE → log OTP instead of sending
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('\n================================================================');
-    console.log('📧 EMAIL SERVICE (DEV MODE)');
-    console.log(`To: ${email}`);
-    console.log(`OTP: ${otp}`);
-    console.log('================================================================\n');
-    return true;
-  }
+    // ✅ DEV MODE: If no credentials, log the OTP and return success
+    if ((!process.env.EMAIL_USER || !process.env.EMAIL_PASS) && process.env.NODE_ENV !== 'production') {
+        console.log('\n================================================================');
+        console.log('📧 EMAIL SERVICE (DEV MODE - NO CREDENTIALS)');
+        console.log(`To: ${email}`);
+        console.log(`OTP: ${otp}`);
+        console.log('================================================================\n');
+        return true;
+    }
 
-  // ❌ Missing credentials safety check
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.error('❌ EMAIL credentials are missing');
-    return false;
-  }
+    // ❌ Missing credentials safety check (Production or if configured incorrectly)
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.error('❌ EMAIL credentials are missing');
+        return false;
+    }
 
-  const mailOptions = {
-    from: `"Blackitab Security" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: 'Your OTP Verification Code',
-    html: `
+    const mailOptions = {
+        from: `"Blackitab Security" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: 'Your OTP Verification Code',
+        html: `
       <div style="font-family: Arial, sans-serif; padding: 20px; color: #111;">
         <h2 style="color: #4F46E5;">Email Verification</h2>
         <p>Your One-Time Password (OTP) is:</p>
@@ -69,23 +69,23 @@ const sendOTP = async (email, otp) => {
         <small style="color: #666;">© Blackitab Security</small>
       </div>
     `,
-  };
+    };
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`✅ OTP successfully sent to ${email}`);
-    return true;
-  } catch (error) {
-    console.error('❌ Error sending email:', error.message);
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`✅ OTP successfully sent to ${email}`);
+        return true;
+    } catch (error) {
+        console.error('❌ Error sending email:', error.message);
 
-    // 🔁 Fallback OTP logging
-    console.log('\n================================================================');
-    console.log('⚠️ EMAIL FAILED - FALLBACK OTP LOG');
-    console.log(`OTP: ${otp}`);
-    console.log('================================================================\n');
+        // 🔁 Fallback OTP logging
+        console.log('\n================================================================');
+        console.log('⚠️ EMAIL FAILED - FALLBACK OTP LOG');
+        console.log(`OTP: ${otp}`);
+        console.log('================================================================\n');
 
-    return false;
-  }
+        return false;
+    }
 };
 
 module.exports = { sendOTP };
