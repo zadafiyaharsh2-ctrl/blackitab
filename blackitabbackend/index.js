@@ -12,7 +12,7 @@
  * 1. Express server setup
  * 2. Middleware configuration (CORS, JSON parsing)
  * 3. Database connection
- * 4. API route definitions
+ * 4. API route definitionsyou didnt editi anything
  * 5. Server startup
  * 
  * API Endpoints:
@@ -102,6 +102,9 @@ const theoryController = require('./controllers/theoryController');
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
+
+// Ignore favicon.ico requests to prevent 404s
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // ============================================================================
 // AUTHENTICATION ROUTES
