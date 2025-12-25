@@ -1,22 +1,16 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
 const sendOTP = async (email, otp) => {
     console.log('------------------------------------------------');
-    console.log('📧 EMAIL SERVICE (NODEMAILER) INITIATED');
+    console.log('📧 EMAIL SERVICE (RESEND) INITIATED');
     console.log(`Target: ${email}`);
 
-    // Create Transporter
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-        }
-    });
+    // Initialize Resend with API key
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
     try {
-        const mailOptions = {
-            from: `"Blackitab Security" <${process.env.EMAIL_USER}>`,
+        const { data, error } = await resend.emails.send({
+            from: 'Blackitab Security <onboarding@resend.dev>',
             to: email,
             subject: 'Your OTP Verification Code',
             html: `
@@ -30,14 +24,23 @@ const sendOTP = async (email, otp) => {
           <small style="color: #666;">© Blackitab Security</small>
         </div>
       `
-        };
+        });
 
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`✅ OTP successfully sent to ${email}. ID: ${info.messageId}`);
+        if (error) {
+            console.error('❌ Resend Error:', error);
+            // Fallback logging
+            console.log('\n================================================================');
+            console.log('⚠️ EMAIL FAILED - FALLBACK OTP LOG');
+            console.log(`OTP: ${otp}`);
+            console.log('================================================================\n');
+            return false;
+        }
+
+        console.log(`✅ OTP successfully sent to ${email}. ID: ${data.id}`);
         return true;
 
     } catch (error) {
-        console.error('❌ Nodemailer Error:', error);
+        console.error('❌ Resend Error:', error);
         // Fallback logging
         console.log('\n================================================================');
         console.log('⚠️ EMAIL FAILED - FALLBACK OTP LOG');
