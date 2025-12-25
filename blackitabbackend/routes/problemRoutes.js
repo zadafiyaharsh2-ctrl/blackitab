@@ -1,5 +1,16 @@
+/**
+ * ============================================================================
+ * PROBLEM ROUTES (problemRoutes.js)
+ * ============================================================================
+ * 
+ * Defines API endpoints for the Problem Set feature.
+ * Connects URL paths to specific controller functions.
+ */
+
 const express = require('express');
 const router = express.Router();
+
+// Import Controller Functions
 const {
     getProblemSubjects,
     createProblemSubject,
@@ -9,52 +20,64 @@ const {
     updateProblemStatus
 } = require('../controllers/problemController');
 
-// We need auth middleware to get user ID for progress
+// Import Auth Middleware
+// 'protect' ensures the user is logged in (throws 401 if not)
 const protect = require('../middleware/auth');
 
-router.route('/subjects')
-    .get(getProblemSubjects)
-    .post(createProblemSubject);
-
-router.route('/subjects/:subjectId/chapters')
-    .get(getChaptersBySubject);
-
-// Use protect middleware optionally? Or we can make a separate route for authenticated users
-// For simplicity, let's make the problems route use 'protect' but we need to handle if we want public access too.
-// Actually, the user wants to see THEIR progress, so they should be logged in.
-// But if we want it public, we'd need a custom middleware "optionalProtect".
-// Let's assume for now the frontend sends the token if available.
-// We'll use a custom middleware inline here or just use 'protect' if we decide problems are private.
-// Let's try to make it work with the existing 'protect' middleware but only if the header is present?
-// No, standard 'protect' throws 401 if no token.
-// Let's create a simple "optionalProtect" here or just import it if it existed.
-// Since I can't easily see middleware/auth.js right now, I'll just use `protect` for the status update
-// and for fetching problems, I'll rely on the controller checking `req.user`.
-// BUT `req.user` won't be set without middleware.
-// I'll add a simple middleware here to decode token if present, without enforcing it.
+// Import JWT for optional auth logic
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+/**
+ * MIDDLEWARE: Optional Protection
+ * Checks for a token, decodes it, and attaches the user to `req.user`.
+ * Unlike 'protect', this does NOT throw an error if the token is missing.
+ * Used for routes that can be viewed publicly but show extra data (like progress) if logged in.
+ */
 const optionalProtect = async (req, res, next) => {
     let token;
+    // Check if Authorization header exists and starts with "Bearer"
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         try {
+            // Extract token string
             token = req.headers.authorization.split(' ')[1];
+            // Verify token signature
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            // Find user and attach to request object
             req.user = await User.findById(decoded.userId).select('-password');
         } catch (error) {
             console.error('Optional auth error:', error);
+            // We ignore errors here because authentication is optional
         }
     }
+    // Proceed to next middleware/controller
     next();
 };
 
+/**
+ * ROUTES
+ */
+
+// Subjects: Get All (Public) / Create New (Admin/Private)
+router.route('/subjects')
+    .get(getProblemSubjects)
+    .post(createProblemSubject); // Note: Should probably be admin protected in future
+
+// Chapters: Get by Subject ID
+router.route('/subjects/:subjectId/chapters')
+    .get(getChaptersBySubject);
+
+// Problems: Get by Chapter ID
+// Uses optionalProtect to show user progress if they are logged in
 router.route('/chapters/:chapterId/problems')
     .get(optionalProtect, getProblemsByChapter);
 
+// Single Problem: Get by ID
 router.route('/:id')
     .get(getProblemById);
 
+// Update Status: Mark as done/attempted
+// Requires strict authentication (protect)
 router.route('/:id/status')
     .post(protect, updateProblemStatus);
 

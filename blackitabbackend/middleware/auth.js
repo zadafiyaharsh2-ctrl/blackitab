@@ -23,7 +23,14 @@ const authMiddleware = async (req, res, next) => {
     try {
         // Extract token from Authorization header
         // Header format: "Bearer <token>"
-        const token = req.headers.authorization?.split(' ')[1];
+        // Extract token from Authorization header or Query param
+        // Header format: "Bearer <token>"
+        let token = req.headers.authorization?.split(' ')[1];
+
+        // Fallback to query param (useful for direct file downloads/images)
+        if (!token && req.query.token) {
+            token = req.query.token;
+        }
 
         // Check if token exists
         if (!token) {

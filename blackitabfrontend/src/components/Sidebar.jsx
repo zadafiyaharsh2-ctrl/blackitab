@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import { FaHome, FaUsers, FaRobot, FaChartBar, FaUser, FaSignOutAlt, FaBars, FaStore, FaBriefcase, FaSuitcase, FaBook, FaCode, FaLaptopCode, FaTrophy, FaMoon, FaSun, FaSchool } from 'react-icons/fa';
+import { FaHome, FaUsers, FaRobot, FaChartBar, FaUser, FaSignOutAlt, FaBars, FaStore, FaBriefcase, FaSuitcase, FaBook, FaCode, FaLaptopCode, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaMoneyBillWave } from 'react-icons/fa';
 import { MdReportProblem } from 'react-icons/md';
 import { useTheme } from '../context/ThemeContext';
 import Logo from './Logo';
@@ -18,7 +18,9 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
     { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
     { path: '/theory', label: 'Theory', icon: <FaBook /> },
-    { path: '/ide', label: 'IDE', icon: <FaLaptopCode /> },
+
+    { path: '/ide', label: 'Projects', icon: <FaLaptopCode /> },
+    { path: '/playlists', label: 'Playlists', icon: <FaListUl /> },
     { path: '/store', label: 'Store', icon: <FaStore /> },
     { path: '/jobs', label: 'Jobs', icon: <FaSuitcase /> },
     { path: '/profile', label: 'Profile', icon: <FaUser /> },

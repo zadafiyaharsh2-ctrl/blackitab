@@ -7,18 +7,6 @@
  * It sets up the server, middleware, database connection, and all API routes.
  * 
  * Server runs on: http://localhost:5000 (or PORT from environment variable)
- * 
- * Main Components:
- * 1. Express server setup
- * 2. Middleware configuration (CORS, JSON parsing)
- * 3. Database connection
- * 4. API route definitionsyou didnt editi anything
- * 5. Server startup
- * 
- * API Endpoints:
- * - Authentication: /api/register, /api/login, /api/verify-otp
- * - Theory: /api/subjects, /api/subjects/:id/topics, /api/topics/:id/full
- * - User: /api/me (protected route)
  */
 
 // ============================================================================
@@ -49,8 +37,63 @@ const User = require('./models/User');
 // SERVER CONFIGURATION
 // ============================================================================
 
+// Import HTTP module to create server explicitly (needed for Socket.io)
+const http = require('http');
+const { Server } = require('socket.io');
+
 // Create Express application instance
 const app = express();
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize Socket.io
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:5173", "http://127.0.0.1:5173"], // Frontend URL
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+  }
+});
+
+// Socket.io connection handler
+const userSocketMap = {}; // {userId: socketId}
+
+io.on('connection', (socket) => {
+  // console.log('A user connected:', socket.id); // Replaced with more detailed log below
+
+  const userId = socket.handshake.query.userId;
+  console.log(`Socket Debug: Connection attempt. SocketID: ${socket.id}, UserID: ${userId}`);
+
+  if (userId && userId !== "undefined") {
+    userSocketMap[userId] = socket.id;
+    console.log(`Socket Debug: User mapped. Map:`, Object.keys(userSocketMap));
+  } else {
+    console.log(`Socket Debug: Connection rejected/ignored for tracking. Invalid UserID.`);
+  }
+
+  // Send keys as an array of online user IDs
+  io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  console.log("Socket Debug: Emitted getOnlineUsers:", Object.keys(userSocketMap));
+
+  socket.on('disconnect', () => {
+    console.log('Socket Debug: User disconnected:', socket.id);
+    delete userSocketMap[userId];
+    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  });
+});
+
+// Export helper to get receiver's socket id (useful for message controller later)
+const getReceiverSocketId = (receiverId) => {
+  return userSocketMap[receiverId];
+};
+app.set('getReceiverSocketId', getReceiverSocketId);
+
+// Middleware to attach io instance to request object
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 // Set server port from environment variable or default to 5000
 // Environment variable allows flexibility in deployment (Heroku, AWS, etc.)
@@ -100,10 +143,12 @@ const theoryController = require('./controllers/theoryController');
 
 // GET / - Basic health check to confirm server is running
 app.get('/', (req, res) => {
+  // Send simple text response indicating status
   res.send('API is running...');
 });
 
 // Ignore favicon.ico requests to prevent 404s
+// Browsers automatically request this icon; sending 204 (No Content) stops errors
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // ============================================================================
@@ -146,18 +191,58 @@ app.get('/api/topics/:id/full', theoryController.getTopicFullContent);
 // ============================================================================
 // PROGRESS ROUTES (PROTECTED)
 // ============================================================================
-// Import progress routes
+// Import progress routes (modular routing)
 const progressRoutes = require('./routes/progress');
 
 // Use progress routes with /api/progress prefix
-// All routes require authentication (handled in routes/progress.js)
+// All endpoints in progressRoutes will start with /api/progress
+// e.g., /api/progress/mark-complete
 app.use('/api/progress', progressRoutes);
 
 // ============================================================================
 // PROBLEM ROUTES
 // ============================================================================
+// Import and use problem routes
 const problemRoutes = require('./routes/problemRoutes');
 app.use('/api/problems', problemRoutes);
+
+// ============================================================================
+// SOCIAL ROUTES
+// ============================================================================
+const socialRoutes = require('./routes/socialRoutes');
+app.use('/api/social', socialRoutes);
+
+// ============================================================================
+// STATIC FILES
+// ============================================================================
+// Serve uploaded files statically
+// path.join(__dirname, 'uploads') resolves to absolute path of uploads folder
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// ============================================================================
+// MESSAGE ROUTES
+// ============================================================================
+const messageRoutes = require('./routes/messageRoutes');
+app.use('/api/messages', messageRoutes);
+
+// ============================================================================
+// POST ROUTES (CLOUDINARY)
+// ============================================================================
+const postRoutes = require('./routes/postRoutes');
+app.use('/api/posts', postRoutes);
+
+// ============================================================================
+// USER ROUTES (PROFILE UPDATE)
+// ============================================================================
+const userRoutes = require('./routes/userRoutes');
+app.use('/api/user', userRoutes);
+
+// ============================================================================
+// PLAYLIST ROUTES
+// ============================================================================
+const playlistRoutes = require('./routes/playlistRoutes');
+app.use('/api/playlists', playlistRoutes);
 
 // ============================================================================
 // PROTECTED ROUTE - GET CURRENT USER
@@ -183,10 +268,7 @@ app.get('/api/me', async (req, res) => {
     }
 
     // Verify and decode the JWT token
-    // jwt.verify() checks:
-    // 1. Token signature is valid (not tampered with)
-    // 2. Token hasn't expired
-    // 3. Token was signed with our JWT_SECRET
+    // jwt.verify() checks signature, expiration, and secret
     // Returns decoded payload (contains userId)
     const decoded = jwt.verify(token, JWT_SECRET);
 
@@ -195,8 +277,7 @@ app.get('/api/me', async (req, res) => {
     // We never want to send password hash to client, even if encrypted
     const user = await User.findById(decoded.userId).select('-password');
 
-    // Check if user exists in database
-    // User might have been deleted after token was issued
+    // Check if user exists in database (might have been deleted)
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -208,15 +289,18 @@ app.get('/api/me', async (req, res) => {
     res.json({
       success: true,
       user: {
-        id: user._id,      // User's MongoDB ObjectId
-        email: user.email,  // User's email address
-        name: user.name     // User's display name
+        id: user._id, // User's MongoDB ObjectId
+        email: user.email, // User's email address
+        name: user.name, // User's display name
+        bio: user.bio,
+        profileImage: user.profileImage,
+        followerCount: user.followerCount || 0,
+        followingCount: user.followingCount || 0,
+        subscriberCount: user.subscriberCount || 0
       }
     });
   } catch (error) {
-    // Handle JWT-specific errors
-    // JsonWebTokenError: Invalid token format or signature
-    // TokenExpiredError: Token has expired
+    // Handle JWT-specific errors (Invalid signature or Expired)
     if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
@@ -239,11 +323,10 @@ app.get('/api/me', async (req, res) => {
 
 // Start Express server and listen on specified port
 // Callback function runs once server successfully starts
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   // Log server URL to console
   console.log(`Server is running on http://localhost:${PORT}`);
 
   // Log MongoDB connection string (for debugging)
-  // Shows which database we're connected to
   console.log(`MongoDB connection: ${process.env.MONGODB_URI || 'mongodb://localhost:27017/blackitab'}`);
 });

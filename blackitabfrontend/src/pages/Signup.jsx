@@ -1,19 +1,35 @@
+/**
+ * ============================================================================
+ * SIGNUP PAGE COMPONENT (Signup.jsx)
+ * ============================================================================
+ * 
+ * Handles new user registration.
+ * Similar to login, this follows a two-step process:
+ * 1. Collect Details (Name, Email, Password) -> Create User & Send OTP
+ * 2. Verify OTP -> Activate Account & Log In auto-magically
+ */
+
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import API_URL from '../config';  // Ensure we use the centralized API URL
 
 const Signup = ({ onSignupSuccess }) => {
   const navigate = useNavigate();
+
+  // Local State structure
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    confirmPassword: '',
+    confirmPassword: '', // Client-side validation only
     otp: ''
   });
+  
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Handle text input changes
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -22,15 +38,22 @@ const Signup = ({ onSignupSuccess }) => {
     setError('');
   };
 
+  /**
+   * Handle Form Submission
+   * Logic splits based on otpSent state
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted. Data:', formData);
     setError('');
     setLoading(true);
 
     try {
       if (!otpSent) {
-        // Step 1: Register and get OTP
+        // ==========================================
+        // STEP 1: REGISTRATION
+        // ==========================================
+        
+        // Client-side Validation
         if (formData.password !== formData.confirmPassword) {
           setError('Passwords do not match');
           setLoading(false);
@@ -43,8 +66,9 @@ const Signup = ({ onSignupSuccess }) => {
           return;
         }
 
-        console.log('Sending register request to backend...');
-        console.log('Using API URL:', API_URL);
+        console.log('Sending register request...');
+        
+        // POST request to create user
         const response = await fetch(`${API_URL}/api/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -54,18 +78,21 @@ const Signup = ({ onSignupSuccess }) => {
             password: formData.password
           }),
         });
-        console.log('Response received:', response.status);
 
         const data = await response.json();
 
         if (data.success) {
+          // Success: User created (unverified) & Email sent
           setOtpSent(true);
-          setError(''); // Clear any previous errors
+          setError('');
         } else {
+          // Failure: Email exists or invalid data
           setError(data.message || 'Signup failed');
         }
       } else {
-        // Step 2: Verify OTP
+        // ==========================================
+        // STEP 2: VERIFICATION
+        // ==========================================
         const response = await fetch(`${API_URL}/api/verify-otp`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -78,6 +105,7 @@ const Signup = ({ onSignupSuccess }) => {
         const data = await response.json();
 
         if (data.success) {
+          // Success: User verified and logged in
           localStorage.setItem('token', data.token);
           localStorage.setItem('user', JSON.stringify(data.user));
           
@@ -99,8 +127,27 @@ const Signup = ({ onSignupSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black px-4 py-12">
-      <div className="bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md p-8 transform transition-all duration-300 hover:shadow-3xl hover:border-blue-500/30">
+    <div className="min-h-screen flex items-center justify-center bg-black text-white overflow-hidden relative selection:bg-blue-500 selection:text-white font-sans px-4 py-12">
+      
+      {/* ==================== BACKGROUND EFFECTS ==================== */}
+      {/* 1. Base Gradient */}
+      <div className="fixed inset-0 bg-gradient-to-b from-gray-900 via-black to-black z-0"></div>
+      
+      {/* 2. Animated Glow Orbs */}
+      <div className="fixed top-[-20%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[128px] pointer-events-none mix-blend-screen"></div>
+      <div className="fixed bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[128px] pointer-events-none mix-blend-screen"></div>
+
+      {/* 3. Grid Overlay */}
+      <div className="fixed inset-0 z-0 opacity-[0.15]" 
+           style={{ 
+             backgroundImage: 'linear-gradient(#444 1px, transparent 1px), linear-gradient(90deg, #444 1px, transparent 1px)', 
+             backgroundSize: '50px 50px' 
+           }}>
+      </div>
+
+      <div className="relative z-10 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md p-8 transform transition-all duration-300 hover:shadow-3xl hover:border-blue-500/30 animate-fade-in-up opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
+        
+        {/* Header */}
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-white mb-2">
             {otpSent ? 'Verify Email' : 'Create Account'}
@@ -110,9 +157,14 @@ const Signup = ({ onSignupSuccess }) => {
           </p>
         </div>
         
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           {!otpSent ? (
+            // ====================
+            // STEP 1 UI
+            // ====================
             <>
+              {/* Name Field */}
               <div className="space-y-2">
                 <label htmlFor="name" className="block text-sm font-semibold text-gray-300">Full Name</label>
                 <div className="relative">
@@ -132,6 +184,7 @@ const Signup = ({ onSignupSuccess }) => {
                 </div>
               </div>
 
+              {/* Email Field */}
               <div className="space-y-2">
                 <label htmlFor="email" className="block text-sm font-semibold text-gray-300">Email Address</label>
                 <div className="relative">
@@ -151,6 +204,7 @@ const Signup = ({ onSignupSuccess }) => {
                 </div>
               </div>
 
+              {/* Password Field with Indicator */}
               <div className="space-y-2">
                 <label htmlFor="password" className="block text-sm font-semibold text-gray-300">Password</label>
                 <div className="relative">
@@ -168,6 +222,7 @@ const Signup = ({ onSignupSuccess }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
+                {/* Real-time Password Strength feedback */}
                 {formData.password && (
                   <p className={`text-xs ${formData.password.length >= 6 ? 'text-green-400' : 'text-red-400'}`}>
                     {formData.password.length >= 6 ? '✓ Password length is good' : `⚠ Password must be at least 6 characters (${formData.password.length}/6)`}
@@ -175,6 +230,7 @@ const Signup = ({ onSignupSuccess }) => {
                 )}
               </div>
 
+              {/* Confirm Password Field with Match Indicator */}
               <div className="space-y-2">
                 <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-300">Confirm Password</label>
                 <div className="relative">
@@ -208,6 +264,9 @@ const Signup = ({ onSignupSuccess }) => {
               </div>
             </>
           ) : (
+            // ====================
+            // STEP 2 UI
+            // ====================
             <div className="space-y-2">
               <label htmlFor="otp" className="block text-sm font-semibold text-gray-300">Verification Code</label>
               <div className="relative">
@@ -228,6 +287,7 @@ const Signup = ({ onSignupSuccess }) => {
             </div>
           )}
 
+          {/* Error Message */}
           {error && (
             <div className="bg-red-500/10 border-l-4 border-red-500 text-red-400 px-4 py-3 rounded-r-lg text-sm flex items-center space-x-2 animate-pulse">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -237,6 +297,7 @@ const Signup = ({ onSignupSuccess }) => {
             </div>
           )}
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
@@ -261,6 +322,7 @@ const Signup = ({ onSignupSuccess }) => {
           </button>
         </form>
 
+        {/* Footer */}
         <div className="mt-6 text-center">
           <p className="text-gray-400 text-sm">
             Already have an account?{' '}
@@ -273,9 +335,25 @@ const Signup = ({ onSignupSuccess }) => {
           </p>
         </div>
       </div>
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in-up {
+          animation-name: fadeInUp;
+          animation-duration: 0.8s;
+          animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+      `}</style>
     </div>
   );
 };
 
 export default Signup;
-

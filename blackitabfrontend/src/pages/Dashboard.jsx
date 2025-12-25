@@ -1,31 +1,46 @@
+/**
+ * ============================================================================
+ * DASHBOARD PAGE (Dashboard.jsx)
+ * ============================================================================
+ * 
+ * The main landing page for logged-in users.
+ * Displays:
+ * 1. Introduction with User Name
+ * 2. Key Stats (Topics Completed, Streak, Points, Rank)
+ * 3. Daily Motivation Quote
+ * 4. Heatmap of Activity (Progress)
+ * 5. Quick Actions for Navigation
+ * 6. Dynamic Subject Progress bars
+ * 
+ * Uses a Bento Grid layout for responsive design.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { 
-  FaBook, 
-  FaCode, 
-  FaTrophy, 
-  FaFire, 
-  FaChartLine, 
-  FaClock,
-  FaArrowRight,
-  FaCheckCircle,
-  FaDatabase,
-  FaLaptopCode,
-  FaCloud,
-  FaQuoteLeft,
-  FaCalendarAlt
+  FaBook, FaCode, FaTrophy, FaFire, FaChartLine, 
+  FaClock, FaArrowRight, FaCheckCircle, FaDatabase,
+  FaLaptopCode, FaCloud, FaQuoteLeft, FaCalendarAlt, FaListUl
 } from 'react-icons/fa';
 import { MdReportProblem } from 'react-icons/md';
-import ActivityHeatmap from '../components/ActivityHeatmap';
-import { useTheme } from '../context/ThemeContext';
-import API_URL from '../config';
+import ActivityHeatmap from '../components/ActivityHeatmap'; // Custom Heatmap Component
+import PlaylistCard from '../components/PlaylistCard'; // Import PlaylistCard
+import { useTheme } from '../context/ThemeContext'; // Dark Mode context
+import API_URL from '../config'; // Centralized API URL
 
 const Dashboard = () => {
-  const { isDark } = useTheme();
+  const { isDark } = useTheme(); // Access dark mode state
+
+  // ============================================================================
+  // LOCAL STATE
+  // ============================================================================
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Data State
   const [subjects, setSubjects] = useState([]);
+  const [playlists, setPlaylists] = useState([]); // State for playlists
   const [progressStats, setProgressStats] = useState({
     totalCompleted: 0,
     bySubject: []
@@ -39,6 +54,7 @@ const Dashboard = () => {
 
   const [quote, setQuote] = useState({ text: '', author: '' });
 
+  // Static Data (Static for now, could be dynamic in future)
   const quotes = [
     { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
     { text: "Code is like humor. When you have to explain it, it’s bad.", author: "Cory House" },
@@ -61,9 +77,14 @@ const Dashboard = () => {
     link: "/problems"
   };
 
+  /**
+   * DATA FETCHING
+   * Runs on component mount.
+   */
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // 1. Get User Info from LocalStorage
         const userData = localStorage.getItem('user');
         const token = localStorage.getItem('token');
         
@@ -71,15 +92,19 @@ const Dashboard = () => {
           setUser(JSON.parse(userData));
         }
 
-        // Fetch subjects
-        // Fetch subjects
+        // 2. Fetch Subjects List
         const subjectsRes = await axios.get(`${API_URL}/api/subjects`);
         if (subjectsRes.data.success) {
           setSubjects(subjectsRes.data.data);
         }
 
-        // Fetch progress stats if logged in
-        // Fetch progress stats if logged in
+        // 3. Fetch Playlists (New)
+        const playlistsRes = await axios.get(`${API_URL}/api/playlists/all`);
+        if (playlistsRes.data.success) {
+            setPlaylists(playlistsRes.data.playlists);
+        }
+
+        // 4. Fetch User Progress (Auth required)
         if (token) {
           const progressRes = await axios.get(`${API_URL}/api/progress/stats`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -102,12 +127,16 @@ const Dashboard = () => {
 
     fetchData();
     
-    // Set random quote
+    // Pick a random quote
     const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
     setQuote(randomQuote);
-  }, []);
+  }, []); // Empty dependency array = runs once
 
-  // Stats cards data
+  // ============================================================================
+  // DISPLAY LOGIC
+  // ============================================================================
+
+  // Configuration for Stats Cards (Top Row)
   const statsCards = [
     {
       title: 'Topics Completed',
@@ -143,7 +172,7 @@ const Dashboard = () => {
     }
   ];
 
-  // Quick actions
+  // Quick Action Buttons Conf
   const quickActions = [
     {
       title: 'Theory',
@@ -160,7 +189,7 @@ const Dashboard = () => {
       color: 'from-green-500 to-green-600'
     },
     {
-      title: 'IDE',
+      title: 'Projects',
       description: 'Code online',
       icon: FaLaptopCode,
       link: '/ide',
@@ -175,19 +204,21 @@ const Dashboard = () => {
     }
   ];
 
-  // Calculate dynamic subject progress
+  // Calculate Progress Percentages for each subject
   const recentSubjects = subjects.map(subject => {
     // Find progress for this subject
     const subjectProgress = progressStats.bySubject.find(s => s._id === subject._id);
     const completed = subjectProgress ? subjectProgress.totalCompleted : 0;
     const total = subject.topicCount || 0;
+    // Math to get percentage (handle divide by zero)
     const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
     
-    // Determine icon and color based on subject name (fallback defaults)
+    // Default styling
     let icon = FaBook;
     let color = 'text-gray-600';
     let barColor = 'from-gray-500 to-gray-600';
     
+    // Custom styling per subject name
     if (subject.name === 'DBMS') {
       icon = FaDatabase;
       color = 'text-blue-600';
@@ -213,17 +244,9 @@ const Dashboard = () => {
     };
   });
 
-  // Recent activity (Placeholder for now, could be fetched from API if we had an activity log)
-  const recentActivity = [
-    { action: 'Completed', item: 'Normal Forms in DBMS', time: '2 hours ago', type: 'theory' },
-    { action: 'Solved', item: 'Two Sum Problem', time: '5 hours ago', type: 'problem' },
-    { action: 'Started', item: 'SQL Joins Tutorial', time: '1 day ago', type: 'theory' },
-    { action: 'Achieved', item: '7 Day Streak!', time: '1 day ago', type: 'achievement' }
-  ];
-
   return (
     <div className="min-h-screen bg-transparent p-6 md:p-8">
-      {/* Header */}
+      {/* HEADER SECTION */}
       <div className="mb-8">
         <h1 className={`text-3xl md:text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-800'} mb-2`}>
           Welcome back, {user?.name || 'Student'}! 👋
@@ -231,7 +254,7 @@ const Dashboard = () => {
         <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>Here's what's happening with your learning journey today.</p>
       </div>
 
-      {/* Stats Row */}
+      {/* STATS ROW (Four Cards) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {statsCards.map((stat, index) => (
           <div
@@ -251,11 +274,12 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Bento Grid Layout */}
+      {/* BENTO GRID (Main Content) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         
-        {/* Row 1: Motivation (2) & Problem (1) */}
+        {/* ROW 1: Motivation (Wide) & Problem of Day (Narrow) */}
         <div className="lg:col-span-2 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl shadow-lg p-8 text-white relative overflow-hidden flex flex-col justify-center min-h-[200px]">
+          {/* Background Decorative Element */}
           <FaQuoteLeft className="text-white opacity-10 text-8xl absolute -top-4 -left-4" />
           <div className="relative z-10">
             <h3 className="text-indigo-200 font-semibold mb-3 uppercase tracking-wider text-sm">Daily Motivation</h3>
@@ -270,6 +294,7 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Problem of the Day Card */}
         <div className="lg:col-span-1 bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-700/50 flex flex-col relative overflow-hidden group hover:border-blue-500/30 transition-all duration-300">
           <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
             <FaCode className="text-8xl text-indigo-600 transform rotate-12" />
@@ -294,7 +319,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Row 2: Heatmap (2) & Contest (1) */}
+        {/* ROW 2: Activity Heatmap (Wide) & Upcoming Contest (Narrow) */}
         <div className="lg:col-span-2 bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-700/50 p-1 overflow-hidden">
            <div className="p-5 border-b border-gray-700/50">
              <h3 className="font-bold text-white flex items-center">
@@ -302,10 +327,12 @@ const Dashboard = () => {
              </h3>
            </div>
            <div className="p-4">
+             {/* Reusable Heatmap Component */}
              <ActivityHeatmap />
            </div>
         </div>
 
+        {/* Upcoming Contest Card */}
         <div className="lg:col-span-1 bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-700/50 flex flex-col hover:border-blue-500/30 transition-all duration-300">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-bold text-white flex items-center">
@@ -342,7 +369,7 @@ const Dashboard = () => {
           </Link>
         </div>
 
-        {/* Row 3: Progress (2) & Quick Actions (1) */}
+        {/* ROW 3: Subject Progress (Wide) & Quick Actions (Narrow) */}
         <div className="lg:col-span-2 bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-700/50 p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-white flex items-center">
@@ -354,6 +381,7 @@ const Dashboard = () => {
             </Link>
           </div>
           
+          {/* List of Subjects with Progress Bars */}
           <div className="space-y-4">
             {recentSubjects.map((subject, index) => (
               <div key={index} className="group flex items-center p-3 rounded-xl hover:bg-gray-700/50 transition-colors border border-transparent hover:border-gray-700">
@@ -365,7 +393,9 @@ const Dashboard = () => {
                     <h3 className="font-bold text-gray-200">{subject.name}</h3>
                     <span className="text-sm font-bold text-gray-400">{subject.progress}%</span>
                   </div>
+                  {/* Progress Bar Track */}
                   <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
+                    {/* Progress Bar Fill */}
                     <div
                       className={`h-2 rounded-full bg-gradient-to-r ${subject.barColor} transition-all duration-1000 ease-out`}
                       style={{ width: `${subject.progress}%` }}
@@ -377,6 +407,7 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Quick Actions Grid */}
         <div className="lg:col-span-1 bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-700/50 p-6">
           <h2 className="text-lg font-bold text-white mb-6 flex items-center">
             <FaArrowRight className="mr-2 text-blue-400" />
@@ -400,10 +431,34 @@ const Dashboard = () => {
         </div>
 
       </div>
+
+      {/* NEW SECTION: Featured Series (Playlists) */}
+      <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-white flex items-center">
+              <FaListUl className="mr-3 text-purple-500" />
+              Featured Series
+            </h2>
+            <Link to="/playlists" className="text-sm text-purple-400 font-medium hover:text-purple-300 flex items-center">
+              View All <FaArrowRight className="ml-1 text-xs" />
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {playlists.slice(0, 4).map((playlist, index) => (
+                  <div key={playlist._id} className="transform hover:-translate-y-1 transition-transform duration-300">
+                      <PlaylistCard playlist={playlist} />
+                  </div>
+              ))}
+              {playlists.length === 0 && !loading && (
+                  <div className="col-span-full text-center py-10 bg-gray-800/30 rounded-xl border border-dashed border-gray-700">
+                      <p className="text-gray-500">No series available yet.</p>
+                  </div>
+              )}
+          </div>
+      </div>
     </div>
   );
 };
 
 export default Dashboard;
-
-
