@@ -1,35 +1,66 @@
+/**
+ * ============================================================================
+ * LOGIN PAGE COMPONENT (Login.jsx)
+ * ============================================================================
+ * 
+ * This component handles the user login flow.
+ * Unique Feature: It uses a Two-Step Verification (MFA) process for EVERY login.
+ * 
+ * Workflow:
+ * 1. User enters Email & Password -> Backend checks credentials
+ * 2. If valid, Backend sends OTP to email -> Frontend shows OTP input (otpSent = true)
+ * 3. User enters OTP -> Backend verifies -> Frontend saves token and redirects
+ */
+
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import API_URL from '../config';
 
 const Login = ({ onLoginSuccess }) => {
+  // Hook for programmatic navigation (redirecting after login)
   const navigate = useNavigate();
+
+  // Local State
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    otp: ''
+    otp: '' // Stores OTP entered by user in Step 2
   });
+  
+  // Toggle between Step 1 (Credentials) and Step 2 (OTP)
   const [otpSent, setOtpSent] = useState(false);
+  
+  // UI States
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Handle input changes (updates state as user types)
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear errors when user tries again
     setError('');
   };
 
+  /**
+   * Handle Form Submission
+   * Logic splits based on 'otpSent' state.
+   */
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent page reload
     setError('');
     setLoading(true);
 
     try {
       if (!otpSent) {
-        // Step 1: Login and get OTP
+        // ==========================================
+        // STEP 1: INITIAL LOGIN (Email + Password)
+        // ==========================================
         console.log('Using API URL:', API_URL);
+        
+        // Send credentials to backend
         const response = await fetch(`${API_URL}/api/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -42,13 +73,17 @@ const Login = ({ onLoginSuccess }) => {
         const data = await response.json();
 
         if (data.success) {
-          setOtpSent(true);
+          // Success: Backend verified credentials and sent OTP
+          setOtpSent(true); // Switch UI to OTP mode
           setError('');
         } else {
+          // Failure: Invalid password or user not found
           setError(data.message || 'Login failed');
         }
       } else {
-        // Step 2: Verify OTP
+        // ==========================================
+        // STEP 2: VERIFY OTP
+        // ==========================================
         const response = await fetch(`${API_URL}/api/verify-otp`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -61,29 +96,57 @@ const Login = ({ onLoginSuccess }) => {
         const data = await response.json();
 
         if (data.success) {
+          // Success: OTP matches
+          // 1. Save JWT Token securely in LocalStorage
           localStorage.setItem('token', data.token);
+          // 2. Save User Info for quick access
           localStorage.setItem('user', JSON.stringify(data.user));
           
+          // 3. Update App-level state (passed down from App.jsx)
           if (onLoginSuccess) {
             onLoginSuccess(data.user, data.token);
           }
           
+          // 4. Redirect to Dashboard
           navigate('/dashboard');
         } else {
+          // Failure: Wrong OTP or Expired
           setError(data.message || 'Verification failed');
         }
       }
     } catch (err) {
+      // Handle Network Errors (Server offline, etc.)
       setError('Network error. Please check if the server is running.');
       console.error('Login error:', err);
     } finally {
+      // Stop loading spinner
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black px-4 py-12">
-      <div className="bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md p-8 transform transition-all duration-300 hover:shadow-3xl hover:border-blue-500/30">
+    <div className="min-h-screen flex items-center justify-center bg-black text-white overflow-hidden relative selection:bg-blue-500 selection:text-white font-sans px-4 py-12">
+      
+      {/* ==================== BACKGROUND EFFECTS ==================== */}
+      {/* 1. Base Gradient */}
+      <div className="fixed inset-0 bg-gradient-to-b from-gray-900 via-black to-black z-0"></div>
+      
+      {/* 2. Animated Glow Orbs */}
+      <div className="fixed top-[-20%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[128px] pointer-events-none mix-blend-screen"></div>
+      <div className="fixed bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[128px] pointer-events-none mix-blend-screen"></div>
+
+      {/* 3. Grid Overlay */}
+      <div className="fixed inset-0 z-0 opacity-[0.15]" 
+           style={{ 
+             backgroundImage: 'linear-gradient(#444 1px, transparent 1px), linear-gradient(90deg, #444 1px, transparent 1px)', 
+             backgroundSize: '50px 50px' 
+           }}>
+      </div>
+
+      {/* Card Container with Glassmorphism Effect */}
+      <div className="relative z-10 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md p-8 transform transition-all duration-300 hover:shadow-3xl hover:border-blue-500/30 animate-fade-in-up opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
+        
+        {/* Header Section */}
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-white mb-2">
             {otpSent ? 'Verify Identity' : 'Welcome Back'}
@@ -93,9 +156,14 @@ const Login = ({ onLoginSuccess }) => {
           </p>
         </div>
         
+        {/* Logical Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           {!otpSent ? (
+            // ====================
+            // STEP 1 UI: Inputs
+            // ====================
             <>
+              {/* Email Input */}
               <div className="space-y-2">
                 <label htmlFor="email" className="block text-sm font-semibold text-gray-300">Email Address</label>
                 <div className="relative">
@@ -109,12 +177,14 @@ const Login = ({ onLoginSuccess }) => {
                     placeholder="you@example.com"
                     className="w-full px-4 py-3 pl-12 bg-gray-900/50 border-2 border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-500"
                   />
+                  {/* Icon SVG */}
                   <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                   </svg>
                 </div>
               </div>
 
+              {/* Password Input */}
               <div className="space-y-2">
                 <label htmlFor="password" className="block text-sm font-semibold text-gray-300">Password</label>
                 <div className="relative">
@@ -128,6 +198,7 @@ const Login = ({ onLoginSuccess }) => {
                     placeholder="Enter your password"
                     className="w-full px-4 py-3 pl-12 bg-gray-900/50 border-2 border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-500"
                   />
+                  {/* Icon SVG */}
                   <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
@@ -135,6 +206,9 @@ const Login = ({ onLoginSuccess }) => {
               </div>
             </>
           ) : (
+            // ====================
+            // STEP 2 UI: OTP
+            // ====================
             <div className="space-y-2">
               <label htmlFor="otp" className="block text-sm font-semibold text-gray-300">Verification Code</label>
               <div className="relative">
@@ -155,6 +229,7 @@ const Login = ({ onLoginSuccess }) => {
             </div>
           )}
 
+          {/* Error Message Display */}
           {error && (
             <div className="bg-red-500/10 border-l-4 border-red-500 text-red-400 px-4 py-3 rounded-r-lg text-sm flex items-center space-x-2 animate-pulse">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -164,12 +239,14 @@ const Login = ({ onLoginSuccess }) => {
             </div>
           )}
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
             className="w-full bg-blue-600 text-white py-3.5 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-blue-600/30 hover:shadow-xl flex items-center justify-center space-x-2"
           >
             {loading ? (
+              // Loading State Spinner
               <>
                 <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -178,6 +255,7 @@ const Login = ({ onLoginSuccess }) => {
                 <span>{otpSent ? 'Verifying...' : 'Logging in...'}</span>
               </>
             ) : (
+              // Normal Text
               <>
                 <span>{otpSent ? 'Verify & Login' : 'Login'}</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,6 +266,7 @@ const Login = ({ onLoginSuccess }) => {
           </button>
         </form>
 
+        {/* Footer Link */}
         <div className="mt-6 text-center">
           <p className="text-gray-400 text-sm">
             Don't have an account?{' '}
@@ -200,6 +279,25 @@ const Login = ({ onLoginSuccess }) => {
           </p>
         </div>
       </div>
+      
+      {/* Animation Styles */}
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in-up {
+          animation-name: fadeInUp;
+          animation-duration: 0.8s;
+          animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+      `}</style>
     </div>
   );
 };
