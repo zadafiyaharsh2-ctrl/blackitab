@@ -237,9 +237,25 @@ exports.followUser = async (req, res) => {
 
         if (existingFollow) {
             if (existingFollow.status === 'accepted') {
-                return res.status(400).json({ success: false, message: 'You are already following this user' });
+                // SELF-HEALING: Ensure FollowingList entry exists
+                const existingFollowing = await FollowingList.findOne({
+                    userId: currentUserId,
+                    followingId: targetUserId
+                });
+
+                if (!existingFollowing) {
+                    await FollowingList.create({
+                        userId: currentUserId,
+                        followingId: targetUserId,
+                        status: 'accepted'
+                    });
+                }
+
+                // Return success instead of error to allow frontend to sync
+                return res.json({ success: true, message: 'You are now following this user', status: 'accepted' });
             } else {
-                return res.status(400).json({ success: false, message: 'Follow request already sent' });
+                // Idempotent success: Request is already pending
+                return res.json({ success: true, message: 'Follow request already sent', status: 'pending' });
             }
         }
 

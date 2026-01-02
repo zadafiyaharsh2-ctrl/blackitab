@@ -73,8 +73,25 @@ const Login = ({ onLoginSuccess }) => {
         const data = await response.json();
 
         if (data.success) {
-          // Success: Backend verified credentials and sent OTP
-          setOtpSent(true); // Switch UI to OTP mode
+          // CHECK: Did we get a token immediately? (Verified User)
+          if (data.token) {
+            // 1. Save JWT Token securely in LocalStorage
+            localStorage.setItem('token', data.token);
+            // 2. Save User Info for quick access
+            localStorage.setItem('user', JSON.stringify(data.user));
+            
+            // 3. Update App-level state (passed down from App.jsx)
+            if (onLoginSuccess) {
+              onLoginSuccess(data.user, data.token);
+            }
+            
+            // 4. Redirect to Dashboard
+            navigate('/dashboard');
+            return; // Stop here
+          }
+
+          // If no token, assume Unverified -> Show OTP Input
+          setOtpSent(true); 
           setError('');
         } else {
           // Failure: Invalid password or user not found

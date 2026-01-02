@@ -201,7 +201,30 @@ exports.login = async (req, res) => {
             return res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
 
-        // Generate New OTP for Login Verification
+        // CHECK VERIFICATION STATUS
+        // If user is already verified, skipping OTP and logging in directly
+        if (user.isVerified) {
+            // Generate JWT Token
+            const token = jwt.sign(
+                { userId: user._id, email: user.email }, // Payload
+                JWT_SECRET,                              // Secret Key
+                { expiresIn: '24h' }                     // Token lifetime (24 hours)
+            );
+
+            return res.json({
+                success: true,
+                message: 'Login successful',
+                token,
+                user: {
+                    _id: user._id,
+                    email: user.email,
+                    name: user.name
+                }
+            });
+        }
+
+        // IF NOT VERIFIED -> Send OTP to verify account
+        // Generate New OTP
         const otp = generateOTP();
         user.otp = otp;
         user.otpExpires = Date.now() + 10 * 60 * 1000;
@@ -213,11 +236,10 @@ exports.login = async (req, res) => {
             console.log(`Failed to send email. OTP for ${user.email}: ${otp}`);
         }
 
-        // Return success, but NO TOKEN yet
-        // Client must call verify-otp next with the code they received
+        // Return success, requesting OTP
         res.json({
             success: true,
-            message: 'OTP sent to your email',
+            message: 'Account not verified. OTP sent to your email',
             email: user.email,
             requireOtp: true // Flag to tell frontend to show OTP input
         });

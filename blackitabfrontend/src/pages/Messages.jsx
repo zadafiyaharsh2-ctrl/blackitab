@@ -25,9 +25,7 @@ const Messages = () => {
     const getUserId = (user) => user?._id || user?.id;
 
     // Debug: Log onlineUsers whenever it changes
-    useEffect(() => {
-        console.log("Messages: onlineUsers updated:", onlineUsers);
-    }, [onlineUsers]);
+
 
     // Real-time messages listener
     useEffect(() => {
@@ -333,7 +331,7 @@ const Messages = () => {
                                     <h3 className="font-bold text-white text-lg">{currentChatUser.name}</h3>
                                     {(() => {
                                         const isOnline = onlineUsers.includes(currentChatUser._id) || onlineUsers.includes(currentChatUser.id);
-                                        console.log("Messages: Checking online status for", currentChatUser.name, "- ID:", getUserId(currentChatUser), "- isOnline:", isOnline, "- onlineUsers:", onlineUsers);
+
                                         return isOnline ? (
                                             <span className="text-xs text-green-400 font-medium flex items-center gap-1.5"><FaCircle size={6} /> Online Now</span>
                                         ) : (
