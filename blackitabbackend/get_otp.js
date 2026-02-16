@@ -8,7 +8,8 @@ const getOtp = async () => {
         const users = await User.find().sort({ createdAt: -1 }).limit(5);
         console.log('\n--- RECENT USERS ---');
         users.forEach(u => {
-            console.log(`Email: ${u.email} | OTP: ${u.otp} | Verified: ${u.isVerified}`);
+            // console.log(`Email: ${u.email} | OTP: ${u.otp} | Verified: ${u.isVerified}`);
+            console.log(`Email: ${u.email} | OTP: DISABLED | Verified: ${u.isVerified} (Auto-verified)`);
         });
         console.log('--------------------\n');
     } catch (error) {

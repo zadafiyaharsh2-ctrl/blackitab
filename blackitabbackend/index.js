@@ -131,7 +131,7 @@ app.use(express.json());
 // IMPORT CONTROLLERS
 // ============================================================================
 
-// Import authentication controller (register, login, OTP verification)
+// Import authentication controller (register, login)
 const authController = require('./controllers/authController');
 
 // Import theory controller (subjects, topics, content)
@@ -162,13 +162,8 @@ app.post('/api/register', authController.register);
 
 // POST /api/login - Login existing user
 // Body: { email, password }
-// Response: { success, message } (OTP sent to email)
-app.post('/api/login', authController.login);
-
-// POST /api/verify-otp - Verify OTP and get JWT token
-// Body: { email, otp }
 // Response: { success, token, user }
-app.post('/api/verify-otp', authController.verifyOTP);
+app.post('/api/login', authController.login);
 
 // ============================================================================
 // THEORY ROUTES (PUBLIC)

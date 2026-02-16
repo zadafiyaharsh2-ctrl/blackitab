@@ -4,12 +4,10 @@
  * ============================================================================
  * 
  * This component handles the user login flow.
- * Unique Feature: It uses a Two-Step Verification (MFA) process for EVERY login.
  * 
  * Workflow:
  * 1. User enters Email & Password -> Backend checks credentials
- * 2. If valid, Backend sends OTP to email -> Frontend shows OTP input (otpSent = true)
- * 3. User enters OTP -> Backend verifies -> Frontend saves token and redirects
+ * 2. If valid, Backend returns JWT token -> Frontend saves token and redirects
  */
 
 import { useState } from 'react';
@@ -23,12 +21,8 @@ const Login = ({ onLoginSuccess }) => {
   // Local State
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
-    otp: '' // Stores OTP entered by user in Step 2
+    password: ''
   });
-  
-  // Toggle between Step 1 (Credentials) and Step 2 (OTP)
-  const [otpSent, setOtpSent] = useState(false);
   
   // UI States
   const [error, setError] = useState('');
@@ -46,7 +40,6 @@ const Login = ({ onLoginSuccess }) => {
 
   /**
    * Handle Form Submission
-   * Logic splits based on 'otpSent' state.
    */
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent page reload
@@ -54,83 +47,41 @@ const Login = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      if (!otpSent) {
-        // ==========================================
-        // STEP 1: INITIAL LOGIN (Email + Password)
-        // ==========================================
-        console.log('Using API URL:', API_URL);
+      // ==========================================
+      // LOGIN (Email + Password)
+      // ==========================================
+      console.log('Using API URL:', API_URL);
+      
+      // Send credentials to backend
+      const response = await fetch(`${API_URL}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.token) {
+        // 1. Save JWT Token securely in LocalStorage
+        localStorage.setItem('token', data.token);
+        // 2. Save User Info for quick access
+        localStorage.setItem('user', JSON.stringify(data.user));
         
-        // Send credentials to backend
-        const response = await fetch(`${API_URL}/api/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: formData.email,
-            password: formData.password
-          }),
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          // CHECK: Did we get a token immediately? (Verified User)
-          if (data.token) {
-            // 1. Save JWT Token securely in LocalStorage
-            localStorage.setItem('token', data.token);
-            // 2. Save User Info for quick access
-            localStorage.setItem('user', JSON.stringify(data.user));
-            
-            // 3. Update App-level state (passed down from App.jsx)
-            if (onLoginSuccess) {
-              onLoginSuccess(data.user, data.token);
-            }
-            
-            // 4. Redirect to Dashboard
-            navigate('/dashboard');
-            return; // Stop here
-          }
-
-          // If no token, assume Unverified -> Show OTP Input
-          setOtpSent(true); 
-          setError('');
-        } else {
-          // Failure: Invalid password or user not found
-          setError(data.message || 'Login failed');
+        // 3. Update App-level state (passed down from App.jsx)
+        if (onLoginSuccess) {
+          onLoginSuccess(data.user, data.token);
         }
+        
+        // 4. Redirect to Dashboard
+        navigate('/dashboard');
       } else {
-        // ==========================================
-        // STEP 2: VERIFY OTP
-        // ==========================================
-        const response = await fetch(`${API_URL}/api/verify-otp`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: formData.email,
-            otp: formData.otp
-          }),
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          // Success: OTP matches
-          // 1. Save JWT Token securely in LocalStorage
-          localStorage.setItem('token', data.token);
-          // 2. Save User Info for quick access
-          localStorage.setItem('user', JSON.stringify(data.user));
-          
-          // 3. Update App-level state (passed down from App.jsx)
-          if (onLoginSuccess) {
-            onLoginSuccess(data.user, data.token);
-          }
-          
-          // 4. Redirect to Dashboard
-          navigate('/dashboard');
-        } else {
-          // Failure: Wrong OTP or Expired
-          setError(data.message || 'Verification failed');
-        }
+        // Failure: Invalid password or user not found
+        setError(data.message || 'Login failed');
       }
+
     } catch (err) {
       // Handle Network Errors (Server offline, etc.)
       setError('Network error. Please check if the server is running.');
@@ -166,85 +117,56 @@ const Login = ({ onLoginSuccess }) => {
         {/* Header Section */}
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-white mb-2">
-            {otpSent ? 'Verify Identity' : 'Welcome Back'}
+            Welcome Back
           </h2>
           <p className="text-gray-400 text-sm">
-            {otpSent ? `Enter the code sent to ${formData.email}` : 'Sign in to your account'}
+            Sign in to your account
           </p>
         </div>
         
         {/* Logical Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-          {!otpSent ? (
-            // ====================
-            // STEP 1 UI: Inputs
-            // ====================
-            <>
-              {/* Email Input */}
-              <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-semibold text-gray-300">Email Address</label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    placeholder="you@example.com"
-                    className="w-full px-4 py-3 pl-12 bg-gray-900/50 border-2 border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-500"
-                  />
-                  {/* Icon SVG */}
-                  <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                  </svg>
-                </div>
-              </div>
-
-              {/* Password Input */}
-              <div className="space-y-2">
-                <label htmlFor="password" className="block text-sm font-semibold text-gray-300">Password</label>
-                <div className="relative">
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    placeholder="Enter your password"
-                    className="w-full px-4 py-3 pl-12 bg-gray-900/50 border-2 border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-500"
-                  />
-                  {/* Icon SVG */}
-                  <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
-              </div>
-            </>
-          ) : (
-            // ====================
-            // STEP 2 UI: OTP
-            // ====================
-            <div className="space-y-2">
-              <label htmlFor="otp" className="block text-sm font-semibold text-gray-300">Verification Code</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  id="otp"
-                  name="otp"
-                  value={formData.otp}
-                  onChange={handleChange}
-                  required
-                  placeholder="Enter 6-digit code"
-                  className="w-full px-4 py-3 pl-12 bg-gray-900/50 border-2 border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-500 tracking-widest text-lg"
-                />
-                <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
+          {/* Email Input */}
+          <div className="space-y-2">
+            <label htmlFor="email" className="block text-sm font-semibold text-gray-300">Email Address</label>
+            <div className="relative">
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder="you@example.com"
+                className="w-full px-4 py-3 pl-12 bg-gray-900/50 border-2 border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-500"
+              />
+              {/* Icon SVG */}
+              <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+              </svg>
             </div>
-          )}
+          </div>
+
+          {/* Password Input */}
+          <div className="space-y-2">
+            <label htmlFor="password" className="block text-sm font-semibold text-gray-300">Password</label>
+            <div className="relative">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder="Enter your password"
+                className="w-full px-4 py-3 pl-12 bg-gray-900/50 border-2 border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-500"
+              />
+              {/* Icon SVG */}
+              <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+          </div>
 
           {/* Error Message Display */}
           {error && (
@@ -269,12 +191,12 @@ const Login = ({ onLoginSuccess }) => {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span>{otpSent ? 'Verifying...' : 'Logging in...'}</span>
+                <span>Logging in...</span>
               </>
             ) : (
               // Normal Text
               <>
-                <span>{otpSent ? 'Verify & Login' : 'Login'}</span>
+                <span>Login</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
