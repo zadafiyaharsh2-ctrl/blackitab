@@ -67,18 +67,11 @@ const userSchema = new mongoose.Schema({
   },
 
   // ========================================
-  // OTP (ONE-TIME PASSWORD) FIELDS
+  // OTP (ONE-TIME PASSWORD) FIELDS - REMOVED
   // ========================================
-  // Used for Two-Factor Authentication or Email Verification
-  otp: {
-    type: String                // Stores the temporary OTP code sent to email
-  },
-  otpExpires: {
-    type: Date                  // Stores when the OTP becomes invalid
-  },
   isVerified: {
     type: Boolean,
-    default: false              // Initially false until user verifies email
+    default: true               // Auto-verified since OTP is removed
   },
 
   // ========================================

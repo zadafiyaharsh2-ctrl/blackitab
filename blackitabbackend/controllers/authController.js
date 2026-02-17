@@ -66,8 +66,6 @@ exports.login = async (req, res) => {
         // Auto-verify any legacy unverified accounts on login
         if (!user.isVerified) {
             user.isVerified = true;
-            user.otp = undefined;
-            user.otpExpires = undefined;
             await user.save();
         }
 
