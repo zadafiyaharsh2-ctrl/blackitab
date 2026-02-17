@@ -13,6 +13,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
     { path: '/social', label: 'Social', icon: <FaUsers /> },
     { path: '/ai', label: 'AI', icon: <FaRobot /> },
+    { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot className="text-purple-400" /> },
     { path: '/analytics', label: 'Analytics', icon: <FaChartBar /> },
     { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
     { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },

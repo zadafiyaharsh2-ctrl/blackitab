@@ -1,47 +1,36 @@
-/**
- * ============================================================================
- * SIGNUP PAGE COMPONENT (Signup.jsx)
- * ============================================================================
- * 
- * Handles new user registration.
- * Similar to login, this follows a two-step process:
- * 1. Collect Details (Name, Email, Password) -> Create User & Send OTP
- * 2. Verify OTP -> Activate Account & Log In auto-magically
- */
-
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import API_URL from '../config';  // Ensure we use the centralized API URL
+import API_URL from '../config';
 
 const Signup = ({ onSignupSuccess }) => {
   const navigate = useNavigate();
+  const formRef = useRef(null);
 
-  // Local State structure
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    confirmPassword: '', // Client-side validation only
+    confirmPassword: '',
     otp: ''
   });
-  
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1);
 
-  // Handle text input changes
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
   };
 
-  /**
-   * Handle Form Submission
-   * Logic splits based on otpSent state
-   */
+  const transitionToOTP = () => {
+    setStep(0);
+    setTimeout(() => {
+      setOtpSent(true);
+      setStep(2);
+    }, 400);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -49,26 +38,17 @@ const Signup = ({ onSignupSuccess }) => {
 
     try {
       if (!otpSent) {
-        // ==========================================
-        // STEP 1: REGISTRATION
-        // ==========================================
-        
-        // Client-side Validation
         if (formData.password !== formData.confirmPassword) {
           setError('Passwords do not match');
           setLoading(false);
           return;
         }
-
         if (formData.password.length < 6) {
-          setError('Password must be at least 6 characters long');
+          setError('Password must be at least 6 characters');
           setLoading(false);
           return;
         }
 
-        console.log('Sending register request...');
-        
-        // POST request to create user
         const response = await fetch(`${API_URL}/api/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -78,41 +58,25 @@ const Signup = ({ onSignupSuccess }) => {
             password: formData.password
           }),
         });
-
         const data = await response.json();
 
         if (data.success) {
-          // Success: User created (unverified) & Email sent
-          setOtpSent(true);
-          setError('');
+          transitionToOTP();
         } else {
-          // Failure: Email exists or invalid data
           setError(data.message || 'Signup failed');
         }
       } else {
-        // ==========================================
-        // STEP 2: VERIFICATION
-        // ==========================================
         const response = await fetch(`${API_URL}/api/verify-otp`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: formData.email,
-            otp: formData.otp
-          }),
+          body: JSON.stringify({ email: formData.email, otp: formData.otp }),
         });
-
         const data = await response.json();
 
         if (data.success) {
-          // Success: User verified and logged in
           localStorage.setItem('token', data.token);
           localStorage.setItem('user', JSON.stringify(data.user));
-          
-          if (onSignupSuccess) {
-            onSignupSuccess(data.user, data.token);
-          }
-          
+          if (onSignupSuccess) onSignupSuccess(data.user, data.token);
           navigate('/dashboard');
         } else {
           setError(data.message || 'Verification failed');
@@ -126,48 +90,69 @@ const Signup = ({ onSignupSuccess }) => {
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white overflow-hidden relative selection:bg-blue-500 selection:text-white font-sans px-4 py-12">
-      
-      {/* ==================== BACKGROUND EFFECTS ==================== */}
-      {/* 1. Base Gradient */}
-      <div className="fixed inset-0 bg-gradient-to-b from-gray-900 via-black to-black z-0"></div>
-      
-      {/* 2. Animated Glow Orbs */}
-      <div className="fixed top-[-20%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[128px] pointer-events-none mix-blend-screen"></div>
-      <div className="fixed bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[128px] pointer-events-none mix-blend-screen"></div>
+  const passwordStrength = formData.password.length >= 6;
+  const passwordsMatch = formData.password === formData.confirmPassword;
+  const stepClass = step === 0 ? 'signup-step-exit' : 'signup-step-enter';
 
-      {/* 3. Grid Overlay */}
-      <div className="fixed inset-0 z-0 opacity-[0.15]" 
-           style={{ 
-             backgroundImage: 'linear-gradient(#444 1px, transparent 1px), linear-gradient(90deg, #444 1px, transparent 1px)', 
-             backgroundSize: '50px 50px' 
-           }}>
+  return (
+    <div className="signup-page">
+      {/* Ambient Background */}
+      <div className="signup-bg-base" />
+      <div className="signup-orb signup-orb--emerald" />
+      <div className="signup-orb signup-orb--violet" />
+      <div className="signup-grid-overlay" />
+
+      {/* Floating particles */}
+      <div className="signup-particles">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="signup-particle" style={{ '--i': i }} />
+        ))}
       </div>
 
-      <div className="relative z-10 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md p-8 transform transition-all duration-300 hover:shadow-3xl hover:border-blue-500/30 animate-fade-in-up opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
-        
+      {/* Card */}
+      <div className="signup-card">
+        {/* Step indicator */}
+        <div className="signup-steps-indicator">
+          <div className={`signup-step-dot ${step >= 1 ? 'active' : ''}`} />
+          <div className="signup-step-line">
+            <div className={`signup-step-line-fill ${otpSent ? 'filled' : ''}`} />
+          </div>
+          <div className={`signup-step-dot ${step === 2 ? 'active' : ''}`} />
+        </div>
+
         {/* Header */}
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-white mb-2">
+        <div className={`signup-header ${stepClass}`}>
+          <div className="signup-icon-circle">
+            {!otpSent ? (
+              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+              </svg>
+            ) : (
+              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+              </svg>
+            )}
+          </div>
+          <h2 className="signup-title">
             {otpSent ? 'Verify Email' : 'Create Account'}
           </h2>
-          <p className="text-gray-400 text-sm">
-            {otpSent ? `Enter the code sent to ${formData.email}` : 'Sign up to get started'}
+          <p className="signup-subtitle">
+            {otpSent
+              ? `We sent a code to ${formData.email}`
+              : 'Join Blackitab and start learning'}
           </p>
         </div>
-        
+
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form ref={formRef} onSubmit={handleSubmit} className={`signup-form ${stepClass}`}>
           {!otpSent ? (
-            // ====================
-            // STEP 1 UI
-            // ====================
             <>
-              {/* Name Field */}
-              <div className="space-y-2">
-                <label htmlFor="name" className="block text-sm font-semibold text-gray-300">Full Name</label>
-                <div className="relative">
+              <div className="signup-field">
+                <label htmlFor="name">Full Name</label>
+                <div className="signup-input-wrap">
+                  <svg className="signup-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                  </svg>
                   <input
                     type="text"
                     id="name"
@@ -176,18 +161,17 @@ const Signup = ({ onSignupSuccess }) => {
                     onChange={handleChange}
                     required
                     placeholder="John Doe"
-                    className="w-full px-4 py-3 pl-12 bg-gray-900/50 border-2 border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-500"
+                    autoComplete="name"
                   />
-                  <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
                 </div>
               </div>
 
-              {/* Email Field */}
-              <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-semibold text-gray-300">Email Address</label>
-                <div className="relative">
+              <div className="signup-field">
+                <label htmlFor="email">Email</label>
+                <div className="signup-input-wrap">
+                  <svg className="signup-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                  </svg>
                   <input
                     type="email"
                     id="email"
@@ -196,18 +180,17 @@ const Signup = ({ onSignupSuccess }) => {
                     onChange={handleChange}
                     required
                     placeholder="you@example.com"
-                    className="w-full px-4 py-3 pl-12 bg-gray-900/50 border-2 border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-500"
+                    autoComplete="email"
                   />
-                  <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                  </svg>
                 </div>
               </div>
 
-              {/* Password Field with Indicator */}
-              <div className="space-y-2">
-                <label htmlFor="password" className="block text-sm font-semibold text-gray-300">Password</label>
-                <div className="relative">
+              <div className="signup-field">
+                <label htmlFor="password">Password</label>
+                <div className="signup-input-wrap">
+                  <svg className="signup-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                  </svg>
                   <input
                     type="password"
                     id="password"
@@ -215,25 +198,23 @@ const Signup = ({ onSignupSuccess }) => {
                     value={formData.password}
                     onChange={handleChange}
                     required
-                    placeholder="Minimum 6 characters"
-                    className="w-full px-4 py-3 pl-12 bg-gray-900/50 border-2 border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-500"
+                    placeholder="Min 6 characters"
+                    autoComplete="new-password"
                   />
-                  <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
                 </div>
-                {/* Real-time Password Strength feedback */}
                 {formData.password && (
-                  <p className={`text-xs ${formData.password.length >= 6 ? 'text-green-400' : 'text-red-400'}`}>
-                    {formData.password.length >= 6 ? '✓ Password length is good' : `⚠ Password must be at least 6 characters (${formData.password.length}/6)`}
-                  </p>
+                  <span className={`signup-hint ${passwordStrength ? 'good' : 'warn'}`}>
+                    {passwordStrength ? '✓ Strong enough' : `${formData.password.length}/6 characters`}
+                  </span>
                 )}
               </div>
 
-              {/* Confirm Password Field with Match Indicator */}
-              <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-300">Confirm Password</label>
-                <div className="relative">
+              <div className="signup-field">
+                <label htmlFor="confirmPassword">Confirm Password</label>
+                <div className={`signup-input-wrap ${formData.confirmPassword ? (passwordsMatch ? 'match' : 'mismatch') : ''}`}>
+                  <svg className="signup-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                  </svg>
                   <input
                     type="password"
                     id="confirmPassword"
@@ -241,35 +222,24 @@ const Signup = ({ onSignupSuccess }) => {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     required
-                    placeholder="Re-enter your password"
-                    className={`w-full px-4 py-3 pl-12 bg-gray-900/50 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 placeholder-gray-500 text-white ${
-                      formData.confirmPassword && formData.password === formData.confirmPassword
-                        ? 'border-green-500/50 focus:ring-green-500 focus:border-transparent'
-                        : formData.confirmPassword && formData.password !== formData.confirmPassword
-                        ? 'border-red-500/50 focus:ring-red-500 focus:border-transparent'
-                        : 'border-gray-700 focus:ring-blue-500 focus:border-transparent'
-                    }`}
+                    placeholder="Re-enter password"
+                    autoComplete="new-password"
                   />
-                  <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
                 </div>
                 {formData.confirmPassword && (
-                  <p className={`text-xs ${
-                    formData.password === formData.confirmPassword ? 'text-green-400' : 'text-red-400'
-                  }`}>
-                    {formData.password === formData.confirmPassword ? '✓ Passwords match' : '⚠ Passwords do not match'}
-                  </p>
+                  <span className={`signup-hint ${passwordsMatch ? 'good' : 'warn'}`}>
+                    {passwordsMatch ? '✓ Passwords match' : '✗ Passwords don\'t match'}
+                  </span>
                 )}
               </div>
             </>
           ) : (
-            // ====================
-            // STEP 2 UI
-            // ====================
-            <div className="space-y-2">
-              <label htmlFor="otp" className="block text-sm font-semibold text-gray-300">Verification Code</label>
-              <div className="relative">
+            <div className="signup-field">
+              <label htmlFor="otp">Verification Code</label>
+              <div className="signup-input-wrap">
+                <svg className="signup-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                </svg>
                 <input
                   type="text"
                   id="otp"
@@ -278,44 +248,35 @@ const Signup = ({ onSignupSuccess }) => {
                   onChange={handleChange}
                   required
                   placeholder="Enter 6-digit code"
-                  className="w-full px-4 py-3 pl-12 bg-gray-900/50 border-2 border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-500 tracking-widest text-lg"
+                  className="signup-otp-input"
+                  autoFocus
                 />
-                <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
               </div>
             </div>
           )}
 
-          {/* Error Message */}
+          {/* Error */}
           {error && (
-            <div className="bg-red-500/10 border-l-4 border-red-500 text-red-400 px-4 py-3 rounded-r-lg text-sm flex items-center space-x-2 animate-pulse">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <div className="signup-error">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
               <span>{error}</span>
             </div>
           )}
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-3.5 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-blue-600/30 hover:shadow-xl flex items-center justify-center space-x-2"
-          >
+          {/* Submit */}
+          <button type="submit" disabled={loading} className="signup-btn">
             {loading ? (
               <>
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>{otpSent ? 'Verifying...' : 'Sending OTP...'}</span>
+                <div className="signup-spinner" />
+                <span>{otpSent ? 'Verifying...' : 'Creating account...'}</span>
               </>
             ) : (
               <>
-                <span>{otpSent ? 'Verify & Login' : 'Sign Up'}</span>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                <span>{otpSent ? 'Verify & Login' : 'Create Account'}</span>
+                <svg className="signup-btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </>
             )}
@@ -323,33 +284,419 @@ const Signup = ({ onSignupSuccess }) => {
         </form>
 
         {/* Footer */}
-        <div className="mt-6 text-center">
-          <p className="text-gray-400 text-sm">
+        <div className="signup-footer">
+          <p>
             Already have an account?{' '}
-            <Link
-              to="/login"
-              className="text-blue-400 font-semibold hover:text-blue-300 transition-colors underline decoration-2 underline-offset-2"
-            >
-              Login here
-            </Link>
+            <Link to="/login" className="signup-link">Sign in</Link>
           </p>
         </div>
       </div>
+
       <style>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+        .signup-page {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #000;
+          color: #fff;
+          overflow: hidden;
+          position: relative;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+          padding: 1.5rem;
         }
-        .animate-fade-in-up {
-          animation-name: fadeInUp;
-          animation-duration: 0.8s;
-          animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+        .signup-bg-base {
+          position: fixed;
+          inset: 0;
+          background: linear-gradient(to bottom, #0a0a1a, #000 40%, #050510);
+          z-index: 0;
+        }
+
+        .signup-orb {
+          position: fixed;
+          width: 600px;
+          height: 600px;
+          border-radius: 50%;
+          filter: blur(140px);
+          pointer-events: none;
+          mix-blend-mode: screen;
+          animation: signupOrbFloat 8s ease-in-out infinite alternate;
+        }
+
+        .signup-orb--emerald {
+          top: -25%;
+          left: -15%;
+          background: rgba(16, 185, 129, 0.12);
+          animation-delay: 0s;
+        }
+
+        .signup-orb--violet {
+          bottom: -25%;
+          right: -15%;
+          background: rgba(139, 92, 246, 0.12);
+          animation-delay: -4s;
+        }
+
+        @keyframes signupOrbFloat {
+          0% { transform: translate(0, 0) scale(1); }
+          100% { transform: translate(30px, -20px) scale(1.1); }
+        }
+
+        .signup-grid-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 0;
+          opacity: 0.06;
+          background-image:
+            linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+          background-size: 60px 60px;
+        }
+
+        .signup-particles {
+          position: fixed;
+          inset: 0;
+          z-index: 1;
+          pointer-events: none;
+          overflow: hidden;
+        }
+
+        .signup-particle {
+          position: absolute;
+          width: 3px;
+          height: 3px;
+          background: rgba(110, 231, 183, 0.4);
+          border-radius: 50%;
+          animation: signupParticleDrift 12s ease-in-out infinite;
+          left: calc(15% + var(--i) * 13%);
+          top: calc(20% + var(--i) * 10%);
+          animation-delay: calc(var(--i) * -2s);
+        }
+
+        @keyframes signupParticleDrift {
+          0%, 100% { transform: translate(0, 0); opacity: 0.3; }
+          25% { transform: translate(20px, -30px); opacity: 0.7; }
+          50% { transform: translate(-10px, -60px); opacity: 0.4; }
+          75% { transform: translate(15px, -20px); opacity: 0.6; }
+        }
+
+        .signup-card {
+          position: relative;
+          z-index: 10;
+          width: 100%;
+          max-width: 420px;
+          background: rgba(15, 15, 30, 0.7);
+          backdrop-filter: blur(24px) saturate(1.5);
+          -webkit-backdrop-filter: blur(24px) saturate(1.5);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 24px;
+          padding: 2.5rem;
+          box-shadow:
+            0 0 0 1px rgba(255, 255, 255, 0.03),
+            0 24px 48px rgba(0, 0, 0, 0.5),
+            0 0 80px rgba(16, 185, 129, 0.05);
+          animation: signupCardAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          opacity: 0;
+          transform: translateY(24px);
+        }
+
+        @keyframes signupCardAppear {
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .signup-steps-indicator {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 2rem;
+        }
+
+        .signup-step-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.15);
+          border: 2px solid rgba(255, 255, 255, 0.2);
+          transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+          flex-shrink: 0;
+        }
+
+        .signup-step-dot.active {
+          background: #10b981;
+          border-color: #10b981;
+          box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+        }
+
+        .signup-step-line {
+          width: 60px;
+          height: 2px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 1px;
+          overflow: hidden;
+        }
+
+        .signup-step-line-fill {
+          width: 0%;
+          height: 100%;
+          background: linear-gradient(90deg, #10b981, #8b5cf6);
+          border-radius: 1px;
+          transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .signup-step-line-fill.filled { width: 100%; }
+
+        .signup-header { text-align: center; margin-bottom: 2rem; }
+
+        .signup-icon-circle {
+          width: 56px;
+          height: 56px;
+          border-radius: 16px;
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(139, 92, 246, 0.15));
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 1rem;
+          color: #6ee7b7;
+        }
+
+        .signup-title {
+          font-size: 1.5rem;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          margin: 0 0 0.5rem;
+          background: linear-gradient(to right, #fff, #cbd5e1);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .signup-subtitle {
+          font-size: 0.875rem;
+          color: rgba(148, 163, 184, 0.8);
+          margin: 0;
+          line-height: 1.5;
+        }
+
+        .signup-step-enter {
+          animation: signupStepEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .signup-step-exit {
+          animation: signupStepExit 0.35s ease-in forwards;
+        }
+
+        @keyframes signupStepEnter {
+          from { opacity: 0; transform: translateX(20px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes signupStepExit {
+          from { opacity: 1; transform: translateX(0); }
+          to   { opacity: 0; transform: translateX(-20px); }
+        }
+
+        .signup-form {
+          display: flex;
+          flex-direction: column;
+          gap: 1.1rem;
+        }
+
+        .signup-field label {
+          display: block;
+          font-size: 0.8rem;
+          font-weight: 500;
+          color: rgba(203, 213, 225, 0.7);
+          margin-bottom: 0.5rem;
+          letter-spacing: 0.03em;
+          text-transform: uppercase;
+        }
+
+        .signup-input-wrap {
+          position: relative;
+        }
+
+        .signup-input-icon {
+          position: absolute;
+          left: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 18px;
+          height: 18px;
+          color: rgba(148, 163, 184, 0.5);
+          transition: color 0.2s;
+          pointer-events: none;
+        }
+
+        .signup-input-wrap input {
+          width: 100%;
+          padding: 0.8rem 1rem 0.8rem 2.75rem;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 12px;
+          color: #fff;
+          font-size: 0.95rem;
+          outline: none;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          box-sizing: border-box;
+        }
+
+        .signup-input-wrap input::placeholder {
+          color: rgba(148, 163, 184, 0.35);
+        }
+
+        .signup-input-wrap input:focus {
+          border-color: rgba(16, 185, 129, 0.5);
+          background: rgba(16, 185, 129, 0.05);
+          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .signup-input-wrap:focus-within .signup-input-icon {
+          color: #6ee7b7;
+        }
+
+        .signup-input-wrap.match input {
+          border-color: rgba(16, 185, 129, 0.4);
+        }
+
+        .signup-input-wrap.mismatch input {
+          border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .signup-hint {
+          display: block;
+          font-size: 0.75rem;
+          margin-top: 0.35rem;
+          padding-left: 0.25rem;
+          transition: color 0.2s;
+        }
+
+        .signup-hint.good { color: #6ee7b7; }
+        .signup-hint.warn { color: #fca5a5; }
+
+        .signup-otp-input {
+          letter-spacing: 0.3em;
+          font-size: 1.1rem !important;
+          text-align: center;
+          font-weight: 600;
+        }
+
+        .signup-error {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.75rem 1rem;
+          background: rgba(239, 68, 68, 0.08);
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          border-radius: 12px;
+          color: #fca5a5;
+          font-size: 0.85rem;
+          animation: signupErrorShake 0.4s ease-out;
+        }
+
+        @keyframes signupErrorShake {
+          0%, 100% { transform: translateX(0); }
+          20% { transform: translateX(-6px); }
+          40% { transform: translateX(6px); }
+          60% { transform: translateX(-4px); }
+          80% { transform: translateX(4px); }
+        }
+
+        .signup-btn {
+          width: 100%;
+          padding: 0.9rem 1.5rem;
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: #fff;
+          border: none;
+          border-radius: 14px;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          position: relative;
+          overflow: hidden;
+          margin-top: 0.25rem;
+        }
+
+        .signup-btn::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+          opacity: 0;
+          transition: opacity 0.3s;
+        }
+
+        .signup-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
+        }
+
+        .signup-btn:hover::before { opacity: 1; }
+
+        .signup-btn:active:not(:disabled) {
+          transform: translateY(0) scale(0.98);
+        }
+
+        .signup-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .signup-btn-arrow {
+          width: 18px;
+          height: 18px;
+          transition: transform 0.3s;
+        }
+
+        .signup-btn:hover .signup-btn-arrow {
+          transform: translateX(4px);
+        }
+
+        .signup-spinner {
+          width: 20px;
+          height: 20px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-top-color: #fff;
+          border-radius: 50%;
+          animation: signupSpin 0.6s linear infinite;
+        }
+
+        @keyframes signupSpin { to { transform: rotate(360deg); } }
+
+        .signup-footer {
+          text-align: center;
+          margin-top: 1.75rem;
+          padding-top: 1.5rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .signup-footer p {
+          font-size: 0.85rem;
+          color: rgba(148, 163, 184, 0.6);
+          margin: 0;
+        }
+
+        .signup-link {
+          color: #6ee7b7;
+          font-weight: 600;
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+
+        .signup-link:hover { color: #a7f3d0; }
+
+        @media (max-width: 480px) {
+          .signup-card {
+            padding: 2rem 1.5rem;
+            border-radius: 20px;
+          }
+          .signup-title { font-size: 1.3rem; }
         }
       `}</style>
     </div>

@@ -33,6 +33,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Social from './pages/Social';
 import AI from './pages/AI';
+import AskAI from './pages/AskAI';
 import Analytics from './pages/Analytics';
 import SchoolAnalytics from './pages/SchoolAnalytics';
 import Problems from './pages/Problems';
@@ -195,6 +196,18 @@ function App() {
               <ProtectedRoute>
                 <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                   <AI />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Ask AI - Interactive Chat */}
+          <Route
+            path="/ask-ai"
+            element={
+              <ProtectedRoute>
+                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                  <AskAI />
                 </MainLayout>
               </ProtectedRoute>
             }
