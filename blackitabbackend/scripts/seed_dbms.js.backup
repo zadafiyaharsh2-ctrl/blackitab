@@ -1,0 +1,861 @@
+/**
+ * ============================================================================
+ * DBMS DATABASE SEEDING SCRIPT
+ * ============================================================================
+ * 
+ * This script populates the database with DBMS subject, topics, and content.
+ * It's designed to be run manually to initialize or reset the DBMS data.
+ * 
+ * Usage:
+ * node seed_dbms.js
+ * 
+ * What it does:
+ * 1. Connects to MongoDB
+ * 2. Creates/finds the DBMS subject
+ * 3. Deletes existing DBMS topics and content (fresh start)
+ * 4. Inserts new topics into 'topics' collection
+ * 5. Inserts full content into 'full_data_of_topics' collection
+ * 6. Disconnects from database
+ * 
+ * Data Structure:
+ * - topicsData array contains topic objects
+ * - Each topic has: name (required), content (optional)
+ * - Topics without content: Only created in 'topics' collection
+ * - Topics with content: Created in both 'topics' and 'full_data_of_topics'
+ * 
+ * Content Block Types:
+ * - paragraph: { type: "paragraph", text: "..." }
+ * - heading: { type: "heading", text: "..." }
+ * - list: { type: "list", title: "...", items: [...] }
+ * - numbered_list: { type: "numbered_list", items: [...] }
+ * - image: { type: "image", src: "...", alt: "...", caption: "..." }
+ * 
+ * Why Separate Collections?
+ * - 'topics' collection: Lightweight, fast listing (just names and IDs)
+ * - 'full_data_of_topics': Heavy content (paragraphs, lists, images)
+ * - Improves performance when loading topic lists
+ */
+
+// Import Mongoose for database operations
+const mongoose = require('mongoose');
+
+// Import database models
+const Subject = require('./models/Subject');                    // Subject model (DBMS, OS, etc.)
+const Topic = require('./models/Topic');                        // Topic model (lightweight)
+const FullTopicData = require('./models/full_data_of_topics');  // Full content model
+
+// Load environment variables from .env file
+// This makes process.env.MONGODB_URI available
+require('dotenv').config();
+
+/**
+ * Main seeding function
+ * This async function handles the entire seeding process
+ */
+const seedDBMS = async () => {
+    try {
+        // ========================================
+        // STEP 1: CONNECT TO DATABASE
+        // ========================================
+        // Connect to MongoDB using connection string from environment variable
+        await mongoose.connect(process.env.MONGODB_URI);
+        console.log('Connected to MongoDB');
+
+        // ========================================
+        // STEP 2: CREATE OR FIND SUBJECT
+        // ========================================
+        // Check if DBMS subject already exists in database
+        // findOne returns null if not found
+        let subject = await Subject.findOne({ name: 'DBMS' });
+
+        if (!subject) {
+            // Subject doesn't exist, create new one
+            subject = new Subject({
+                name: 'DBMS',
+                description: 'Database Management System complete syllabus'
+            });
+            // Save to database and get the created document with _id
+            await subject.save();
+            console.log('Created Subject: DBMS');
+        } else {
+            // Subject already exists, use existing one
+            // This prevents duplicate subjects
+            console.log('Subject DBMS already exists');
+        }
+
+        // ========================================
+        // STEP 3: DEFINE TOPICS DATA
+        // ========================================
+        // Array of topic objects
+        // Each object has:
+        // - name: Topic title (required)
+        // - content: Array of content blocks (optional)
+        // 
+        // Topics without content will only be created in 'topics' collection
+        // Topics with content will be created in both collections
+        const topicsData = [
+            { "name": "Basics of DBMS" },
+            {
+                "name": "Introduction of DBMS",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "text": "DBMS is a software system that manages, stores, and retrieves data efficiently in a structured format."
+                    },
+                    {
+                        "type": "list",
+                        "title": "Why DBMS is Used",
+                        "items": [
+                            "Allows users to create, update, and query databases efficiently.",
+                            "Ensures data integrity, consistency, and security across multiple users and applications.",
+                            "Reduces data redundancy and inconsistency through centralized control.",
+                            "Supports concurrent data access, transaction management, and automatic backups."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "DBMS as a Bridge"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "DBMS acts as a bridge between a central database and multiple clients, including apps and users. It uses APIs to handle data requests securely and efficiently."
+                    },
+                    {
+                        "type": "image",
+                        "src": "/images/dbms/dbms-architecture.png",
+                        "alt": "DBMS Architecture - Database connected to Apps and Users through APIs",
+                        "caption": "DBMS acts as a bridge between the database and multiple clients (apps and users) through APIs"
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Problems with Traditional File-Based Systems"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "Data Redundancy: Duplicate entries across files.",
+                            "Inconsistency: Conflicting or outdated information.",
+                            "Difficult Access: Manual file search required.",
+                            "Poor Security: No control over data access.",
+                            "Single-User Access: No support for collaboration.",
+                            "No Backup/Recovery: Data loss was often permanent."
+                        ]
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "A university file-based system storing data in separate files such as Academics, Results, and Hostels often faced these problems."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Components of DBMS Applications"
+                    },
+                    {
+                        "type": "numbered_list",
+                        "items": [
+                            "Hardware – Physical devices like servers, disks, and input-output equipment used for storage and processing.",
+                            "Software – DBMS software like MySQL, Oracle, PostgreSQL, along with OS, network tools, and application software.",
+                            "Data – Operational data and metadata stored in structured or unstructured formats.",
+                            "Procedures – Rules for using DBMS such as backup, login/logout, validation, and security.",
+                            "Database Access Language – SQL, DDL, DML used to perform database operations.",
+                            "People – DBAs, developers, and end-users interacting with the system."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Types of DBMS"
+                    },
+                    {
+                        "type": "numbered_list",
+                        "items": [
+                            "Relational Database Management System (RDBMS) – Data stored in tables using SQL. Examples: MySQL, Oracle, PostgreSQL.",
+                            "NoSQL DBMS – Non-relational, scalable storage for large-scale apps. Examples: MongoDB, Cassandra, DynamoDB.",
+                            "Object-Oriented DBMS – Stores data as objects. Examples: ObjectDB, db4o.",
+                            "Hierarchical DBMS – Tree-like structure. Example: IBM IMS.",
+                            "Network DBMS – Graph-like structure enabling many-to-many relationships.",
+                            "Cloud-Based DBMS – Hosted on cloud platforms like AWS RDS, MongoDB Atlas, Google BigQuery."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Database Languages"
+                    },
+                    {
+                        "type": "numbered_list",
+                        "items": [
+                            "DDL (Data Definition Language) – CREATE, ALTER, DROP, TRUNCATE, COMMENT, RENAME.",
+                            "DML (Data Manipulation Language) – SELECT, INSERT, UPDATE, DELETE, MERGE, CALL.",
+                            "DCL (Data Control Language) – GRANT, REVOKE.",
+                            "TCL (Transaction Control Language) – COMMIT, ROLLBACK, SAVEPOINT.",
+                            "DQL (Data Query Language) – SELECT for retrieving data."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Applications of DBMS"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "Banking – Manages accounts and transactions.",
+                            "E-commerce – Tracks products, orders, and customers.",
+                            "Healthcare – Stores patient records and diagnoses.",
+                            "Education – Handles student grades and schedules.",
+                            "Social Media – Manages user profiles and interactions.",
+                            "Data Science – Supports analytics and predictions."
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "History of DBMS",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "text": "The first database management systems (DBMS) were created to handle complex data for businesses in the 1960s. These systems included Charles Bachman's Integrated Data Store (IDS) and IBM's Information Management System (IMS). Databases were first organized into tree-like structures using hierarchical and network models."
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "Edgar F. Codd popularized the relational model in the 1970s, transforming database management systems (DBMS) with the concept of arranging data in tables, or relations and utilizing SQL for queries. As a result, contemporary DBMS systems like Oracle and MySQL were established. These systems are still developing today, incorporating newer technologies like NoSQL databases to handle unstructured data."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "What is DBMS?"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "A Database Management System (DBMS) is a Software system designed to handle, store, retrieve, and work with data in databases. It ensures effective data management by serving as an interface between databases and end users. A DBMS gives users/developers the ability to create, edit, and remove databases as well as organize the environment in which data is kept in tables, records, and fields."
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "DBMS supports multiple operations, including data storage, retrieval, updating, and database management. Usually, DBMS communicates with the database using Structured Query Language (SQL). A database management system (DBMS) is primarily used to manage large amounts of data in an organized manner while maintaining data security, consistency, and integrity."
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "Two important characteristics of DBMSs are data independence, which guarantees that modifications to data structures do not impact application layers, and data abstraction, which makes database interactions simpler by shielding users from the complexity of data storage. Additionally, it provides concurrency control, which permits several users to access data concurrently and peacefully"
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Evolution of Data Storage and Processing Techniques"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "1950s and early 1960s: Magnetic tapes were developed for data storage. Data processing tasks such as payroll were automated, with data stored on tapes. Processing of data consisted of reading data from one or more tapes and writing data to a new tape. Data could also be input from punched card decks, and output to printers.",
+                            "Late 1960s and 1970s: Widespread use of hard disks in the late 1960s changed the scenario for data processing greatly, since hard disks allowed direct access to data. The position of data on disk was immaterial, since any location on disk could be accessed in just tens of milliseconds. With disks, network and hierarchical databases could be created that allowed data structures such as lists and trees to be stored on disk. Programmers could construct and manipulate these data structures. A landmark paper by Codd [1970] defined the relational model and nonprocedural ways of querying data in the relational model, and relational databases were born.",
+                            "1980s: Although academically interesting, the relational model was not used in practice initially, because of its perceived performance disadvantages; relational databases could not match the performance of existing network and hierarchical databases. That changed with System R, a groundbreaking project at IBM Research that developed techniques for the construction of an efficient relational database system. Excellent overviews of System R are provided by Astrahan et al. [1976] and Chamberlin et al. [1981]. The fully functional System R prototype led to IBM’s first relational database product, SQL/DS. At the same time, the Ingres system was being developed at the University of California at Berkeley. It led to a commercial product of the same name. Initial commercial relational database systems, such as IBM DB2, Oracle, Ingres, and DEC Rdb, played a major role in advancing techniques for efficient processing of declarative queries. By the early 1980s, relational databases had become competitive with network and hierarchical database systems even in the area of performance. Relational databases were so easy to use that they eventually replaced network and hierarchical databases; programmers using such databases were forced to deal with many low-level implementation details, and had to code their queries in a procedural fashion. Most importantly, they had to keep efficiency in mind when designing their programs, which involved a lot of effort. In contrast, in a relational database, almost all these low-level tasks are carried out automatically by the database, leaving the programmer free to work at a logical level.",
+                            "Early 1990s: The SQL language was designed primarily for decision support applications, which are query-intensive, yet the mainstay of databases in the 1980s was transaction-processing applications, which are update-intensive. Decision support and querying re-emerged as a major application area for databases. Tools for analyzing large amounts of data saw large growths in usage. Many database vendors introduced parallel database products in this period. Database vendors also began to add object-relational support to their databases.",
+                            "1990s: The major event of the 1990s was the explosive growth of the World Wide Web. Databases were deployed much more extensively than ever before. Database systems now had to support very high transaction-processing rates, as well as very high reliability and 24 × 7 availability (availability 24 hours a day, 7 days a week, meaning no downtime for scheduled maintenance activities). Database systems also had to support Web interfaces to data.",
+                            "2000s: The first half of the 2000s saw the emerging of XML and the associated query language XQuery as a new database technology. Although XML is widely used for data exchange, as well as for storing certain complex data types, relational databases still form the core of a vast majority of large-scale database applications. In this time period we have also witnessed the growth in “autonomic-computing/auto-admin” techniques for minimizing system administration effort. This period also saw a significant growth in use of open-source database systems, particularly PostgreSQL and MySQL. The latter part of the decade has seen growth in specialized databases for data analysis, in particular column-stores, which in effect store each column of a table as a separate array, and highly parallel database systems designed for analysis of very large data sets. Several novel distributed data-storage systems have been built to handle the data management requirements of very large Web sites such as Amazon, Facebook, Google, Microsoft and Yahoo!, and some of these are now offered as Web services that can be used by application developers."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Conclusion"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "The development of database management systems (DBMS) has revolutionized the organization, storage, and retrieval of data. From the first network and hierarchical models to Edgar F. Codd's ground-breaking relational model, database management systems (DBMS) have grown to be essential to the management of structured data. The use of Structure Query Language (SQL) in various industries was further increased by its ascent to become a standard language for databases. NoSQL and other contemporary database systems are paving the way for managing unstructured data today with the rise of big data, demonstrating the ongoing innovation in the data management space."
+                    }
+                ]
+            },
+            {
+                "name": "DBMS Architecture (1, 2, 3 level)",
+                "lastUpdated": "2025-10-09T00:00:00.000Z",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "text": "A DBMS architecture defines how users interact with the database to read, write, or update information. A well-designed architecture and schema (a blueprint detailing tables, fields and relationships) ensure data consistency, improve performance and keep data secure."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Types of DBMS Architecture"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "There are several types of DBMS Architecture that we use according to the usage requirements."
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "1-Tier Architecture",
+                            "2-Tier Architecture",
+                            "3-Tier Architecture"
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "1-Tier Architecture"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "In 1-Tier Architecture, the user works directly with the database on the same system. This means the client, server and database are all in one application. The user can open the application, interact with the data and perform tasks without needing a separate server or network connection."
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "A common example is Microsoft Excel. Everything from the user interface to the logic and data storage happens on the same device. The user enters data, performs calculations and saves files directly on their computer."
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "This setup is simple and easy to use, making it ideal for personal or standalone applications. It does not require a network or complex setup, which is why it's often used in small-scale or individual use cases."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Advantages of 1-Tier Architecture"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "Simple Architecture: 1-Tier Architecture is the most simple architecture to set up, as only a single machine is required to maintain it.",
+                            "Cost-Effective: No additional hardware is required for implementing 1-Tier Architecture, which makes it cost-effective.",
+                            "Easy to Implement: 1-Tier Architecture can be easily deployed and hence it is mostly used in small projects."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Disadvantages of 1-Tier Architecture"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "Limited to Single User: Only one person can use the application at a time. It’s not designed for multiple users or teamwork.",
+                            "Poor Security: Since everything is on the same machine, if someone gets access to the system, they can access both the data and the application easily.",
+                            "No Centralized Control: Data is stored locally, so there's no central database. This makes it hard to manage or back up data across multiple devices.",
+                            "Hard to Share Data: Sharing data between users is difficult because everything is stored on one computer."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "2-Tier Architecture"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "The 2-tier architecture is similar to a basic client-server model. The application at the client end directly communicates with the database on the server side. APIs like ODBC and JDBC are used for this interaction. The server side is responsible for providing query processing and transaction management functionalities."
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "On the client side, the user interfaces and application programs are run. The application on the client side establishes a connection with the server side to communicate with the DBMS. For Example: A Library Management System used in schools or small organizations is a classic example of two-tier architecture."
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "Client Layer (Tier 1): This is the user interface that library staff or users interact with. For example they might use a desktop application to search for books, issue them, or check due dates.",
+                            "Database Layer (Tier 2): The database server stores all the library records such as book details, user information and transaction logs."
+                        ]
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "The client layer sends a request (like searching for a book) to the database layer which processes it and sends back the result. This separation allows the client to focus on the user interface, while the server handles data storage and retrieval."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Advantages of 2-Tier Architecture"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "Easy to Access: 2-Tier Architecture makes easy access to the database, which makes fast retrieval.",
+                            "Scalable: We can scale the database easily, by adding clients or upgrading hardware.",
+                            "Low Cost: 2-Tier Architecture is cheaper than 3-Tier Architecture and Multi-Tier Architecture.",
+                            "Easy Deployment: 2-Tier Architecture is easier to deploy than 3-Tier Architecture.",
+                            "Simple: 2-Tier Architecture is easily understandable as well as simple because of only two components."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Disadvantages of 2-Tier Architecture"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "Limited Scalability: As the number of users increases, the system performance can slow down because the server gets overloaded with too many requests.",
+                            "Security Issues: Clients connect directly to the database, which can make the system more vulnerable to attacks or data leaks.",
+                            "Tight Coupling: The client and the server are closely linked. If the database changes, the client application often needs to be updated too.",
+                            "Difficult Maintenance: Managing updates, fixing bugs, or adding features becomes harder when the number of users or systems increases."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "3-Tier Architecture"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "In 3-Tier Architecture, there is another layer between the client and the server. The client does not directly communicate with the server. Instead, it interacts with an application server which further communicates with the database system and then the query processing and transaction management takes place. This intermediate layer acts as a medium for the exchange of partially processed data between the server and the client. This type of architecture is used in the case of large web applications."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Example: E-commerce Store"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "User: You visit an online store, search for a product and add it to your cart.",
+                            "Processing: The system checks if the product is in stock, calculates the total price and applies any discounts.",
+                            "Database: The product details, your cart and order history are stored in the database for future reference."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Advantages of 3-Tier Architecture"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "Enhanced scalability: Scalability is enhanced due to the distributed deployment of application servers. Now, individual connections need not be made between the client and server.",
+                            "Data Integrity: 3-Tier Architecture maintains Data Integrity. Since there is a middle layer between the client and the server, data corruption can be avoided/removed.",
+                            "Security: 3-Tier Architecture Improves Security. This type of model prevents direct interaction of the client with the server thereby reducing access to unauthorized data."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Disadvantages of 3-Tier Architecture"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "More Complex: 3-Tier Architecture is more complex in comparison to 2-Tier Architecture. Communication Points are also doubled in 3-Tier Architecture.",
+                            "Difficult to Interact: It becomes difficult for this sort of interaction to take place due to the presence of middle layers.",
+                            "Slower Response Time: Since the request passes through an extra layer (application server), it may take more time to get a response compared to 2-Tier systems.",
+                            "Higher Cost: Setting up and maintaining three separate layers (client, server and database) requires more hardware, software and skilled people. This makes it more expensive."
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "Difference between File System and DBMS",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "text": "A file system and a DBMS are two kinds of data management systems that are used in different capacities and possess different characteristics. A File System is a way of organizing files into groups and folders and then storing them in a storage device. It provides the media that stores data as well as enables users to perform procedures such as reading, writing, and even erasure."
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "On the other hand, DBMS is a more elaborate software application that is solely charged with the responsibility of managing large amounts of structured data. It provides functionalities such as query, index, transaction, as well as data integrity. Although the file system serves well for the purpose of data storage for applications where data is to be stored simply and does not require any great organization, DBMS is more appropriate for applications where data needs to be stored and optimized for organizational and structural needs, security, etc."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "File System"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "The file system is basically a way of arranging the files in a storage medium like a hard disk. The file system organizes the files and helps in the retrieval of files when they are required. File systems consist of different files which are grouped into directories. The directories further contain other folders and files. The file system performs basic operations like management, file naming, giving access rules, etc. Example: NTFS(New Technology File System) , EXT(Extended File System)."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "DBMS (Database Management System)"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "Database Management System is basically software that manages the collection of related data. It is used for storing data and retrieving the data effectively when it is needed. It also provides proper security measures for protecting the data from unauthorized access. In Database Management System the data can be fetched by SQL queries and relational algebra. It also provides mechanisms for data recovery and data backup. Example: Oracle, MySQL, MS SQL server."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Difference Between File System and DBMS"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "Structure: The file system is a way of arranging the files in a storage medium within a computer. DBMS is software for managing the database.",
+                            "Data Redundancy: Redundant data can be present in a file system. In DBMS there is no redundant data.",
+                            "Backup and Recovery: File System doesn't provide Inbuilt mechanism for backup and recovery of data if it is lost. DBMS provides in house tools for backup and recovery of data even if it is lost.",
+                            "Query processing: There is no efficient query processing in the file system. Efficient query processing is there in DBMS.",
+                            "Consistency: There is less data consistency in the file system. There is more data consistency because of the process of normalization in DBMS.",
+                            "Complexity: File System is less complex as compared to DBMS. DBMS has more complexity in handling as compared to the file system.",
+                            "Security Constraints: File systems provide less security in comparison to DBMS. DBMS has more security mechanisms as compared to file systems.",
+                            "Cost: File System is less expensive than DBMS. DBMS has a comparatively higher cost than a file system.",
+                            "Data Independence: There is no data independence in File System. In DBMS data independence exists, mainly of two types: Logical and Physical Data Independence.",
+                            "User Access: Only one user can access data at a time in File System. Multiple users can access data at a time in DBMS.",
+                            "Meaning: In File System, the users are not required to write procedures. In DBMS, the user has to write procedures for managing databases.",
+                            "Sharing: Data is distributed in many files in File System, so it is not easy to share data. Due to centralized nature, data sharing is easy in DBMS.",
+                            "Data Abstraction: File System gives details of storage and representation of data. DBMS hides the internal details of Database.",
+                            "Integrity Constraints: Integrity Constraints are difficult to implement in File System. Integrity constraints are easy to implement in DBMS.",
+                            "Attributes: To access data in a file, user requires attributes such as file name, file location. No such attributes are required in DBMS."
+                        ]
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "The main difference between a file system and a DBMS (Database Management System) is the way they organize and manage data."
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "File systems are used to manage files and directories, and provide basic operations for creating, deleting, renaming, and accessing files. They typically store data in a hierarchical structure, where files are organized in directories and subdirectories. File systems are simple and efficient, but they lack the ability to manage complex data relationships and ensure data consistency."
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "On the other hand, DBMS is a software system designed to manage large amounts of structured data, and provide advanced operations for storing, retrieving, and manipulating data. DBMS provides a centralized and organized way of storing data, which can be accessed and modified by multiple users or applications. DBMS offers advanced features like data validation, indexing , transactions, concurrency control , and backup and recovery mechanisms. DBMS ensures data consistency, accuracy, and integrity by enforcing data constraints, such as primary keys, foreign keys, and data types."
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "In summary, file systems are suitable for managing small amounts of unstructured data , while DBMS is designed for managing large amounts of structured data, and offers more advanced features for ensuring data integrity, security, and performance."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Conclusion"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "On balance, a File System focuses more on organizing, creating, storing, retrieving, renaming and deleting files at a storage device and mainly deals with fundamental levels of data operations. It is user-friendly and convenient for dealing with various files and directories but does not support complex data handling. In contrast, a DBMS is intended for comprehensive data storage, providing organization, efficient data access, and reliable information integrity. DBMS is appropriate for complex cases of data management, with many records that require storage, searching and updating."
+                    }
+                ]
+            },
+            {
+                "name": "Introduction of ER Model",
+                "lastUpdated": "2025-11-17T00:00:00.000Z",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "text": "The Entity-Relationship Model (ER Model) is a conceptual model for designing a database. This model represents the logical structure of a database, including entities, their attributes and relationships between them."
+                    },
+                    {
+                        "type": "list",
+                        "title": "Basic Components",
+                        "items": [
+                            "Entity: An object stored as data such as Student, Course or Company.",
+                            "Attribute: Properties that describe an entity such as StudentID, CourseName, or EmployeeEmail.",
+                            "Relationship: A connection between entities such as 'a Student enrolls in a Course'."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Components of ER Diagram"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "The graphical representation of an ER model is called an Entity-Relationship Diagram (ERD)."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "ER Model in Database Design Process"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "Gather the requirements (functional and data) by asking questions to the database users.",
+                            "Create a conceptual design using the ER model.",
+                            "Convert ERD to a logical model.",
+                            "Later move toward physical database design (indexing, storage) and external design (views)."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Why Use ER Diagrams in DBMS?"
+                    },
+                    {
+                        "type": "list",
+                        "items": [
+                            "ER diagrams easily convert into relational tables.",
+                            "They visually represent real-world objects and relationships.",
+                            "Users don't need technical DBMS knowledge to understand ERDs.",
+                            "They simplify complex data structure visualization."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Symbols Used in ER Model"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "ER models use standardized symbols to represent entities, attributes, and relationships."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "What is an Entity?"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "An Entity represents a real-world object, concept, or thing about which data is stored in a database. In relational databases, entities map to tables."
+                    },
+                    {
+                        "type": "list",
+                        "title": "Examples of Entities",
+                        "items": [
+                            "Person, Car, Employee",
+                            "Course, Event, Reservation",
+                            "Product, Document, Device"
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "What is an Entity Set?"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "An entity set is the collection of all entities of a particular entity type."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Types of Entity"
+                    },
+                    {
+                        "type": "numbered_list",
+                        "items": [
+                            "Strong Entity – Has a primary key and does not rely on another entity for identification.",
+                            "Weak Entity – Cannot be uniquely identified without a strong entity; represented by double rectangles."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Attributes in ER Model"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "Attributes define properties of an entity. Example: For Student → Roll_No, Name, DOB, Age, Phone_No."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Types of Attributes"
+                    },
+                    {
+                        "type": "numbered_list",
+                        "items": [
+                            "Key Attribute – Uniquely identifies each entity (e.g., Roll_No).",
+                            "Composite Attribute – Composed of multiple attributes (e.g., Address → City, State, Country).",
+                            "Multivalued Attribute – Has multiple values (e.g., Phone_No).",
+                            "Derived Attribute – Computed from another attribute (e.g., Age derived from DOB)."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Relationship Type and Relationship Set"
+                    },
+                    {
+                        "type": "paragraph",
+                        "text": "A relationship type describes associations between entities. A relationship set is a collection of similar relationships."
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Degree of Relationship"
+                    },
+                    {
+                        "type": "numbered_list",
+                        "items": [
+                            "Unary/Recursive Relationship – One entity participates (e.g., Person married to Person).",
+                            "Binary Relationship – Two entity sets participate (e.g., Student–Course).",
+                            "Ternary Relationship – Three entity sets participate.",
+                            "N-ary Relationship – More than three entity sets participate."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Cardinality in ER Model"
+                    },
+                    {
+                        "type": "numbered_list",
+                        "items": [
+                            "One-to-One – A person has one passport.",
+                            "One-to-Many – One department has many doctors.",
+                            "Many-to-One – Many surgeries done by one surgeon.",
+                            "Many-to-Many – Employees work on multiple projects."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "Participation Constraints"
+                    },
+                    {
+                        "type": "numbered_list",
+                        "items": [
+                            "Total Participation – Every entity must participate (double line).",
+                            "Partial Participation – Participation is optional."
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "text": "How to Draw an ER Diagram"
+                    },
+                    {
+                        "type": "numbered_list",
+                        "items": [
+                            "Identify Entities.",
+                            "Identify Relationships.",
+                            "Add Attributes.",
+                            "Define Primary Keys.",
+                            "Remove Redundancy.",
+                            "Review for clarity."
+                        ]
+                    }
+                ]
+            }
+            ,
+
+            { "name": "ER Model" },
+            { "name": "Structural Constraints of Relationships" },
+            { "name": "Generalization, Specialization, Aggregation" },
+            { "name": "Relational Model & Codd Rules" },
+            { "name": "Keys in Relational Model" },
+            { "name": "Mapping ER to Relational Model" },
+            { "name": "Strategies for Schema Design" },
+
+            { "name": "Relational Algebra" },
+            { "name": "SQL Joins (Inner, Left, Right, Full)" },
+            { "name": "Join operation vs Nested Query" },
+            { "name": "Tuple Relational Calculus" },
+            { "name": "Domain Relational Calculus" },
+
+            { "name": "Functional Dependencies" },
+            { "name": "Attribute Closure" },
+            { "name": "Armstrong's Axioms" },
+            { "name": "Canonical Cover" },
+            { "name": "Normal Forms" },
+            { "name": "Redundancy in Database" },
+            { "name": "Lossless Join & Dependency Preserving" },
+            { "name": "Denormalization in Database" },
+
+            { "name": "ACID Properties" },
+            { "name": "Types of Schedules" },
+            { "name": "Concurrency Control" },
+            { "name": "Graph Based Concurrency Control" },
+            { "name": "Multiple Granularity Locking" },
+            { "name": "Database Recovery Techniques" },
+            { "name": "Deadlock in DBMS" },
+
+            { "name": "Advanced DBMS" },
+            { "name": "Indexing in Databases" },
+            { "name": "B Tree" },
+            { "name": "B+ Tree" },
+            { "name": "Bitmap Indexing" },
+            { "name": "Inverted Index" },
+            { "name": "Clustered & Non-Clustered Indexes" },
+            { "name": "File Organization in DBMS" },
+
+            { "name": "Practice Questions" },
+            { "name": "Last Minute Notes" },
+            { "name": "DBMS Interview Questions (Set 1)" },
+            { "name": "DBMS Interview Questions (Set 2)" },
+            { "name": "GATE Previous Year Questions" }
+        ];
+
+        // ========================================
+        // STEP 4: CLEAR EXISTING DATA
+        // ========================================
+        // Delete all existing topics for this subject
+        // This ensures a fresh start and prevents duplicates
+        await Topic.deleteMany({ subjectId: subject._id });
+
+        // Delete ALL full topic data
+        // CAUTION: This clears content for ALL subjects, not just DBMS
+        // In production, should filter by topic IDs to only delete DBMS content
+        await FullTopicData.deleteMany({});
+
+        console.log('Cleared existing topics and content for DBMS');
+
+        // ========================================
+        // STEP 5: INSERT TOPICS AND CONTENT
+        // ========================================
+        // Counter for tracking how many topics were inserted
+        let insertedCount = 0;
+
+        // Loop through each topic in the topicsData array
+        for (const tData of topicsData) {
+            // ----------------------------------------
+            // 5a. Create Topic (Lightweight Entry)
+            // ----------------------------------------
+            // Create new topic document with name and subject reference
+            // This goes into 'topics' collection
+            const newTopic = new Topic({
+                name: tData.name,           // Topic name from data
+                subjectId: subject._id      // Link to DBMS subject
+            });
+
+            // Save topic to database and get saved document with _id
+            // We need the _id to link full content to this topic
+            const savedTopic = await newTopic.save();
+
+            // ----------------------------------------
+            // 5b. Create Full Content (If Exists)
+            // ----------------------------------------
+            // Only create full content entry if topic has content property
+            if (tData.content) {
+                // Create full content document
+                // This goes into 'full_data_of_topics' collection
+                const fullData = new FullTopicData({
+                    topicId: savedTopic._id,    // Link to topic we just created
+                    title: tData.name,           // Duplicate name for convenience
+                    content: tData.content,      // Array of content blocks
+                    lastUpdated: tData.lastUpdated || new Date().toISOString(),
+                    createdAt: new Date()        // Timestamp of creation
+                });
+                await Topic.deleteMany({ subjectId: subject._id });
+
+                // Delete ALL full topic data
+                // CAUTION: This clears content for ALL subjects, not just DBMS
+                // In production, should filter by topic IDs to only delete DBMS content
+                await FullTopicData.deleteMany({});
+
+                console.log('Cleared existing topics and content for DBMS');
+
+                // ========================================
+                // STEP 5: INSERT TOPICS AND CONTENT
+                // ========================================
+                // Counter for tracking how many topics were inserted
+                let insertedCount = 0;
+
+                // Loop through each topic in the topicsData array
+                for (const tData of topicsData) {
+                    // ----------------------------------------
+                    // 5a. Create Topic (Lightweight Entry)
+                    // ----------------------------------------
+                    // Create new topic document with name and subject reference
+                    // This goes into 'topics' collection
+                    const newTopic = new Topic({
+                        name: tData.name,           // Topic name from data
+                        subjectId: subject._id      // Link to DBMS subject
+                    });
+
+                    // Save topic to database and get saved document with _id
+                    // We need the _id to link full content to this topic
+                    const savedTopic = await newTopic.save();
+
+                    // ----------------------------------------
+                    // 5b. Create Full Content (If Exists)
+                    // ----------------------------------------
+                    // Only create full content entry if topic has content property
+                    if (tData.content) {
+                        // Create full content document
+                        // This goes into 'full_data_of_topics' collection
+                        const fullData = new FullTopicData({
+                            topicId: savedTopic._id,    // Link to topic we just created
+                            title: tData.name,           // Duplicate name for convenience
+                            content: tData.content,      // Array of content blocks
+                            lastUpdated: tData.lastUpdated || new Date().toISOString(),
+                            createdAt: new Date()        // Timestamp of creation
+                        });
+
+                        // Save full content to database
+                        await fullData.save();
+                    }
+                    // Note: If topic has no content, only the lightweight topic entry is created
+
+                    // Increment counter
+                    insertedCount++;
+                }
+
+                // Log success message with count
+                console.log(`Inserted ${insertedCount} topics for DBMS`);
+
+            } catch (error) {
+                // ========================================
+                // ERROR HANDLING
+                // ========================================
+                // Log any errors that occur during seeding
+                // Common errors:
+                // - Database connection failed
+                // - Duplicate key error (if unique constraint violated)
+                // - Validation error (if required fields missing)
+                console.error('Error seeding database:', error);
+            } finally {
+                // ========================================
+                // CLEANUP
+                // ========================================
+                // Always disconnect from database, whether seeding succeeded or failed
+                // This prevents hanging connections
+                mongoose.disconnect();
+                console.log('Disconnected');
+            }
+        };
+
+        // ============================================================================
+        // EXECUTE SEEDING
+        // ============================================================================
+        // Call the seeding function immediately when script is run
+        // This is an IIFE (Immediately Invoked Function Expression) pattern
+        seedDBMS();
