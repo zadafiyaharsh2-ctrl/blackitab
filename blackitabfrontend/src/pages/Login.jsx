@@ -6,23 +6,13 @@ const Login = ({ onLoginSuccess }) => {
   const navigate = useNavigate();
   const formRef = useRef(null);
 
-  const [formData, setFormData] = useState({ email: '', password: '', otp: '' });
-  const [otpSent, setOtpSent] = useState(false);
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState(1); // 1 = credentials, 2 = OTP
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
-  };
-
-  const transitionToOTP = () => {
-    setStep(0); // trigger exit animation
-    setTimeout(() => {
-      setOtpSent(true);
-      setStep(2); // trigger enter animation
-    }, 400);
   };
 
   const handleSubmit = async (e) => {
@@ -31,42 +21,20 @@ const Login = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      if (!otpSent) {
-        const response = await fetch(`${API_URL}/api/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: formData.email, password: formData.password }),
-        });
-        const data = await response.json();
+      const response = await fetch(`${API_URL}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, password: formData.password }),
+      });
+      const data = await response.json();
 
-        if (data.success) {
-          if (data.token) {
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            if (onLoginSuccess) onLoginSuccess(data.user, data.token);
-            navigate('/dashboard');
-            return;
-          }
-          transitionToOTP();
-        } else {
-          setError(data.message || 'Login failed');
-        }
+      if (data.success && data.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        if (onLoginSuccess) onLoginSuccess(data.user, data.token);
+        navigate('/dashboard');
       } else {
-        const response = await fetch(`${API_URL}/api/verify-otp`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: formData.email, otp: formData.otp }),
-        });
-        const data = await response.json();
-
-        if (data.success) {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify(data.user));
-          if (onLoginSuccess) onLoginSuccess(data.user, data.token);
-          navigate('/dashboard');
-        } else {
-          setError(data.message || 'Verification failed');
-        }
+        setError(data.message || 'Login failed');
       }
     } catch (err) {
       setError('Network error. Please check if the server is running.');
@@ -75,10 +43,6 @@ const Login = ({ onLoginSuccess }) => {
       setLoading(false);
     }
   };
-
-  const stepClass = step === 0
-    ? 'login-step-exit'
-    : 'login-step-enter';
 
   return (
     <div className="login-page">
@@ -97,101 +61,56 @@ const Login = ({ onLoginSuccess }) => {
 
       {/* Card */}
       <div className="login-card">
-        {/* Step indicator */}
-        <div className="login-steps-indicator">
-          <div className={`login-step-dot ${step >= 1 ? 'active' : ''}`} />
-          <div className="login-step-line">
-            <div className={`login-step-line-fill ${otpSent ? 'filled' : ''}`} />
-          </div>
-          <div className={`login-step-dot ${step === 2 ? 'active' : ''}`} />
-        </div>
-
         {/* Header */}
-        <div className={`login-header ${stepClass}`}>
+        <div className="login-header login-step-enter">
           <div className="login-icon-circle">
-            {!otpSent ? (
-              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-              </svg>
-            ) : (
-              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-              </svg>
-            )}
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
           </div>
-          <h2 className="login-title">
-            {otpSent ? 'Verify Identity' : 'Welcome Back'}
-          </h2>
-          <p className="login-subtitle">
-            {otpSent
-              ? `We sent a code to ${formData.email}`
-              : 'Sign in to continue to Blackitab'}
-          </p>
+          <h2 className="login-title">Welcome Back</h2>
+          <p className="login-subtitle">Sign in to continue to Blackitab</p>
         </div>
 
         {/* Form */}
-        <form ref={formRef} onSubmit={handleSubmit} className={`login-form ${stepClass}`}>
-          {!otpSent ? (
-            <>
-              <div className="login-field">
-                <label htmlFor="email">Email</label>
-                <div className="login-input-wrap">
-                  <svg className="login-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                  </svg>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    placeholder="you@example.com"
-                    autoComplete="email"
-                  />
-                </div>
-              </div>
-
-              <div className="login-field">
-                <label htmlFor="password">Password</label>
-                <div className="login-input-wrap">
-                  <svg className="login-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                  </svg>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    placeholder="Enter your password"
-                    autoComplete="current-password"
-                  />
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="login-field">
-              <label htmlFor="otp">Verification Code</label>
-              <div className="login-input-wrap">
-                <svg className="login-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                </svg>
-                <input
-                  type="text"
-                  id="otp"
-                  name="otp"
-                  value={formData.otp}
-                  onChange={handleChange}
-                  required
-                  placeholder="Enter 6-digit code"
-                  className="login-otp-input"
-                  autoFocus
-                />
-              </div>
+        <form ref={formRef} onSubmit={handleSubmit} className="login-form login-step-enter">
+          <div className="login-field">
+            <label htmlFor="email">Email</label>
+            <div className="login-input-wrap">
+              <svg className="login-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+              </svg>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder="you@example.com"
+                autoComplete="email"
+              />
             </div>
-          )}
+          </div>
+
+          <div className="login-field">
+            <label htmlFor="password">Password</label>
+            <div className="login-input-wrap">
+              <svg className="login-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder="Enter your password"
+                autoComplete="current-password"
+              />
+            </div>
+          </div>
 
           {/* Error */}
           {error && (
@@ -208,11 +127,11 @@ const Login = ({ onLoginSuccess }) => {
             {loading ? (
               <>
                 <div className="login-spinner" />
-                <span>{otpSent ? 'Verifying...' : 'Signing in...'}</span>
+                <span>Signing in...</span>
               </>
             ) : (
               <>
-                <span>{otpSent ? 'Verify & Login' : 'Sign In'}</span>
+                <span>Sign In</span>
                 <svg className="login-btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
@@ -350,51 +269,6 @@ const Login = ({ onLoginSuccess }) => {
           }
         }
 
-        /* Step indicator */
-        .login-steps-indicator {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0;
-          margin-bottom: 2rem;
-        }
-
-        .login-step-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.15);
-          border: 2px solid rgba(255, 255, 255, 0.2);
-          transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-          flex-shrink: 0;
-        }
-
-        .login-step-dot.active {
-          background: #3b82f6;
-          border-color: #3b82f6;
-          box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
-        }
-
-        .login-step-line {
-          width: 60px;
-          height: 2px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 1px;
-          overflow: hidden;
-        }
-
-        .login-step-line-fill {
-          width: 0%;
-          height: 100%;
-          background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-          border-radius: 1px;
-          transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .login-step-line-fill.filled {
-          width: 100%;
-        }
-
         /* Header */
         .login-header {
           text-align: center;
@@ -437,18 +311,9 @@ const Login = ({ onLoginSuccess }) => {
           animation: stepEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .login-step-exit {
-          animation: stepExit 0.35s ease-in forwards;
-        }
-
         @keyframes stepEnter {
           from { opacity: 0; transform: translateX(20px); }
           to   { opacity: 1; transform: translateX(0); }
-        }
-
-        @keyframes stepExit {
-          from { opacity: 1; transform: translateX(0); }
-          to   { opacity: 0; transform: translateX(-20px); }
         }
 
         /* Form fields */
@@ -509,13 +374,6 @@ const Login = ({ onLoginSuccess }) => {
 
         .login-input-wrap:focus-within .login-input-icon {
           color: #93c5fd;
-        }
-
-        .login-otp-input {
-          letter-spacing: 0.3em;
-          font-size: 1.1rem !important;
-          text-align: center;
-          font-weight: 600;
         }
 
         /* Error */

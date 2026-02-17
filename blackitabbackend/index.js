@@ -83,7 +83,6 @@ app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 app.post('/api/register', authController.register);
 app.post('/api/login', authController.login);
-app.post('/api/verify-otp', authController.verifyOTP);
 
 // --- Theory Routes (inline) ---
 

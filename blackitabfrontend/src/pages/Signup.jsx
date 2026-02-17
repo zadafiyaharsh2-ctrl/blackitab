@@ -10,25 +10,14 @@ const Signup = ({ onSignupSuccess }) => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    otp: ''
+    confirmPassword: ''
   });
-  const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState(1);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
-  };
-
-  const transitionToOTP = () => {
-    setStep(0);
-    setTimeout(() => {
-      setOtpSent(true);
-      setStep(2);
-    }, 400);
   };
 
   const handleSubmit = async (e) => {
@@ -37,50 +26,35 @@ const Signup = ({ onSignupSuccess }) => {
     setLoading(true);
 
     try {
-      if (!otpSent) {
-        if (formData.password !== formData.confirmPassword) {
-          setError('Passwords do not match');
-          setLoading(false);
-          return;
-        }
-        if (formData.password.length < 6) {
-          setError('Password must be at least 6 characters');
-          setLoading(false);
-          return;
-        }
+      if (formData.password !== formData.confirmPassword) {
+        setError('Passwords do not match');
+        setLoading(false);
+        return;
+      }
+      if (formData.password.length < 6) {
+        setError('Password must be at least 6 characters');
+        setLoading(false);
+        return;
+      }
 
-        const response = await fetch(`${API_URL}/api/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: formData.name,
-            email: formData.email,
-            password: formData.password
-          }),
-        });
-        const data = await response.json();
+      const response = await fetch(`${API_URL}/api/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password
+        }),
+      });
+      const data = await response.json();
 
-        if (data.success) {
-          transitionToOTP();
-        } else {
-          setError(data.message || 'Signup failed');
-        }
+      if (data.success && data.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        if (onSignupSuccess) onSignupSuccess(data.user, data.token);
+        navigate('/dashboard');
       } else {
-        const response = await fetch(`${API_URL}/api/verify-otp`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: formData.email, otp: formData.otp }),
-        });
-        const data = await response.json();
-
-        if (data.success) {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify(data.user));
-          if (onSignupSuccess) onSignupSuccess(data.user, data.token);
-          navigate('/dashboard');
-        } else {
-          setError(data.message || 'Verification failed');
-        }
+        setError(data.message || 'Signup failed');
       }
     } catch (err) {
       setError('Network error. Please check if the server is running.');
@@ -92,7 +66,6 @@ const Signup = ({ onSignupSuccess }) => {
 
   const passwordStrength = formData.password.length >= 6;
   const passwordsMatch = formData.password === formData.confirmPassword;
-  const stepClass = step === 0 ? 'signup-step-exit' : 'signup-step-enter';
 
   return (
     <div className="signup-page">
@@ -111,149 +84,104 @@ const Signup = ({ onSignupSuccess }) => {
 
       {/* Card */}
       <div className="signup-card">
-        {/* Step indicator */}
-        <div className="signup-steps-indicator">
-          <div className={`signup-step-dot ${step >= 1 ? 'active' : ''}`} />
-          <div className="signup-step-line">
-            <div className={`signup-step-line-fill ${otpSent ? 'filled' : ''}`} />
-          </div>
-          <div className={`signup-step-dot ${step === 2 ? 'active' : ''}`} />
-        </div>
-
         {/* Header */}
-        <div className={`signup-header ${stepClass}`}>
+        <div className="signup-header signup-step-enter">
           <div className="signup-icon-circle">
-            {!otpSent ? (
-              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
-              </svg>
-            ) : (
-              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-              </svg>
-            )}
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+            </svg>
           </div>
-          <h2 className="signup-title">
-            {otpSent ? 'Verify Email' : 'Create Account'}
-          </h2>
-          <p className="signup-subtitle">
-            {otpSent
-              ? `We sent a code to ${formData.email}`
-              : 'Join Blackitab and start learning'}
-          </p>
+          <h2 className="signup-title">Create Account</h2>
+          <p className="signup-subtitle">Join Blackitab and start learning</p>
         </div>
 
         {/* Form */}
-        <form ref={formRef} onSubmit={handleSubmit} className={`signup-form ${stepClass}`}>
-          {!otpSent ? (
-            <>
-              <div className="signup-field">
-                <label htmlFor="name">Full Name</label>
-                <div className="signup-input-wrap">
-                  <svg className="signup-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                  </svg>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    placeholder="John Doe"
-                    autoComplete="name"
-                  />
-                </div>
-              </div>
-
-              <div className="signup-field">
-                <label htmlFor="email">Email</label>
-                <div className="signup-input-wrap">
-                  <svg className="signup-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                  </svg>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    placeholder="you@example.com"
-                    autoComplete="email"
-                  />
-                </div>
-              </div>
-
-              <div className="signup-field">
-                <label htmlFor="password">Password</label>
-                <div className="signup-input-wrap">
-                  <svg className="signup-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                  </svg>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    placeholder="Min 6 characters"
-                    autoComplete="new-password"
-                  />
-                </div>
-                {formData.password && (
-                  <span className={`signup-hint ${passwordStrength ? 'good' : 'warn'}`}>
-                    {passwordStrength ? '✓ Strong enough' : `${formData.password.length}/6 characters`}
-                  </span>
-                )}
-              </div>
-
-              <div className="signup-field">
-                <label htmlFor="confirmPassword">Confirm Password</label>
-                <div className={`signup-input-wrap ${formData.confirmPassword ? (passwordsMatch ? 'match' : 'mismatch') : ''}`}>
-                  <svg className="signup-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                  </svg>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    required
-                    placeholder="Re-enter password"
-                    autoComplete="new-password"
-                  />
-                </div>
-                {formData.confirmPassword && (
-                  <span className={`signup-hint ${passwordsMatch ? 'good' : 'warn'}`}>
-                    {passwordsMatch ? '✓ Passwords match' : '✗ Passwords don\'t match'}
-                  </span>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="signup-field">
-              <label htmlFor="otp">Verification Code</label>
-              <div className="signup-input-wrap">
-                <svg className="signup-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                </svg>
-                <input
-                  type="text"
-                  id="otp"
-                  name="otp"
-                  value={formData.otp}
-                  onChange={handleChange}
-                  required
-                  placeholder="Enter 6-digit code"
-                  className="signup-otp-input"
-                  autoFocus
-                />
-              </div>
+        <form ref={formRef} onSubmit={handleSubmit} className="signup-form signup-step-enter">
+          <div className="signup-field">
+            <label htmlFor="name">Full Name</label>
+            <div className="signup-input-wrap">
+              <svg className="signup-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                placeholder="John Doe"
+                autoComplete="name"
+              />
             </div>
-          )}
+          </div>
+
+          <div className="signup-field">
+            <label htmlFor="email">Email</label>
+            <div className="signup-input-wrap">
+              <svg className="signup-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+              </svg>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder="you@example.com"
+                autoComplete="email"
+              />
+            </div>
+          </div>
+
+          <div className="signup-field">
+            <label htmlFor="password">Password</label>
+            <div className="signup-input-wrap">
+              <svg className="signup-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder="Min 6 characters"
+                autoComplete="new-password"
+              />
+            </div>
+            {formData.password && (
+              <span className={`signup-hint ${passwordStrength ? 'good' : 'warn'}`}>
+                {passwordStrength ? '✓ Strong enough' : `${formData.password.length}/6 characters`}
+              </span>
+            )}
+          </div>
+
+          <div className="signup-field">
+            <label htmlFor="confirmPassword">Confirm Password</label>
+            <div className={`signup-input-wrap ${formData.confirmPassword ? (passwordsMatch ? 'match' : 'mismatch') : ''}`}>
+              <svg className="signup-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+              </svg>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                placeholder="Re-enter password"
+                autoComplete="new-password"
+              />
+            </div>
+            {formData.confirmPassword && (
+              <span className={`signup-hint ${passwordsMatch ? 'good' : 'warn'}`}>
+                {passwordsMatch ? '✓ Passwords match' : '✗ Passwords don\'t match'}
+              </span>
+            )}
+          </div>
 
           {/* Error */}
           {error && (
@@ -270,11 +198,11 @@ const Signup = ({ onSignupSuccess }) => {
             {loading ? (
               <>
                 <div className="signup-spinner" />
-                <span>{otpSent ? 'Verifying...' : 'Creating account...'}</span>
+                <span>Creating account...</span>
               </>
             ) : (
               <>
-                <span>{otpSent ? 'Verify & Login' : 'Create Account'}</span>
+                <span>Create Account</span>
                 <svg className="signup-btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
@@ -405,46 +333,6 @@ const Signup = ({ onSignupSuccess }) => {
           to { opacity: 1; transform: translateY(0); }
         }
 
-        .signup-steps-indicator {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 2rem;
-        }
-
-        .signup-step-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.15);
-          border: 2px solid rgba(255, 255, 255, 0.2);
-          transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-          flex-shrink: 0;
-        }
-
-        .signup-step-dot.active {
-          background: #10b981;
-          border-color: #10b981;
-          box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
-        }
-
-        .signup-step-line {
-          width: 60px;
-          height: 2px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 1px;
-          overflow: hidden;
-        }
-
-        .signup-step-line-fill {
-          width: 0%;
-          height: 100%;
-          background: linear-gradient(90deg, #10b981, #8b5cf6);
-          border-radius: 1px;
-          transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .signup-step-line-fill.filled { width: 100%; }
 
         .signup-header { text-align: center; margin-bottom: 2rem; }
 
@@ -483,18 +371,9 @@ const Signup = ({ onSignupSuccess }) => {
           animation: signupStepEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .signup-step-exit {
-          animation: signupStepExit 0.35s ease-in forwards;
-        }
-
         @keyframes signupStepEnter {
           from { opacity: 0; transform: translateX(20px); }
           to   { opacity: 1; transform: translateX(0); }
-        }
-
-        @keyframes signupStepExit {
-          from { opacity: 1; transform: translateX(0); }
-          to   { opacity: 0; transform: translateX(-20px); }
         }
 
         .signup-form {
@@ -575,12 +454,7 @@ const Signup = ({ onSignupSuccess }) => {
         .signup-hint.good { color: #6ee7b7; }
         .signup-hint.warn { color: #fca5a5; }
 
-        .signup-otp-input {
-          letter-spacing: 0.3em;
-          font-size: 1.1rem !important;
-          text-align: center;
-          font-weight: 600;
-        }
+
 
         .signup-error {
           display: flex;
