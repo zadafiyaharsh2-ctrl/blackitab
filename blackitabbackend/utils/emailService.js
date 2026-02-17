@@ -1,11 +1,7 @@
 const { Resend } = require('resend');
 
 const sendOTP = async (email, otp) => {
-    console.log('------------------------------------------------');
-    console.log('📧 EMAIL SERVICE (RESEND) INITIATED');
-    console.log(`Target: ${email}`);
-
-    // Initialize Resend with API key
+    console.log(`📧 Sending OTP to ${email}`);
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     try {
@@ -28,24 +24,15 @@ const sendOTP = async (email, otp) => {
 
         if (error) {
             console.error('❌ Resend Error:', error);
-            // Fallback logging
-            console.log('\n================================================================');
-            console.log('⚠️ EMAIL FAILED - FALLBACK OTP LOG');
-            console.log(`OTP: ${otp}`);
-            console.log('================================================================\n');
+            console.log(`⚠️ EMAIL FAILED — Fallback OTP: ${otp}`);
             return false;
         }
 
-        console.log(`✅ OTP successfully sent to ${email}. ID: ${data.id}`);
+        console.log(`✅ OTP sent to ${email} (ID: ${data.id})`);
         return true;
-
     } catch (error) {
         console.error('❌ Resend Error:', error);
-        // Fallback logging
-        console.log('\n================================================================');
-        console.log('⚠️ EMAIL FAILED - FALLBACK OTP LOG');
-        console.log(`OTP: ${otp}`);
-        console.log('================================================================\n');
+        console.log(`⚠️ EMAIL FAILED — Fallback OTP: ${otp}`);
         return false;
     }
 };
