@@ -20,8 +20,7 @@ exports.register = async (req, res) => {
         const newUser = new User({
             name,
             email: email.toLowerCase(),
-            password,
-            isVerified: true
+            password
         });
 
         await newUser.save();
