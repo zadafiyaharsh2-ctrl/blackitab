@@ -22,11 +22,15 @@ const userSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now
+    default: Date.now           // Automatically set to current timestamp when user is created
   },
+
+  // ========================================
+  // OTP (ONE-TIME PASSWORD) FIELDS - REMOVED
+  // ========================================
   isVerified: {
     type: Boolean,
-    default: true
+    default: true               // Auto-verified since OTP is removed
   },
 
   // Gamification
