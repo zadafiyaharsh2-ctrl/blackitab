@@ -62,12 +62,6 @@ exports.login = async (req, res) => {
             return res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
 
-        // Auto-verify any legacy unverified accounts on login
-        if (!user.isVerified) {
-            user.isVerified = true;
-            await user.save();
-        }
-
         const token = jwt.sign(
             { userId: user._id, email: user.email },
             JWT_SECRET,
