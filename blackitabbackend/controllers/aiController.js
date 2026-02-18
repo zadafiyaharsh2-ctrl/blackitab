@@ -1,7 +1,10 @@
 const axios = require('axios');
 const AIQuestion = require('../models/AIQuestion');
 
-const LANGCHAIN_API_URL = process.env.LANGCHAIN_API_URL || 'http://localhost:8000/query';
+
+const LANGCHAIN_API_URL = process.env.LANGCHAIN_API_URL || 'http://localhost:8000';
+const ASK_URL = `${LANGCHAIN_API_URL}/query`;
+const QUIZ_URL = `${LANGCHAIN_API_URL}/quiz`;
 
 // POST /api/ai/ask — send question to LangChain API and save response
 const askQuestion = async (req, res) => {
@@ -15,7 +18,7 @@ const askQuestion = async (req, res) => {
 
         let aiResponse;
         try {
-            const response = await axios.post(LANGCHAIN_API_URL, { query: query.trim(), top_k }, { timeout: 60000 });
+            const response = await axios.post(ASK_URL, { query: query.trim(), top_k }, { timeout: 60000 });
             aiResponse = response.data;
         } catch (apiError) {
             console.error('LangChain API Error:', apiError.message);
@@ -83,5 +86,7 @@ const clearHistory = async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to clear history', error: error.message });
     }
 };
+
+
 
 module.exports = { askQuestion, getHistory, deleteQuestion, clearHistory };

@@ -56,6 +56,7 @@ import ContentDetail from './pages/ContentDetail';
 import PlaylistList from './pages/PlaylistList';
 import PlaylistDetail from './pages/PlaylistDetail';
 import Earnings from './pages/Earnings';
+import AIQuestionGenerator from './pages/AIQuestionGenerator';
 
 // ============================================================================
 // IMPORT COMPONENTS
@@ -256,6 +257,18 @@ function App() {
               <ProtectedRoute>
                 <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                   <Contest />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* AI Question Generator */}
+          <Route
+            path="/ai-questions"
+            element={
+              <ProtectedRoute>
+                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                  <AIQuestionGenerator />
                 </MainLayout>
               </ProtectedRoute>
             }

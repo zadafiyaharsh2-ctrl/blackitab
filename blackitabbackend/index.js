@@ -22,6 +22,7 @@ const postRoutes = require('./routes/postRoutes');
 const userRoutes = require('./routes/userRoutes');
 const playlistRoutes = require('./routes/playlistRoutes');
 const aiRoutes = require('./routes/aiRoutes');
+const aiQuestionRoutes = require('./routes/aiQuestionRoutes');
 
 // --- Server Setup ---
 
@@ -100,6 +101,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/playlists', playlistRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/ai-questions', aiQuestionRoutes);
 
 // --- GET /api/me — Current User (protected) ---
 

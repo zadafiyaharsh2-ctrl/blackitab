@@ -22,6 +22,7 @@ const authMiddleware = require('../middleware/auth');
 router.use(authMiddleware);
 
 // Ask a question
+// Ask a question
 router.post('/ask', aiController.askQuestion);
 
 // Get question history
