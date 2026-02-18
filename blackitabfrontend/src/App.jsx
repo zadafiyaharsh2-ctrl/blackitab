@@ -32,7 +32,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Social from './pages/Social';
-import AI from './pages/AI';
+// import AI from './pages/AI';
 import AskAI from './pages/AskAI';
 import Analytics from './pages/Analytics';
 import SchoolAnalytics from './pages/SchoolAnalytics';
@@ -191,7 +191,7 @@ function App() {
           />
 
           {/* AI Helper */}
-          <Route
+          {/* <Route
             path="/ai"
             element={
               <ProtectedRoute>
@@ -200,7 +200,7 @@ function App() {
                 </MainLayout>
               </ProtectedRoute>
             }
-          />
+          /> */}
 
           {/* Ask AI - Interactive Chat */}
           <Route
