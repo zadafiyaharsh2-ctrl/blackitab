@@ -3,7 +3,7 @@ const GeneratedQuestion = require('../models/GeneratedQuestion');
 
 const LANGCHAIN_API_URL = process.env.LANGCHAIN_API_URL || 'http://localhost:8000/query';
 
-const QUIZ_API_URL = process.env.QUIZ_API_URL || 'http://localhost:8000/quiz';
+const QUIZ_API_URL = process.env.QUIZ_API_URL || 'http://127.0.0.1:8000/query';
 
 // POST /api/ai-questions/generate — generate questions using LangChain API
 // POST /api/ai-questions/generate — generate questions using LangChain API
@@ -27,10 +27,10 @@ const generateQuestions = async (req, res) => {
                 difficulty: validDifficulty,
                 count: questionCount
             }, { timeout: 120000 }); // 2 min timeout
-            
+            console.log('AI Service Response:', response.data);
             const rawQuiz = response.data.quiz;
             quizData = typeof rawQuiz === 'string' ? JSON.parse(rawQuiz) : rawQuiz;
-
+            console.log('Parsed Quiz Data:', quizData); 
         } catch (apiError) {
             console.error('AI Service Error (quiz):', apiError.message);
             return res.status(503).json({
