@@ -17,7 +17,11 @@ const {
     getChaptersBySubject,
     getProblemsByChapter,
     getProblemById,
-    updateProblemStatus
+    updateProblemStatus,
+    getExamQuestions,
+    checkExamAnswer,
+    generateExamQuestions,
+    startAiTutor
 } = require('../controllers/problemController');
 
 // Import Auth Middleware
@@ -81,4 +85,12 @@ router.route('/:id')
 router.route('/:id/status')
     .post(protect, updateProblemStatus);
 
+
+
+router.get('/exam/:examId/questions', getExamQuestions);
+router.post('/exam/:examId/check-answer', protect, checkExamAnswer);
+// router.post('/exam/:examId/generate', protect, generateExamQuestions);
+
+
+router.post('/exam/:examId/ai-tutor', protect, startAiTutor);
 module.exports = router;

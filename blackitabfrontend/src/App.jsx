@@ -57,7 +57,7 @@ import PlaylistList from './pages/PlaylistList';
 import PlaylistDetail from './pages/PlaylistDetail';
 import Earnings from './pages/Earnings';
 import AIQuestionGenerator from './pages/AIQuestionGenerator';
-
+import ExamQuestions from './pages/ExamQuestions'
 // ============================================================================
 // IMPORT COMPONENTS
 // ============================================================================
@@ -129,69 +129,69 @@ function App() {
       {/* BrowserRouter enables URL-based routing */}
       {/* BrowserRouter enables URL-based routing */}
       <SocketContextProvider authUser={user}>
-      <BrowserRouter>
-        <Routes>
+        <BrowserRouter>
+          <Routes>
 
-          {/* ===== PUBLIC ROUTES ===== */}
-          {/* Accessible only when NOT logged in */}
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <Login onLoginSuccess={handleLoginSuccess} />
-              </PublicRoute>
-            }
-          />
+            {/* ===== PUBLIC ROUTES ===== */}
+            {/* Accessible only when NOT logged in */}
+            <Route
+              path="/login"
+              element={
+                <PublicRoute>
+                  <Login onLoginSuccess={handleLoginSuccess} />
+                </PublicRoute>
+              }
+            />
 
-          <Route
-            path="/signup"
-            element={
-              <PublicRoute>
-                <Signup onSignupSuccess={handleSignupSuccess} />
-              </PublicRoute>
-            }
-          />
+            <Route
+              path="/signup"
+              element={
+                <PublicRoute>
+                  <Signup onSignupSuccess={handleSignupSuccess} />
+                </PublicRoute>
+              }
+            />
 
-          {/* ===== LANDING PAGE ===== */}
-          <Route
-            path="/"
-            element={
-              <PublicRoute>
-                <LandingPage />
-              </PublicRoute>
-            }
-          />
+            {/* ===== LANDING PAGE ===== */}
+            <Route
+              path="/"
+              element={
+                <PublicRoute>
+                  <LandingPage />
+                </PublicRoute>
+              }
+            />
 
-          {/* ===== PROTECTED ROUTES ===== */}
-          {/* Accessible only when logged IN */}
-          {/* MainLayout adds the Sidebar structure */}
-          
-          {/* Dashboard */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <Dashboard />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* ===== PROTECTED ROUTES ===== */}
+            {/* Accessible only when logged IN */}
+            {/* MainLayout adds the Sidebar structure */}
 
-          {/* Social / Community */}
-          <Route
-            path="/social"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <Social />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Dashboard */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Dashboard />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* AI Helper */}
-          {/* <Route
+            {/* Social / Community */}
+            <Route
+              path="/social"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Social />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* AI Helper */}
+            {/* <Route
             path="/ai"
             element={
               <ProtectedRoute>
@@ -202,301 +202,312 @@ function App() {
             }
           /> */}
 
-          {/* Ask AI - Interactive Chat */}
-          <Route
-            path="/ask-ai"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <AskAI />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Ask AI - Interactive Chat */}
+            <Route
+              path="/ask-ai"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <AskAI />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Analytics */}
-          <Route
-            path="/analytics"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <Analytics />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Analytics */}
+            <Route
+              path="/analytics"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Analytics />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* School Analytics */}
-          <Route
-            path="/school-analytics"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <SchoolAnalytics />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* School Analytics */}
+            <Route
+              path="/school-analytics"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <SchoolAnalytics />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Problem Sets (Main List) */}
-          <Route
-            path="/problems"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <Problems />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Problem Sets (Main List) */}
+            <Route
+              path="/problems"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Problems />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Contest Platform */}
-          <Route
-            path="/contest"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <Contest />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Contest Platform */}
+            <Route
+              path="/contest"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Contest />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* AI Question Generator */}
-          <Route
-            path="/ai-questions"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <AIQuestionGenerator />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* AI Question Generator */}
+            <Route
+              path="/ai-questions"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <AIQuestionGenerator />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Problem Chapters for a Subject */}
-          <Route
-            path="/problems/:subjectId"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <ProblemChapters />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Problem Chapters for a Subject */}
+            <Route
+              path="/problems/:subjectId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <ProblemChapters />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Specific Problem List for a Chapter */}
-          <Route
-            path="/problems/:subjectId/chapters/:chapterId"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <ProblemList />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Specific Problem List for a Chapter */}
+            <Route
+              path="/problems/:subjectId/chapters/:chapterId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <ProblemList />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Individual Problem Detail View */}
-          <Route
-            path="/problems/view/:problemId"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <ProblemDetail />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Individual Problem Detail View */}
+            <Route
+              path="/problems/view/:problemId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <ProblemDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Theory Learning Page */}
-          <Route
-            path="/theory"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <Theory />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Theory Learning Page */}
+            <Route
+              path="/theory"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Theory />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Online Projects */}
-          <Route
-            path="/ide"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <Projects />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Online Projects */}
+            <Route
+              path="/ide"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Projects />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Store / Marketplace */}
-          <Route
-            path="/store"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <Store />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Store / Marketplace */}
+            <Route
+              path="/store"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Store />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Job Board */}
-          <Route
-            path="/jobs"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <Jobs />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Job Board */}
+            <Route
+              path="/jobs"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Jobs />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* User Profile */}
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <Profile />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile/:userId"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <Profile />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/network/:userId/:type"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <SocialListPage />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Messaging Routes */}
-          <Route
-            path="/messages"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <Messages />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/messages/:userId"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                  <Messages />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Notifications Route */}
-          <Route
-            path="/notifications"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                   <Notifications />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* User Profile */}
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Profile />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile/:userId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Profile />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/network/:userId/:type"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <SocialListPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Create Post Route */}
-          <Route
-            path="/create-post"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                   <CreatePost />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Messaging Routes */}
+            <Route
+              path="/messages"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Messages />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/messages/:userId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Messages />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Study Content Route */}
-          <Route
-            path="/study-content"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                   <StudyContent />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Notifications Route */}
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Notifications />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Playlist Routes */}
-          <Route
-            path="/playlists"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                   <PlaylistList />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/playlist/:id"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                   <PlaylistDetail />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Create Post Route */}
+            <Route
+              path="/create-post"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <CreatePost />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Individual Content Detail Route */}
-          <Route
-            path="/earnings"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                   <Earnings />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/content/:contentId"
-            element={
-              <ProtectedRoute>
-                <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                   <ContentDetail />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Study Content Route */}
+            <Route
+              path="/study-content"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <StudyContent />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Fallback Route: Redirect unknown URLs to Dashboard */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          
-        </Routes>
-      </BrowserRouter>
+            {/* Playlist Routes */}
+            <Route
+              path="/playlists"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <PlaylistList />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/playlist/:id"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <PlaylistDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Individual Content Detail Route */}
+            <Route
+              path="/earnings"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Earnings />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/content/:contentId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <ContentDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/exam/:examId" element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <ExamQuestions />
+
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+
+            />
+
+            {/* Fallback Route: Redirect unknown URLs to Dashboard */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+
+          </Routes>
+        </BrowserRouter>
       </SocketContextProvider>
     </ThemeProvider>
   );
@@ -518,7 +529,7 @@ import SocialSidebar from './components/SocialSidebar';
 
 function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
   // Determine if we are in a Social context
-  const location = useLocation(); 
+  const location = useLocation();
   const isSocial = ['/social', '/profile', '/network', '/messages', '/earnings', '/create-post', '/playlists', '/playlist', '/notifications'].some(path => location.pathname.startsWith(path));
 
   // State for Social Sidebar (independent toggle)
@@ -536,30 +547,30 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
       {/* 1. Main Sidebar - ALWAYS VISIBLE, FIXED LEFT */}
       {/* Ensure z-50 to be on top */}
       <div className="z-50">
-          <Sidebar onLogout={onLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+        <Sidebar onLogout={onLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       </div>
 
       {/* 2. Social Sidebar - RENDER ONLY IF SOCIAL, POSITIONED NEXT TO MAIN */}
       {/* Animate presence could be added here later, for now conditional rendering */}
       {isSocial && (
-        <SocialSidebar 
-            onLogout={onLogout} 
-            isOpen={socialSidebarOpen} 
-            setIsOpen={setSocialSidebarOpen} 
-            user={currentUser} 
-            leftOffset={mainSidebarWidth} // Position it right after Main Sidebar
+        <SocialSidebar
+          onLogout={onLogout}
+          isOpen={socialSidebarOpen}
+          setIsOpen={setSocialSidebarOpen}
+          user={currentUser}
+          leftOffset={mainSidebarWidth} // Position it right after Main Sidebar
         />
       )}
-      
+
       {/* 3. Main Content Area */}
       {/* Margin Left = Main Sidebar Width + (Social Sidebar Width if visible) */}
-      <div 
-          className={`flex-1 transition-all duration-300 ${location.pathname.startsWith('/messages') ? '' : 'p-6'}`}
-          style={{ 
-              marginLeft: isSocial 
-                  ? `calc(${mainSidebarWidth} + ${socialSidebarWidth})` 
-                  : mainSidebarWidth 
-          }}
+      <div
+        className={`flex-1 transition-all duration-300 ${location.pathname.startsWith('/messages') ? '' : 'p-6'}`}
+        style={{
+          marginLeft: isSocial
+            ? `calc(${mainSidebarWidth} + ${socialSidebarWidth})`
+            : mainSidebarWidth
+        }}
       >
         {children}
       </div>

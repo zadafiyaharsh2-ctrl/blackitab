@@ -1,4 +1,5 @@
 const ProblemSubject = require('../models/ProblemSubject');
+const ExamQuestion = require('../models/ExamQuestion');
 const ProblemChapter = require('../models/ProblemChapter');
 const Problem = require('../models/Problem');
 const ProblemProgress = require('../models/ProblemProgress');
@@ -151,6 +152,130 @@ exports.updateProblemStatus = async (req, res) => {
         res.status(200).json({ success: true, data: progress });
     } catch (err) {
         console.error('Error updating problem status:', err);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+
+// GET /api/problems/exam/:examId/questions
+exports.getExamQuestions = async(req, res) => {
+    try{
+        const { examId } = req.params;
+        const { subject } = req.query;
+        const filter = { exam: examId};
+        if(subject) filter.subject = subject;
+
+        const questions = await ExamQuestion.find(filter)
+        .select('-correctAnswer -explanation')
+        .sort({createdAt: -1});
+
+        res.json({success: true, data:questions});
+    }catch(err){
+        console.error('Error fetching exam Questions: ', err);
+        res.status(500).json({success: false, message: 'Server Error'});
+
+    }
+};
+
+
+
+exports.checkExamAnswer = async(req, res) => {
+    try{
+        const { questionId, selectedOption } = req.body;
+        const question = await ExamQuestion.findById(questionId);
+        if(!question){
+            return res.status(400).json({ success: false, message: 'Question not found'});
+        }
+        const isCorrect = question.correctAnswer === selectedOption;
+        res.json({
+            success: true,
+            data: isCorrect ? { correct: true, correctAnswer: question.correctAnswer} : { correct: false }
+        });
+    }catch(err){
+        console.error('Error checking answer:' ,err);
+        res.status(500).json({success: false, message: 'Server Error'});
+    }
+};
+
+
+exports.generateExamQuestions = async (req, res) => {
+    try{
+        const { examId } = req.params;
+        const { subject = 'Physics', count = 3, difficulty= 'Medium'} = req.body;
+
+        const dummyGenerated = []  /// need to repalce with api Ai
+         for (let i = 0; i < count; i++) {
+            dummyGenerated.push({
+                exam: examId, subject,
+                question: `[AI Generated] Sample ${subject} question #${i + 1} for ${examId.toUpperCase()}?`,
+                options: ['Option A', 'Option B', 'Option C', 'Option D'],
+                correctAnswer: Math.floor(Math.random() * 4),
+                difficulty, explanation: 'AI-generated dummy explanation.',
+                isAIGenerated: true
+            });
+        }
+/// up until this
+
+
+        const saved = await ExamQuestion.insertMany(dummyGenerated);
+        const safeQuestions = saved.map(q => ({
+            _id: q._id, exam: q.exam, subject: q.subject,
+            question: q.question, options: q.options,
+            difficulty: q.difficulty, isAIGenerated: q.isAIGenerated
+        }));
+        res.json({ success: true, data: safeQuestions });
+
+    }catch(err) {
+        console.error('Error generateing questions: ', err);
+        res.status(500).json({success: false, message: 'Server error'});
+    }
+};
+
+
+exports.startAiTutor = async (req, res) => {
+    try {
+        const { questionId, userAnswer, sessionHistory = [] } = req.body;
+        const question = await ExamQuestion.findById(questionId);
+        if (!question) {
+            return res.status(404).json({ success: false, message: 'Question not found' });
+        }
+
+        // Dummy AI tutor logic — replace with real AI API later
+        const step = sessionHistory.length;
+
+        let message, followUpQuestion, isResolved = false;
+
+        if (step === 0) {
+            message = `Let's break this down! The concept here involves ${question.subject}. Think about the fundamental principles.`;
+            followUpQuestion = {
+                question: `Basic concept check: Which area does this question relate to most?`,
+                options: [question.subject, 'General Knowledge', 'Language', 'History'],
+                correctAnswer: 0
+            };
+        } else if (step === 1) {
+            message = `Good thinking! Now let's go deeper. Focus on the key formula or rule that applies here.`;
+            followUpQuestion = {
+                question: `What approach would you use to solve a ${question.subject} problem like this?`,
+                options: ['Memorize the answer', 'Apply the right formula/concept', 'Guess randomly', 'Skip it'],
+                correctAnswer: 1
+            };
+        } else {
+            message = `Great job working through this! You now have a better grasp of the concept. Try the original question again with this understanding!`;
+            isResolved = true;
+            followUpQuestion = null;
+        }
+
+        res.json({
+            success: true,
+            data: {
+                message,
+                followUpQuestion,
+                isResolved,
+                history: [...sessionHistory, { step, userAnswer, aiMessage: message }]
+            }
+        });
+    } catch (err) {
+        console.error('Error in AI tutor:', err);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
