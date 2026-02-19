@@ -36,6 +36,7 @@ const Login = ({ onLoginSuccess }) => {
       } else {
         setError(data.message || 'Login failed');
       }
+
     } catch (err) {
       setError('Network error. Please check if the server is running.');
       console.error('Login error:', err);
