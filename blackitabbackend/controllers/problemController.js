@@ -232,48 +232,142 @@ exports.generateExamQuestions = async (req, res) => {
 };
 
 
+// POST /api/problems/exam/:examId/ai-tutor
+// POST /api/problems/exam/:examId/ai-tutor
 exports.startAiTutor = async (req, res) => {
     try {
         const { questionId, userAnswer, sessionHistory = [] } = req.body;
         const question = await ExamQuestion.findById(questionId);
+        
         if (!question) {
             return res.status(404).json({ success: false, message: 'Question not found' });
         }
 
-        // Dummy AI tutor logic — replace with real AI API later
         const step = sessionHistory.length;
+        const LANGCHAIN_API_URL = process.env.LANGCHAIN_API_URL || 'http://127.0.0.1:8000/query';
 
-        let message, followUpQuestion, isResolved = false;
+        // --- PROMPT ENGINEERING ---
+        let systemContext, userTask, outputFormat;
 
-        if (step === 0) {
-            message = `Let's break this down! The concept here involves ${question.subject}. Think about the fundamental principles.`;
-            followUpQuestion = {
-                question: `Basic concept check: Which area does this question relate to most?`,
-                options: [question.subject, 'General Knowledge', 'Language', 'History'],
-                correctAnswer: 0
-            };
-        } else if (step === 1) {
-            message = `Good thinking! Now let's go deeper. Focus on the key formula or rule that applies here.`;
-            followUpQuestion = {
-                question: `What approach would you use to solve a ${question.subject} problem like this?`,
-                options: ['Memorize the answer', 'Apply the right formula/concept', 'Guess randomly', 'Skip it'],
-                correctAnswer: 1
-            };
+        if (step >= 5) {
+            // FORCE THEORY EXIT
+            systemContext = `You are a world-class Expert Tutor. A student is STUCK on a Concept. They have failed multiple attempts.`;
+            userTask = `
+            Context: The student is stuck on a ${question.subject} question: "${question.question}".
+            
+            YOUR TASK:
+            1. Identify the CORE CONCEPT required to solve this.
+            2. Provide a clear, high-quality THEORY EXPLANATION (Study Text) for this concept.
+            3. Do NOT ask another question. The student needs to study now.
+            4. Make the explanation educational, easy to understand, and complete.
+            `;
+            outputFormat = `
+            Output ONLY valid JSON:
+            {
+                "action": "study_theory",
+                "message": "It seems we need to review the core concept. Here is a study guide for you:",
+                "studyText": "## Concept Name\\n\\nDetailed explanation here use Markdown...",
+                "isResolved": false
+            }
+            `;
         } else {
-            message = `Great job working through this! You now have a better grasp of the concept. Try the original question again with this understanding!`;
-            isResolved = true;
-            followUpQuestion = null;
+            // REMEDIAL QUESTION
+            systemContext = `You are a Socratic Tutor. Your goal is to help a student understand a complex problem by breaking it down into a SIMPLER, foundational step.`;
+            userTask = `
+            Context:
+            - Extension/Subject: ${question.subject}
+            - Difficulty: ${question.difficulty}
+            - Original Question: "${question.question}"
+            - Correct Answer: "${question.options[question.correctAnswer]}"
+            - Student's Wrong Answer Index: ${userAnswer}
+            
+            YOUR TASK:
+            1. Diagnose why the student might have chosen the wrong answer.
+            2. Create a NEW, SIMPLER multiple-choice question that tests the *prerequisite* knowledge for the original question.
+            3. The new question MUST be easier than the original.
+            4. Do NOT simply repeat the original question.
+            `;
+            outputFormat = `
+            Output ONLY valid JSON:
+            {
+                "action": "continue",
+                "message": "Let's take a step back. Try this simpler question to build your understanding.",
+                "followUpQuestion": {
+                    "question": "The simpler question text...",
+                    "options": ["Opt A", "Opt B", "Opt C", "Opt D"],
+                    "correctAnswer": 0
+                },
+                "isResolved": false
+            }
+            `;
         }
 
-        res.json({
-            success: true,
-            data: {
-                message,
-                followUpQuestion,
-                isResolved,
-                history: [...sessionHistory, { step, userAnswer, aiMessage: message }]
+        const prompt = `${systemContext}\n\n${userTask}\n\n${outputFormat}\n\nIMPORTANT: Return ONLY the raw JSON string. No markdown formatting.`;
+
+        // --- API CALL & ROBUST PARSING ---
+        try {
+            console.log('AI Tutor: Sending request to AI...', { step, subject: question.subject });
+            const aiRes = await axios.post(LANGCHAIN_API_URL, {
+                query: prompt,
+                top_k: 3
+            }, { timeout: 120000 }); // 2 min timeout for complex generation
+
+            let aiText = aiRes.data.answer || aiRes.data.response || '';
+            
+            if (!aiText) throw new Error('Empty response from AI');
+
+            // Robust JSON Extraction
+            const jsonStartIndex = aiText.indexOf('{');
+            const jsonEndIndex = aiText.lastIndexOf('}');
+            
+            if (jsonStartIndex === -1 || jsonEndIndex === -1) {
+                console.error('AI Tutor: Failed to find JSON in response:', aiText);
+                throw new Error('Invalid JSON format from AI');
             }
-        });
+
+            const jsonString = aiText.substring(jsonStartIndex, jsonEndIndex + 1);
+            let aiData;
+            
+            try {
+                aiData = JSON.parse(jsonString);
+            } catch (pErr) {
+                console.error('AI Tutor: JSON Parse Error:', pErr);
+                console.error('Failed JSON string:', jsonString);
+                throw new Error('JSON Parse Failed');
+            }
+
+            res.json({
+                success: true,
+                data: {
+                    ...aiData,
+                    history: [...sessionHistory, { step, userAnswer, aiData }]
+                }
+            });
+
+        } catch (aiErr) {
+            console.error('AI Tutor Service Error:', aiErr.message);
+            
+            // Generate a basic fallback response to keep the UI functional
+            res.json({
+                success: true,
+                data: {
+                    action: 'study_theory',
+                    message: 'I am having trouble generating a new question right now. However, reviewing this topic in your textbook will be very helpful!',
+                    studyText: `### Self Study Recommendation
+                    
+                    **Topic:** ${question.subject}
+                    
+                    Please review the core concepts for this topic. Focus on:
+                    - Fundamental definitions
+                    - Key formulas
+                    - Common problem types
+                    `,
+                    isResolved: false,
+                    history: [...sessionHistory]
+                }
+            });
+        }
+
     } catch (err) {
         console.error('Error in AI tutor:', err);
         res.status(500).json({ success: false, message: 'Server Error' });

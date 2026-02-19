@@ -10,8 +10,12 @@ import {
     BookOpen,
     Filter,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    BrainCircuit,
+    Book
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import API_URL from '../config';
 
 const ExamQuestions = () => {
@@ -23,6 +27,7 @@ const ExamQuestions = () => {
     const [results, setResults] = useState({});
     const [activeSubject, setActiveSubject] = useState('All');
     const [loading, setLoading] = useState(true);
+    const [analyzing, setAnalyzing] = useState(false);
     // const [generating, setGenerating] = useState(false);
     const [checkingId, setCheckingId] = useState(null);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -72,10 +77,12 @@ const ExamQuestions = () => {
         if (selected === undefined) return;
 
         const session = tutorSessions[questionId];
-        const isCorrect = selected === session.followUpQuestion.correctAnswer;
-
-        // Call tutor again with history for next step
+        
+        // Optimistic UI update or wait for server?
+        // Let's call server to get next step (or resolution)
+        
         try {
+            setAnalyzing(true); // Freeze screen effect
             const token = localStorage.getItem('token');
             const res = await axios.post(
                 `${API_URL}/api/problems/exam/${examId}/ai-tutor`,
@@ -92,17 +99,19 @@ const ExamQuestions = () => {
             }
         } catch (err) {
             console.error('Error in tutor follow-up:', err);
+        } finally {
+            setAnalyzing(false);
         }
     };
 
 
     const startTutorSession = async (questionId) => {
         try {
-            setCheckingId(questionId);
+            setAnalyzing(true); // Freeze screen effect
             const token = localStorage.getItem('token');
             const res = await axios.post(
                 `${API_URL}/api/problems/exam/${examId}/ai-tutor`,
-                { questionId },
+                { questionId, sessionHistory: [] },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             if (res.data.success) {
@@ -111,7 +120,7 @@ const ExamQuestions = () => {
         } catch (err) {
             console.error('Error starting tutor session:', err);
         } finally {
-            setCheckingId(null);
+            setAnalyzing(false);
         }
     }
 
@@ -131,9 +140,7 @@ const ExamQuestions = () => {
             if (res.data.success) {
                 setResults(prev => ({ ...prev, [questionId]: res.data.data }));
             }
-            if (!res.data.data.correct) {
-                startTutorSession(questionId);
-            }
+            // Logic removed: don't auto-start tutor on wrong answer. User must click "Get Help"
         } catch (err) {
             console.error('Error checking answer:', err);
         } finally {
@@ -184,7 +191,17 @@ const ExamQuestions = () => {
     };
 
     return (
-        <div className="max-w-5xl mx-auto px-4 py-8">
+        <div className="max-w-5xl mx-auto px-4 py-8 relative">
+            {/* Analyzing Overlay */}
+            {analyzing && (
+                <div className="fixed inset-0 z-50 bg-gray-900/80 backdrop-blur-sm flex flex-col items-center justify-center">
+                    <div className="bg-gray-800 p-8 rounded-2xl border border-purple-500/50 flex flex-col items-center max-w-sm text-center shadow-2xl shadow-purple-500/20">
+                        <Loader2 className="h-12 w-12 text-purple-400 animate-spin mb-4" />
+                        <h3 className="text-xl font-bold text-white mb-2">AI Agent Analyzing...</h3>
+                        <p className="text-gray-400">Identifying your learning gap and preparing a remedial step.</p>
+                    </div>
+                </div>
+            )}
             {/* Header */}
             <div className="mb-8">
                 <button
@@ -375,48 +392,112 @@ const ExamQuestions = () => {
                                             </div>
                                         </div>
 
+                                        {/* Action Button: Get AI Help (Manual Trigger) */}
+                                        {!results[q._id].correct && !tutorSessions[q._id] && (
+                                            <div className="mt-4 flex justify-end">
+                                                <button
+                                                    onClick={() => startTutorSession(q._id)}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg transition-all shadow-lg shadow-purple-900/20"
+                                                >
+                                                    <BrainCircuit className="h-4 w-4" />
+                                                    Stuck? Get AI Help
+                                                </button>
+                                            </div>
+                                        )}
+
                                         {/* AI Tutor Panel — only on wrong answer */}
+                                        {/* AI Tutor Panel */}
                                         {!results[q._id].correct && tutorSessions[q._id] && (
-                                            <div className="mt-3 p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <Sparkles className="h-5 w-5 text-purple-400" />
-                                                    <span className="text-purple-300 font-semibold">AI Tutor</span>
+                                            <div className="mt-4 p-5 bg-gray-900/50 border border-purple-500/30 rounded-xl relative overflow-hidden">
+                                                {/* Ambient Glow */}
+                                                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-3xl rounded-full pointer-events-none"></div>
+
+                                                <div className="flex items-center gap-2 mb-4 relative z-10">
+                                                    <div className="p-1.5 bg-purple-500/20 rounded-lg">
+                                                        <Sparkles className="h-5 w-5 text-purple-400" />
+                                                    </div>
+                                                    <span className="text-purple-300 font-bold">AI Tutor</span>
                                                 </div>
 
-                                                <p className="text-gray-300 text-sm mb-4">{tutorSessions[q._id].message}</p>
+                                                <p className="text-gray-300 text-sm mb-4 leading-relaxed">{tutorSessions[q._id].message}</p>
 
-                                                {!tutorSessions[q._id].isResolved && tutorSessions[q._id].followUpQuestion && (
-                                                    <div className="bg-gray-800/50 p-4 rounded-lg">
-                                                        <p className="text-white text-sm font-medium mb-3">
-                                                            {tutorSessions[q._id].followUpQuestion.question}
-                                                        </p>
-                                                        <div className="space-y-2">
-                                                            {tutorSessions[q._id].followUpQuestion.options.map((opt, i) => (
-                                                                <button key={i}
-                                                                    onClick={() => setFollowUpAnswers(prev => ({ ...prev, [q._id]: i }))}
-                                                                    className={`w-full text-left px-3 py-2 rounded-lg border text-sm transition-all ${followUpAnswers[q._id] === i
-                                                                        ? 'border-purple-500 bg-purple-500/20 text-white'
-                                                                        : 'border-gray-700 text-gray-400 hover:border-gray-500'
-                                                                        }`}
-                                                                >
-                                                                    {String.fromCharCode(65 + i)}. {opt}
-                                                                </button>
-                                                            ))}
+                                                {/* THEORY MODE */}
+                                                {tutorSessions[q._id].action === 'study_theory' && (
+                                                    <div className="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-4">
+                                                        <div className="flex items-center gap-2 mb-3 text-blue-400">
+                                                            <Book className="h-5 w-5" />
+                                                            <span className="font-semibold">Concept Study Required</span>
                                                         </div>
-                                                        <button
-                                                            onClick={() => handleFollowUpSubmit(q._id)}
-                                                            disabled={followUpAnswers[q._id] === undefined}
-                                                            className="mt-3 px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 text-white text-sm rounded-lg"
-                                                        >
-                                                            Submit
-                                                        </button>
+                                                        <div className="prose prose-invert prose-sm max-w-none text-gray-300">
+                                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                                {tutorSessions[q._id].studyText}
+                                                            </ReactMarkdown>
+                                                        </div>
+                                                        <div className="mt-4 flex justify-end">
+                                                            <button
+                                                                onClick={() => setTutorSessions(prev => ({ ...prev, [q._id]: undefined }))}
+                                                                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
+                                                            >
+                                                                I've Studied - Let me try again
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 )}
 
+                                                {/* REMEDIAL QUESTION MODE */}
+                                                {tutorSessions[q._id].action !== 'study_theory' && !tutorSessions[q._id].isResolved && tutorSessions[q._id].followUpQuestion && (
+                                                    <div className="bg-gray-800/80 p-5 rounded-xl border border-gray-700/50">
+                                                        <p className="text-white font-medium mb-4 text-lg">
+                                                            {tutorSessions[q._id].followUpQuestion.question}
+                                                        </p>
+                                                        <div className="space-y-3">
+                                                            {tutorSessions[q._id].followUpQuestion.options.map((opt, i) => (
+                                                                <button key={i}
+                                                                    onClick={() => setFollowUpAnswers(prev => ({ ...prev, [q._id]: i }))}
+                                                                    className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${followUpAnswers[q._id] === i
+                                                                        ? 'border-purple-500 bg-purple-500/20 text-white shadow-lg shadow-purple-900/20'
+                                                                        : 'border-gray-700 text-gray-400 hover:border-gray-600 hover:bg-gray-700/50'
+                                                                        }`}
+                                                                >
+                                                                    <div className="flex items-center gap-3">
+                                                                        <span className={`w-6 h-6 flex items-center justify-center rounded-full border text-xs ${followUpAnswers[q._id] === i ? 'border-purple-400 text-purple-300' : 'border-gray-600 text-gray-500'}`}>
+                                                                            {String.fromCharCode(65 + i)}
+                                                                        </span>
+                                                                        {opt}
+                                                                    </div>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                        <div className="mt-4 flex justify-end">
+                                                            <button
+                                                                onClick={() => handleFollowUpSubmit(q._id)}
+                                                                disabled={followUpAnswers[q._id] === undefined}
+                                                                className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-medium rounded-lg transition-all"
+                                                            >
+                                                                Submit Answer
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* RESOLVED MODE */}
                                                 {tutorSessions[q._id].isResolved && (
-                                                    <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-                                                        <CheckCircle className="h-5 w-5 text-green-400" />
-                                                        <span className="text-green-300 text-sm">You've got the concept! Try the original question again.</span>
+                                                    <div className="flex flex-col gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+                                                        <div className="flex items-center gap-2">
+                                                            <CheckCircle className="h-5 w-5 text-green-400" />
+                                                            <span className="text-green-300 font-semibold">You've got the concept!</span>
+                                                        </div>
+                                                        <p className="text-sm text-green-200/70 ml-7">
+                                                            Great work working through the basics. functionality. Now try to solve the original question again.
+                                                        </p>
+                                                        <div className="self-end mt-2">
+                                                            <button
+                                                                onClick={() => setTutorSessions(prev => ({ ...prev, [q._id]: undefined }))} // Close tutor
+                                                                className="px-3 py-1.5 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-300 border border-green-800 rounded-lg transition-colors"
+                                                            >
+                                                                Close Tutor
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
