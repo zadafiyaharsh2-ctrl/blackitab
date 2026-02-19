@@ -13,7 +13,7 @@ const StudyContentCard = ({ content }) => {
       onClick={() => navigate(`/content/${content._id}`)}
     >
       {/* Thumbnail Container */}
-      <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-900 border border-white/10 group-hover:border-white/30 transition-all">
+      <div className="relative aspect-video rounded-xl overflow-hidden bg-white dark:bg-gray-900 border border-gray-300 dark:border-white/10 group-hover:border-white/30 transition-all">
         {content.mediaType === 'video' ? (
           <video 
             src={content.mediaUrl} 
@@ -31,14 +31,14 @@ const StudyContentCard = ({ content }) => {
         
         {/* Overlays */}
         {content.mediaType === 'video' && (
-           <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded-md text-xs font-bold text-white flex items-center gap-1">
+           <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded-md text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1">
              <FaPlay size={10} /> Video
            </div>
         )}
         
         {/* Paid Content Overlay */}
         {content.contentType === 'paid-content' && (
-           <div className="absolute top-2 right-2 bg-amber-600 text-white px-2 py-1 rounded-md text-xs font-bold flex items-center gap-1 shadow-lg">
+           <div className="absolute top-2 right-2 bg-amber-600 text-gray-900 dark:text-white px-2 py-1 rounded-md text-xs font-bold flex items-center gap-1 shadow-lg">
              <FaRupeeSign size={10} /> {content.price}
            </div>
         )}
@@ -52,10 +52,10 @@ const StudyContentCard = ({ content }) => {
         </div> */}
 
         <div className="flex-1">
-          <h3 className="text-white font-bold leading-tight mb-1 line-clamp-2 group-hover:text-blue-400 transition-colors">
+          <h3 className="text-gray-900 dark:text-white font-bold leading-tight mb-1 line-clamp-2 group-hover:text-blue-400 transition-colors">
             {content.title}
           </h3>
-          <div className="text-sm text-gray-400 flex items-center gap-2">
+          <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
             {content.contentType === 'paid-content' ? (
                 <span className="text-amber-500 font-bold flex items-center gap-0.5">
                     <FaLock size={10} /> Premium
@@ -69,7 +69,7 @@ const StudyContentCard = ({ content }) => {
         </div>
         
         {/* Quick Menu (Optional) */}
-        {/* <button className="text-gray-400 hover:text-white"><FaEllipsisV /></button> */}
+        {/* <button className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white"><FaEllipsisV /></button> */}
       </div>
     </motion.div>
   );

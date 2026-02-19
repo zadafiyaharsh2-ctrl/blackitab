@@ -94,7 +94,7 @@ const Analytics = () => {
     const isNeutral = change === 0;
     
     return (
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6 hover:border-purple-500/30 transition-all duration-300 group">
+      <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6 hover:border-purple-500/30 transition-all duration-300 group">
         <div className="flex items-start justify-between mb-4">
           <div className={`p-3 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-lg group-hover:scale-110 transition-transform duration-300`}>
             <Icon className="h-6 w-6 text-purple-400" />
@@ -106,14 +106,14 @@ const Analytics = () => {
             </div>
           )}
           {isNeutral && (
-            <div className="flex items-center gap-1 text-sm font-semibold text-gray-400">
+            <div className="flex items-center gap-1 text-sm font-semibold text-gray-600 dark:text-gray-400">
               <Minus className="h-4 w-4" />
               {change}
             </div>
           )}
         </div>
-        <h3 className="text-gray-400 text-sm font-medium mb-1">{title}</h3>
-        <p className="text-3xl font-bold text-white">{value}{suffix}</p>
+        <h3 className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-1">{title}</h3>
+        <p className="text-3xl font-bold text-gray-900 dark:text-white">{value}{suffix}</p>
       </div>
     );
   };
@@ -127,11 +127,11 @@ const Analytics = () => {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl">
-              <BarChart3 className="h-8 w-8 text-white" />
+              <BarChart3 className="h-8 w-8 text-gray-900 dark:text-white" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-white">Performance Analytics</h1>
-              <p className="text-gray-400 mt-1">Track your progress and identify areas for improvement</p>
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Performance Analytics</h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">Track your progress and identify areas for improvement</p>
             </div>
           </div>
         </div>
@@ -174,23 +174,23 @@ const Analytics = () => {
           </div>
 
           {/* Weekly Activity Chart */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <BarChart3 className="h-5 w-5 text-purple-400" />
-              <h2 className="text-xl font-bold text-white">Weekly Activity</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Weekly Activity</h2>
             </div>
             
             <div className="space-y-3">
               {weeklyActivity.map((item, idx) => (
                 <div key={idx} className="flex items-center gap-3">
-                  <span className="text-sm text-gray-400 w-8">{item.day}</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400 w-8">{item.day}</span>
                   <div className="flex-1 bg-gray-700/30 rounded-full h-6 overflow-hidden">
                     <div
                       className="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full flex items-center justify-end pr-2 transition-all duration-500"
                       style={{ width: `${(item.problems / maxActivity) * 100}%` }}
                     >
                       {item.problems > 0 && (
-                        <span className="text-xs font-semibold text-white">{item.problems}</span>
+                        <span className="text-xs font-semibold text-gray-900 dark:text-white">{item.problems}</span>
                       )}
                     </div>
                   </div>
@@ -201,17 +201,17 @@ const Analytics = () => {
         </div>
 
         {/* Subject Progress */}
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6 mb-8">
+        <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6 mb-8">
           <div className="flex items-center gap-2 mb-6">
             <BookOpen className="h-5 w-5 text-purple-400" />
-            <h2 className="text-xl font-bold text-white">Subject Performance</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Subject Performance</h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {subjectProgress.map((subject, idx) => (
-              <div key={idx} className="bg-gray-700/30 rounded-lg p-5 hover:bg-gray-700/50 transition-all cursor-pointer group">
+              <div key={idx} className="bg-gray-700/30 rounded-lg p-5 hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-all cursor-pointer group">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-white group-hover:text-purple-400 transition-colors">{subject.name}</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-purple-400 transition-colors">{subject.name}</h3>
                   <span className={`text-xs px-2 py-1 rounded-full ${
                     subject.mastery === 'Advanced' ? 'bg-green-500/20 text-green-400' :
                     subject.mastery === 'Intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
@@ -224,12 +224,12 @@ const Analytics = () => {
                 <div className="relative pt-1">
                   <div className="flex mb-2 items-center justify-between">
                     <div>
-                      <span className="text-2xl font-bold text-white">{subject.progress}%</span>
+                      <span className="text-2xl font-bold text-gray-900 dark:text-white">{subject.progress}%</span>
                     </div>
                   </div>
                   <div className="overflow-hidden h-2 text-xs flex rounded-full bg-gray-600">
                     <div
-                      className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r ${subject.color} transition-all duration-500`}
+                      className={`shadow-none flex flex-col text-center whitespace-nowrap text-gray-900 dark:text-white justify-center bg-gradient-to-r ${subject.color} transition-all duration-500`}
                       style={{ width: `${subject.progress}%` }}
                     />
                   </div>
@@ -241,10 +241,10 @@ const Analytics = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Strengths */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <Award className="h-5 w-5 text-green-400" />
-              <h2 className="text-xl font-bold text-white">Your Strengths</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Your Strengths</h2>
             </div>
             
             <div className="space-y-3">
@@ -258,10 +258,10 @@ const Analytics = () => {
           </div>
 
           {/* Weaknesses */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <Brain className="h-5 w-5 text-red-400" />
-              <h2 className="text-xl font-bold text-white">Areas to Improve</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Areas to Improve</h2>
             </div>
             
             <div className="space-y-3">
@@ -279,15 +279,15 @@ const Analytics = () => {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+        <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-6">
             <Code className="h-5 w-5 text-purple-400" />
-            <h2 className="text-xl font-bold text-white">Recent Activity</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Recent Activity</h2>
           </div>
           
           <div className="space-y-4">
             {recentActivity.map((activity, idx) => (
-              <div key={idx} className="flex items-center gap-4 p-4 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all cursor-pointer group">
+              <div key={idx} className="flex items-center gap-4 p-4 bg-gray-700/30 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-all cursor-pointer group">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                   activity.type === 'completed' ? 'bg-green-500/20' : 'bg-yellow-500/20'
                 }`}>
@@ -299,11 +299,11 @@ const Analytics = () => {
                 </div>
                 
                 <div className="flex-1">
-                  <h3 className="font-semibold text-white group-hover:text-purple-400 transition-colors">
+                  <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-purple-400 transition-colors">
                     {activity.title}
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-sm text-gray-400">{activity.time}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{activity.time}</span>
                     <span className="text-gray-600">•</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
                       activity.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' :
@@ -322,42 +322,42 @@ const Analytics = () => {
         {/* Learning Velocity & Peak Study Hours */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Learning Velocity */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <Activity className="h-5 w-5 text-purple-400" />
-              <h2 className="text-xl font-bold text-white">Learning Velocity</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Learning Velocity</h2>
               <span className="ml-auto text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-full">Trending Up</span>
             </div>
             
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Last 7 days</span>
-                <span className="text-2xl font-bold text-white">83 problems</span>
+                <span className="text-gray-600 dark:text-gray-400">Last 7 days</span>
+                <span className="text-2xl font-bold text-gray-900 dark:text-white">83 problems</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Last 30 days</span>
-                <span className="text-2xl font-bold text-white">312 problems</span>
+                <span className="text-gray-600 dark:text-gray-400">Last 30 days</span>
+                <span className="text-2xl font-bold text-gray-900 dark:text-white">312 problems</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Average per day</span>
-                <span className="text-2xl font-bold text-white">10.4 problems</span>
+                <span className="text-gray-600 dark:text-gray-400">Average per day</span>
+                <span className="text-2xl font-bold text-gray-900 dark:text-white">10.4 problems</span>
               </div>
               
-              <div className="mt-6 pt-4 border-t border-gray-700">
+              <div className="mt-6 pt-4 border-t border-gray-300 dark:border-gray-700">
                 <div className="flex items-center gap-2 text-sm">
                   <TrendingUp className="h-4 w-4 text-green-400" />
                   <span className="text-green-400 font-semibold">+23% from last month</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-1">You're accelerating! Keep up the momentum.</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">You're accelerating! Keep up the momentum.</p>
               </div>
             </div>
           </div>
 
           {/* Peak Study Hours */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <CalendarDays className="h-5 w-5 text-purple-400" />
-              <h2 className="text-xl font-bold text-white">Peak Study Hours</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Peak Study Hours</h2>
             </div>
             
             <div className="space-y-3">
@@ -369,8 +369,8 @@ const Analytics = () => {
               ].map((slot, idx) => (
                 <div key={idx}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-gray-400">{slot.time}</span>
-                    <span className="text-sm font-semibold text-white">{slot.problems} problems</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{slot.time}</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{slot.problems} problems</span>
                   </div>
                   <div className="bg-gray-700/30 rounded-full h-2 overflow-hidden">
                     <div
@@ -394,91 +394,91 @@ const Analytics = () => {
         {/* Global Rankings & Monthly Summary */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Global Rankings */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <Trophy className="h-5 w-5 text-yellow-400" />
-              <h2 className="text-xl font-bold text-white">Global Rankings</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Global Rankings</h2>
             </div>
             
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-lg">
                 <div>
-                  <p className="text-sm text-gray-400">Overall Rank</p>
-                  <p className="text-3xl font-bold text-white">#1,234</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Overall Rank</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">#1,234</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-gray-400">Top</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Top</p>
                   <p className="text-2xl font-bold text-yellow-400">8%</p>
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 bg-gray-700/30 rounded-lg">
-                  <p className="text-xs text-gray-400 mb-1">Country Rank</p>
-                  <p className="text-xl font-bold text-white">#89</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Country Rank</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">#89</p>
                 </div>
                 <div className="p-3 bg-gray-700/30 rounded-lg">
-                  <p className="text-xs text-gray-400 mb-1">Institution Rank</p>
-                  <p className="text-xl font-bold text-white">#12</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Institution Rank</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">#12</p>
                 </div>
               </div>
               
               <div className="flex items-center gap-2 text-sm pt-2">
                 <Users className="h-4 w-4 text-purple-400" />
-                <span className="text-gray-400">Ahead of <span className="text-white font-semibold">14,523</span> users</span>
+                <span className="text-gray-600 dark:text-gray-400">Ahead of <span className="text-gray-900 dark:text-white font-semibold">14,523</span> users</span>
               </div>
             </div>
           </div>
 
           {/* Monthly Summary */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <CalendarDays className="h-5 w-5 text-purple-400" />
-              <h2 className="text-xl font-bold text-white">This Month Summary</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">This Month Summary</h2>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle className="h-4 w-4 text-green-400" />
-                  <span className="text-xs text-gray-400">Completed</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Completed</span>
                 </div>
-                <p className="text-2xl font-bold text-white">312</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">312</p>
               </div>
               
               <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Code className="h-4 w-4 text-yellow-400" />
-                  <span className="text-xs text-gray-400">Attempted</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Attempted</span>
                 </div>
-                <p className="text-2xl font-bold text-white">45</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">45</p>
               </div>
               
               <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Clock className="h-4 w-4 text-purple-400" />
-                  <span className="text-xs text-gray-400">Study Hours</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Study Hours</span>
                 </div>
-                <p className="text-2xl font-bold text-white">186h</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">186h</p>
               </div>
               
               <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Award className="h-4 w-4 text-blue-400" />
-                  <span className="text-xs text-gray-400">Achievements</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Achievements</span>
                 </div>
-                <p className="text-2xl font-bold text-white">8</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">8</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Skill Progression Tracker */}
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6 mb-8">
+        <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6 mb-8">
           <div className="flex items-center gap-2 mb-6">
             <TrendingUp className="h-5 w-5 text-purple-400" />
-            <h2 className="text-xl font-bold text-white">Skill Progression Tracker</h2>
-            <span className="ml-auto text-xs text-gray-400">Last 6 months</span>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Skill Progression Tracker</h2>
+            <span className="ml-auto text-xs text-gray-600 dark:text-gray-400">Last 6 months</span>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -490,7 +490,7 @@ const Analytics = () => {
               { skill: 'Greedy', level: 'Intermediate', progress: 62, color: 'pink' },
               { skill: 'Backtrack', level: 'Beginner', progress: 42, color: 'teal' }
             ].map((skill, idx) => (
-              <div key={idx} className="bg-gray-700/30 rounded-lg p-4 text-center hover:bg-gray-700/50 transition-all cursor-pointer group">
+              <div key={idx} className="bg-gray-700/30 rounded-lg p-4 text-center hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-all cursor-pointer group">
                 <div className="relative w-16 h-16 mx-auto mb-3">
                   <svg className="transform -rotate-90 w-16 h-16">
                     <circle
@@ -515,10 +515,10 @@ const Analytics = () => {
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-sm font-bold text-white">{skill.progress}%</span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">{skill.progress}%</span>
                   </div>
                 </div>
-                <h3 className="font-semibold text-white text-sm mb-1 group-hover:text-purple-400 transition-colors">{skill.skill}</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-1 group-hover:text-purple-400 transition-colors">{skill.skill}</h3>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${
                   skill.level === 'Expert' ? 'bg-purple-500/20 text-purple-400' :
                   skill.level === 'Advanced' ? 'bg-blue-500/20 text-blue-400' :
@@ -536,60 +536,60 @@ const Analytics = () => {
         <div className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-6">
             <Lightbulb className="h-6 w-6 text-yellow-400" />
-            <h2 className="text-2xl font-bold text-white">AI-Powered Insights & Recommendations</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">AI-Powered Insights & Recommendations</h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-5 border border-gray-700">
+            <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg p-5 border border-gray-300 dark:border-gray-700">
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-green-500/20 rounded-lg">
                   <TrendingUp className="h-5 w-5 text-green-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white mb-2">Strength to Leverage</h3>
-                  <p className="text-sm text-gray-300 leading-relaxed">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Strength to Leverage</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                     Your mastery in <span className="text-green-400 font-semibold">Dynamic Programming</span> is exceptional. Consider tackling harder problems to maintain momentum and teaching others to reinforce your knowledge.
                   </p>
                 </div>
               </div>
             </div>
             
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-5 border border-gray-700">
+            <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg p-5 border border-gray-300 dark:border-gray-700">
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-red-500/20 rounded-lg">
                   <Target className="h-5 w-5 text-red-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white mb-2">Focus Area</h3>
-                  <p className="text-sm text-gray-300 leading-relaxed">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Focus Area</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                     <span className="text-red-400 font-semibold">Graph Algorithms</span> need attention. Dedicate 30 minutes daily to BFS/DFS problems. You're 67% more likely to succeed with consistent practice.
                   </p>
                 </div>
               </div>
             </div>
             
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-5 border border-gray-700">
+            <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg p-5 border border-gray-300 dark:border-gray-700">
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-blue-500/20 rounded-lg">
                   <Sparkles className="h-5 w-5 text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white mb-2">Optimal Study Time</h3>
-                  <p className="text-sm text-gray-300 leading-relaxed">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Optimal Study Time</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                     Based on your patterns, you perform <span className="text-blue-400 font-semibold">34% better</span> between 8-11 PM. Schedule challenging problems during this peak productivity window.
                   </p>
                 </div>
               </div>
             </div>
             
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-5 border border-gray-700">
+            <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg p-5 border border-gray-300 dark:border-gray-700">
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-purple-500/20 rounded-lg">
                   <Trophy className="h-5 w-5 text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white mb-2">Next Milestone</h3>
-                  <p className="text-sm text-gray-300 leading-relaxed">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Next Milestone</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                     You're <span className="text-purple-400 font-semibold">23 problems away</span> from reaching the top 5% globally. Maintain your current pace to achieve this in 2 weeks.
                   </p>
                 </div>
@@ -601,10 +601,10 @@ const Analytics = () => {
         {/* Difficulty Distribution & Topic Performance */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Difficulty Distribution */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <PieChart className="h-5 w-5 text-purple-400" />
-              <h2 className="text-xl font-bold text-white">Difficulty Distribution</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Difficulty Distribution</h2>
             </div>
             
             <div className="space-y-4">
@@ -617,11 +617,11 @@ const Analytics = () => {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <div className={`w-3 h-3 rounded-full bg-${item.color}-500`} />
-                      <span className="text-gray-300 font-medium">{item.difficulty}</span>
+                      <span className="text-gray-700 dark:text-gray-300 font-medium">{item.difficulty}</span>
                     </div>
                     <div className="text-right">
-                      <span className="text-white font-bold">{item.count}</span>
-                      <span className="text-gray-400 text-sm ml-2">({item.percentage}%)</span>
+                      <span className="text-gray-900 dark:text-white font-bold">{item.count}</span>
+                      <span className="text-gray-600 dark:text-gray-400 text-sm ml-2">({item.percentage}%)</span>
                     </div>
                   </div>
                   <div className="bg-gray-700/30 rounded-full h-2 overflow-hidden">
@@ -636,17 +636,17 @@ const Analytics = () => {
             
             <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-lg">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-300">Total Problems Solved</span>
-                <span className="text-2xl font-bold text-white">127</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">Total Problems Solved</span>
+                <span className="text-2xl font-bold text-gray-900 dark:text-white">127</span>
               </div>
             </div>
           </div>
 
           {/* Topic-Wise Performance */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <BookOpen className="h-5 w-5 text-purple-400" />
-              <h2 className="text-xl font-bold text-white">Top Performing Topics</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Top Performing Topics</h2>
             </div>
             
             <div className="space-y-3">
@@ -656,9 +656,9 @@ const Analytics = () => {
                 { topic: 'Trees & Graphs', solved: 32, total: 40, accuracy: 85 },
                 { topic: 'Hash Tables', solved: 22, total: 25, accuracy: 92 }
               ].map((topic, idx) => (
-                <div key={idx} className="p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all">
+                <div key={idx} className="p-3 bg-gray-700/30 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-all">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-white font-semibold text-sm">{topic.topic}</span>
+                    <span className="text-gray-900 dark:text-white font-semibold text-sm">{topic.topic}</span>
                     <span className="text-xs px-2 py-1 bg-purple-500/20 text-purple-400 rounded-full">
                       {topic.accuracy}% accuracy
                     </span>
@@ -670,7 +670,7 @@ const Analytics = () => {
                         style={{ width: `${(topic.solved / topic.total) * 100}%` }}
                       />
                     </div>
-                    <span className="text-xs text-gray-400 whitespace-nowrap">
+                    <span className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
                       {topic.solved}/{topic.total}
                     </span>
                   </div>
@@ -681,10 +681,10 @@ const Analytics = () => {
         </div>
 
         {/* Achievements & Badges */}
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6 mb-8">
+        <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6 mb-8">
           <div className="flex items-center gap-2 mb-6">
             <Medal className="h-5 w-5 text-yellow-400" />
-            <h2 className="text-xl font-bold text-white">Achievements & Badges</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Achievements & Badges</h2>
             <span className="ml-auto text-xs px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full">
               12 Unlocked
             </span>
@@ -716,7 +716,7 @@ const Analytics = () => {
                   }`}>
                     <Icon className={`h-6 w-6 ${badge.unlocked ? 'text-' + badge.color + '-400' : 'text-gray-500'}`} />
                   </div>
-                  <p className={`text-xs font-semibold ${badge.unlocked ? 'text-white' : 'text-gray-500'}`}>
+                  <p className={`text-xs font-semibold ${badge.unlocked ? 'text-gray-900 dark:text-white' : 'text-gray-500'}`}>
                     {badge.name}
                   </p>
                 </div>
@@ -728,40 +728,40 @@ const Analytics = () => {
         {/* Peer Comparison & Solving Speed */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Peer Comparison */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <Users className="h-5 w-5 text-purple-400" />
-              <h2 className="text-xl font-bold text-white">Peer Comparison</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Peer Comparison</h2>
             </div>
             
             <div className="space-y-4">
               <div className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-300">vs Average User</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">vs Average User</span>
                   <div className="flex items-center gap-1 text-green-400 font-semibold">
                     <ArrowUp className="h-4 w-4" />
                     <span>+47%</span>
                   </div>
                 </div>
-                <p className="text-xs text-gray-400">You solve 47% more problems than the average user</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">You solve 47% more problems than the average user</p>
               </div>
               
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Your Accuracy</span>
-                  <span className="text-white font-bold">87.5%</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Your Accuracy</span>
+                  <span className="text-gray-900 dark:text-white font-bold">87.5%</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Peer Average</span>
-                  <span className="text-gray-300">73.2%</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Peer Average</span>
+                  <span className="text-gray-700 dark:text-gray-300">73.2%</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Top 10% Threshold</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Top 10% Threshold</span>
                   <span className="text-yellow-400 font-semibold">92.0%</span>
                 </div>
               </div>
               
-              <div className="pt-4 border-t border-gray-700">
+              <div className="pt-4 border-t border-gray-300 dark:border-gray-700">
                 <p className="text-xs text-green-400 font-semibold">
                   <TrendingUp className="h-3 w-3 inline mr-1" />
                   You're in the top 15% of all users globally!
@@ -771,10 +771,10 @@ const Analytics = () => {
           </div>
 
           {/* Solving Speed */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <Timer className="h-5 w-5 text-purple-400" />
-              <h2 className="text-xl font-bold text-white">Solving Speed Metrics</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Solving Speed Metrics</h2>
             </div>
             
             <div className="space-y-4">
@@ -790,12 +790,12 @@ const Analytics = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-3 mt-3">
                     <div>
-                      <p className="text-xs text-gray-400">Avg Time</p>
-                      <p className="text-lg font-bold text-white">{item.avgTime}</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Avg Time</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">{item.avgTime}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-400">Best Time</p>
-                      <p className="text-lg font-bold text-white">{item.best}</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Best Time</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">{item.best}</p>
                     </div>
                   </div>
                 </div>
@@ -807,10 +807,10 @@ const Analytics = () => {
         {/* Consistency Score & Study Recommendations */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Consistency Score */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <Gauge className="h-5 w-5 text-purple-400" />
-              <h2 className="text-xl font-bold text-white">Consistency Score</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Consistency Score</h2>
             </div>
             
             <div className="flex items-center justify-center mb-6">
@@ -838,48 +838,48 @@ const Analytics = () => {
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-4xl font-bold text-white">82</span>
-                  <span className="text-sm text-gray-400">out of 100</span>
+                  <span className="text-4xl font-bold text-gray-900 dark:text-white">82</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">out of 100</span>
                 </div>
               </div>
             </div>
             
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
-                <span className="text-sm text-gray-400">Daily Activity</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">Daily Activity</span>
                 <div className="flex items-center gap-2">
                   <div className="w-24 bg-gray-600 rounded-full h-2">
                     <div className="bg-green-500 h-full rounded-full" style={{ width: '90%' }} />
                   </div>
-                  <span className="text-xs text-white font-semibold">90%</span>
+                  <span className="text-xs text-gray-900 dark:text-white font-semibold">90%</span>
                 </div>
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
-                <span className="text-sm text-gray-400">Weekly Goals</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">Weekly Goals</span>
                 <div className="flex items-center gap-2">
                   <div className="w-24 bg-gray-600 rounded-full h-2">
                     <div className="bg-yellow-500 h-full rounded-full" style={{ width: '75%' }} />
                   </div>
-                  <span className="text-xs text-white font-semibold">75%</span>
+                  <span className="text-xs text-gray-900 dark:text-white font-semibold">75%</span>
                 </div>
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
-                <span className="text-sm text-gray-400">Study Routine</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">Study Routine</span>
                 <div className="flex items-center gap-2">
                   <div className="w-24 bg-gray-600 rounded-full h-2">
                     <div className="bg-purple-500 h-full rounded-full" style={{ width: '85%' }} />
                   </div>
-                  <span className="text-xs text-white font-semibold">85%</span>
+                  <span className="text-xs text-gray-900 dark:text-white font-semibold">85%</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Quick Win Suggestions */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <Gift className="h-5 w-5 text-purple-400" />
-              <h2 className="text-xl font-bold text-white">Quick Win Suggestions</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Quick Win Suggestions</h2>
             </div>
             
             <div className="space-y-3">
@@ -915,14 +915,14 @@ const Analytics = () => {
               ].map((suggestion, idx) => {
                 const Icon = suggestion.icon;
                 return (
-                  <div key={idx} className="p-4 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all cursor-pointer group">
+                  <div key={idx} className="p-4 bg-gray-700/30 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-all cursor-pointer group">
                     <div className="flex items-start gap-3">
                       <div className={`p-2 bg-${suggestion.color}-500/20 rounded-lg group-hover:scale-110 transition-transform`}>
                         <Icon className={`h-4 w-4 text-${suggestion.color}-400`} />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-start justify-between mb-2">
-                          <p className="text-sm font-semibold text-white">{suggestion.title}</p>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white">{suggestion.title}</p>
                           <span className="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full whitespace-nowrap ml-2">
                             {suggestion.reward}
                           </span>

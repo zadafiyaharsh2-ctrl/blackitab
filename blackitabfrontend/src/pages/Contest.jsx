@@ -78,10 +78,10 @@ const Contest = () => {
           <div className="relative z-10">
             <div className="flex items-center gap-4 mb-6">
               <div className="p-4 bg-gradient-to-br from-red-500 to-orange-600 rounded-2xl shadow-lg">
-                <FaTrophy className="text-4xl text-white" />
+                <FaTrophy className="text-4xl text-gray-900 dark:text-white" />
               </div>
               <div>
-                <h1 className={`text-4xl md:text-5xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                <h1 className={`text-4xl md:text-5xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'}`}>
                   Competitive Arena
                 </h1>
                 <p className={`text-lg ${isDark ? 'text-red-300' : 'text-red-600'} font-semibold mt-1`}>
@@ -107,17 +107,17 @@ const Contest = () => {
             return (
               <div
                 key={index}
-                className={`${isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'} rounded-2xl p-8 border backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] group`}
+                className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700' : 'bg-white border-gray-200'} rounded-2xl p-8 border backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] group`}
               >
                 <div className="flex items-start gap-4">
                   <div className={`p-4 rounded-xl bg-gradient-to-br ${feature.gradient} shadow-lg group-hover:scale-110 transition-transform`}>
-                    <Icon className="text-3xl text-white" />
+                    <Icon className="text-3xl text-gray-900 dark:text-white" />
                   </div>
                   <div>
-                    <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-3`}>
+                    <h3 className={`text-2xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'} mb-3`}>
                       {feature.title}
                     </h3>
-                    <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-lg leading-relaxed`}>
+                    <p className={`${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'} text-lg leading-relaxed`}>
                       {feature.description}
                     </p>
                   </div>
@@ -133,39 +133,39 @@ const Contest = () => {
         <div className={`${isDark ? 'bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border-blue-700/50' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'} rounded-2xl p-8 border backdrop-blur-md`}>
           <div className="flex items-center gap-3 mb-8">
             <FaShieldAlt className="text-4xl text-blue-500" />
-            <h2 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <h2 className={`text-3xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'}`}>
               The Rating System
             </h2>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div>
-              <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-lg mb-6 leading-relaxed`}>
+              <p className={`${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'} text-lg mb-6 leading-relaxed`}>
                 Our rating system is designed to accurately reflect your skill level. You start with a base rating, 
                 and after every contest, your rating changes based on:
               </p>
               <ul className="space-y-4 mb-8">
-                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'}`}>
                   <FaCheckCircle className="text-green-500" />
                   <span>Your rank in the contest</span>
                 </li>
-                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'}`}>
                   <FaCheckCircle className="text-green-500" />
                   <span>The ratings of your opponents</span>
                 </li>
-                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'}`}>
                   <FaCheckCircle className="text-green-500" />
                   <span>The difficulty of problems solved</span>
                 </li>
               </ul>
-              <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} italic`}>
+              <p className={`${isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-600'} italic`}>
                 "Consistency is key. Regular participation and steady improvement are rewarded over lucky spikes."
               </p>
             </div>
 
             {/* Rating Tiers Visualization */}
-            <div className={`${isDark ? 'bg-gray-800/60' : 'bg-white/90'} rounded-xl p-6 border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-              <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-4 text-center`}>
+            <div className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/60' : 'bg-white/90'} rounded-xl p-6 border ${isDark ? 'border-gray-300 dark:border-gray-700' : 'border-gray-200'}`}>
+              <h3 className={`text-xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'} mb-4 text-center`}>
                 Rating Tiers
               </h3>
               <div className="space-y-3">
@@ -188,16 +188,16 @@ const Contest = () => {
 
       {/* Call to Action */}
       <div className="max-w-4xl mx-auto text-center">
-        <div className={`${isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'} rounded-2xl p-8 md:p-12 border backdrop-blur-md shadow-xl`}>
+        <div className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700' : 'bg-white border-gray-200'} rounded-2xl p-8 md:p-12 border backdrop-blur-md shadow-xl`}>
           <FaRocket className={`text-5xl ${isDark ? 'text-blue-400' : 'text-blue-600'} mx-auto mb-4`} />
-          <h2 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>
+          <h2 className={`text-3xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'} mb-4`}>
             Ready to Compete?
           </h2>
-          <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-8 max-w-2xl mx-auto leading-relaxed`}>
+          <p className={`text-lg ${isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-600'} mb-8 max-w-2xl mx-auto leading-relaxed`}>
             Prepare yourself for the ultimate challenge. Practice problems, learn algorithms, and get ready 
             to make your mark on the leaderboard when the arena opens.
           </p>
-          <button className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg">
+          <button className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-gray-900 dark:text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg">
             Start Practicing Now
           </button>
         </div>

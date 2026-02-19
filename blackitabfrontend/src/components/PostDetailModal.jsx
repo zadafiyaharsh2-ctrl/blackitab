@@ -112,16 +112,16 @@ const PostDetailModal = ({ isOpen, onClose, post, onPostDeleted }) => {
 
       <button 
           onClick={onClose}
-          className="absolute top-6 right-6 z-50 text-white/50 hover:text-white transition-colors"
+          className="absolute top-6 right-6 z-50 text-gray-900 dark:text-white/50 hover:text-gray-900 dark:text-white transition-colors"
       >
           <FaTimes size={28} />
       </button>
 
       {/* Main Container */}
-      <div className="relative w-full max-w-7xl h-full md:h-[90vh] flex flex-col md:flex-row bg-black rounded-none md:rounded-2xl overflow-hidden shadow-2xl z-10 animate-in zoom-in-95 duration-300 border border-white/5">
+      <div className="relative w-full max-w-7xl h-full md:h-[90vh] flex flex-col md:flex-row bg-black rounded-none md:rounded-2xl overflow-hidden shadow-2xl z-10 animate-in zoom-in-95 duration-300 border border-gray-200 dark:border-white/5">
         
         {/* LEFT: MEDIA (Cinematic) */}
-        <div className="flex-1 relative bg-gray-900 flex items-center justify-center overflow-hidden">
+        <div className="flex-1 relative bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden">
              
              {/* Blurred Ambient Background */}
              <div className="absolute inset-0 opacity-30 blur-3xl scale-125 pointer-events-none">
@@ -149,10 +149,10 @@ const PostDetailModal = ({ isOpen, onClose, post, onPostDeleted }) => {
         </div>
 
         {/* RIGHT: SIDEBAR (Glass/Clean) */}
-        <div className="w-full md:w-[400px] lg:w-[500px] bg-gray-950 flex flex-col h-[45vh] md:h-full border-l border-white/10">
+        <div className="w-full md:w-[400px] lg:w-[500px] bg-gray-950 flex flex-col h-[45vh] md:h-full border-l border-gray-300 dark:border-white/10">
             
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-white/5 bg-gray-950/50 backdrop-blur-md sticky top-0 z-20">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-white/5 bg-gray-950/50 backdrop-blur-md sticky top-0 z-20">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-orange-400 p-[2px]">
                         <img 
@@ -162,18 +162,18 @@ const PostDetailModal = ({ isOpen, onClose, post, onPostDeleted }) => {
                         />
                     </div>
                     <div>
-                        <h3 className="text-white font-semibold text-sm hover:underline cursor-pointer">{currentPost.user?.name}</h3>
+                        <h3 className="text-gray-900 dark:text-white font-semibold text-sm hover:underline cursor-pointer">{currentPost.user?.name}</h3>
                         {currentPost.location && <p className="text-xs text-gray-500">{currentPost.location}</p>}
                     </div>
                 </div>
                 {isOwner && (
                     <div className="relative">
-                        <button onClick={() => setShowMenu(!showMenu)} className="text-white/50 hover:text-white p-2">
+                        <button onClick={() => setShowMenu(!showMenu)} className="text-gray-900 dark:text-white/50 hover:text-gray-900 dark:text-white p-2">
                             <FaEllipsisH />
                         </button>
                         {showMenu && (
-                            <div className="absolute right-0 mt-2 w-32 bg-gray-800 rounded-lg shadow-xl overflow-hidden py-1">
-                                <button onClick={handleDelete} className="w-full text-left px-4 py-2 text-red-400 hover:bg-white/5 text-sm">Delete</button>
+                            <div className="absolute right-0 mt-2 w-32 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden py-1">
+                                <button onClick={handleDelete} className="w-full text-left px-4 py-2 text-red-400 hover:bg-gray-100 dark:bg-white/5 text-sm">Delete</button>
                             </div>
                         )}
                     </div>
@@ -193,8 +193,8 @@ const PostDetailModal = ({ isOpen, onClose, post, onPostDeleted }) => {
                             />
                         </div>
                         <div className="text-sm">
-                            <span className="font-semibold text-white mr-2">{currentPost.user?.name}</span>
-                            <span className="text-gray-300 leading-relaxed font-light">{currentPost.caption}</span>
+                            <span className="font-semibold text-gray-900 dark:text-white mr-2">{currentPost.user?.name}</span>
+                            <span className="text-gray-700 dark:text-gray-300 leading-relaxed font-light">{currentPost.caption}</span>
                             <div className="text-xs text-gray-500 mt-2">{new Date(currentPost.createdAt).toLocaleDateString()}</div>
                         </div>
                     </div>
@@ -211,8 +211,8 @@ const PostDetailModal = ({ isOpen, onClose, post, onPostDeleted }) => {
                             />
                         </div>
                         <div className="text-sm">
-                            <span className="font-semibold text-white mr-2">{comment.user?.name || 'User'}</span>
-                            <span className="text-gray-300 leading-relaxed font-light">{comment.text}</span>
+                            <span className="font-semibold text-gray-900 dark:text-white mr-2">{comment.user?.name || 'User'}</span>
+                            <span className="text-gray-700 dark:text-gray-300 leading-relaxed font-light">{comment.text}</span>
                             <div className="text-xs text-gray-500 mt-1">{new Date(comment.createdAt).toLocaleDateString()}</div>
                         </div>
                     </div>
@@ -222,37 +222,37 @@ const PostDetailModal = ({ isOpen, onClose, post, onPostDeleted }) => {
                 {(!currentPost.comments || currentPost.comments.length === 0) && (
                     <div className="flex flex-col items-center justify-center py-10 opacity-40">
                         <div className="text-4xl mb-2">💬</div>
-                        <p className="text-sm text-gray-400">No comments yet.</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">No comments yet.</p>
                         <p className="text-xs text-gray-600">Start the conversation.</p>
                     </div>
                 )}
             </div>
 
             {/* Actions Footer */}
-            <div className="p-4 border-t border-white/5 bg-black/20">
+            <div className="p-4 border-t border-gray-200 dark:border-white/5 bg-black/20">
                 <div className="flex items-center justify-between mb-4 px-1">
                     <div className="flex items-center gap-5">
                         <button onClick={handleLike} className="transition-transform active:scale-90">
-                            {liked ? <FaHeart size={26} className="text-red-500" /> : <FaRegHeart size={26} className="text-white hover:text-gray-300" />}
+                            {liked ? <FaHeart size={26} className="text-red-500" /> : <FaRegHeart size={26} className="text-gray-900 dark:text-white hover:text-gray-700 dark:text-gray-300" />}
                         </button>
                         <button className="transition-transform active:scale-90" onClick={() => document.getElementById('commentInput').focus()}>
-                            <FaRegComment size={26} className="text-white hover:text-gray-300" />
+                            <FaRegComment size={26} className="text-gray-900 dark:text-white hover:text-gray-700 dark:text-gray-300" />
                         </button>
                         <button className="transition-transform active:scale-90" onClick={handleShare}>
-                            <FaRegPaperPlane size={24} className="text-white hover:text-gray-300" />
+                            <FaRegPaperPlane size={24} className="text-gray-900 dark:text-white hover:text-gray-700 dark:text-gray-300" />
                         </button>
                     </div>
                     <button>
-                        <FaRegBookmark size={24} className="text-white hover:text-gray-300" />
+                        <FaRegBookmark size={24} className="text-gray-900 dark:text-white hover:text-gray-700 dark:text-gray-300" />
                     </button>
                 </div>
 
                 <div className="px-1 mb-4">
-                    <div className="font-semibold text-white text-sm">{currentPost.likes?.length || 0} likes</div>
+                    <div className="font-semibold text-gray-900 dark:text-white text-sm">{currentPost.likes?.length || 0} likes</div>
                     <div className="text-[10px] text-gray-500 uppercase mt-1">{new Date(currentPost.createdAt).toDateString()}</div>
                 </div>
 
-                <div className="flex items-center gap-3 mt-2 border-t border-white/10 pt-4">
+                <div className="flex items-center gap-3 mt-2 border-t border-gray-300 dark:border-white/10 pt-4">
                      <span className="text-xl">😃</span>
                      <input 
                         id="commentInput"
@@ -261,12 +261,12 @@ const PostDetailModal = ({ isOpen, onClose, post, onPostDeleted }) => {
                         value={commentText}
                         onChange={(e) => setCommentText(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleComment()}
-                        className="flex-1 bg-transparent border-none text-sm text-white placeholder-gray-500 focus:ring-0 p-0"
+                        className="flex-1 bg-transparent border-none text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:ring-0 p-0"
                      />
                      <button 
                         onClick={handleComment}
                         disabled={!commentText.trim() || loading}
-                        className={`text-sm font-semibold transition-colors ${commentText.trim() ? 'text-blue-500 hover:text-white' : 'text-blue-500/30 cursor-default'}`}
+                        className={`text-sm font-semibold transition-colors ${commentText.trim() ? 'text-blue-500 hover:text-gray-900 dark:text-white' : 'text-blue-500/30 cursor-default'}`}
                      >
                         {loading ? '...' : 'Post'}
                      </button>

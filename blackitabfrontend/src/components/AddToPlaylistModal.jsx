@@ -105,10 +105,10 @@ const AddToPlaylistModal = ({ isOpen, onClose, contentId }) => {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-gray-900 border border-white/10 rounded-xl w-full max-w-xs sm:max-w-sm overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-4 border-b border-white/10">
-          <h3 className="text-lg font-bold text-white">Save to...</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+      <div className="bg-white dark:bg-gray-900 border border-gray-300 dark:border-white/10 rounded-xl w-full max-w-xs sm:max-w-sm overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-4 border-b border-gray-300 dark:border-white/10">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Save to...</h3>
+          <button onClick={onClose} className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white">
             <FaTimes />
           </button>
         </div>
@@ -127,7 +127,7 @@ const AddToPlaylistModal = ({ isOpen, onClose, contentId }) => {
                  return (
                     <label 
                       key={playlist._id} 
-                      className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${processing === playlist._id ? 'opacity-50' : 'hover:bg-white/5'}`}
+                      className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${processing === playlist._id ? 'opacity-50' : 'hover:bg-gray-100 dark:bg-white/5'}`}
                     >
                       <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isIncluded ? 'bg-blue-600 border-blue-600' : 'border-gray-500'}`}>
                          <input 
@@ -136,10 +136,10 @@ const AddToPlaylistModal = ({ isOpen, onClose, contentId }) => {
                            checked={isIncluded}
                            onChange={() => !processing && togglePlaylist(playlist)}
                          />
-                         {isIncluded && <FaCheck size={12} className="text-white" />}
+                         {isIncluded && <FaCheck size={12} className="text-gray-900 dark:text-white" />}
                       </div>
                       <div className="flex-1 overflow-hidden">
-                         <div className="text-sm font-medium text-white truncate">{playlist.title}</div>
+                         <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{playlist.title}</div>
                          <div className="text-xs text-gray-500 flex items-center gap-1">
                             {playlist.isPrivate ? <FaLock size={10} /> : <FaGlobe size={10} />}
                             {playlist.isPrivate ? 'Private' : 'Public'}

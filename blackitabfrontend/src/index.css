@@ -2,12 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom Scrollbar for Dark Theme */
+/* Custom Scrollbar for Light and Dark Themes */
 ::-webkit-scrollbar {
   width: 8px;
   height: 10px;
-  color: #202b3b;
-  /* For horizontal scrollbars */
 }
 
 /* Default: internal elements have transparent tracks */
@@ -15,23 +13,38 @@
   background: transparent;
 }
 
-/* Main page scrollbar track should be black */
+/* Track background */
 html::-webkit-scrollbar-track,
 body::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+html.dark::-webkit-scrollbar-track,
+body.dark::-webkit-scrollbar-track {
   background: #202b3b;
 }
 
+/* Thumb */
 ::-webkit-scrollbar-thumb {
-  background: #000000;
-  /* Dark gray thumb */
+  background: #cbd5e1;
   border-radius: 5px;
-  border: 2px solid #202b3b;
-  /* Creates padding effect */
+  border: 2px solid #f3f4f6;
 }
 
+.dark ::-webkit-scrollbar-thumb,
+html.dark::-webkit-scrollbar-thumb {
+  background: #000000;
+  border: 2px solid #202b3b;
+}
+
+/* Thumb Hover */
 ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover,
+html.dark::-webkit-scrollbar-thumb:hover {
   background: #080029;
-  /* Lighter on hover */
 }
 
 /* Base Styles */
@@ -42,7 +55,6 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  @apply bg-gradient-to-br from-gray-900 via-gray-800 to-black min-h-screen text-white;
 }
 
 code {

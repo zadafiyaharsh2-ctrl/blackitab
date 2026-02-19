@@ -18,7 +18,7 @@ import Socialfeatures from '../components/Socilafeatures';
 
 const LandingPage = () => {
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden relative selection:bg-blue-500 selection:text-white font-sans">
+    <div className="min-h-screen bg-black text-gray-900 dark:text-white overflow-hidden relative selection:bg-blue-500 selection:text-gray-900 dark:text-white font-sans">
       
       {/* ==================== BACKGROUND EFFECTS ==================== */}
       {/* 1. Base Gradient */}
@@ -44,7 +44,7 @@ const LandingPage = () => {
         <div className="flex items-center gap-6">
           <Link 
             to="/login" 
-            className="text-gray-400 hover:text-white font-medium transition-colors text-sm tracking-wide"
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white font-medium transition-colors text-sm tracking-wide"
           >
             Log In
           </Link>
@@ -62,7 +62,7 @@ const LandingPage = () => {
         
         {/* Animated Badge */}
         <div className="mb-8 animate-fade-in-up opacity-0" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
-          <span className="px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md text-xs font-medium text-blue-300 tracking-wider uppercase">
+          <span className="px-4 py-1.5 rounded-full border border-gray-300 dark:border-white/10 bg-gray-100 dark:bg-white/5 backdrop-blur-md text-xs font-medium text-blue-300 tracking-wider uppercase">
             The Future of EdTech
           </span>
         </div>
@@ -76,7 +76,7 @@ const LandingPage = () => {
         </h1>
 
         {/* Sub-headline */}
-        <p className="text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light animate-fade-in-up opacity-0"
+        <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light animate-fade-in-up opacity-0"
            style={{ animationDelay: '0.5s', animationFillMode: 'forwards' }}>
           Precision engineering for your education. 
           <span className="hidden md:inline"> Master complex concepts with AI-driven insights and real-time analytics.</span>
@@ -86,7 +86,7 @@ const LandingPage = () => {
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.7s', animationFillMode: 'forwards' }}>
           <Link 
             to="/signup"
-            className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-transparent border-2 border-white rounded-full hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white focus:ring-offset-black"
+            className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-gray-900 dark:text-white transition-all duration-200 bg-transparent border-2 border-white rounded-full hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white focus:ring-offset-black"
           >
             <span>Get Started</span>
             <FaArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" />

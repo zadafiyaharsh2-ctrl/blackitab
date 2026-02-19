@@ -231,7 +231,7 @@ const Theory = () => {
         // Block structure: { type: "paragraph", text: "..." }
         case "paragraph":
           return (
-            <p key={index} className="mb-4 leading-relaxed text-lg text-gray-300">
+            <p key={index} className="mb-4 leading-relaxed text-lg text-gray-700 dark:text-gray-300">
               {block.text}
             </p>
           );
@@ -243,7 +243,7 @@ const Theory = () => {
         // Block structure: { type: "heading", text: "..." }
         case "heading":
           return (
-            <h2 key={index} className="text-3xl font-bold mt-8 mb-4 text-white">
+            <h2 key={index} className="text-3xl font-bold mt-8 mb-4 text-gray-900 dark:text-white">
               {block.text}
             </h2>
           );
@@ -259,10 +259,10 @@ const Theory = () => {
             <div key={index} className="mb-6">
               {/* Render list title if provided */}
               {block.title && (
-                <h3 className="font-semibold text-lg mb-2 text-gray-200">{block.title}</h3>
+                <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-200">{block.title}</h3>
               )}
               {/* Render unordered list with disc bullets */}
-              <ul className="list-disc ml-6 space-y-2 text-lg text-gray-300">
+              <ul className="list-disc ml-6 space-y-2 text-lg text-gray-700 dark:text-gray-300">
                 {/* Map over items array and render each as list item */}
                 {block.items.map((item, i) => (
                   <li key={i}>{item}</li>
@@ -278,7 +278,7 @@ const Theory = () => {
         // Block structure: { type: "numbered_list", items: [...] }
         case "numbered_list":
           return (
-            <ol key={index} className="list-decimal ml-6 mb-6 space-y-2 text-lg text-gray-300">
+            <ol key={index} className="list-decimal ml-6 mb-6 space-y-2 text-lg text-gray-700 dark:text-gray-300">
               {/* Map over items array and render each as list item */}
               {block.items.map((item, i) => (
                 <li key={i}>{item}</li>
@@ -319,8 +319,8 @@ const Theory = () => {
         case "code":
           return (
             <div key={index} className="my-4">
-              <pre className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 overflow-x-auto">
-                <code className="text-sm font-mono text-gray-300 whitespace-pre">
+              <pre className="bg-white dark:bg-gray-900/50 border border-gray-300 dark:border-gray-700 rounded-lg p-4 overflow-x-auto">
+                <code className="text-sm font-mono text-gray-700 dark:text-gray-300 whitespace-pre">
                   {block.code || block.text}
                 </code>
               </pre>
@@ -346,11 +346,11 @@ const Theory = () => {
               <div key={index} className="my-6">
                 {/* First half of table */}
                 <div className="overflow-x-auto max-w-full mb-4">
-                  <table className="w-full border-collapse border border-gray-700">
-                    <thead className="bg-gray-800">
+                  <table className="w-full border-collapse border border-gray-300 dark:border-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-800">
                       <tr>
                         {firstHalfHeaders.map((header, i) => (
-                          <th key={i} className="border border-gray-700 px-4 py-2 text-left font-semibold text-gray-200">
+                          <th key={i} className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-200">
                             {header}
                           </th>
                         ))}
@@ -358,9 +358,9 @@ const Theory = () => {
                     </thead>
                     <tbody>
                       {block.rows.map((row, rowIndex) => (
-                        <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-gray-900/30" : "bg-gray-800/30"}>
+                        <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-white dark:bg-gray-900/30" : "bg-gray-50 dark:bg-gray-800/30"}>
                           {row.slice(0, midPoint).map((cell, cellIndex) => (
-                            <td key={cellIndex} className="border border-gray-700 px-4 py-2 text-gray-300">
+                            <td key={cellIndex} className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-gray-700 dark:text-gray-300">
                               {cell}
                             </td>
                           ))}
@@ -372,11 +372,11 @@ const Theory = () => {
                 
                 {/* Second half of table */}
                 <div className="overflow-x-auto max-w-full">
-                  <table className="w-full border-collapse border border-gray-700">
-                    <thead className="bg-gray-800">
+                  <table className="w-full border-collapse border border-gray-300 dark:border-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-800">
                       <tr>
                         {secondHalfHeaders.map((header, i) => (
-                          <th key={i} className="border border-gray-700 px-4 py-2 text-left font-semibold text-gray-200">
+                          <th key={i} className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-200">
                             {header}
                           </th>
                         ))}
@@ -384,9 +384,9 @@ const Theory = () => {
                     </thead>
                     <tbody>
                       {block.rows.map((row, rowIndex) => (
-                        <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-gray-900/30" : "bg-gray-800/30"}>
+                        <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-white dark:bg-gray-900/30" : "bg-gray-50 dark:bg-gray-800/30"}>
                           {row.slice(midPoint).map((cell, cellIndex) => (
-                            <td key={cellIndex} className="border border-gray-700 px-4 py-2 text-gray-300">
+                            <td key={cellIndex} className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-gray-700 dark:text-gray-300">
                               {cell}
                             </td>
                           ))}
@@ -409,12 +409,12 @@ const Theory = () => {
           // Normal table rendering for tables with 5 or fewer columns
           return (
             <div key={index} className="my-6 overflow-x-auto max-w-full">
-              <table className="w-full border-collapse border border-gray-700">
+              <table className="w-full border-collapse border border-gray-300 dark:border-gray-700">
                 {/* Table header */}
-                <thead className="bg-gray-800">
+                <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
                     {block.headers.map((header, i) => (
-                      <th key={i} className="border border-gray-700 px-4 py-2 text-left font-semibold text-gray-200">
+                      <th key={i} className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-200">
                         {header}
                       </th>
                     ))}
@@ -423,9 +423,9 @@ const Theory = () => {
                 {/* Table body */}
                 <tbody>
                   {block.rows.map((row, rowIndex) => (
-                    <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-gray-900/30" : "bg-gray-800/30"}>
+                    <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-white dark:bg-gray-900/30" : "bg-gray-50 dark:bg-gray-800/30"}>
                       {row.map((cell, cellIndex) => (
-                        <td key={cellIndex} className="border border-gray-700 px-4 py-2 text-gray-300">
+                        <td key={cellIndex} className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-gray-700 dark:text-gray-300">
                           {cell}
                         </td>
                       ))}
@@ -541,7 +541,7 @@ const Theory = () => {
     return (
       <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Page title */}
-        <h1 className="text-4xl font-bold text-white mb-8">Theory Subjects</h1>
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-8">Theory Subjects</h1>
 
         {/* Show loading spinner or subject grid based on loading state */}
         {loading ? (
@@ -564,19 +564,19 @@ const Theory = () => {
                 <div
                   key={subject._id} // Unique key for React list rendering
                   onClick={() => setSelectedSubject(subject)} // Set selected subject on click
-                  className="bg-gray-800/50 backdrop-blur-md rounded-xl shadow-lg hover:shadow-xl cursor-pointer p-6 border border-gray-700 group transition hover:border-blue-500/30"
+                  className="bg-white dark:bg-gray-800/50 backdrop-blur-md rounded-xl shadow-lg hover:shadow-xl cursor-pointer p-6 border border-gray-300 dark:border-gray-700 group transition hover:border-blue-500/30"
                 >
                   {/* Icon container with hover effect */}
                   <div className="h-14 w-14 bg-blue-500/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-600 transition">
                     {/* BookOpen icon that changes color on hover */}
-                    <BookOpen className="text-blue-400 group-hover:text-white h-8 w-8" />
+                    <BookOpen className="text-blue-400 group-hover:text-gray-900 dark:text-white h-8 w-8" />
                   </div>
 
                   {/* Subject name */}
-                  <h2 className="text-xl font-bold text-white">{subject.name}</h2>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">{subject.name}</h2>
                   
                   {/* Subject description (limited to 2 lines) */}
-                  <p className="text-gray-400 mt-2 line-clamp-2">
+                  <p className="text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">
                     {subject.description}
                   </p>
 
@@ -584,7 +584,7 @@ const Theory = () => {
                   <div className="mt-4 space-y-2">
                     {/* Progress text and percentage */}
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400 font-medium">
+                      <span className="text-gray-600 dark:text-gray-400 font-medium">
                         {completedCount}/{totalTopics} topics completed
                       </span>
                       <span className="text-blue-400 font-bold">
@@ -620,7 +620,7 @@ const Theory = () => {
   // This view is shown when a subject is selected
   // Layout: Left side shows topic content, right side shows topic sidebar
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-transparent overflow-hidden">
+    <div className="flex h-[calc(100vh-64px)] bg-white dark:bg-transparent overflow-hidden">
 
       {/* ========================================
           LEFT SIDE: TOPIC CONTENT AREA
@@ -634,10 +634,10 @@ const Theory = () => {
             Shows topic name and menu button to open sidebar */}
         <div className="lg:hidden flex justify-between items-center mb-4">
           {/* Current topic name */}
-          <span className="font-bold text-white">{selectedTopic?.name}</span>
+          <span className="font-bold text-gray-900 dark:text-white">{selectedTopic?.name}</span>
           {/* Menu button to open sidebar on mobile */}
           <button onClick={() => setSidebarOpen(true)}>
-            <Menu className="text-gray-300" />
+            <Menu className="text-gray-700 dark:text-gray-300" />
           </button>
         </div>
 
@@ -646,7 +646,7 @@ const Theory = () => {
             ======================================== */}
         <div className="max-w-4xl mx-auto">
           {/* Topic title as main heading */}
-          <h1 className="text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-3">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 border-b border-gray-300 dark:border-gray-700 pb-3">
             {selectedTopic?.name}
           </h1>
 
@@ -672,7 +672,7 @@ const Theory = () => {
                   </div>
                   <button
                     onClick={handleNextTopic}
-                    className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg"
+                    className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-gray-900 dark:text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg"
                   >
                     <span>Next Topic</span>
                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -681,7 +681,7 @@ const Theory = () => {
               </>
             ) : (
               // If content is still loading, show loading message
-              <p className="text-gray-400">Loading content...</p>
+              <p className="text-gray-600 dark:text-gray-400">Loading content...</p>
             )}
           </div>
         </div>

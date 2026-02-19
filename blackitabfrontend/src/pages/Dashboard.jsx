@@ -248,10 +248,10 @@ const Dashboard = () => {
     <div className="min-h-screen bg-transparent p-6 md:p-8">
       {/* HEADER SECTION */}
       <div className="mb-8">
-        <h1 className={`text-3xl md:text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-800'} mb-2`}>
+        <h1 className={`text-3xl md:text-4xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-800'} mb-2`}>
           Welcome back, {user?.name || 'Student'}! 👋
         </h1>
-        <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>Here's what's happening with your learning journey today.</p>
+        <p className={isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-600'}>Here's what's happening with your learning journey today.</p>
       </div>
 
       {/* STATS ROW (Four Cards) */}
@@ -259,11 +259,11 @@ const Dashboard = () => {
         {statsCards.map((stat, index) => (
           <div
             key={index}
-            className={`${isDark ? 'bg-gray-800/50 border-gray-700/50' : 'bg-white border-gray-100'} backdrop-blur-sm rounded-2xl shadow-lg p-5 border flex items-center justify-between group hover:border-blue-500/30 transition-all duration-300`}
+            className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700/50' : 'bg-white border-gray-100'} backdrop-blur-sm rounded-2xl shadow-lg p-5 border flex items-center justify-between group hover:border-blue-500/30 transition-all duration-300`}
           >
             <div>
-              <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm font-medium mb-1`}>{stat.title}</p>
-              <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'} group-hover:text-blue-400 transition-colors`}>
+              <p className={`${isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-500'} text-sm font-medium mb-1`}>{stat.title}</p>
+              <h3 className={`text-2xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-800'} group-hover:text-blue-400 transition-colors`}>
                 {stat.value}
               </h3>
             </div>
@@ -278,13 +278,13 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         
         {/* ROW 1: Motivation (Wide) & Problem of Day (Narrow) */}
-        <div className="lg:col-span-2 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl shadow-lg p-8 text-white relative overflow-hidden flex flex-col justify-center min-h-[200px]">
+        <div className="lg:col-span-2 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl shadow-lg p-8 text-gray-900 dark:text-white relative overflow-hidden flex flex-col justify-center min-h-[200px]">
           {/* Background Decorative Element */}
-          <FaQuoteLeft className="text-white opacity-10 text-8xl absolute -top-4 -left-4" />
+          <FaQuoteLeft className="text-gray-900 dark:text-white opacity-10 text-8xl absolute -top-4 -left-4" />
           <div className="relative z-10">
             <h3 className="text-indigo-200 font-semibold mb-3 uppercase tracking-wider text-sm">Daily Motivation</h3>
             <p className="text-2xl md:text-3xl font-bold italic mb-6 leading-relaxed">"{quote.text}"</p>
-            <p className="text-white font-medium flex items-center">
+            <p className="text-gray-900 dark:text-white font-medium flex items-center">
               <span className="w-8 h-0.5 bg-indigo-400 mr-3"></span>
               {quote.author}
             </p>
@@ -295,7 +295,7 @@ const Dashboard = () => {
         </div>
 
         {/* Problem of the Day Card */}
-        <div className="lg:col-span-1 bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-700/50 flex flex-col relative overflow-hidden group hover:border-blue-500/30 transition-all duration-300">
+        <div className="lg:col-span-1 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-300 dark:border-gray-700/50 flex flex-col relative overflow-hidden group hover:border-blue-500/30 transition-all duration-300">
           <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
             <FaCode className="text-8xl text-indigo-600 transform rotate-12" />
           </div>
@@ -307,12 +307,12 @@ const Dashboard = () => {
               {problemOfTheDay.difficulty}
             </span>
           </div>
-          <h3 className="text-lg font-bold text-white mb-1 relative z-10">Problem of the Day</h3>
-          <p className="text-gray-400 text-sm mb-4 relative z-10">{problemOfTheDay.title}</p>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 relative z-10">Problem of the Day</h3>
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 relative z-10">{problemOfTheDay.title}</p>
           <div className="mt-auto relative z-10">
             <Link 
               to={problemOfTheDay.link}
-              className="flex items-center justify-center w-full py-2.5 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
+              className="flex items-center justify-center w-full py-2.5 rounded-xl bg-blue-600 text-gray-900 dark:text-white font-semibold text-sm hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
             >
               Solve Challenge <FaArrowRight className="ml-2 text-xs" />
             </Link>
@@ -320,9 +320,9 @@ const Dashboard = () => {
         </div>
 
         {/* ROW 2: Activity Heatmap (Wide) & Upcoming Contest (Narrow) */}
-        <div className="lg:col-span-2 bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-700/50 p-1 overflow-hidden">
-           <div className="p-5 border-b border-gray-700/50">
-             <h3 className="font-bold text-white flex items-center">
+        <div className="lg:col-span-2 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-300 dark:border-gray-700/50 p-1 overflow-hidden">
+           <div className="p-5 border-b border-gray-300 dark:border-gray-700/50">
+             <h3 className="font-bold text-gray-900 dark:text-white flex items-center">
                <FaFire className="text-orange-500 mr-2" /> Activity Log
              </h3>
            </div>
@@ -333,9 +333,9 @@ const Dashboard = () => {
         </div>
 
         {/* Upcoming Contest Card */}
-        <div className="lg:col-span-1 bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-700/50 flex flex-col hover:border-blue-500/30 transition-all duration-300">
+        <div className="lg:col-span-1 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-300 dark:border-gray-700/50 flex flex-col hover:border-blue-500/30 transition-all duration-300">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-white flex items-center">
+            <h3 className="font-bold text-gray-900 dark:text-white flex items-center">
               <FaTrophy className="text-yellow-500 mr-2" /> Upcoming
             </h3>
             <span className="text-xs font-semibold bg-green-500/10 text-green-400 px-2 py-1 rounded-md border border-green-500/20">
@@ -344,22 +344,22 @@ const Dashboard = () => {
           </div>
           
           <div className="text-center py-4 flex-1 flex flex-col justify-center">
-            <h4 className="text-xl font-bold text-white mb-2">{nextContest.title}</h4>
-            <div className="flex items-center justify-center text-gray-400 text-sm mb-6">
+            <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{nextContest.title}</h4>
+            <div className="flex items-center justify-center text-gray-600 dark:text-gray-400 text-sm mb-6">
               <FaCalendarAlt className="mr-2" /> {nextContest.date}
             </div>
             <div className="grid grid-cols-3 gap-2 text-center mb-6">
               <div className="bg-gray-700/50 rounded-lg p-2">
-                <span className="block text-xs text-gray-400">Time</span>
-                <span className="font-bold text-white">2h</span>
+                <span className="block text-xs text-gray-600 dark:text-gray-400">Time</span>
+                <span className="font-bold text-gray-900 dark:text-white">2h</span>
               </div>
               <div className="bg-gray-700/50 rounded-lg p-2">
-                <span className="block text-xs text-gray-400">Ques</span>
-                <span className="font-bold text-white">4</span>
+                <span className="block text-xs text-gray-600 dark:text-gray-400">Ques</span>
+                <span className="font-bold text-gray-900 dark:text-white">4</span>
               </div>
               <div className="bg-gray-700/50 rounded-lg p-2">
-                <span className="block text-xs text-gray-400">XP</span>
-                <span className="font-bold text-white">100</span>
+                <span className="block text-xs text-gray-600 dark:text-gray-400">XP</span>
+                <span className="font-bold text-gray-900 dark:text-white">100</span>
               </div>
             </div>
           </div>
@@ -370,9 +370,9 @@ const Dashboard = () => {
         </div>
 
         {/* ROW 3: Subject Progress (Wide) & Quick Actions (Narrow) */}
-        <div className="lg:col-span-2 bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-700/50 p-6">
+        <div className="lg:col-span-2 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-300 dark:border-gray-700/50 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-white flex items-center">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
               <FaChartLine className="mr-2 text-blue-400" />
               Learning Progress
             </h2>
@@ -384,14 +384,14 @@ const Dashboard = () => {
           {/* List of Subjects with Progress Bars */}
           <div className="space-y-4">
             {recentSubjects.map((subject, index) => (
-              <div key={index} className="group flex items-center p-3 rounded-xl hover:bg-gray-700/50 transition-colors border border-transparent hover:border-gray-700">
+              <div key={index} className="group flex items-center p-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-colors border border-transparent hover:border-gray-300 dark:border-gray-700">
                 <div className={`p-3 rounded-xl bg-gray-700/50 ${subject.color.replace('text-', 'text-opacity-90 text-')} group-hover:scale-105 transition-transform`}>
                   <subject.icon className="text-xl" />
                 </div>
                 <div className="ml-4 flex-1">
                   <div className="flex justify-between mb-1">
                     <h3 className="font-bold text-gray-200">{subject.name}</h3>
-                    <span className="text-sm font-bold text-gray-400">{subject.progress}%</span>
+                    <span className="text-sm font-bold text-gray-600 dark:text-gray-400">{subject.progress}%</span>
                   </div>
                   {/* Progress Bar Track */}
                   <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
@@ -408,8 +408,8 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions Grid */}
-        <div className="lg:col-span-1 bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-700/50 p-6">
-          <h2 className="text-lg font-bold text-white mb-6 flex items-center">
+        <div className="lg:col-span-1 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-300 dark:border-gray-700/50 p-6">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center">
             <FaArrowRight className="mr-2 text-blue-400" />
             Quick Actions
           </h2>
@@ -418,12 +418,12 @@ const Dashboard = () => {
               <Link
                 key={index}
                 to={action.link}
-                className="flex items-center p-3 rounded-xl bg-gray-700/30 hover:bg-gray-700/80 border border-gray-700/50 hover:border-blue-500/30 transition-all duration-300 group"
+                className="flex items-center p-3 rounded-xl bg-gray-700/30 hover:bg-gray-200 dark:hover:bg-gray-700/80 border border-gray-300 dark:border-gray-700/50 hover:border-blue-500/30 transition-all duration-300 group"
               >
-                <div className={`p-2 rounded-lg bg-gray-800 shadow-sm ${action.color.replace('from-', 'text-').replace('to-', '')} group-hover:text-white group-hover:bg-gradient-to-r ${action.color} transition-all`}>
+                <div className={`p-2 rounded-lg bg-gray-50 dark:bg-gray-800 shadow-sm ${action.color.replace('from-', 'text-').replace('to-', '')} group-hover:text-gray-900 dark:text-white group-hover:bg-gradient-to-r ${action.color} transition-all`}>
                   <action.icon className="text-lg" />
                 </div>
-                <span className="ml-3 font-semibold text-gray-300 group-hover:text-white">{action.title}</span>
+                <span className="ml-3 font-semibold text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:text-white">{action.title}</span>
                 <FaArrowRight className="ml-auto text-gray-600 group-hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-all transform -translate-x-2 group-hover:translate-x-0" />
               </Link>
             ))}
@@ -435,7 +435,7 @@ const Dashboard = () => {
       {/* NEW SECTION: Featured Series (Playlists) */}
       <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-white flex items-center">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
               <FaListUl className="mr-3 text-purple-500" />
               Featured Series
             </h2>
@@ -451,7 +451,7 @@ const Dashboard = () => {
                   </div>
               ))}
               {playlists.length === 0 && !loading && (
-                  <div className="col-span-full text-center py-10 bg-gray-800/30 rounded-xl border border-dashed border-gray-700">
+                  <div className="col-span-full text-center py-10 bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
                       <p className="text-gray-500">No series available yet.</p>
                   </div>
               )}

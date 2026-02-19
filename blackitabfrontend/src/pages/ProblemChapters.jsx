@@ -65,14 +65,14 @@ const ProblemChapters = () => {
       {/* Back Button Navigation */}
       <button 
         onClick={() => navigate('/problems')}
-        className="flex items-center text-gray-400 hover:text-purple-400 mb-6 transition-colors"
+        className="flex items-center text-gray-600 dark:text-gray-400 hover:text-purple-400 mb-6 transition-colors"
       >
         <ArrowLeft className="h-5 w-5 mr-2" />
         Back to Subjects
       </button>
 
       {/* Page Title */}
-      <h1 className="text-4xl font-bold text-white mb-8">Select a Chapter</h1>
+      <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-8">Select a Chapter</h1>
 
       {/* Main Content Area */}
       {loading ? (
@@ -88,19 +88,19 @@ const ProblemChapters = () => {
               <div
                 key={chapter._id}
                 onClick={() => navigate(`/problems/${subjectId}/chapters/${chapter._id}`)}
-                className="bg-gray-800/50 backdrop-blur-md rounded-xl shadow-md hover:shadow-lg cursor-pointer p-6 border border-gray-700 transition-all hover:border-purple-500/30 group"
+                className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-md rounded-xl shadow-md hover:shadow-lg cursor-pointer p-6 border border-gray-300 dark:border-gray-700 transition-all hover:border-purple-500/30 group"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     {/* Chapter Header */}
                     <div className="flex items-center mb-2">
                       <BookOpen className="h-5 w-5 text-purple-400 mr-2" />
-                      <h3 className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-purple-400 transition-colors">
                         {chapter.name}
                       </h3>
                     </div>
                     {/* Chapter Description */}
-                    <p className="text-gray-400 text-sm mt-1">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                       {chapter.description}
                     </p>
                   </div>
@@ -111,8 +111,8 @@ const ProblemChapters = () => {
             ))
           ) : (
             // Empty State
-            <div className="col-span-full text-center py-12 bg-gray-800/30 rounded-lg border border-dashed border-gray-700">
-              <p className="text-gray-400 text-lg">No chapters found for this subject.</p>
+            <div className="col-span-full text-center py-12 bg-gray-50 dark:bg-gray-800/30 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">
+              <p className="text-gray-600 dark:text-gray-400 text-lg">No chapters found for this subject.</p>
             </div>
           )}
         </div>

@@ -14,16 +14,16 @@ const Earnings = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-transparent text-white p-6 md:p-8 pt-24 font-sans selection:bg-green-500/30">
+    <div className="min-h-screen bg-transparent text-gray-900 dark:text-white p-6 md:p-8 pt-24 font-sans selection:bg-green-500/30">
       
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">dummy data of Earnings</h1>
-          <p className="text-gray-400">Manage your revenue and payouts</p>
+          <p className="text-gray-600 dark:text-gray-400">Manage your revenue and payouts</p>
         </div>
         <div className="flex gap-3">
-            <button className="bg-[#1a1a1a] hover:bg-[#252525] text-white px-5 py-2.5 rounded-full font-medium transition-colors border border-white/10 flex items-center gap-2">
+            <button className="bg-[#1a1a1a] hover:bg-[#252525] text-gray-900 dark:text-white px-5 py-2.5 rounded-full font-medium transition-colors border border-gray-300 dark:border-white/10 flex items-center gap-2">
                 <FaHistory size={14} /> History
             </button>
             <button className="bg-white text-black hover:bg-gray-200 px-6 py-2.5 rounded-full font-bold transition-colors flex items-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
@@ -39,16 +39,16 @@ const Earnings = () => {
         <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl relative overflow-hidden group"
+            className="bg-gray-100 dark:bg-white/5 backdrop-blur-xl border border-gray-300 dark:border-white/10 p-6 rounded-2xl relative overflow-hidden group"
         >
             <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-2xl -mr-16 -mt-16 group-hover:bg-green-500/20 transition-all duration-500"></div>
-            <div className="flex items-center gap-3 mb-4 text-gray-400">
+            <div className="flex items-center gap-3 mb-4 text-gray-600 dark:text-gray-400">
                 <div className="p-2 bg-green-500/10 rounded-lg text-green-400">
                     <FaWallet />
                 </div>
                 <span className="font-medium text-sm">Available Balance</span>
             </div>
-            <div className="text-3xl font-bold text-white mb-2">$1,240.50</div>
+            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">$1,240.50</div>
             <div className="text-sm text-green-400 flex items-center gap-1">
                 <FaArrowUp size={10} /> +12.5% <span className="text-gray-500 ml-1">from last month</span>
             </div>
@@ -59,16 +59,16 @@ const Earnings = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl relative overflow-hidden group"
+            className="bg-gray-100 dark:bg-white/5 backdrop-blur-xl border border-gray-300 dark:border-white/10 p-6 rounded-2xl relative overflow-hidden group"
         >
              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl -mr-16 -mt-16 group-hover:bg-blue-500/20 transition-all duration-500"></div>
-            <div className="flex items-center gap-3 mb-4 text-gray-400">
+            <div className="flex items-center gap-3 mb-4 text-gray-600 dark:text-gray-400">
                 <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
                     <FaMoneyBillWave />
                 </div>
                 <span className="font-medium text-sm">Total Revenue</span>
             </div>
-            <div className="text-3xl font-bold text-white mb-2">$14,850.00</div>
+            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">$14,850.00</div>
              <div className="text-sm text-gray-500">
                 Lifetime earnings
             </div>
@@ -79,16 +79,16 @@ const Earnings = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl relative overflow-hidden group"
+            className="bg-gray-100 dark:bg-white/5 backdrop-blur-xl border border-gray-300 dark:border-white/10 p-6 rounded-2xl relative overflow-hidden group"
         >
             <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 rounded-full blur-2xl -mr-16 -mt-16 group-hover:bg-yellow-500/20 transition-all duration-500"></div>
-            <div className="flex items-center gap-3 mb-4 text-gray-400">
+            <div className="flex items-center gap-3 mb-4 text-gray-600 dark:text-gray-400">
                 <div className="p-2 bg-yellow-500/10 rounded-lg text-yellow-400">
                     <FaHistory />
                 </div>
                 <span className="font-medium text-sm">Pending Clearance</span>
             </div>
-            <div className="text-3xl font-bold text-white mb-2">$320.00</div>
+            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">$320.00</div>
              <div className="text-sm text-gray-500">
                 Available on Dec 25
             </div>
@@ -102,14 +102,14 @@ const Earnings = () => {
         <div className="lg:col-span-2 space-y-6">
             <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold">Recent Transactions</h2>
-                <button className="text-sm text-gray-400 hover:text-white flex items-center gap-2 transition-colors">
+                <button className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white flex items-center gap-2 transition-colors">
                     <FaDownload size={12} /> Export CSV
                 </button>
             </div>
 
-            <div className="bg-white/5 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden">
+            <div className="bg-gray-100 dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-white/5 rounded-2xl overflow-hidden">
                 {transactions.map((tx, i) => (
-                    <div key={tx.id} className={`p-4 flex items-center justify-between hover:bg-white/5 transition-colors ${i !== transactions.length - 1 ? 'border-b border-white/5' : ''}`}>
+                    <div key={tx.id} className={`p-4 flex items-center justify-between hover:bg-gray-100 dark:bg-white/5 transition-colors ${i !== transactions.length - 1 ? 'border-b border-gray-200 dark:border-white/5' : ''}`}>
                         <div className="flex items-center gap-4">
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
                                 tx.type === 'credit' ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'
@@ -117,16 +117,16 @@ const Earnings = () => {
                                 {tx.type === 'credit' ? <FaArrowDown className="rotate-45" size={12} /> : <FaArrowUp className="rotate-45" size={12} />}
                             </div>
                             <div>
-                                <div className="font-medium text-white">{tx.source}</div>
+                                <div className="font-medium text-gray-900 dark:text-white">{tx.source}</div>
                                 <div className="text-xs text-gray-500">{tx.date} • {tx.status}</div>
                             </div>
                         </div>
-                        <div className={`font-bold ${tx.type === 'credit' ? 'text-green-400' : 'text-white'}`}>
+                        <div className={`font-bold ${tx.type === 'credit' ? 'text-green-400' : 'text-gray-900 dark:text-white'}`}>
                             {tx.type === 'credit' ? '+' : ''}${Math.abs(tx.amount).toFixed(2)}
                         </div>
                     </div>
                 ))}
-                <button className="w-full py-3 text-center text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+                <button className="w-full py-3 text-center text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white hover:bg-gray-100 dark:bg-white/5 transition-colors">
                     View All Transactions
                 </button>
             </div>
@@ -136,10 +136,10 @@ const Earnings = () => {
         <div className="lg:col-span-1 space-y-6">
             <h2 className="text-xl font-bold">Analytics</h2>
             
-            <div className="bg-white/5 backdrop-blur-xl border border-white/5 rounded-2xl p-6">
+            <div className="bg-gray-100 dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-white/5 rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="font-bold text-gray-200">Income Sources</h3>
-                    <select className="bg-white/10 border border-white/10 rounded-lg text-xs px-2 py-1 outline-none text-gray-400">
+                    <select className="bg-white/10 border border-gray-300 dark:border-white/10 rounded-lg text-xs px-2 py-1 outline-none text-gray-600 dark:text-gray-400">
                         <option>This Month</option>
                         <option>Last Month</option>
                     </select>
@@ -149,40 +149,40 @@ const Earnings = () => {
                 <div className="space-y-4">
                     <div>
                         <div className="flex justify-between text-sm mb-1">
-                            <span className="text-gray-400">Course Sales</span>
-                            <span className="text-white font-medium">65%</span>
+                            <span className="text-gray-600 dark:text-gray-400">Course Sales</span>
+                            <span className="text-gray-900 dark:text-white font-medium">65%</span>
                         </div>
-                        <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div className="h-2 bg-gray-50 dark:bg-gray-800 rounded-full overflow-hidden">
                             <div className="h-full bg-blue-500 w-[65%] rounded-full"></div>
                         </div>
                     </div>
                     <div>
                         <div className="flex justify-between text-sm mb-1">
-                            <span className="text-gray-400">Subscriptions</span>
-                            <span className="text-white font-medium">25%</span>
+                            <span className="text-gray-600 dark:text-gray-400">Subscriptions</span>
+                            <span className="text-gray-900 dark:text-white font-medium">25%</span>
                         </div>
-                        <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div className="h-2 bg-gray-50 dark:bg-gray-800 rounded-full overflow-hidden">
                             <div className="h-full bg-purple-500 w-[25%] rounded-full"></div>
                         </div>
                     </div>
                     <div>
                         <div className="flex justify-between text-sm mb-1">
-                            <span className="text-gray-400">Tips / Donations</span>
-                            <span className="text-white font-medium">10%</span>
+                            <span className="text-gray-600 dark:text-gray-400">Tips / Donations</span>
+                            <span className="text-gray-900 dark:text-white font-medium">10%</span>
                         </div>
-                        <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div className="h-2 bg-gray-50 dark:bg-gray-800 rounded-full overflow-hidden">
                             <div className="h-full bg-green-500 w-[10%] rounded-full"></div>
                         </div>
                     </div>
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-white/5">
+                <div className="mt-8 pt-6 border-t border-gray-200 dark:border-white/5">
                     <h3 className="font-bold text-gray-200 mb-2">Payout Method</h3>
-                    <div className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-white/5">
+                    <div className="flex items-center justify-between bg-gray-100 dark:bg-white/5 p-3 rounded-xl border border-gray-200 dark:border-white/5">
                         <div className="flex items-center gap-3">
-                            <FaUniversity className="text-gray-400" />
+                            <FaUniversity className="text-gray-600 dark:text-gray-400" />
                             <div className="text-sm">
-                                <div className="text-white">Chase Bank</div>
+                                <div className="text-gray-900 dark:text-white">Chase Bank</div>
                                 <div className="text-xs text-gray-500">**** 4567</div>
                             </div>
                         </div>

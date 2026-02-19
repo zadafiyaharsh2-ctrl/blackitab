@@ -543,7 +543,7 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
   const socialSidebarWidth = socialSidebarOpen ? '16rem' : '4rem';
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-gray-50 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-black text-gray-900 dark:text-white transition-colors duration-300">
       {/* 1. Main Sidebar - ALWAYS VISIBLE, FIXED LEFT */}
       {/* Ensure z-50 to be on top */}
       <div className="z-50">

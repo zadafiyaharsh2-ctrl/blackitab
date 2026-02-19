@@ -68,7 +68,7 @@ const ActivityHeatmap = () => {
   // ☀️ LIGHT MODE (reverse shades)
   const getColor = (count) => {
     if (isDark) {
-      if (count === 0) return "bg-gray-900";
+      if (count === 0) return "bg-white dark:bg-gray-900";
       if (count < 2) return "bg-green-900";
       if (count < 5) return "bg-green-700";
       if (count < 10) return "bg-green-500";
@@ -89,14 +89,14 @@ const ActivityHeatmap = () => {
 
   if (loading) {
     return (
-      <div className={`${isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md p-6 border h-full flex items-center justify-center`}>
+      <div className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md p-6 border h-full flex items-center justify-center`}>
         <div className="animate-spin h-8 w-8 border-b-2 border-orange-600 rounded-full"></div>
       </div>
     );
   }
 
   return (
-    <div className={`${isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md p-6 border overflow-hidden`}>
+    <div className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md p-6 border overflow-hidden`}>
 
       <div className="overflow-x-auto pb-2" ref={scrollRef}>
         <div className="min-w-max">
@@ -122,7 +122,7 @@ const ActivityHeatmap = () => {
           </div>
 
           {/* Dynamic Legend - NOW WORKS IN DARK/LIGHT MODE */}
-          <div className={`flex items-center justify-end mt-4 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} space-x-2`}>
+          <div className={`flex items-center justify-end mt-4 text-xs ${isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-500'} space-x-2`}>
             <span>Less</span>
 
             {legendLevels.map((level, i) => (

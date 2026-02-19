@@ -228,27 +228,27 @@ const AskAI = () => {
     ol: ({ children }) => <ol className="list-decimal list-inside my-2 space-y-1">{children}</ol>,
     p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
     a: ({ children, href }) => <a href={href} className={`${isDark ? 'text-blue-400' : 'text-blue-600'} hover:underline`} target="_blank" rel="noreferrer">{children}</a>,
-    blockquote: ({ children }) => <blockquote className={`border-l-4 ${isDark ? 'border-gray-500 text-gray-400' : 'border-gray-400 text-gray-600'} pl-3 my-2 italic`}>{children}</blockquote>,
+    blockquote: ({ children }) => <blockquote className={`border-l-4 ${isDark ? 'border-gray-500 text-gray-600 dark:text-gray-400' : 'border-gray-400 text-gray-600'} pl-3 my-2 italic`}>{children}</blockquote>,
     table: ({ children }) => <div className="overflow-x-auto my-2"><table className={`min-w-full border ${isDark ? 'border-gray-600' : 'border-gray-300'}`}>{children}</table></div>,
     th: ({ children }) => <th className={`px-3 py-2 text-left font-semibold border-b ${isDark ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-100'}`}>{children}</th>,
-    td: ({ children }) => <td className={`px-3 py-2 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>{children}</td>,
+    td: ({ children }) => <td className={`px-3 py-2 border-b ${isDark ? 'border-gray-300 dark:border-gray-700' : 'border-gray-200'}`}>{children}</td>,
   };
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen ${isDark ? 'bg-white dark:bg-gray-900' : 'bg-gray-50'}`}>
       <div className="max-w-6xl mx-auto h-[calc(100vh-3rem)] flex flex-col">
 
         {/* Header */}
-        <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+        <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-200 dark:border-gray-800' : 'border-gray-200'}`}>
           <div className="flex items-center gap-3">
             <div className={`p-3 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 shadow-lg`}>
-              <FaRobot className="text-2xl text-white" />
+              <FaRobot className="text-2xl text-gray-900 dark:text-white" />
             </div>
             <div>
-              <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              <h1 className={`text-2xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'}`}>
                 Ask AI
               </h1>
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className={`text-sm ${isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-600'}`}>
                 Your intelligent study companion
               </p>
             </div>
@@ -257,9 +257,9 @@ const AskAI = () => {
           <button
             onClick={() => setShowHistory(!showHistory)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${showHistory
-                ? 'bg-purple-600 text-white'
+                ? 'bg-purple-600 text-gray-900 dark:text-white'
                 : isDark
-                  ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  ? 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
           >
@@ -290,21 +290,21 @@ const AskAI = () => {
                           : 'bg-gradient-to-br from-purple-500 to-blue-600'
                       }`}>
                       {msg.role === 'user' ? (
-                        <FaUser className="text-white text-sm" />
+                        <FaUser className="text-gray-900 dark:text-white text-sm" />
                       ) : (
-                        <FaRobot className="text-white text-sm" />
+                        <FaRobot className="text-gray-900 dark:text-white text-sm" />
                       )}
                     </div>
 
                     {/* Message Bubble */}
                     <div className={`p-4 rounded-2xl ${msg.role === 'user'
-                        ? 'bg-blue-600 text-white rounded-tr-none'
+                        ? 'bg-blue-600 text-gray-900 dark:text-white rounded-tr-none'
                         : msg.isError
                           ? isDark
                             ? 'bg-red-900/50 text-red-200 border border-red-800 rounded-tl-none'
                             : 'bg-red-50 text-red-800 border border-red-200 rounded-tl-none'
                           : isDark
-                            ? 'bg-gray-800 text-gray-200 border border-gray-700 rounded-tl-none'
+                            ? 'bg-gray-50 dark:bg-gray-800 text-gray-200 border border-gray-300 dark:border-gray-700 rounded-tl-none'
                             : 'bg-white text-gray-800 border border-gray-200 shadow-sm rounded-tl-none'
                       }`}>
                       {msg.role === 'user' ? (
@@ -329,12 +329,12 @@ const AskAI = () => {
                 <div className="flex justify-start">
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center">
-                      <FaRobot className="text-white text-sm animate-pulse" />
+                      <FaRobot className="text-gray-900 dark:text-white text-sm animate-pulse" />
                     </div>
-                    <div className={`p-4 rounded-2xl rounded-tl-none ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                    <div className={`p-4 rounded-2xl rounded-tl-none ${isDark ? 'bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700' : 'bg-white border border-gray-200'}`}>
                       <div className="flex items-center gap-2">
                         <FaSpinner className={`animate-spin ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
-                        <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>AI is thinking...</span>
+                        <span className={isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-600'}>AI is thinking...</span>
                       </div>
                     </div>
                   </div>
@@ -343,10 +343,10 @@ const AskAI = () => {
 
               {/* Sample questions for empty state */}
               {messages.length === 1 && (
-                <div className={`mt-8 p-6 rounded-2xl ${isDark ? 'bg-gray-800/50 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                <div className={`mt-8 p-6 rounded-2xl ${isDark ? 'bg-gray-50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700' : 'bg-white border border-gray-200'}`}>
                   <div className="flex items-center gap-2 mb-4">
                     <FaLightbulb className={isDark ? 'text-yellow-400' : 'text-yellow-600'} />
-                    <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    <span className={`font-semibold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'}`}>
                       Try asking...
                     </span>
                   </div>
@@ -356,7 +356,7 @@ const AskAI = () => {
                         key={idx}
                         onClick={() => setInput(q)}
                         className={`p-3 text-left rounded-lg transition-all ${isDark
-                            ? 'bg-gray-700/50 hover:bg-gray-700 text-gray-300'
+                            ? 'bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
                             : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
                           }`}
                       >
@@ -371,7 +371,7 @@ const AskAI = () => {
             </div>
 
             {/* Input Area */}
-            <form onSubmit={handleSendMessage} className={`p-4 border-t ${isDark ? 'border-gray-800 bg-gray-900/80' : 'border-gray-200 bg-white'}`}>
+            <form onSubmit={handleSendMessage} className={`p-4 border-t ${isDark ? 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/80' : 'border-gray-200 bg-white'}`}>
               {error && (
                 <div className={`mb-3 p-3 rounded-lg flex items-center gap-2 ${isDark ? 'bg-red-900/30 text-red-300' : 'bg-red-50 text-red-700'}`}>
                   <FaExclamationCircle />
@@ -391,7 +391,7 @@ const AskAI = () => {
                   placeholder="Ask anything about your studies..."
                   disabled={isLoading}
                   className={`flex-1 px-4 py-3 rounded-xl border transition-all focus:ring-2 focus:ring-purple-500 focus:outline-none ${isDark
-                      ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500'
+                      ? 'bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-500'
                       : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'
                     } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
@@ -400,7 +400,7 @@ const AskAI = () => {
                   disabled={isLoading || !input.trim()}
                   className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 ${isLoading || !input.trim()
                       ? 'bg-gray-600 cursor-not-allowed opacity-50'
-                      : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl'
+                      : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-gray-900 dark:text-white shadow-lg hover:shadow-xl'
                     }`}
                 >
                   {isLoading ? <FaSpinner className="animate-spin" /> : <FaPaperPlane />}
@@ -412,9 +412,9 @@ const AskAI = () => {
 
           {/* History Sidebar */}
           {showHistory && (
-            <div className={`w-full md:w-80 flex flex-col border-l ${isDark ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'}`}>
-              <div className={`p-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'} flex items-center justify-between`}>
-                <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <div className={`w-full md:w-80 flex flex-col border-l ${isDark ? 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900' : 'border-gray-200 bg-white'}`}>
+              <div className={`p-4 border-b ${isDark ? 'border-gray-200 dark:border-gray-800' : 'border-gray-200'} flex items-center justify-between`}>
+                <h3 className={`font-semibold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'}`}>
                   Chat History
                 </h3>
                 <div className="flex items-center gap-2">
@@ -430,7 +430,7 @@ const AskAI = () => {
                     onClick={() => setShowHistory(false)}
                     className="md:hidden p-1"
                   >
-                    <FaTimes className={isDark ? 'text-gray-400' : 'text-gray-600'} />
+                    <FaTimes className={isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-600'} />
                   </button>
                 </div>
               </div>
@@ -438,10 +438,10 @@ const AskAI = () => {
               <div className="flex-1 overflow-y-auto p-3 space-y-2">
                 {loadingHistory ? (
                   <div className="flex items-center justify-center py-8">
-                    <FaSpinner className={`animate-spin text-2xl ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
+                    <FaSpinner className={`animate-spin text-2xl ${isDark ? 'text-gray-600' : 'text-gray-600 dark:text-gray-400'}`} />
                   </div>
                 ) : history.length === 0 ? (
-                  <div className={`text-center py-8 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                  <div className={`text-center py-8 ${isDark ? 'text-gray-500' : 'text-gray-600 dark:text-gray-400'}`}>
                     <FaComment className="text-3xl mx-auto mb-2 opacity-50" />
                     <p className="text-sm">No history yet</p>
                     <p className="text-xs">Your Q&A will appear here</p>
@@ -452,12 +452,12 @@ const AskAI = () => {
                       key={item._id}
                       onClick={() => loadFromHistory(item)}
                       className={`p-3 rounded-lg cursor-pointer group transition-all ${isDark
-                          ? 'bg-gray-800/50 hover:bg-gray-800 border border-gray-700'
+                          ? 'bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700'
                           : 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
                         }`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <p className={`text-sm font-medium line-clamp-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        <p className={`text-sm font-medium line-clamp-2 ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'}`}>
                           {item.question}
                         </p>
                         <button
@@ -468,7 +468,7 @@ const AskAI = () => {
                           <FaTrash className="text-xs" />
                         </button>
                       </div>
-                      <p className={`text-xs mt-1 line-clamp-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                      <p className={`text-xs mt-1 line-clamp-1 ${isDark ? 'text-gray-500' : 'text-gray-600 dark:text-gray-400'}`}>
                         {new Date(item.createdAt).toLocaleDateString()}
                       </p>
                     </div>

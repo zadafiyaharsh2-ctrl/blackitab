@@ -193,7 +193,7 @@ const ContentDetail = () => {
 
   if (loading) {
     return (
-         <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center text-white">
+         <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center text-gray-900 dark:text-white">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>
     );
@@ -201,21 +201,21 @@ const ContentDetail = () => {
 
   if (!content) {
      return (
-        <div className="min-h-screen bg-[#0f0f0f] flex flex-col items-center justify-center text-white gap-4">
-            <h2 className="text-2xl font-bold text-gray-400">Content not found</h2>
+        <div className="min-h-screen bg-[#0f0f0f] flex flex-col items-center justify-center text-gray-900 dark:text-white gap-4">
+            <h2 className="text-2xl font-bold text-gray-600 dark:text-gray-400">Content not found</h2>
             <button onClick={() => navigate(-1)} className="text-blue-500 hover:underline">Go Back</button>
         </div>
     );
   }
 
     return (
-        <div className="min-h-screen bg-[#0f0f0f] text-white font-sans selection:bg-blue-500/30">
+        <div className="min-h-screen bg-[#0f0f0f] text-gray-900 dark:text-white font-sans selection:bg-blue-500/30">
             
             {/* Standard Sticky Header */}
-            <div className="sticky top-0 z-50 bg-[#0f0f0f] border-b border-white/10 px-4 md:px-6 py-3 flex items-center gap-4">
+            <div className="sticky top-0 z-50 bg-[#0f0f0f] border-b border-gray-300 dark:border-white/10 px-4 md:px-6 py-3 flex items-center gap-4">
                  <button 
                          onClick={() => navigate(-1)} 
-                         className="p-2 rounded-full hover:bg-white/10 transition-colors text-white"
+                         className="p-2 rounded-full hover:bg-white/10 transition-colors text-gray-900 dark:text-white"
                 >
                     <FaArrowLeft />
                 </button>
@@ -234,10 +234,10 @@ const ContentDetail = () => {
                         {showMenu && (
                              <>
                                 <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-                                <div className="absolute right-0 top-full mt-2 w-48 bg-[#222] rounded-xl shadow-xl border border-white/10 overflow-hidden z-50 py-1">
+                                <div className="absolute right-0 top-full mt-2 w-48 bg-[#222] rounded-xl shadow-xl border border-gray-300 dark:border-white/10 overflow-hidden z-50 py-1">
                                     <button 
                                         onClick={handleDelete}
-                                        className="w-full text-left px-4 py-3 text-red-400 hover:bg-white/5 text-sm font-medium transition-colors flex items-center gap-2"
+                                        className="w-full text-left px-4 py-3 text-red-400 hover:bg-gray-100 dark:bg-white/5 text-sm font-medium transition-colors flex items-center gap-2"
                                     >
                                         <FaEllipsisH /> Delete Content
                                     </button>
@@ -254,7 +254,7 @@ const ContentDetail = () => {
                 <div className="flex flex-col gap-4">
                     
                     {/* VIDEO PLAYER */}
-                    <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-sm border border-white/5 relative group">
+                    <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-white/5 relative group">
                         {content.mediaType === 'video' ? (
                             <video 
                                 key={content.mediaUrl} 
@@ -273,7 +273,7 @@ const ContentDetail = () => {
                     <h1 className="text-xl md:text-2xl font-bold mt-2">{content.title}</h1>
 
                     {/* ACTIONS & METADATA ROW */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-4">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-300 dark:border-white/10 pb-4">
                         <div className="flex items-center gap-4">
                              {/* User Info */}
                              <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex items-center justify-center text-sm font-bold">
@@ -285,7 +285,7 @@ const ContentDetail = () => {
                              </div>
                              <div>
                                  <h3 className="font-bold text-base">{content.user?.name}</h3>
-                                 <div className="text-xs text-gray-400">
+                                 <div className="text-xs text-gray-600 dark:text-gray-400">
                                      {content.user?.followerCount || 0} Followers
                                  </div>
                              </div>
@@ -296,7 +296,7 @@ const ContentDetail = () => {
                                      onClick={handleFollow}
                                      className={`px-4 py-2 rounded-full font-medium text-sm transition-colors ml-4 ${
                                          isFollowing 
-                                         ? 'bg-[#222] text-white hover:bg-[#333]' 
+                                         ? 'bg-[#222] text-gray-900 dark:text-white hover:bg-[#333]' 
                                          : 'bg-white text-black hover:bg-gray-200'
                                      }`}
                                  >
@@ -310,19 +310,19 @@ const ContentDetail = () => {
                             <div className="flex bg-[#222] rounded-full overflow-hidden">
                                 <button
                                     onClick={handleLike}
-                                    className={`flex items-center gap-2 px-4 py-2 hover:bg-white/10 transition-colors border-r border-white/5 ${liked ? 'text-white' : 'text-gray-200'}`}
+                                    className={`flex items-center gap-2 px-4 py-2 hover:bg-white/10 transition-colors border-r border-gray-200 dark:border-white/5 ${liked ? 'text-gray-900 dark:text-white' : 'text-gray-200'}`}
                                 >
                                     {liked ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
                                     <span className="font-medium text-sm">{content.likes?.length || 0}</span>
                                 </button>
-                                <button className="px-3 py-2 hover:bg-white/10 transition-colors text-gray-200 hover:text-white">
+                                <button className="px-3 py-2 hover:bg-white/10 transition-colors text-gray-200 hover:text-gray-900 dark:text-white">
                                     <FaEllipsisH className="rotate-90" size={14} />
                                 </button>
                             </div>
                             
                             <button 
                                 onClick={handleShare}
-                                className="flex items-center gap-2 px-4 py-2 bg-[#222] hover:bg-[#333] rounded-full font-medium text-sm transition-colors text-gray-200 hover:text-white"
+                                className="flex items-center gap-2 px-4 py-2 bg-[#222] hover:bg-[#333] rounded-full font-medium text-sm transition-colors text-gray-200 hover:text-gray-900 dark:text-white"
                             >
                                 <FaShare /> Share
                             </button>
@@ -330,7 +330,7 @@ const ContentDetail = () => {
                             {isOwner && (
                                 <button 
                                     onClick={() => setShowPlaylistModal(true)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-[#222] hover:bg-[#333] rounded-full font-medium text-sm transition-colors text-gray-200 hover:text-white"
+                                    className="flex items-center gap-2 px-4 py-2 bg-[#222] hover:bg-[#333] rounded-full font-medium text-sm transition-colors text-gray-200 hover:text-gray-900 dark:text-white"
                                 >
                                     <FaBookmark /> Save
                                 </button>
@@ -344,7 +344,7 @@ const ContentDetail = () => {
                              <span>{content.comments?.length * 15} views</span>
                              <span>{new Date(content.createdAt).toLocaleDateString()}</span>
                         </div>
-                        <p className="whitespace-pre-wrap leading-relaxed text-gray-300">
+                        <p className="whitespace-pre-wrap leading-relaxed text-gray-700 dark:text-gray-300">
                              {content.description}
                         </p>
                     </div>
@@ -353,7 +353,7 @@ const ContentDetail = () => {
                     <div className="mt-6">
                         <div className="flex items-center gap-4 mb-6">
                              <h3 className="text-xl font-bold">Comments</h3>
-                             <span className="text-gray-400">{content.comments?.length}</span>
+                             <span className="text-gray-600 dark:text-gray-400">{content.comments?.length}</span>
                         </div>
 
                         {/* Add Comment */}
@@ -368,10 +368,10 @@ const ContentDetail = () => {
                                     onChange={(e) => setCommentText(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleComment()}
                                     placeholder="Add a comment..."
-                                    className="w-full bg-transparent border-b border-gray-700 pb-1 focus:border-white focus:outline-none transition-colors text-sm mb-2"
+                                    className="w-full bg-transparent border-b border-gray-300 dark:border-gray-700 pb-1 focus:border-white focus:outline-none transition-colors text-sm mb-2"
                                 />
                                 <div className="flex justify-end gap-2">
-                                     <button onClick={() => setCommentText('')} className="text-sm font-medium px-3 py-1.5 rounded-full hover:bg-[#222] text-gray-300 transition-colors">Cancel</button>
+                                     <button onClick={() => setCommentText('')} className="text-sm font-medium px-3 py-1.5 rounded-full hover:bg-[#222] text-gray-700 dark:text-gray-300 transition-colors">Cancel</button>
                                      <button 
                                         onClick={handleComment}
                                         disabled={!commentText.trim() || commentLoading}
@@ -387,7 +387,7 @@ const ContentDetail = () => {
                         <div className="space-y-6">
                             {content.comments?.map((comment, index) => (
                                 <div key={index} className="flex gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-[#222] shrink-0 overflow-hidden flex items-center justify-center text-sm font-bold text-gray-400">
+                                    <div className="w-10 h-10 rounded-full bg-[#222] shrink-0 overflow-hidden flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-400">
                                         {comment.user?.profileImage ? (
                                            <img src={comment.user.profileImage} alt="" className="w-full h-full object-cover" />
                                         ) : (
@@ -396,15 +396,15 @@ const ContentDetail = () => {
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-sm font-bold text-white">{comment.user?.name}</span>
+                                            <span className="text-sm font-bold text-gray-900 dark:text-white">{comment.user?.name}</span>
                                             <span className="text-xs text-gray-500">{new Date(comment.createdAt).toLocaleDateString()}</span>
                                         </div>
-                                        <p className="text-sm text-gray-300 leading-relaxed">{comment.text}</p>
+                                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{comment.text}</p>
                                         <div className="flex items-center gap-4 mt-2">
-                                            <button className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors">
+                                            <button className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white transition-colors">
                                                 <FaRegHeart /> 12
                                             </button>
-                                            <button className="text-xs font-semibold px-2 py-1 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors">Reply</button>
+                                            <button className="text-xs font-semibold px-2 py-1 rounded-full hover:bg-white/10 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white transition-colors">Reply</button>
                                         </div>
                                     </div>
                                 </div>
@@ -418,8 +418,8 @@ const ContentDetail = () => {
                      {/* Filter Buttons */}
                      <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
                         <button className="bg-white text-black px-3 py-1.5 rounded-lg text-sm font-bold whitespace-nowrap">All</button>
-                        <button className="bg-[#222] text-white hover:bg-[#333] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">From {content.user?.name}</button>
-                        <button className="bg-[#222] text-white hover:bg-[#333] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">Related</button>
+                        <button className="bg-[#222] text-gray-900 dark:text-white hover:bg-[#333] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">From {content.user?.name}</button>
+                        <button className="bg-[#222] text-gray-900 dark:text-white hover:bg-[#333] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">Related</button>
                      </div>
                      
                      {/* Real Recommended List */}
@@ -440,13 +440,13 @@ const ContentDetail = () => {
                                         <img src={post.mediaUrl} alt="" className="w-full h-full object-cover" />
                                      )}
                                      {/* Duration Label (Mock) */}
-                                     {post.mediaType === 'video' && <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] font-bold px-1 rounded">Video</div>}
+                                     {post.mediaType === 'video' && <div className="absolute bottom-1 right-1 bg-black/80 text-gray-900 dark:text-white text-[10px] font-bold px-1 rounded">Video</div>}
                                  </div>
                                  <div className="flex flex-col gap-1 min-w-0">
-                                     <h4 className="text-sm font-bold leading-tight line-clamp-2 text-white group-hover:text-blue-400 transition-colors">
+                                     <h4 className="text-sm font-bold leading-tight line-clamp-2 text-gray-900 dark:text-white group-hover:text-blue-400 transition-colors">
                                         {post.title || post.caption || "Untitled"}
                                      </h4>
-                                     <div className="text-xs text-gray-400">{post.user?.name || "Unknown User"}</div>
+                                     <div className="text-xs text-gray-600 dark:text-gray-400">{post.user?.name || "Unknown User"}</div>
                                      <div className="text-xs text-gray-500">
                                         {new Date(post.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                      </div>

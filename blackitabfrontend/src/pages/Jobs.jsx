@@ -94,10 +94,10 @@ const Jobs = () => {
           <div className="relative z-10">
             <div className="flex items-center gap-4 mb-6">
               <div className="p-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
-                <FaSuitcase className="text-4xl text-white" />
+                <FaSuitcase className="text-4xl text-gray-900 dark:text-white" />
               </div>
               <div>
-                <h1 className={`text-4xl md:text-5xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                <h1 className={`text-4xl md:text-5xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'}`}>
                   Career Launchpad
                 </h1>
                 <p className={`text-lg ${isDark ? 'text-blue-300' : 'text-blue-600'} font-semibold mt-1`}>
@@ -123,17 +123,17 @@ const Jobs = () => {
             return (
               <div
                 key={index}
-                className={`${isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'} rounded-2xl p-8 border backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] group`}
+                className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700' : 'bg-white border-gray-200'} rounded-2xl p-8 border backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] group`}
               >
                 <div className="flex items-start gap-4">
                   <div className={`p-4 rounded-xl bg-gradient-to-br ${feature.gradient} shadow-lg group-hover:scale-110 transition-transform`}>
-                    <Icon className="text-3xl text-white" />
+                    <Icon className="text-3xl text-gray-900 dark:text-white" />
                   </div>
                   <div>
-                    <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-3`}>
+                    <h3 className={`text-2xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'} mb-3`}>
                       {feature.title}
                     </h3>
-                    <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-lg leading-relaxed`}>
+                    <p className={`${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'} text-lg leading-relaxed`}>
                       {feature.description}
                     </p>
                   </div>
@@ -149,27 +149,27 @@ const Jobs = () => {
         <div className={`${isDark ? 'bg-gradient-to-r from-green-900/30 to-teal-900/30 border-green-700/50' : 'bg-gradient-to-r from-green-50 to-teal-50 border-green-200'} rounded-2xl p-8 border backdrop-blur-md`}>
           <div className="flex items-center gap-3 mb-6">
             <FaFileAlt className="text-4xl text-green-500" />
-            <h2 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <h2 className={`text-3xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'}`}>
               Dynamic Resume Generation
             </h2>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-lg mb-6 leading-relaxed`}>
+              <p className={`${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'} text-lg mb-6 leading-relaxed`}>
                 Your resume shouldn't be a static document. Our system dynamically updates your profile based on 
                 your real-time achievements on the platform.
               </p>
               <ul className="space-y-4">
-                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'}`}>
                   <FaCheckCircle className="text-green-500" />
                   <span><strong>Verified Skills:</strong> Only skills you've proven through tests are listed.</span>
                 </li>
-                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'}`}>
                   <FaCheckCircle className="text-green-500" />
                   <span><strong>Project Portfolio:</strong> Automatically links projects you've built in our IDE.</span>
                 </li>
-                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'}`}>
                   <FaCheckCircle className="text-green-500" />
                   <span><strong>Learning Path:</strong> Showcases courses and certifications you've completed.</span>
                 </li>
@@ -181,7 +181,7 @@ const Jobs = () => {
               <div className="flex items-center gap-4 mb-4 border-b pb-4 border-gray-200">
                 <div className="w-16 h-16 bg-gray-300 rounded-full"></div>
                 <div>
-                  <div className="h-4 w-32 bg-gray-800 rounded mb-2"></div>
+                  <div className="h-4 w-32 bg-gray-50 dark:bg-gray-800 rounded mb-2"></div>
                   <div className="h-3 w-24 bg-gray-500 rounded"></div>
                 </div>
               </div>
@@ -207,12 +207,12 @@ const Jobs = () => {
         <div className={`${isDark ? 'bg-gradient-to-r from-orange-900/30 to-red-900/30 border-orange-700/50' : 'bg-gradient-to-r from-orange-50 to-red-50 border-orange-200'} rounded-2xl p-8 border backdrop-blur-md`}>
           <div className="flex items-center gap-3 mb-8">
             <FaLaptopCode className="text-4xl text-orange-500" />
-            <h2 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <h2 className={`text-3xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'}`}>
               Integrated Assessment System
             </h2>
           </div>
 
-          <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-lg mb-8 max-w-3xl`}>
+          <p className={`${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'} text-lg mb-8 max-w-3xl`}>
             Recruiters can evaluate candidates instantly with our built-in assessment tools. No need for 
             external platforms—everything happens right here.
           </p>
@@ -221,14 +221,14 @@ const Jobs = () => {
             {assessmentFeatures.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <div key={index} className={`${isDark ? 'bg-gray-800/60' : 'bg-white/90'} rounded-xl p-6 border ${isDark ? 'border-gray-700' : 'border-gray-200'} text-center hover:shadow-lg transition-shadow`}>
+                <div key={index} className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/60' : 'bg-white/90'} rounded-xl p-6 border ${isDark ? 'border-gray-300 dark:border-gray-700' : 'border-gray-200'} text-center hover:shadow-lg transition-shadow`}>
                   <div className="w-14 h-14 mx-auto bg-orange-500/20 rounded-full flex items-center justify-center mb-4 text-orange-500">
                     <Icon className="text-2xl" />
                   </div>
-                  <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-2`}>
+                  <h3 className={`font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'} mb-2`}>
                     {feature.title}
                   </h3>
-                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <p className={`text-sm ${isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-600'}`}>
                     {feature.description}
                   </p>
                 </div>
@@ -240,16 +240,16 @@ const Jobs = () => {
 
       {/* Call to Action */}
       <div className="max-w-4xl mx-auto text-center">
-        <div className={`${isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'} rounded-2xl p-8 md:p-12 border backdrop-blur-md shadow-xl`}>
+        <div className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700' : 'bg-white border-gray-200'} rounded-2xl p-8 md:p-12 border backdrop-blur-md shadow-xl`}>
           <FaBuilding className={`text-5xl ${isDark ? 'text-blue-400' : 'text-blue-600'} mx-auto mb-4`} />
-          <h2 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>
+          <h2 className={`text-3xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'} mb-4`}>
             Your Career Starts Here
           </h2>
-          <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-8 max-w-2xl mx-auto leading-relaxed`}>
+          <p className={`text-lg ${isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-600'} mb-8 max-w-2xl mx-auto leading-relaxed`}>
             Whether you're looking for your first internship or your next big role, we provide the tools 
             to showcase your true potential to the world's top companies.
           </p>
-          <button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg">
+          <button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-gray-900 dark:text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg">
             Build Your Profile Now
           </button>
         </div>
