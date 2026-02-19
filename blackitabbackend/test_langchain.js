@@ -1,7 +1,7 @@
 
 const axios = require('axios');
 
-const LANGCHAIN_API_URL = 'http://localhost:8000/query';
+const LANGCHAIN_API_URL = 'http://127.0.0.1:8000/query';
 
 async function testConnection() {
     console.log(`Testing connection to ${LANGCHAIN_API_URL}...`);

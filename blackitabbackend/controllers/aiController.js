@@ -43,7 +43,7 @@ const debugError = (label, error) => {
 // ===============================================================
 
 const LANGCHAIN_API_URL =
-  process.env.LANGCHAIN_API_URL || "http://localhost:8000/query";
+  process.env.LANGCHAIN_API_URL || "http://127.0.0.1:8000/query";
 
 // Log environment configuration on startup
 debugLog("AI Controller Initialized", {
