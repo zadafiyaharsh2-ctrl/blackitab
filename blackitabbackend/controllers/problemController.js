@@ -3,7 +3,7 @@ const ExamQuestion = require('../models/ExamQuestion');
 const ProblemChapter = require('../models/ProblemChapter');
 const Problem = require('../models/Problem');
 const ProblemProgress = require('../models/ProblemProgress');
-
+const axios = require('axios');
 // GET /api/problems/subjects — all problem subjects
 exports.getProblemSubjects = async (req, res) => {
     try {
@@ -271,8 +271,14 @@ exports.startAiTutor = async (req, res) => {
             }
             `;
         } else {
-            // REMEDIAL QUESTION
-            systemContext = `You are a Socratic Tutor. Your goal is to help a student understand a complex problem by breaking it down into a SIMPLER, foundational step.`;
+            // REMEDIAL QUESTION - BRANCHING LOGIC
+            systemContext = `You are a Socratic Tutor. Your goal is to help a student understand a complex problem.
+            
+            STRATEGY:
+            - If the problem involves MULTIPLE concepts (e.g. Rotation + Friction), BREAK IT DOWN. Generate 2 separate simpler questions, one for each concept.
+            - If it's a single concept, generate 1 simpler precursor question.
+            - Questions must be Multiple Choice.`;
+
             userTask = `
             Context:
             - Extension/Subject: ${question.subject}
@@ -282,21 +288,24 @@ exports.startAiTutor = async (req, res) => {
             - Student's Wrong Answer Index: ${userAnswer}
             
             YOUR TASK:
-            1. Diagnose why the student might have chosen the wrong answer.
-            2. Create a NEW, SIMPLER multiple-choice question that tests the *prerequisite* knowledge for the original question.
-            3. The new question MUST be easier than the original.
-            4. Do NOT simply repeat the original question.
+            1. Diagnose the student's struggle.
+            2. Generate Remedial Questions (1 or 2) to build prerequisite knowledge.
+            3. Questions must be significantly easier than the original.
             `;
             outputFormat = `
             Output ONLY valid JSON:
             {
                 "action": "continue",
-                "message": "Let's take a step back. Try this simpler question to build your understanding.",
-                "followUpQuestion": {
-                    "question": "The simpler question text...",
-                    "options": ["Opt A", "Opt B", "Opt C", "Opt D"],
-                    "correctAnswer": 0
-                },
+                "message": "Let's break this down into steps.",
+                "newQuestions": [
+                    {
+                        "question": "Step 1: Simpler question text...",
+                        "options": ["A", "B", "C", "D"],
+                        "correctAnswer": 0,
+                        "explanation": "Brief hint."
+                    }
+                    // Add a second question object here if breaking down a complex topic
+                ],
                 "isResolved": false
             }
             `;
