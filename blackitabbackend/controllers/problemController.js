@@ -1,4 +1,5 @@
 const ProblemSubject = require('../models/ProblemSubject');
+const ExamQuestion = require('../models/ExamQuestion');
 const ProblemChapter = require('../models/ProblemChapter');
 const Problem = require('../models/Problem');
 const ProblemProgress = require('../models/ProblemProgress');
@@ -152,5 +153,80 @@ exports.updateProblemStatus = async (req, res) => {
     } catch (err) {
         console.error('Error updating problem status:', err);
         res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+
+// GET /api/problems/exam/:examId/questions
+exports.getExamQuestions = async(req, res) => {
+    try{
+        const { examId } = req.params;
+        const { subject } = req.query;
+        const filter = { exam: examId};
+        if(subject) filter.subject = subject;
+
+        const questions = await ExamQuestion.find(filter)
+        .select('-correctAnswer -explanation')
+        .sort({createdAt: -1});
+
+        res.json({success: true, data:questions});
+    }catch(err){
+        console.error('Error fetching exam Questions: ', err);
+        res.status(500).json({success: false, message: 'Server Error'});
+
+    }
+};
+
+
+
+exports.checkExamAnswer = async(req, res) => {
+    try{
+        const { questionId, selectedOption } = req.body;
+        const question = await ExamQuestion.findById(questionId);
+        if(!question){
+            return res.status(400).json({ success: false, message: 'Question not found'});
+        }
+        const isCorrect = question.correctAnswer === selectedOption;
+        res.json({
+            success: true,
+            data: { correct: isCorrect, correctAnswer: question.correctAnswer, explanation: question.explanation }
+        });
+    }catch(err){
+        console.error('Error checking answer:' ,err);
+        res.status(500).json({success: false, message: 'Server Error'});
+    }
+};
+
+
+exports.generateExamQuestions = async (req, res) => {
+    try{
+        const { examId } = req.params;
+        const { subject = 'Physics', count = 3, difficulty= 'Medium'} = req.body;
+
+        const dummyGenerated = []  /// need to repalce with api Ai
+         for (let i = 0; i < count; i++) {
+            dummyGenerated.push({
+                exam: examId, subject,
+                question: `[AI Generated] Sample ${subject} question #${i + 1} for ${examId.toUpperCase()}?`,
+                options: ['Option A', 'Option B', 'Option C', 'Option D'],
+                correctAnswer: Math.floor(Math.random() * 4),
+                difficulty, explanation: 'AI-generated dummy explanation.',
+                isAIGenerated: true
+            });
+        }
+/// up until this
+
+
+        const saved = await ExamQuestion.insertMany(dummyGenerated);
+        const safeQuestions = saved.map(q => ({
+            _id: q._id, exam: q.exam, subject: q.subject,
+            question: q.question, options: q.options,
+            difficulty: q.difficulty, isAIGenerated: q.isAIGenerated
+        }));
+        res.json({ success: true, data: safeQuestions });
+
+    }catch(err) {
+        console.error('Error generateing questions: ', err);
+        res.status(500).json({success: false, message: 'Server error'});
     }
 };

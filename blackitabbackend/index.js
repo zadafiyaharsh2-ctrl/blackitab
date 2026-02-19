@@ -28,7 +28,7 @@ const aiQuestionRoutes = require('./routes/aiQuestionRoutes');
 
 const app = express();
 const server = http.createServer(app);
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 // --- Socket.io ---

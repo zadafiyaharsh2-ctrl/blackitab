@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Microscope, 
-  FlaskConical, 
-  BookOpen, 
-  Briefcase, 
+import {
+  Microscope,
+  FlaskConical,
+  BookOpen,
+  Briefcase,
   Award,
   ChevronRight,
   TrendingUp,
@@ -126,16 +126,12 @@ const Problems = () => {
 
   // Handle exam category click
   const handleExamClick = (examId) => {
-    // For general category, show all subjects
-    if (examId === 'general' && problemSubjects.length > 0) {
-      // Navigate to first subject or show all subjects
-      navigate(`/problems/${problemSubjects[0]._id}`);
-    } else {
-      // For specific exams, filter and navigate to relevant subjects
-      // For now, navigate to first subject (can be enhanced later)
-      if (problemSubjects.length > 0) {
+
+    if (examId === 'general') {
+      if (problemSubjects.length > 0)
         navigate(`/problems/${problemSubjects[0]._id}`);
-      }
+    } else {
+      navigate(`/exam/${examId}`);
     }
   };
 
@@ -157,13 +153,13 @@ const Problems = () => {
               <TrendingUp className="w-4 h-4 text-purple-400" />
               <span className="text-purple-300 text-sm font-medium">Master Your Exam Preparation</span>
             </div>
-            
+
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
               Practice. Perfect. <span className="bg-gradient-to-r from-purple-400 to-pink-600 text-transparent bg-clip-text">Succeed.</span>
             </h1>
-            
+
             <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-              Comprehensive problem sets tailored for India's most competitive exams. 
+              Comprehensive problem sets tailored for India's most competitive exams.
               Build confidence with structured practice and detailed solutions.
             </p>
 
@@ -183,7 +179,7 @@ const Problems = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent pointer-events-none"></div>
       </div>
@@ -207,14 +203,14 @@ const Problems = () => {
               >
                 {/* Gradient overlay on hover */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${exam.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
-                
+
                 <div className="relative p-6">
                   {/* Icon and Badge */}
                   <div className="flex items-start justify-between mb-4">
                     <div className={`h-14 w-14 ${exam.bgColor} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
                       <Icon className={`${exam.iconColor} h-7 w-7`} />
                     </div>
-                    
+
                     <div className="px-3 py-1 bg-gray-700/50 rounded-full">
                       <span className="text-xs font-semibold text-gray-300">{exam.stats.difficulty}</span>
                     </div>
@@ -224,7 +220,7 @@ const Problems = () => {
                   <h3 className="text-xl font-bold text-white mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 group-hover:bg-clip-text transition-all">
                     {exam.shortName}
                   </h3>
-                  
+
                   <p className="text-sm text-gray-400 mb-4 line-clamp-2 leading-relaxed">
                     {exam.description}
                   </p>
@@ -248,7 +244,7 @@ const Problems = () => {
                     <span className="text-sm font-semibold text-gray-400">
                       {exam.stats.problems} Problems
                     </span>
-                    
+
                     <div className={`flex items-center gap-1 ${exam.iconColor} font-semibold text-sm group-hover:translate-x-1 transition-transform duration-300`}>
                       Start Practice
                       <ChevronRight className="h-4 w-4" />
