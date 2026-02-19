@@ -1,3 +1,4 @@
+const axios = require('axios');
 const ProblemSubject = require('../models/ProblemSubject');
 const ExamQuestion = require('../models/ExamQuestion');
 const ProblemChapter = require('../models/ProblemChapter');
@@ -158,53 +159,53 @@ exports.updateProblemStatus = async (req, res) => {
 
 
 // GET /api/problems/exam/:examId/questions
-exports.getExamQuestions = async(req, res) => {
-    try{
+exports.getExamQuestions = async (req, res) => {
+    try {
         const { examId } = req.params;
         const { subject } = req.query;
-        const filter = { exam: examId};
-        if(subject) filter.subject = subject;
+        const filter = { exam: examId };
+        if (subject) filter.subject = subject;
 
         const questions = await ExamQuestion.find(filter)
-        .select('-correctAnswer -explanation')
-        .sort({createdAt: -1});
+            .select('-correctAnswer -explanation')
+            .sort({ createdAt: -1 });
 
-        res.json({success: true, data:questions});
-    }catch(err){
+        res.json({ success: true, data: questions });
+    } catch (err) {
         console.error('Error fetching exam Questions: ', err);
-        res.status(500).json({success: false, message: 'Server Error'});
+        res.status(500).json({ success: false, message: 'Server Error' });
 
     }
 };
 
 
 
-exports.checkExamAnswer = async(req, res) => {
-    try{
+exports.checkExamAnswer = async (req, res) => {
+    try {
         const { questionId, selectedOption } = req.body;
         const question = await ExamQuestion.findById(questionId);
-        if(!question){
-            return res.status(400).json({ success: false, message: 'Question not found'});
+        if (!question) {
+            return res.status(400).json({ success: false, message: 'Question not found' });
         }
         const isCorrect = question.correctAnswer === selectedOption;
         res.json({
             success: true,
-            data: isCorrect ? { correct: true, correctAnswer: question.correctAnswer} : { correct: false }
+            data: isCorrect ? { correct: true, correctAnswer: question.correctAnswer } : { correct: false }
         });
-    }catch(err){
-        console.error('Error checking answer:' ,err);
-        res.status(500).json({success: false, message: 'Server Error'});
+    } catch (err) {
+        console.error('Error checking answer:', err);
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
 
 
 exports.generateExamQuestions = async (req, res) => {
-    try{
+    try {
         const { examId } = req.params;
-        const { subject = 'Physics', count = 3, difficulty= 'Medium'} = req.body;
+        const { subject = 'Physics', count = 3, difficulty = 'Medium' } = req.body;
 
         const dummyGenerated = []  /// need to repalce with api Ai
-         for (let i = 0; i < count; i++) {
+        for (let i = 0; i < count; i++) {
             dummyGenerated.push({
                 exam: examId, subject,
                 question: `[AI Generated] Sample ${subject} question #${i + 1} for ${examId.toUpperCase()}?`,
@@ -214,7 +215,7 @@ exports.generateExamQuestions = async (req, res) => {
                 isAIGenerated: true
             });
         }
-/// up until this
+        /// up until this
 
 
         const saved = await ExamQuestion.insertMany(dummyGenerated);
@@ -225,9 +226,9 @@ exports.generateExamQuestions = async (req, res) => {
         }));
         res.json({ success: true, data: safeQuestions });
 
-    }catch(err) {
+    } catch (err) {
         console.error('Error generateing questions: ', err);
-        res.status(500).json({success: false, message: 'Server error'});
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
@@ -238,7 +239,7 @@ exports.startAiTutor = async (req, res) => {
     try {
         const { questionId, userAnswer, sessionHistory = [] } = req.body;
         const question = await ExamQuestion.findById(questionId);
-        
+
         if (!question) {
             return res.status(404).json({ success: false, message: 'Question not found' });
         }
@@ -286,6 +287,10 @@ exports.startAiTutor = async (req, res) => {
             2. Create a NEW, SIMPLER multiple-choice question that tests the *prerequisite* knowledge for the original question.
             3. The new question MUST be easier than the original.
             4. Do NOT simply repeat the original question.
+
+            One Example:
+            Suppose the Answer of a Question is acceleration = final veocity - initial velocity / Time taken
+            then you should be able to ask the student , the questions related to velocity then if he again gives a wrong answer , you should then ask him about displacement and if he then gives the correct answer , you should then ask him about time taken and if he then gives the correct answer , you should then ask him about acceleration and if he then gives the correct answer , you should then ask him about the original question.
             `;
             outputFormat = `
             Output ONLY valid JSON:
@@ -311,15 +316,15 @@ exports.startAiTutor = async (req, res) => {
                 query: prompt,
                 top_k: 3
             }, { timeout: 120000 }); // 2 min timeout for complex generation
-
+            console.log(aiRes)
             let aiText = aiRes.data.answer || aiRes.data.response || '';
-            
+            console.log(aiText)
             if (!aiText) throw new Error('Empty response from AI');
 
             // Robust JSON Extraction
             const jsonStartIndex = aiText.indexOf('{');
             const jsonEndIndex = aiText.lastIndexOf('}');
-            
+
             if (jsonStartIndex === -1 || jsonEndIndex === -1) {
                 console.error('AI Tutor: Failed to find JSON in response:', aiText);
                 throw new Error('Invalid JSON format from AI');
@@ -327,7 +332,7 @@ exports.startAiTutor = async (req, res) => {
 
             const jsonString = aiText.substring(jsonStartIndex, jsonEndIndex + 1);
             let aiData;
-            
+
             try {
                 aiData = JSON.parse(jsonString);
             } catch (pErr) {
@@ -346,7 +351,7 @@ exports.startAiTutor = async (req, res) => {
 
         } catch (aiErr) {
             console.error('AI Tutor Service Error:', aiErr.message);
-            
+
             // Generate a basic fallback response to keep the UI functional
             res.json({
                 success: true,
