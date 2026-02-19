@@ -35,6 +35,7 @@ const ExamQuestions = () => {
     const [tutorSessions, setTutorSessions] = useState({});
 
     const [followUpAnswers, setFollowUpAnswers] = useState({});
+    const [followUpResults, setFollowUpResults] = useState({});
 
     const examMeta = {
         jee: { name: 'JEE', subjects: ['Physics', 'Chemistry', 'Mathematics'], color: 'purple' },
@@ -77,30 +78,53 @@ const ExamQuestions = () => {
         if (selected === undefined) return;
 
         const session = tutorSessions[questionId];
-        
-        // Optimistic UI update or wait for server?
-        // Let's call server to get next step (or resolution)
-        
-        try {
-            setAnalyzing(true); // Freeze screen effect
-            const token = localStorage.getItem('token');
-            const res = await axios.post(
-                `${API_URL}/api/problems/exam/${examId}/ai-tutor`,
-                {
-                    questionId,
-                    userAnswer: selected,
-                    sessionHistory: session.history || []
-                },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            if (res.data.success) {
-                setTutorSessions(prev => ({ ...prev, [questionId]: res.data.data }));
-                setFollowUpAnswers(prev => ({ ...prev, [questionId]: undefined }));
+        const correctIdx = session.followUpQuestion.correctAnswer;
+        const isCorrect = selected === correctIdx;
+
+        // Store the result to show correct/incorrect styling
+        setFollowUpResults(prev => ({ ...prev, [questionId]: { selected, correctIdx, isCorrect } }));
+
+        // Wait 1.5s to let user see the feedback
+        await new Promise(r => setTimeout(r, 2500));
+
+        // Clear the follow-up result
+        setFollowUpResults(prev => { const n = { ...prev }; delete n[questionId]; return n; });
+
+        const newCorrectCount = (session.correctCount || 0) + (isCorrect ? 1 : 0);
+
+        if (isCorrect && newCorrectCount >= 3) {
+            // 3 correct answers reached — resolve the tutor!
+            setTutorSessions(prev => ({
+                ...prev,
+                [questionId]: { ...prev[questionId], isResolved: true, followUpQuestion: null, correctCount: newCorrectCount, message: 'Excellent! You nailed all it' }
+            }));
+            setFollowUpAnswers(prev => ({ ...prev, [questionId]: undefined }));
+        } else {
+            // Either wrong OR correct but haven't hit 3 yet — fetch next question
+            try {
+                setAnalyzing(true);
+                const token = localStorage.getItem('token');
+                const res = await axios.post(
+                    `${API_URL}/api/problems/exam/${examId}/ai-tutor`,
+                    {
+                        questionId,
+                        userAnswer: selected,
+                        sessionHistory: session.history || []
+                    },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                if (res.data.success) {
+                    setTutorSessions(prev => ({
+                        ...prev,
+                        [questionId]: { ...res.data.data, correctCount: newCorrectCount }
+                    }));
+                    setFollowUpAnswers(prev => ({ ...prev, [questionId]: undefined }));
+                }
+            } catch (err) {
+                console.error('Error in tutor follow-up:', err);
+            } finally {
+                setAnalyzing(false);
             }
-        } catch (err) {
-            console.error('Error in tutor follow-up:', err);
-        } finally {
-            setAnalyzing(false);
         }
     };
 
@@ -435,7 +459,11 @@ const ExamQuestions = () => {
                                                         </div>
                                                         <div className="mt-4 flex justify-end">
                                                             <button
-                                                                onClick={() => setTutorSessions(prev => ({ ...prev, [q._id]: undefined }))}
+                                                                onClick={() => {
+                                                                    setTutorSessions(prev => ({ ...prev, [q._id]: undefined }));
+                                                                    setResults(prev => { const n = { ...prev }; delete n[q._id]; return n; });
+                                                                    setSelectedAnswers(prev => { const n = { ...prev }; delete n[q._id]; return n; });
+                                                                }}
                                                                 className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
                                                             >
                                                                 I've Studied - Let me try again
@@ -444,39 +472,78 @@ const ExamQuestions = () => {
                                                     </div>
                                                 )}
 
-                                                {/* REMEDIAL QUESTION MODE */}
                                                 {tutorSessions[q._id].action !== 'study_theory' && !tutorSessions[q._id].isResolved && tutorSessions[q._id].followUpQuestion && (
                                                     <div className="bg-gray-800/80 p-5 rounded-xl border border-gray-700/50">
-                                                        <p className="text-white font-medium mb-4 text-lg">
-                                                            {tutorSessions[q._id].followUpQuestion.question}
-                                                        </p>
+                                                        <div className="flex items-center justify-between mb-4">
+                                                            <p className="text-white font-medium text-lg">
+                                                                {tutorSessions[q._id].followUpQuestion.question}
+                                                            </p>
+                                                            {/* <span className="text-xs px-2.5 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 whitespace-nowrap ml-3">
+                                                                ✓ {tutorSessions[q._id].correctCount || 0}/3 correct
+                                                            </span> */}
+                                                        </div>
                                                         <div className="space-y-3">
-                                                            {tutorSessions[q._id].followUpQuestion.options.map((opt, i) => (
-                                                                <button key={i}
-                                                                    onClick={() => setFollowUpAnswers(prev => ({ ...prev, [q._id]: i }))}
-                                                                    className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${followUpAnswers[q._id] === i
-                                                                        ? 'border-purple-500 bg-purple-500/20 text-white shadow-lg shadow-purple-900/20'
-                                                                        : 'border-gray-700 text-gray-400 hover:border-gray-600 hover:bg-gray-700/50'
-                                                                        }`}
+                                                            {tutorSessions[q._id].followUpQuestion.options.map((opt, i) => {
+                                                                const fResult = followUpResults[q._id];
+                                                                const isSubmitted = !!fResult;
+                                                                const isThisCorrect = isSubmitted && i === fResult.correctIdx;
+                                                                const isThisWrongPick = isSubmitted && i === fResult.selected && !fResult.isCorrect;
+                                                                const isSelected = followUpAnswers[q._id] === i;
+
+                                                                let btnStyle = 'border-gray-700 text-gray-400 hover:border-gray-600 hover:bg-gray-700/50';
+                                                                if (isSubmitted) {
+                                                                    if (isThisCorrect) btnStyle = 'border-green-500 bg-green-500/20 text-green-300';
+                                                                    else if (isThisWrongPick) btnStyle = 'border-red-500 bg-red-500/20 text-red-300';
+                                                                    else btnStyle = 'border-gray-700/50 bg-gray-800/20 text-gray-500';
+                                                                } else if (isSelected) {
+                                                                    btnStyle = 'border-purple-500 bg-purple-500/20 text-white shadow-lg shadow-purple-900/20';
+                                                                }
+
+                                                                return (
+                                                                    <button key={i}
+                                                                        onClick={() => !isSubmitted && setFollowUpAnswers(prev => ({ ...prev, [q._id]: i }))}
+                                                                        disabled={isSubmitted}
+                                                                        className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${btnStyle} ${isSubmitted ? 'cursor-default' : ''}`}
+                                                                    >
+                                                                        <div className="flex items-center gap-3">
+                                                                            <span className={`w-6 h-6 flex items-center justify-center rounded-full border text-xs ${isThisCorrect ? 'border-green-400 text-green-300' :
+                                                                                isThisWrongPick ? 'border-red-400 text-red-300' :
+                                                                                    isSelected && !isSubmitted ? 'border-purple-400 text-purple-300' :
+                                                                                        'border-gray-600 text-gray-500'
+                                                                                }`}>
+                                                                                {String.fromCharCode(65 + i)}
+                                                                            </span>
+                                                                            <span className="flex-1">{opt}</span>
+                                                                            {isThisCorrect && <CheckCircle className="h-5 w-5 text-green-400 shrink-0" />}
+                                                                            {isThisWrongPick && <XCircle className="h-5 w-5 text-red-400 shrink-0" />}
+                                                                        </div>
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                        {!followUpResults[q._id] && (
+                                                            <div className="mt-4 flex justify-end">
+                                                                <button
+                                                                    onClick={() => handleFollowUpSubmit(q._id)}
+                                                                    disabled={followUpAnswers[q._id] === undefined}
+                                                                    className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-medium rounded-lg transition-all"
                                                                 >
-                                                                    <div className="flex items-center gap-3">
-                                                                        <span className={`w-6 h-6 flex items-center justify-center rounded-full border text-xs ${followUpAnswers[q._id] === i ? 'border-purple-400 text-purple-300' : 'border-gray-600 text-gray-500'}`}>
-                                                                            {String.fromCharCode(65 + i)}
-                                                                        </span>
-                                                                        {opt}
-                                                                    </div>
+                                                                    Submit Answer
                                                                 </button>
-                                                            ))}
-                                                        </div>
-                                                        <div className="mt-4 flex justify-end">
-                                                            <button
-                                                                onClick={() => handleFollowUpSubmit(q._id)}
-                                                                disabled={followUpAnswers[q._id] === undefined}
-                                                                className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-medium rounded-lg transition-all"
-                                                            >
-                                                                Submit Answer
-                                                            </button>
-                                                        </div>
+                                                            </div>
+                                                        )}
+                                                        {followUpResults[q._id] && (
+                                                            <div className={`mt-4 p-3 rounded-lg border flex items-center gap-2 ${followUpResults[q._id].isCorrect
+                                                                ? 'bg-green-500/10 border-green-500/30'
+                                                                : 'bg-red-500/10 border-red-500/30'
+                                                                }`}>
+                                                                {followUpResults[q._id].isCorrect ? (
+                                                                    <><CheckCircle className="h-5 w-5 text-green-400" /><span className="text-green-300 text-sm font-medium">Correct! Great understanding!</span></>
+                                                                ) : (
+                                                                    <><XCircle className="h-5 w-5 text-red-400" /><span className="text-red-300 text-sm font-medium">Not quite — loading next step...</span></>
+                                                                )}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
 
@@ -492,7 +559,11 @@ const ExamQuestions = () => {
                                                         </p>
                                                         <div className="self-end mt-2">
                                                             <button
-                                                                onClick={() => setTutorSessions(prev => ({ ...prev, [q._id]: undefined }))} // Close tutor
+                                                                onClick={() => {
+                                                                    setTutorSessions(prev => ({ ...prev, [q._id]: undefined }));
+                                                                    setResults(prev => { const n = { ...prev }; delete n[q._id]; return n; });
+                                                                    setSelectedAnswers(prev => { const n = { ...prev }; delete n[q._id]; return n; });
+                                                                }}
                                                                 className="px-3 py-1.5 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-300 border border-green-800 rounded-lg transition-colors"
                                                             >
                                                                 Close Tutor

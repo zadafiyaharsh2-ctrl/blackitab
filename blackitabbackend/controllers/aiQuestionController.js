@@ -42,6 +42,20 @@ const generateQuestions = async (req, res) => {
         3. "explanation" should be educational.
         4. Do NOT include any markdown formatting (like \`\`\`json) in your response, just the raw JSON string.
         5. Ensure the JSON is valid and can be parsed by JSON.parse().
+        
+        Rules:
+        1. The questions should be related to the topic "${topic}".
+        2. The questions should be of ${validDifficulty} difficulty.
+        3. The questions should be of ${questionCount} count.
+        4. The questions should be in the format of multiple choice questions.
+        5. The questions should have 4 options.
+        6. The questions should have a correct answer.
+        7. The questions should have an explanation.
+        8. The questions should be in the format of JSON.
+
+        Important:
+        The data for the topics of the questions should first be checked on the provided documents, if you find the related concepts then ask questions based on that, if you don't find the related concepts then ask questions based on your knowledge.
+
         `;
 
         // Call the central AI Service (LangChain API)
