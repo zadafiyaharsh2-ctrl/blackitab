@@ -18,26 +18,26 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { 
-  FaBook, FaCode, FaTrophy, FaFire, FaChartLine, 
+import {
+  FaBook, FaCode, FaTrophy, FaFire, FaChartLine,
   FaClock, FaArrowRight, FaCheckCircle, FaDatabase,
   FaLaptopCode, FaCloud, FaQuoteLeft, FaCalendarAlt, FaListUl
 } from 'react-icons/fa';
 import { MdReportProblem } from 'react-icons/md';
 import ActivityHeatmap from '../components/ActivityHeatmap'; // Custom Heatmap Component
 import PlaylistCard from '../components/PlaylistCard'; // Import PlaylistCard
-import { useTheme } from '../context/ThemeContext'; // Dark Mode context
 import API_URL from '../config'; // Centralized API URL
 
+
 const Dashboard = () => {
-  const { isDark } = useTheme(); // Access dark mode state
+
 
   // ============================================================================
   // LOCAL STATE
   // ============================================================================
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Data State
   const [subjects, setSubjects] = useState([]);
   const [playlists, setPlaylists] = useState([]); // State for playlists
@@ -45,7 +45,7 @@ const Dashboard = () => {
     totalCompleted: 0,
     bySubject: []
   });
-  
+
   const [stats, setStats] = useState({
     streak: 0,
     totalPoints: 0,
@@ -87,7 +87,7 @@ const Dashboard = () => {
         // 1. Get User Info from LocalStorage
         const userData = localStorage.getItem('user');
         const token = localStorage.getItem('token');
-        
+
         if (userData) {
           setUser(JSON.parse(userData));
         }
@@ -101,7 +101,7 @@ const Dashboard = () => {
         // 3. Fetch Playlists (New)
         const playlistsRes = await axios.get(`${API_URL}/api/playlists/all`);
         if (playlistsRes.data.success) {
-            setPlaylists(playlistsRes.data.playlists);
+          setPlaylists(playlistsRes.data.playlists);
         }
 
         // 4. Fetch User Progress (Auth required)
@@ -126,7 +126,7 @@ const Dashboard = () => {
     };
 
     fetchData();
-    
+
     // Pick a random quote
     const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
     setQuote(randomQuote);
@@ -212,12 +212,12 @@ const Dashboard = () => {
     const total = subject.topicCount || 0;
     // Math to get percentage (handle divide by zero)
     const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-    
+
     // Default styling
     let icon = FaBook;
     let color = 'text-gray-600';
     let barColor = 'from-gray-500 to-gray-600';
-    
+
     // Custom styling per subject name
     if (subject.name === 'DBMS') {
       icon = FaDatabase;
@@ -248,10 +248,10 @@ const Dashboard = () => {
     <div className="min-h-screen bg-transparent p-6 md:p-8">
       {/* HEADER SECTION */}
       <div className="mb-8">
-        <h1 className={`text-3xl md:text-4xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-800'} mb-2`}>
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-2">
           Welcome back, {user?.name || 'Student'}! 👋
         </h1>
-        <p className={isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-600'}>Here's what's happening with your learning journey today.</p>
+        <p className="text-gray-600 dark:text-gray-400">Here's what's happening with your learning journey today.</p>
       </div>
 
       {/* STATS ROW (Four Cards) */}
@@ -259,11 +259,11 @@ const Dashboard = () => {
         {statsCards.map((stat, index) => (
           <div
             key={index}
-            className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700/50' : 'bg-white border-gray-100'} backdrop-blur-sm rounded-2xl shadow-lg p-5 border flex items-center justify-between group hover:border-blue-500/30 transition-all duration-300`}
+            className="bg-white dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 backdrop-blur-sm rounded-2xl shadow-lg p-5 flex items-center justify-between group hover:border-blue-500/30 transition-all duration-300"
           >
             <div>
-              <p className={`${isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-500'} text-sm font-medium mb-1`}>{stat.title}</p>
-              <h3 className={`text-2xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-800'} group-hover:text-blue-400 transition-colors`}>
+              <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">{stat.title}</p>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-white group-hover:text-blue-400 transition-colors">
                 {stat.value}
               </h3>
             </div>
@@ -276,7 +276,7 @@ const Dashboard = () => {
 
       {/* BENTO GRID (Main Content) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        
+
         {/* ROW 1: Motivation (Wide) & Problem of Day (Narrow) */}
         <div className="lg:col-span-2 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl shadow-lg p-8 text-gray-900 dark:text-white relative overflow-hidden flex flex-col justify-center min-h-[200px]">
           {/* Background Decorative Element */}
@@ -310,7 +310,7 @@ const Dashboard = () => {
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 relative z-10">Problem of the Day</h3>
           <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 relative z-10">{problemOfTheDay.title}</p>
           <div className="mt-auto relative z-10">
-            <Link 
+            <Link
               to={problemOfTheDay.link}
               className="flex items-center justify-center w-full py-2.5 rounded-xl bg-blue-600 text-gray-900 dark:text-white font-semibold text-sm hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
             >
@@ -321,15 +321,15 @@ const Dashboard = () => {
 
         {/* ROW 2: Activity Heatmap (Wide) & Upcoming Contest (Narrow) */}
         <div className="lg:col-span-2 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-300 dark:border-gray-700/50 p-1 overflow-hidden">
-           <div className="p-5 border-b border-gray-300 dark:border-gray-700/50">
-             <h3 className="font-bold text-gray-900 dark:text-white flex items-center">
-               <FaFire className="text-orange-500 mr-2" /> Activity Log
-             </h3>
-           </div>
-           <div className="p-4">
-             {/* Reusable Heatmap Component */}
-             <ActivityHeatmap />
-           </div>
+          <div className="p-5 border-b border-gray-300 dark:border-gray-700/50">
+            <h3 className="font-bold text-gray-900 dark:text-white flex items-center">
+              <FaFire className="text-orange-500 mr-2" /> Activity Log
+            </h3>
+          </div>
+          <div className="p-4">
+            {/* Reusable Heatmap Component */}
+            <ActivityHeatmap />
+          </div>
         </div>
 
         {/* Upcoming Contest Card */}
@@ -342,7 +342,7 @@ const Dashboard = () => {
               Registered
             </span>
           </div>
-          
+
           <div className="text-center py-4 flex-1 flex flex-col justify-center">
             <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{nextContest.title}</h4>
             <div className="flex items-center justify-center text-gray-600 dark:text-gray-400 text-sm mb-6">
@@ -363,7 +363,7 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-          
+
           <Link to={nextContest.link} className="w-full py-2.5 rounded-xl border border-blue-500/50 text-blue-400 font-bold text-sm text-center hover:bg-blue-500/10 transition-colors">
             View Details
           </Link>
@@ -380,7 +380,7 @@ const Dashboard = () => {
               View All
             </Link>
           </div>
-          
+
           {/* List of Subjects with Progress Bars */}
           <div className="space-y-4">
             {recentSubjects.map((subject, index) => (
@@ -434,28 +434,28 @@ const Dashboard = () => {
 
       {/* NEW SECTION: Featured Series (Playlists) */}
       <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-              <FaListUl className="mr-3 text-purple-500" />
-              Featured Series
-            </h2>
-            <Link to="/playlists" className="text-sm text-purple-400 font-medium hover:text-purple-300 flex items-center">
-              View All <FaArrowRight className="ml-1 text-xs" />
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {playlists.slice(0, 4).map((playlist, index) => (
-                  <div key={playlist._id} className="transform hover:-translate-y-1 transition-transform duration-300">
-                      <PlaylistCard playlist={playlist} />
-                  </div>
-              ))}
-              {playlists.length === 0 && !loading && (
-                  <div className="col-span-full text-center py-10 bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
-                      <p className="text-gray-500">No series available yet.</p>
-                  </div>
-              )}
-          </div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+            <FaListUl className="mr-3 text-purple-500" />
+            Featured Series
+          </h2>
+          <Link to="/playlists" className="text-sm text-purple-400 font-medium hover:text-purple-300 flex items-center">
+            View All <FaArrowRight className="ml-1 text-xs" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {playlists.slice(0, 4).map((playlist, index) => (
+            <div key={playlist._id} className="transform hover:-translate-y-1 transition-transform duration-300">
+              <PlaylistCard playlist={playlist} />
+            </div>
+          ))}
+          {playlists.length === 0 && !loading && (
+            <div className="col-span-full text-center py-10 bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
+              <p className="text-gray-500">No series available yet.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../context/useTheme';
 import API_URL from '../config';
 
 const ActivityHeatmap = () => {

@@ -1,12 +1,12 @@
 import { useTheme } from '../context/ThemeContext';
-import { 
-  FaSuitcase, 
-  FaFileAlt, 
-  FaLaptopCode, 
-  FaBell, 
-  FaUserTie, 
-  FaCheckCircle, 
-  FaSearch, 
+import {
+  FaSuitcase,
+  FaFileAlt,
+  FaLaptopCode,
+  FaBell,
+  FaUserTie,
+  FaCheckCircle,
+  FaSearch,
   FaBuilding,
   FaRobot,
   FaClipboardList,
@@ -90,7 +90,7 @@ const Jobs = () => {
         <div className={`${isDark ? 'bg-gradient-to-br from-blue-900/40 via-indigo-900/40 to-violet-900/40 border-blue-700/50' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 border-blue-200'} rounded-3xl p-8 md:p-12 border backdrop-blur-md shadow-2xl relative overflow-hidden`}>
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl"></div>
-          
+
           <div className="relative z-10">
             <div className="flex items-center gap-4 mb-6">
               <div className="p-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
@@ -105,10 +105,10 @@ const Jobs = () => {
                 </p>
               </div>
             </div>
-            
+
             <p className={`text-xl ${isDark ? 'text-gray-200' : 'text-gray-700'} mb-8 leading-relaxed max-w-4xl`}>
-              More than just a job board. We bridge the gap between your skills and your dream career. 
-              Our platform tracks your learning journey, builds your resume automatically, and connects you 
+              More than just a job board. We bridge the gap between your skills and your dream career.
+              Our platform tracks your learning journey, builds your resume automatically, and connects you
               directly with recruiters who are looking for exactly what you have to offer.
             </p>
           </div>
@@ -157,7 +157,7 @@ const Jobs = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <p className={`${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'} text-lg mb-6 leading-relaxed`}>
-                Your resume shouldn't be a static document. Our system dynamically updates your profile based on 
+                Your resume shouldn't be a static document. Our system dynamically updates your profile based on
                 your real-time achievements on the platform.
               </p>
               <ul className="space-y-4">
@@ -213,7 +213,7 @@ const Jobs = () => {
           </div>
 
           <p className={`${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'} text-lg mb-8 max-w-3xl`}>
-            Recruiters can evaluate candidates instantly with our built-in assessment tools. No need for 
+            Recruiters can evaluate candidates instantly with our built-in assessment tools. No need for
             external platforms—everything happens right here.
           </p>
 
@@ -246,7 +246,7 @@ const Jobs = () => {
             Your Career Starts Here
           </h2>
           <p className={`text-lg ${isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-600'} mb-8 max-w-2xl mx-auto leading-relaxed`}>
-            Whether you're looking for your first internship or your next big role, we provide the tools 
+            Whether you're looking for your first internship or your next big role, we provide the tools
             to showcase your true potential to the world's top companies.
           </p>
           <button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-gray-900 dark:text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg">
