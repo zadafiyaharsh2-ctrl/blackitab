@@ -73,11 +73,17 @@ const ExamQuestions = () => {
     };
 
     const handleFollowUpSubmit = async (questionId) => {
-        const selected = followUpAnswers[questionId];
-        if (selected === undefined) return;
-
         const session = tutorSessions[questionId];
         
+        let selected;
+        if (session.newQuestions && session.newQuestions.length > 0) {
+            selected = session.newQuestions.map((_, i) => followUpAnswers[`${questionId}_${i}`]);
+            if (selected.includes(undefined)) return;
+        } else {
+            selected = followUpAnswers[questionId];
+            if (selected === undefined) return;
+        }
+
         // Optimistic UI update or wait for server?
         // Let's call server to get next step (or resolution)
         
@@ -445,33 +451,50 @@ const ExamQuestions = () => {
                                                 )}
 
                                                 {/* REMEDIAL QUESTION MODE */}
-                                                {tutorSessions[q._id].action !== 'study_theory' && !tutorSessions[q._id].isResolved && tutorSessions[q._id].followUpQuestion && (
-                                                    <div className="bg-gray-800/80 p-5 rounded-xl border border-gray-700/50">
-                                                        <p className="text-white font-medium mb-4 text-lg">
-                                                            {tutorSessions[q._id].followUpQuestion.question}
-                                                        </p>
-                                                        <div className="space-y-3">
-                                                            {tutorSessions[q._id].followUpQuestion.options.map((opt, i) => (
-                                                                <button key={i}
-                                                                    onClick={() => setFollowUpAnswers(prev => ({ ...prev, [q._id]: i }))}
-                                                                    className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${followUpAnswers[q._id] === i
-                                                                        ? 'border-purple-500 bg-purple-500/20 text-white shadow-lg shadow-purple-900/20'
-                                                                        : 'border-gray-700 text-gray-400 hover:border-gray-600 hover:bg-gray-700/50'
-                                                                        }`}
-                                                                >
-                                                                    <div className="flex items-center gap-3">
-                                                                        <span className={`w-6 h-6 flex items-center justify-center rounded-full border text-xs ${followUpAnswers[q._id] === i ? 'border-purple-400 text-purple-300' : 'border-gray-600 text-gray-500'}`}>
-                                                                            {String.fromCharCode(65 + i)}
-                                                                        </span>
-                                                                        {opt}
-                                                                    </div>
-                                                                </button>
-                                                            ))}
-                                                        </div>
+                                                {tutorSessions[q._id].action !== 'study_theory' && !tutorSessions[q._id].isResolved && (tutorSessions[q._id].followUpQuestion || (tutorSessions[q._id].newQuestions && tutorSessions[q._id].newQuestions.length > 0)) && (
+                                                    <div className="bg-gray-800/80 p-5 rounded-xl border border-gray-700/50 space-y-6">
+                                                        {(tutorSessions[q._id].newQuestions || [tutorSessions[q._id].followUpQuestion]).map((fq, fqIdx) => (
+                                                            <div key={fqIdx} className="space-y-4">
+                                                                <p className="text-white font-medium mb-2 text-lg">
+                                                                    {fq.question}
+                                                                </p>
+                                                                <div className="space-y-3">
+                                                                    {fq.options.map((opt, i) => {
+                                                                        const isSelected = tutorSessions[q._id].newQuestions 
+                                                                            ? followUpAnswers[`${q._id}_${fqIdx}`] === i 
+                                                                            : followUpAnswers[q._id] === i;
+                                                                        return (
+                                                                            <button key={i}
+                                                                                onClick={() => {
+                                                                                    if (tutorSessions[q._id].newQuestions) {
+                                                                                        setFollowUpAnswers(prev => ({ ...prev, [`${q._id}_${fqIdx}`]: i }));
+                                                                                    } else {
+                                                                                        setFollowUpAnswers(prev => ({ ...prev, [q._id]: i }));
+                                                                                    }
+                                                                                }}
+                                                                                className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${isSelected
+                                                                                    ? 'border-purple-500 bg-purple-500/20 text-white shadow-lg shadow-purple-900/20'
+                                                                                    : 'border-gray-700 text-gray-400 hover:border-gray-600 hover:bg-gray-700/50'
+                                                                                    }`}
+                                                                            >
+                                                                                <div className="flex items-center gap-3">
+                                                                                    <span className={`w-6 h-6 flex items-center justify-center rounded-full border text-xs ${isSelected ? 'border-purple-400 text-purple-300' : 'border-gray-600 text-gray-500'}`}>
+                                                                                        {String.fromCharCode(65 + i)}
+                                                                                    </span>
+                                                                                    {opt}
+                                                                                </div>
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        ))}
                                                         <div className="mt-4 flex justify-end">
                                                             <button
                                                                 onClick={() => handleFollowUpSubmit(q._id)}
-                                                                disabled={followUpAnswers[q._id] === undefined}
+                                                                disabled={tutorSessions[q._id].newQuestions 
+                                                                    ? tutorSessions[q._id].newQuestions.some((_, i) => followUpAnswers[`${q._id}_${i}`] === undefined)
+                                                                    : followUpAnswers[q._id] === undefined}
                                                                 className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-medium rounded-lg transition-all"
                                                             >
                                                                 Submit Answer

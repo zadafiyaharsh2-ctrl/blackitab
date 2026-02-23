@@ -4,7 +4,7 @@ const ExamQuestion = require('../models/ExamQuestion');
 const ProblemChapter = require('../models/ProblemChapter');
 const Problem = require('../models/Problem');
 const ProblemProgress = require('../models/ProblemProgress');
-const axios = require('axios');
+
 // GET /api/problems/subjects — all problem subjects
 exports.getProblemSubjects = async (req, res) => {
     try {
