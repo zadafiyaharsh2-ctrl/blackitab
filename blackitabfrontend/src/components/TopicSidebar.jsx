@@ -69,7 +69,7 @@ const TopicSidebar = ({
           Main sidebar element with different behavior on mobile vs desktop */}
       <div 
         className={`
-          fixed lg:static inset-y-0 right-0 z-30 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-l 
+          fixed lg:static inset-y-0 right-0 z-30 bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 border-l 
           transform transition-all duration-300 ease-in-out flex flex-col
           ${isOpen ? 'translate-x-0 w-80' : 'translate-x-full lg:translate-x-0 lg:w-0 lg:border-l-0'}
           lg:h-full mt-16 lg:mt-0
@@ -90,7 +90,7 @@ const TopicSidebar = ({
             SIDEBAR HEADER
             ========================================
             Contains subject name and navigation buttons */}
-        <div className={`p-4 border-b ${isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-100 bg-white'} flex items-center justify-between ${!isOpen && 'hidden'}`}>
+        <div className={`p-4 border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 flex items-center justify-between ${!isOpen && 'hidden'}`}>
           {/* Hidden when sidebar is closed */}
           
           {/* Left side: Back button and subject name */}
@@ -105,7 +105,7 @@ const TopicSidebar = ({
             </button>
             
             {/* Subject name heading */}
-            <h2 className={`font-bold ${isDark ? 'text-white' : 'text-gray-800'} truncate`}>
+            <h2 className={`font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-800'} truncate`}>
               {/* truncate prevents long names from breaking layout */}
               {subjectName}
             </h2>
@@ -141,10 +141,10 @@ const TopicSidebar = ({
                 className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-between group
                   ${selectedTopic?._id === topic._id 
                     // If this topic is currently selected:
-                    ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 shadow-sm' 
-                    // Selected: Blue background, blue text, left border accent, shadow
-                    : isDark ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    // Not selected: Gray text, hover effects
+                    ? 'bg-gray-200 dark:bg-gray-900 border-blue-600 dark:border-blue-500 shadow-sm text-blue-700 dark:text-blue-400 border-l-4' 
+                    // Selected
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:text-white'
+                    // Not selected
                   }`}
               >
                 {/* Topic name (truncated if too long) */}
@@ -174,8 +174,8 @@ const TopicSidebar = ({
         onClick={onToggle} // Toggle sidebar open/closed
         className={`
           hidden lg:flex absolute top-1/2 transform -translate-y-1/2 z-40
-          ${isDark ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200 text-gray-600'} shadow-md rounded-l-lg p-1.5
-          hover:text-blue-600 hover:bg-gray-50 transition-all duration-300
+          bg-gray-100 dark:bg-gray-800 border-y border-l border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 shadow-md rounded-l-lg p-1.5
+          hover:text-blue-600 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300
           ${isOpen ? 'right-80' : 'right-0'}
         `}
         // Breakdown of classes:

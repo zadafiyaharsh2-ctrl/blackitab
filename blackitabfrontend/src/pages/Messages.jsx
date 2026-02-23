@@ -202,12 +202,12 @@ const Messages = () => {
 
              return (
                 <div className="space-y-2">
-                    <div onClick={() => handleDownload(downloadUrl, msg.fileName, msg._id)} className="flex items-center gap-3 bg-black/20 p-3 rounded-lg hover:bg-black/30 transition-all border border-white/10 group cursor-pointer max-w-xs">
+                    <div onClick={() => handleDownload(downloadUrl, msg.fileName, msg._id)} className="flex items-center gap-3 bg-black/20 p-3 rounded-lg hover:bg-black/30 transition-all border border-gray-300 dark:border-white/10 group cursor-pointer max-w-xs">
                         <div className="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center text-red-400 group-hover:bg-red-500/20 group-hover:scale-105 transition-all">
                              {downloadingMsgId === msg._id ? <FaSpinner className="animate-spin" size={24} /> : (msg.fileName?.endsWith('.pdf') ? <FaFilePdf size={24} /> : <FaFileAlt size={24} />)}
                         </div>
                         <div className="flex-1 min-w-0">
-                             <p className="text-sm font-semibold truncate text-gray-200 group-hover:text-white transition-colors">{msg.fileName || 'Attachment'}</p>
+                             <p className="text-sm font-semibold truncate text-gray-200 group-hover:text-gray-900 dark:text-white transition-colors">{msg.fileName || 'Attachment'}</p>
                              <div className="flex items-center gap-1 text-xs text-gray-500 group-hover:text-blue-400 mt-0.5">
                                 {downloadingMsgId === msg._id ? (
                                     <>
@@ -228,14 +228,14 @@ const Messages = () => {
             );
         } else if (msg.type === 'post' && msg.post) {
              return (
-                 <div className="bg-gray-800 rounded-lg overflow-hidden border border-white/10 max-w-xs cursor-pointer hover:border-white/30 transition-colors">
+                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-300 dark:border-white/10 max-w-xs cursor-pointer hover:border-white/30 transition-colors">
                       {msg.post.mediaType === 'video' ? (
                           <video src={msg.post.mediaUrl} className="w-full h-32 object-cover" />
                       ) : (
                           <img src={msg.post.mediaUrl} className="w-full h-32 object-cover" alt="" />
                       )}
                       <div className="p-2">
-                          <p className="text-xs text-gray-400 truncate">{msg.post.caption || 'Shared Post'}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{msg.post.caption || 'Shared Post'}</p>
                       </div>
                  </div>
              );
@@ -253,15 +253,15 @@ const Messages = () => {
             </div>
 
             {/* LEFT SIDEBAR */}
-            <div className={`w-full md:w-[300px] border-r border-white/5 flex flex-col bg-transparent z-10 ${userId ? 'hidden md:flex' : 'flex'}`}>
-                <div className="p-4 border-b border-white/5">
-                    <h2 className="text-xl font-bold mb-2 text-white tracking-tight">Messages</h2>
+            <div className={`w-full md:w-[300px] border-r border-gray-200 dark:border-white/5 flex flex-col bg-transparent z-10 ${userId ? 'hidden md:flex' : 'flex'}`}>
+                <div className="p-4 border-b border-gray-200 dark:border-white/5">
+                    <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white tracking-tight">Messages</h2>
                     <div className="relative group">
                         <FaSearch className="absolute left-3 top-3 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
                         <input 
                             type="text" 
                             placeholder="Search..." 
-                            className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-3 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all placeholder-gray-500"
+                            className="w-full bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl py-2 pl-10 pr-3 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all placeholder-gray-500"
                         />
                     </div>
                 </div>
@@ -281,7 +281,7 @@ const Messages = () => {
                                 whileTap={{ scale: 0.98 }}
                                 key={conv._id}
                                 onClick={() => navigate(`/messages/${conv._id}`)}
-                                className={`p-3 flex items-center gap-3 cursor-pointer rounded-xl transition-all border border-transparent ${currentChatUser?._id === conv._id ? 'bg-blue-600/20 border-blue-500/30 shadow-lg shadow-blue-900/20' : 'hover:border-white/5'}`}
+                                className={`p-3 flex items-center gap-3 cursor-pointer rounded-xl transition-all border border-transparent ${currentChatUser?._id === conv._id ? 'bg-blue-600/20 border-blue-500/30 shadow-lg shadow-blue-900/20' : 'hover:border-gray-200 dark:border-white/5'}`}
                             >
                                 <div className="relative">
                                     <img 
@@ -295,10 +295,10 @@ const Messages = () => {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-baseline mb-1">
-                                        <h3 className={`font-semibold truncate ${currentChatUser?._id === conv._id ? 'text-white' : 'text-gray-200'}`}>{conv.name}</h3>
+                                        <h3 className={`font-semibold truncate ${currentChatUser?._id === conv._id ? 'text-gray-900 dark:text-white' : 'text-gray-200'}`}>{conv.name}</h3>
                                         <span className="text-[10px] text-gray-500">12:30 PM</span> 
                                     </div>
-                                    <p className={`text-sm truncate ${currentChatUser?._id === conv._id ? 'text-blue-200' : 'text-gray-400'}`}>Click to verify message history...</p>
+                                    <p className={`text-sm truncate ${currentChatUser?._id === conv._id ? 'text-blue-200' : 'text-gray-600 dark:text-gray-400'}`}>Click to verify message history...</p>
                                 </div>
                             </motion.div>
                         ))
@@ -311,16 +311,16 @@ const Messages = () => {
                 {currentChatUser ? (
                     <>
                         {/* CHAT HEADER */}
-                        <div className="p-4 md:p-6 border-b border-white/5 flex items-center justify-between bg-transparent backdrop-blur-md sticky top-0 z-20">
+                        <div className="p-4 md:p-6 border-b border-gray-200 dark:border-white/5 flex items-center justify-between bg-transparent backdrop-blur-md sticky top-0 z-20">
                             <div className="flex items-center gap-4">
-                                <button onClick={() => navigate('/messages')} className="md:hidden w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-gray-300">
+                                <button onClick={() => navigate('/messages')} className="md:hidden w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300">
                                     <FaArrowLeft />
                                 </button>
                                 <div className="relative">
                                     <img 
                                         src={currentChatUser.profileImage?.startsWith('http') ? currentChatUser.profileImage : `${API_URL}${currentChatUser.profileImage}` || 'https://via.placeholder.com/40'} 
                                         alt={currentChatUser.name} 
-                                        className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover ring-2 ring-white/10 bg-gray-800"
+                                        className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover ring-2 ring-white/10 bg-gray-50 dark:bg-gray-800"
                                     />
                                     {(onlineUsers.includes(currentChatUser._id) || onlineUsers.includes(currentChatUser.id)) && (
                                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black animate-pulse"></div>
@@ -328,7 +328,7 @@ const Messages = () => {
 
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-white text-lg">{currentChatUser.name}</h3>
+                                    <h3 className="font-bold text-gray-900 dark:text-white text-lg">{currentChatUser.name}</h3>
                                     {(() => {
                                         const isOnline = onlineUsers.includes(currentChatUser._id) || onlineUsers.includes(currentChatUser.id);
 
@@ -340,7 +340,7 @@ const Messages = () => {
                                     })()}
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 md:gap-4 text-gray-400">
+                            <div className="flex items-center gap-2 md:gap-4 text-gray-600 dark:text-gray-400">
                                 <button className="p-3 hover:bg-white/10 rounded-full transition-colors"><FaPhone /></button>
                                 <button className="p-3 hover:bg-white/10 rounded-full transition-colors"><FaVideo /></button>
                                 <button className="p-3 hover:bg-white/10 rounded-full transition-colors"><FaEllipsisV /></button>
@@ -354,8 +354,8 @@ const Messages = () => {
                                     <div className="w-24 h-24 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-2xl shadow-blue-500/20 mb-4">
                                         <div className="text-5xl">👋</div>
                                     </div>
-                                    <h3 className="text-2xl font-bold text-white">Start a conversation</h3>
-                                    <p className="text-gray-400 max-w-xs">Say hello to {currentChatUser.name} and start connecting!</p>
+                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Start a conversation</h3>
+                                    <p className="text-gray-600 dark:text-gray-400 max-w-xs">Say hello to {currentChatUser.name} and start connecting!</p>
                                 </div>
                             ) : (
                                 messages.map((msg, index) => {
@@ -371,12 +371,12 @@ const Messages = () => {
                                             <div className={`max-w-[85%] md:max-w-[70%] flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                                                 <div className={`px-4 py-2 rounded-2xl shadow-md backdrop-blur-sm relative border ${
                                                     isMe 
-                                                        ? 'bg-blue-600 text-white rounded-br-none border-blue-500 shadow-blue-900/20 ' 
-                                                        : 'bg-white/10 text-gray-100 rounded-bl-none border-white/5 shadow-black/10'
+                                                        ? 'bg-blue-600 text-gray-900 dark:text-white rounded-br-none border-blue-500 shadow-blue-900/20 ' 
+                                                        : 'bg-white/10 text-gray-100 rounded-bl-none border-gray-200 dark:border-white/5 shadow-black/10'
                                                 }`}>
                                                     {renderMessageContent(msg)}
                                                 </div>
-                                                <p className={`text-[10px] mt-1.5 font-medium px-2 ${isMe ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                <p className={`text-[10px] mt-1.5 font-medium px-2 ${isMe ? 'text-gray-600 dark:text-gray-400' : 'text-gray-500'}`}>
                                                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </p>
                                             </div>
@@ -388,23 +388,23 @@ const Messages = () => {
                         </div>
 
                         {/* INPUT AREA */}
-                        <form onSubmit={handleSendMessage} className="p-3 md:p-4 border-t border-white/5 bg-transparent backdrop-blur-md">
+                        <form onSubmit={handleSendMessage} className="p-3 md:p-4 border-t border-gray-200 dark:border-white/5 bg-transparent backdrop-blur-md">
                             
-                            <div className="bg-white/5 border border-white/10 rounded-full p-1 pl-4 flex items-center gap-2 focus-within:border-blue-500/50 focus-within:bg-white/10 transition-all shadow-lg h-12">
+                            <div className="bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-full p-1 pl-4 flex items-center gap-2 focus-within:border-blue-500/50 focus-within:bg-white/10 transition-all shadow-lg h-12">
                                 
                                 <input 
                                     type="text" 
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
                                     placeholder="Type a message..."
-                                    className="flex-1 bg-transparent text-white focus:outline-none placeholder-gray-500 h-full text-sm"
+                                    className="flex-1 bg-transparent text-gray-900 dark:text-white focus:outline-none placeholder-gray-500 h-full text-sm"
                                 />
                                 <motion.button 
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                     type="submit" 
                                     disabled={!newMessage.trim() || sending}
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg shadow-blue-900/30 ${sending ? 'bg-gray-600' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400'} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg shadow-blue-900/30 ${sending ? 'bg-gray-600' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400'} text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed`}
                                 >
                                     {sending ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <FaPaperPlane className="ml-0.5" size={14} />}
                                 </motion.button>
@@ -417,13 +417,13 @@ const Messages = () => {
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ duration: 0.5 }}
-                            className="w-32 h-32 bg-white/5 rounded-full flex items-center justify-center mb-8 border border-white/10 shadow-2xl relative overflow-hidden"
+                            className="w-32 h-32 bg-gray-100 dark:bg-white/5 rounded-full flex items-center justify-center mb-8 border border-gray-300 dark:border-white/10 shadow-2xl relative overflow-hidden"
                         >
                             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 animate-pulse"></div>
-                            <FaPaperPlane className="text-4xl text-white/40 relative z-10" />
+                            <FaPaperPlane className="text-4xl text-gray-900 dark:text-white/40 relative z-10" />
                         </motion.div>
-                        <h2 className="text-3xl font-bold text-white mb-2">Welcome to Messages</h2>
-                        <p className="text-gray-400 max-w-md">Select a conversation from the sidebar to start chatting with your network.</p>
+                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Messages</h2>
+                        <p className="text-gray-600 dark:text-gray-400 max-w-md">Select a conversation from the sidebar to start chatting with your network.</p>
                     </div>
                 )}
             </div>

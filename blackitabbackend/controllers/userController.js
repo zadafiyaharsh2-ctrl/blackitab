@@ -47,3 +47,20 @@ exports.updateProfile = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+// GET /api/user/leaderboard — top 50 users by points then streak
+exports.getLeaderboard = async (req, res) => {
+    try {
+        const users = await User.find({})
+            .select('name profileImage points streak followerCount')
+            .sort({ points: -1, streak: -1 })
+            .limit(50)
+            .lean();
+
+        const ranked = users.map((u, i) => ({ ...u, rank: i + 1 }));
+        res.json({ success: true, data: ranked });
+    } catch (error) {
+        console.error('Leaderboard error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};

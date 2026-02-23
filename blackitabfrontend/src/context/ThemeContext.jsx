@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 
 const ThemeContext = createContext();
 
@@ -20,7 +20,7 @@ export const ThemeProvider = ({ children }) => {
   // Update localStorage and document class whenever theme changes
   useEffect(() => {
     localStorage.setItem('theme', theme);
-    
+
     // Add or remove dark class from html element
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -47,3 +47,4 @@ export const ThemeProvider = ({ children }) => {
 };
 
 export default ThemeContext;
+

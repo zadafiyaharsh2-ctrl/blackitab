@@ -75,12 +75,12 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdate }) => {
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         onClick={(e) => e.stopPropagation()}
-                        className="bg-gray-900 border border-gray-700 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden"
+                        className="bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden"
                     >
                         {/* Header */}
-                        <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-800/50">
-                            <h2 className="text-lg font-bold text-white">Edit Profile</h2>
-                            <button onClick={onClose} className="p-2 text-gray-400 hover:text-white rounded-full hover:bg-white/10 transition-colors">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+                            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Edit Profile</h2>
+                            <button onClick={onClose} className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white rounded-full hover:bg-white/10 transition-colors">
                                 <FaTimes />
                             </button>
                         </div>
@@ -90,17 +90,17 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdate }) => {
                             {/* Image Upload */}
                             <div className="flex flex-col items-center gap-4">
                                 <div className="relative group cursor-pointer">
-                                    <div className="w-24 h-24 rounded-full border-2 border-gray-700 overflow-hidden bg-gray-800">
+                                    <div className="w-24 h-24 rounded-full border-2 border-gray-300 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-800">
                                         {preview ? (
                                             <img src={preview} alt="Preview" className="w-full h-full object-cover" />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-600 bg-gray-800">
+                                            <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-600 bg-gray-50 dark:bg-gray-800">
                                                 {name.charAt(0).toUpperCase()}
                                             </div>
                                         )}
                                     </div>
                                     <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 rounded-full transition-opacity cursor-pointer">
-                                        <FaCamera className="text-white text-xl" />
+                                        <FaCamera className="text-gray-900 dark:text-white text-xl" />
                                         <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
                                     </label>
                                 </div>
@@ -110,33 +110,33 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdate }) => {
                             {/* Inputs */}
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Display Name</label>
+                                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Display Name</label>
                                     <input 
                                         type="text" 
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
-                                        className="w-full bg-black/40 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                                        className="w-full bg-black/40 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors"
                                         placeholder="Your Name"
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Bio</label>
+                                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Bio</label>
                                     <textarea 
                                         rows="3"
                                         value={bio}
                                         onChange={(e) => setBio(e.target.value)}
-                                        className="w-full bg-black/40 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                                        className="w-full bg-black/40 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors resize-none"
                                         placeholder="Tell us about yourself..."
                                         maxLength={160}
                                     />
                                     <div className="text-right text-xs text-gray-500 mt-1">{bio.length}/160</div>
                                 </div>
                                 
-                                <div className="flex items-center justify-between bg-black/40 p-3 rounded-lg border border-gray-700">
+                                <div className="flex items-center justify-between bg-black/40 p-3 rounded-lg border border-gray-300 dark:border-gray-700">
                                     <div>
-                                        <h3 className="text-white font-medium">Private Account</h3>
-                                        <p className="text-xs text-gray-400">Only followers can see your posts and message you.</p>
+                                        <h3 className="text-gray-900 dark:text-white font-medium">Private Account</h3>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">Only followers can see your posts and message you.</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input 
@@ -155,7 +155,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdate }) => {
                                 <button 
                                     type="submit" 
                                     disabled={loading}
-                                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-gray-900 dark:text-white font-bold py-3 rounded-xl shadow-lg transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {loading ? <FaSpinner className="animate-spin" /> : <FaSave />}
                                     Save Changes

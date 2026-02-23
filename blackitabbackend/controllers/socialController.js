@@ -75,6 +75,17 @@ exports.getNotifications = async (req, res) => {
     }
 };
 
+// GET /api/social/notifications/unread-count
+exports.getUnreadNotificationCount = async (req, res) => {
+    try {
+        const count = await Notification.countDocuments({ recipient: req.user._id, read: false });
+        res.json({ success: true, count });
+    } catch (error) {
+        console.error('Get unread count error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
 // --- Follow ---
 
 // POST /api/social/follow/:id — send follow request (auto-accept for public profiles)

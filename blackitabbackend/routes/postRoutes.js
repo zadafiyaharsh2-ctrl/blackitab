@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { upload, createPost, getFeedParams, getUserPosts, deletePost, likePost, unlikePost, addComment, deleteComment, getStudyContent, getPaidContent, getContentById, getRecentVideos } = require('../controllers/postController');
+const { upload, createPost, getFeedParams, getUserPosts, deletePost, likePost, unlikePost, addComment, deleteComment, getStudyContent, getPaidContent, getContentById, getRecentVideos, likeComment } = require('../controllers/postController');
 const protect = require('../middleware/auth');
 
 router.post('/create', protect, upload.fields([
@@ -22,5 +22,6 @@ router.put('/like/:id', protect, likePost);
 router.put('/unlike/:id', protect, unlikePost);
 router.post('/comment/:id', protect, addComment);
 router.delete('/comment/:id/:commentId', protect, deleteComment);
+router.put('/:id/comments/:commentId/like', protect, likeComment);
 
 module.exports = router;

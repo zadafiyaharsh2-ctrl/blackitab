@@ -294,6 +294,9 @@ exports.getContentById = async (req, res) => {
             isFollowing = !!exists;
         }
 
+        // Increment view count
+        await Post.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } });
+
         res.json({ success: true, data: { ...content.toObject(), isFollowing } });
     } catch (err) {
         console.error('Get content by ID error:', err);
@@ -316,6 +319,33 @@ exports.getRecentVideos = async (req, res) => {
         res.json({ success: true, data: videos });
     } catch (error) {
         console.error('Fetch recent videos error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// PUT /api/posts/:id/comments/:commentId/like — toggle like on a comment
+exports.likeComment = async (req, res) => {
+    try {
+        const { id: postId, commentId } = req.params;
+        const userId = req.user._id;
+
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ success: false, message: 'Post not found' });
+
+        const comment = post.comments.id(commentId);
+        if (!comment) return res.status(404).json({ success: false, message: 'Comment not found' });
+
+        const alreadyLiked = comment.likes.some(id => id.toString() === userId.toString());
+        if (alreadyLiked) {
+            comment.likes = comment.likes.filter(id => id.toString() !== userId.toString());
+        } else {
+            comment.likes.push(userId);
+        }
+
+        await post.save();
+        res.json({ success: true, liked: !alreadyLiked, likeCount: comment.likes.length });
+    } catch (err) {
+        console.error('Like comment error:', err);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

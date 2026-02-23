@@ -88,7 +88,7 @@ const ProblemList = () => {
       case 'easy': return 'text-green-400 bg-green-500/10 border-green-500/20';
       case 'medium': return 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20';
       case 'hard': return 'text-red-400 bg-red-500/10 border-red-500/20';
-      default: return 'text-gray-400 bg-gray-500/10 border-gray-500/20';
+      default: return 'text-gray-600 dark:text-gray-400 bg-gray-500/10 border-gray-500/20';
     }
   };
 
@@ -97,13 +97,13 @@ const ProblemList = () => {
       {/* Back Button */}
       <button 
         onClick={() => navigate(`/problems/${subjectId}/chapters`)}
-        className="flex items-center text-gray-400 hover:text-purple-400 mb-6 transition-colors"
+        className="flex items-center text-gray-600 dark:text-gray-400 hover:text-purple-400 mb-6 transition-colors"
       >
         <ArrowLeft className="h-5 w-5 mr-2" />
         Back to Chapters
       </button>
 
-      <h1 className="text-3xl font-bold text-white mb-8">Problems</h1>
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Problems</h1>
 
       {loading ? (
         // Loading Spinner
@@ -112,7 +112,7 @@ const ProblemList = () => {
         </div>
       ) : (
         // Problem List Container
-        <div className="bg-gray-800/50 backdrop-blur-md rounded-xl shadow-sm border border-gray-700 overflow-hidden">
+        <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-md rounded-xl shadow-sm border border-gray-300 dark:border-gray-700 overflow-hidden">
           {problems.length > 0 ? (
             <div className="divide-y divide-gray-700">
               {/* Map through problems */}
@@ -120,7 +120,7 @@ const ProblemList = () => {
                 <div
                   key={problem._id}
                   onClick={() => navigate(`/problems/view/${problem._id}`)}
-                  className="p-6 hover:bg-gray-700/50 transition-colors cursor-pointer group flex items-center justify-between"
+                  className="p-6 hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group flex items-center justify-between"
                 >
                   {/* Left Side: Icon & Title */}
                   <div className="flex items-center space-x-4">
@@ -128,7 +128,7 @@ const ProblemList = () => {
                       {getStatusIcon(problem.status)}
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-white group-hover:text-purple-400 transition-colors">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-purple-400 transition-colors">
                         {problem.title}
                       </h3>
                       <div className="flex items-center mt-1 space-x-3">
@@ -147,7 +147,7 @@ const ProblemList = () => {
           ) : (
             // Empty State
             <div className="text-center py-12">
-              <p className="text-gray-400">No problems found for this chapter yet.</p>
+              <p className="text-gray-600 dark:text-gray-400">No problems found for this chapter yet.</p>
             </div>
           )}
         </div>

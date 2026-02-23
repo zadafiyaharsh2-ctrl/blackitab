@@ -205,11 +205,11 @@ const CreatePost = () => {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-2xl bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative z-10"
+        className="w-full max-w-2xl bg-gray-100 dark:bg-white/5 backdrop-blur-xl border border-gray-300 dark:border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative z-10"
       >
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">Create New Post</h2>
-          <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-white transition-colors">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create New Post</h2>
+          <button onClick={() => navigate(-1)} className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white transition-colors">
             <FaTimes size={20} />
           </button>
         </div>
@@ -218,17 +218,17 @@ const CreatePost = () => {
         <div className="space-y-6">
           {!file ? (
             <div 
-              className={`border-2 border-dashed rounded-2xl h-64 flex flex-col items-center justify-center cursor-pointer transition-all ${dragActive ? 'border-blue-500 bg-blue-500/10' : 'border-gray-600 hover:border-gray-500 hover:bg-white/5'}`}
+              className={`border-2 border-dashed rounded-2xl h-64 flex flex-col items-center justify-center cursor-pointer transition-all ${dragActive ? 'border-blue-500 bg-blue-500/10' : 'border-gray-600 hover:border-gray-500 hover:bg-gray-100 dark:bg-white/5'}`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current.click()}
             >
-              <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4 text-gray-400">
+              <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4 text-gray-600 dark:text-gray-400">
                 <FaCloudUploadAlt size={32} />
               </div>
-              <p className="text-gray-300 font-medium text-lg">Drag & Drop or Click to Upload</p>
+              <p className="text-gray-700 dark:text-gray-300 font-medium text-lg">Drag & Drop or Click to Upload</p>
               <p className="text-gray-500 text-sm mt-2">Images (JPG, PNG) or Videos (MP4, WebM)</p>
               <input 
                 ref={fileInputRef}
@@ -239,7 +239,7 @@ const CreatePost = () => {
               />
             </div>
           ) : (
-            <div className="relative rounded-2xl overflow-hidden bg-black/50 border border-white/10 group">
+            <div className="relative rounded-2xl overflow-hidden bg-black/50 border border-gray-300 dark:border-white/10 group">
               {fileType === 'image' ? (
                 <img src={previewUrl} alt="Preview" className="w-full h-auto max-h-[500px] object-contain mx-auto" />
               ) : (
@@ -248,7 +248,7 @@ const CreatePost = () => {
               
               <button 
                 onClick={clearFile}
-                className="absolute top-4 right-4 p-2 bg-black/60 text-white rounded-full hover:bg-black/80 transition-colors backdrop-blur-sm"
+                className="absolute top-4 right-4 p-2 bg-black/60 text-gray-900 dark:text-white rounded-full hover:bg-black/80 transition-colors backdrop-blur-sm"
               >
                 <FaTimes />
               </button>
@@ -256,16 +256,16 @@ const CreatePost = () => {
           )}
 
           {/* Content Type Selector */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
-            <label className="text-sm font-semibold text-gray-300 block">Content Type</label>
+          <div className="bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-2xl p-4 space-y-3">
+            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 block">Content Type</label>
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => setContentType('post')}
                 className={`flex-1 py-3 rounded-xl font-medium transition-all ${
                   contentType === 'post'
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30'
-                    : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                    ? 'bg-blue-600 text-gray-900 dark:text-white shadow-lg shadow-blue-900/30'
+                    : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-white/10'
                 }`}
               >
                 📱 Regular Post
@@ -275,8 +275,8 @@ const CreatePost = () => {
                 onClick={() => setContentType('study-content')}
                 className={`flex-1 py-3 rounded-xl font-medium transition-all ${
                   contentType === 'study-content'
-                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/30'
-                    : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                    ? 'bg-purple-600 text-gray-900 dark:text-white shadow-lg shadow-purple-900/30'
+                    : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-white/10'
                 }`}
               >
                 🎓 Study Content
@@ -286,8 +286,8 @@ const CreatePost = () => {
                 onClick={() => setContentType('paid-content')}
                 className={`flex-1 py-3 rounded-xl font-medium transition-all ${
                   contentType === 'paid-content'
-                    ? 'bg-amber-600 text-white shadow-lg shadow-amber-900/30'
-                    : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                    ? 'bg-amber-600 text-gray-900 dark:text-white shadow-lg shadow-amber-900/30'
+                    : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-white/10'
                 }`}
               >
                 <div className="flex items-center justify-center gap-1">
@@ -299,16 +299,16 @@ const CreatePost = () => {
 
           {/* Playlist Selection Section */}
           {(contentType === 'study-content' || contentType === 'paid-content') && (
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
+            <div className="bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-2xl p-4 space-y-3">
                <div className="flex justify-between items-center">
-                   <label className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                   <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                        <FaListUl className="text-purple-400" /> Add to Playlist (Series)
                    </label>
                    {!showNewPlaylistInput && (
                        <button 
                            type="button" 
                            onClick={() => { setShowNewPlaylistInput(true); setSelectedPlaylistId(''); }}
-                           className="text-xs text-blue-400 hover:text-white flex items-center gap-1 font-semibold"
+                           className="text-xs text-blue-400 hover:text-gray-900 dark:text-white flex items-center gap-1 font-semibold"
                        >
                            <FaPlus /> New Playlist
                        </button>
@@ -323,7 +323,7 @@ const CreatePost = () => {
                                value={newPlaylistTitle}
                                onChange={(e) => setNewPlaylistTitle(e.target.value)}
                                placeholder="Playlist Title (e.g. Full Stack Course)"
-                               className="w-full bg-black/50 border border-white/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+                               className="w-full bg-black/50 border border-white/20 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-purple-500"
                            />
                            {/* Playlist Thumbnail Input */}
                            <div className="relative">
@@ -336,7 +336,7 @@ const CreatePost = () => {
                                />
                                <label 
                                     htmlFor="playlist-thumb-upload"
-                                    className="flex items-center gap-2 text-xs text-gray-400 hover:text-white cursor-pointer transition-colors border border-dashed border-white/20 rounded-lg p-2 w-full justify-center hover:border-purple-500/50"
+                                    className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white cursor-pointer transition-colors border border-dashed border-white/20 rounded-lg p-2 w-full justify-center hover:border-purple-500/50"
                                >
                                     <FaPlusSquare /> 
                                     {playlistThumbnail ? playlistThumbnail.name : "Upload Series Cover (Optional)"}
@@ -346,7 +346,7 @@ const CreatePost = () => {
                        <button 
                            type="button"
                            onClick={() => { setShowNewPlaylistInput(false); setNewPlaylistTitle(''); setPlaylistThumbnail(null); }}
-                           className="px-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors h-fit py-2"
+                           className="px-3 bg-white/10 hover:bg-white/20 text-gray-900 dark:text-white rounded-lg transition-colors h-fit py-2"
                        >
                            <FaTimes />
                        </button>
@@ -356,14 +356,14 @@ const CreatePost = () => {
                        <select
                            value={selectedPlaylistId}
                            onChange={(e) => setSelectedPlaylistId(e.target.value)}
-                           className="w-full bg-black/50 border border-white/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none"
+                           className="w-full bg-black/50 border border-white/20 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-purple-500 appearance-none"
                        >
                            <option value="">Select an existing playlist (Optional)</option>
                            {playlists.map(p => (
                                <option key={p._id} value={p._id}>{p.title}</option>
                            ))}
                        </select>
-                       <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                       <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-600 dark:text-gray-400">
                            ▼
                        </div>
                    </div>
@@ -386,43 +386,43 @@ const CreatePost = () => {
                 exit={{ opacity: 0, height: 0 }}
                 className="space-y-4"
               >
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 focus-within:border-purple-500/50 focus-within:bg-white/10 transition-all">
-                  <label className="text-xs font-semibold text-gray-400 block mb-2">Title *</label>
+                <div className="bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-2xl p-4 focus-within:border-purple-500/50 focus-within:bg-white/10 transition-all">
+                  <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 block mb-2">Title *</label>
                   <input
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Enter content title..."
                     maxLength={200}
-                    className="w-full bg-transparent text-white placeholder-gray-500 focus:outline-none"
+                    className="w-full bg-transparent text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none"
                   />
                   <div className="text-xs text-gray-500 mt-2">{title.length}/200</div>
                 </div>
 
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 focus-within:border-purple-500/50 focus-within:bg-white/10 transition-all">
-                  <label className="text-xs font-semibold text-gray-400 block mb-2">Description *</label>
+                <div className="bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-2xl p-4 focus-within:border-purple-500/50 focus-within:bg-white/10 transition-all">
+                  <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 block mb-2">Description *</label>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Describe what students will learn..."
                     maxLength={5000}
-                    className="w-full bg-transparent text-white placeholder-gray-500 resize-none focus:outline-none min-h-[120px]"
+                    className="w-full bg-transparent text-gray-900 dark:text-white placeholder-gray-500 resize-none focus:outline-none min-h-[120px]"
                   />
                   <div className="text-xs text-gray-500 mt-2">{description.length}/5000</div>
                 </div>
 
                 {contentType === 'paid-content' && (
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-4 focus-within:border-amber-500/50 focus-within:bg-white/10 transition-all">
-                      <label className="text-xs font-semibold text-gray-400 block mb-2">Price (INR) *</label>
+                    <div className="bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-2xl p-4 focus-within:border-amber-500/50 focus-within:bg-white/10 transition-all">
+                      <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 block mb-2">Price (INR) *</label>
                       <div className="relative">
-                          <FaRupeeSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                          <FaRupeeSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400" />
                           <input
                             type="number"
                             value={price}
                             onChange={(e) => setPrice(e.target.value)}
                             placeholder="Enter price (e.g., 499)"
                             min="1"
-                            className="w-full bg-transparent text-white placeholder-gray-500 focus:outline-none pl-8"
+                            className="w-full bg-transparent text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none pl-8"
                           />
                       </div>
                     </div>
@@ -432,15 +432,15 @@ const CreatePost = () => {
           )}
 
           {/* Caption Input */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-4 focus-within:border-blue-500/50 focus-within:bg-white/10 transition-all">
+          <div className="bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-2xl p-4 focus-within:border-blue-500/50 focus-within:bg-white/10 transition-all">
             <textarea
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               placeholder="Write a caption..."
-              className="w-full bg-transparent text-white placeholder-gray-500 resize-none focus:outline-none min-h-[100px]"
+              className="w-full bg-transparent text-gray-900 dark:text-white placeholder-gray-500 resize-none focus:outline-none min-h-[100px]"
             />
-            <div className="flex justify-between items-center mt-2 pt-2 border-t border-white/5">
-                <div className="flex gap-2 text-gray-400">
+            <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200 dark:border-white/5">
+                <div className="flex gap-2 text-gray-600 dark:text-gray-400">
                     <button onClick={() => fileInputRef.current?.click()} className="p-2 hover:bg-white/10 rounded-full transition-colors" title="Add Image">
                         <FaImage />
                     </button>
@@ -459,7 +459,7 @@ const CreatePost = () => {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4"
+                className="bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-2xl p-6 space-y-4"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -477,12 +477,12 @@ const CreatePost = () => {
                       )}
                     </div>
                     <div>
-                      <p className="text-white font-semibold">
+                      <p className="text-gray-900 dark:text-white font-semibold">
                         {uploadStatus === 'uploading' && `Uploading... ${uploadProgress}%`}
                         {uploadStatus === 'processing' && 'Processing your post...'}
                         {uploadStatus === 'complete' && 'Post created successfully!'}
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
                         {uploadStatus === 'uploading' && 'Please wait while we upload your media'}
                         {uploadStatus === 'processing' && 'Almost there...'}
                         {uploadStatus === 'complete' && 'Redirecting to your profile...'}
@@ -493,7 +493,7 @@ const CreatePost = () => {
                 </div>
                 
                 {/* Progress Bar */}
-                <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-gray-50 dark:bg-gray-800 rounded-full h-2 overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${uploadProgress}%` }}
@@ -512,7 +512,7 @@ const CreatePost = () => {
             className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg ${
               loading || (!file && !caption.trim())
                 ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white hover:shadow-blue-500/25 active:scale-[0.98]'
+                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-gray-900 dark:text-white hover:shadow-blue-500/25 active:scale-[0.98]'
             }`}
           >
             {loading ? <FaSpinner className="animate-spin" /> : 'Share Post'}

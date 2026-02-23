@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
 import axios from 'axios';
 import {
     ArrowLeft,
@@ -21,6 +22,7 @@ import API_URL from '../config';
 const ExamQuestions = () => {
     const { examId } = useParams();
     const navigate = useNavigate();
+    const { isDark } = useTheme();
 
     const [questions, setQuestions] = useState([]);
     const [selectedAnswers, setSelectedAnswers] = useState({});
@@ -35,6 +37,7 @@ const ExamQuestions = () => {
     const [tutorSessions, setTutorSessions] = useState({});
 
     const [followUpAnswers, setFollowUpAnswers] = useState({});
+    const [followUpResults, setFollowUpResults] = useState({});
 
     const examMeta = {
         jee: { name: 'JEE', subjects: ['Physics', 'Chemistry', 'Mathematics'], color: 'purple' },
@@ -77,30 +80,53 @@ const ExamQuestions = () => {
         if (selected === undefined) return;
 
         const session = tutorSessions[questionId];
-        
-        // Optimistic UI update or wait for server?
-        // Let's call server to get next step (or resolution)
-        
-        try {
-            setAnalyzing(true); // Freeze screen effect
-            const token = localStorage.getItem('token');
-            const res = await axios.post(
-                `${API_URL}/api/problems/exam/${examId}/ai-tutor`,
-                {
-                    questionId,
-                    userAnswer: selected,
-                    sessionHistory: session.history || []
-                },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            if (res.data.success) {
-                setTutorSessions(prev => ({ ...prev, [questionId]: res.data.data }));
-                setFollowUpAnswers(prev => ({ ...prev, [questionId]: undefined }));
+        const correctIdx = session.followUpQuestion.correctAnswer;
+        const isCorrect = selected === correctIdx;
+
+        // Store the result to show correct/incorrect styling
+        setFollowUpResults(prev => ({ ...prev, [questionId]: { selected, correctIdx, isCorrect } }));
+
+        // Wait 1.5s to let user see the feedback
+        await new Promise(r => setTimeout(r, 2500));
+
+        // Clear the follow-up result
+        setFollowUpResults(prev => { const n = { ...prev }; delete n[questionId]; return n; });
+
+        const newCorrectCount = (session.correctCount || 0) + (isCorrect ? 1 : 0);
+
+        if (isCorrect && newCorrectCount >= 3) {
+            // 3 correct answers reached — resolve the tutor!
+            setTutorSessions(prev => ({
+                ...prev,
+                [questionId]: { ...prev[questionId], isResolved: true, followUpQuestion: null, correctCount: newCorrectCount, message: 'Excellent! You nailed all it' }
+            }));
+            setFollowUpAnswers(prev => ({ ...prev, [questionId]: undefined }));
+        } else {
+            // Either wrong OR correct but haven't hit 3 yet — fetch next question
+            try {
+                setAnalyzing(true);
+                const token = localStorage.getItem('token');
+                const res = await axios.post(
+                    `${API_URL}/api/problems/exam/${examId}/ai-tutor`,
+                    {
+                        questionId,
+                        userAnswer: selected,
+                        sessionHistory: session.history || []
+                    },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                if (res.data.success) {
+                    setTutorSessions(prev => ({
+                        ...prev,
+                        [questionId]: { ...res.data.data, correctCount: newCorrectCount }
+                    }));
+                    setFollowUpAnswers(prev => ({ ...prev, [questionId]: undefined }));
+                }
+            } catch (err) {
+                console.error('Error in tutor follow-up:', err);
+            } finally {
+                setAnalyzing(false);
             }
-        } catch (err) {
-            console.error('Error in tutor follow-up:', err);
-        } finally {
-            setAnalyzing(false);
         }
     };
 
@@ -175,30 +201,30 @@ const ExamQuestions = () => {
         const result = results[questionId];
         const isSelected = selectedAnswers[questionId] === optionIndex;
 
-        if (!result) {
+         if (!result) {
             return isSelected
-                ? 'border-purple-500 bg-purple-500/20 text-white'
-                : 'border-gray-700 bg-gray-800/30 text-gray-300 hover:border-gray-500 hover:bg-gray-700/30';
+                ? isDark ? 'border-purple-500 bg-purple-500/20 text-white' : 'border-purple-500 bg-purple-50 text-purple-900'
+                : isDark ? 'border-gray-700 bg-gray-800/30 text-gray-300 hover:border-gray-500 hover:bg-gray-700/30' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50';
         }
 
         if (optionIndex === result.correctAnswer) {
-            return 'border-green-500 bg-green-500/20 text-green-300';
+            return isDark ? 'border-green-500 bg-green-500/20 text-green-300' : 'border-green-500 bg-green-100 text-green-800';
         }
         if (isSelected && !result.correct) {
-            return 'border-red-500 bg-red-500/20 text-red-300';
+            return isDark ? 'border-red-500 bg-red-500/20 text-red-300' : 'border-red-500 bg-red-100 text-red-800';
         }
-        return 'border-gray-700/50 bg-gray-800/20 text-gray-500';
+        return isDark ? 'border-gray-700/50 bg-gray-800/20 text-gray-500' : 'border-gray-200 bg-gray-50 text-gray-400';
     };
 
     return (
         <div className="max-w-5xl mx-auto px-4 py-8 relative">
             {/* Analyzing Overlay */}
             {analyzing && (
-                <div className="fixed inset-0 z-50 bg-gray-900/80 backdrop-blur-sm flex flex-col items-center justify-center">
-                    <div className="bg-gray-800 p-8 rounded-2xl border border-purple-500/50 flex flex-col items-center max-w-sm text-center shadow-2xl shadow-purple-500/20">
-                        <Loader2 className="h-12 w-12 text-purple-400 animate-spin mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">AI Agent Analyzing...</h3>
-                        <p className="text-gray-400">Identifying your learning gap and preparing a remedial step.</p>
+                <div className="fixed inset-0 z-50 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm flex flex-col items-center justify-center">
+                    <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl border border-purple-200 dark:border-purple-500/50 flex flex-col items-center max-w-sm text-center shadow-2xl shadow-purple-500/20">
+                        <Loader2 className="h-12 w-12 text-purple-600 dark:text-purple-400 animate-spin mb-4" />
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">AI Agent Analyzing...</h3>
+                        <p className="text-gray-600 dark:text-gray-400">Identifying your learning gap and preparing a remedial step.</p>
                     </div>
                 </div>
             )}
@@ -206,7 +232,7 @@ const ExamQuestions = () => {
             <div className="mb-8">
                 <button
                     onClick={() => navigate('/problems')}
-                    className="flex items-center gap-2 text-gray-400 hover:text-purple-400 transition-colors mb-4"
+                    className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors mb-4"
                 >
                     <ArrowLeft className="h-5 w-5" />
                     Back to Exams
@@ -214,13 +240,13 @@ const ExamQuestions = () => {
 
                 <div className="flex items-center justify-between flex-wrap gap-4">
                     <div>
-                        <h1 className="text-4xl font-bold text-white">
+                        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
                             {currentExam.name}{' '}
-                            <span className="bg-gradient-to-r from-purple-400 to-pink-500 text-transparent bg-clip-text">
+                            <span className="bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-500 text-transparent bg-clip-text">
                                 Practice
                             </span>
                         </h1>
-                        <p className="text-gray-400 mt-2">
+                        <p className="text-gray-600 dark:text-gray-400 mt-2">
                             {questions.length} question{questions.length !== 1 ? 's' : ''} available
                         </p>
                     </div>
@@ -246,8 +272,8 @@ const ExamQuestions = () => {
                 <button
                     onClick={() => setActiveSubject('All')}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeSubject === 'All'
-                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50'
-                        : 'bg-gray-800/50 text-gray-400 border border-gray-700 hover:border-gray-500'
+                        ? 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/50'
+                        : 'bg-white dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
                         }`}
                 >
                     <div className="flex items-center gap-2">
@@ -260,8 +286,8 @@ const ExamQuestions = () => {
                         key={subject}
                         onClick={() => setActiveSubject(subject)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeSubject === subject
-                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50'
-                            : 'bg-gray-800/50 text-gray-400 border border-gray-700 hover:border-gray-500'
+                            ? 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/50'
+                            : 'bg-white dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
                             }`}
                     >
                         {subject}
@@ -275,9 +301,9 @@ const ExamQuestions = () => {
                     <div className="animate-spin h-12 w-12 border-b-2 border-purple-600 rounded-full"></div>
                 </div>
             ) : questions.length === 0 ? (
-                <div className="text-center py-20 bg-gray-800/30 rounded-2xl border border-dashed border-gray-700">
-                    <BookOpen className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400 text-lg mb-2">No questions found for this exam yet.</p>
+                <div className="text-center py-20 bg-gray-50 dark:bg-gray-800/30 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
+                    <BookOpen className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-600 dark:text-gray-400 text-lg mb-2">No questions found for this exam yet.</p>
                     <p className="text-gray-500 text-sm mb-6">Click the button above to generate some AI questions!</p>
                     {/* <button
                         onClick={handleAIGenerate}
@@ -297,35 +323,35 @@ const ExamQuestions = () => {
                         return (
                             <div
                                 key={q._id}
-                                className="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700 p-6 transition-all"
+                                className="bg-white/80 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 p-6 transition-all shadow-sm dark:shadow-none"
                             >
                                 {/* Question Header */}
                                 <div className="flex items-start justify-between mb-4">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-2">
-                                            <span className="px-3 py-1 bg-purple-500/20 text-purple-300 text-xs font-semibold rounded-full">
+                                            <span className="px-3 py-1 bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 text-xs font-semibold rounded-full">
                                                 Q{currentIndex + 1} of {questions.length}
                                             </span>
                                             {q.subject && (
-                                                <span className="px-3 py-1 bg-gray-700/50 text-gray-400 text-xs rounded-full">
+                                                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 text-xs rounded-full">
                                                     {q.subject}
                                                 </span>
                                             )}
                                             {q.difficulty && (
-                                                <span className={`px-3 py-1 text-xs rounded-full ${q.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' :
-                                                    q.difficulty === 'Hard' ? 'bg-red-500/20 text-red-400' :
-                                                        'bg-yellow-500/20 text-yellow-400'
+                                                <span className={`px-3 py-1 text-xs rounded-full ${q.difficulty === 'Easy' ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400' :
+                                                    q.difficulty === 'Hard' ? 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400' :
+                                                        'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400'
                                                     }`}>
                                                     {q.difficulty}
                                                 </span>
                                             )}
                                             {q.isAIGenerated && (
-                                                <span className="px-3 py-1 bg-pink-500/20 text-pink-300 text-xs rounded-full flex items-center gap-1">
+                                                <span className="px-3 py-1 bg-pink-100 dark:bg-pink-500/20 text-pink-700 dark:text-pink-300 text-xs rounded-full flex items-center gap-1">
                                                     <Sparkles className="h-3 w-3" /> AI
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-white text-lg font-medium leading-relaxed">
+                                        <p className="text-gray-900 dark:text-white text-lg font-medium leading-relaxed">
                                             {q.question}
                                         </p>
                                     </div>
@@ -374,19 +400,19 @@ const ExamQuestions = () => {
                                 ) : (
                                     <>
                                         <div className={`p-4 rounded-xl border ${results[q._id].correct
-                                            ? 'bg-green-500/10 border-green-500/30'
-                                            : 'bg-red-500/10 border-red-500/30'
+                                            ? 'bg-green-100 dark:bg-green-500/10 border-green-200 dark:border-green-500/30'
+                                            : 'bg-red-100 dark:bg-red-500/10 border-red-200 dark:border-red-500/30'
                                             }`}>
                                             <div className="flex items-center gap-2">
                                                 {results[q._id].correct ? (
                                                     <>
-                                                        <CheckCircle className="h-5 w-5 text-green-400" />
-                                                        <span className="text-green-400 font-semibold">Correct!</span>
+                                                        <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                                                        <span className="text-green-700 dark:text-green-400 font-semibold">Correct!</span>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <XCircle className="h-5 w-5 text-red-400" />
-                                                        <span className="text-red-400 font-semibold">Not quite right</span>
+                                                        <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                                                        <span className="text-red-700 dark:text-red-400 font-semibold">Not quite right</span>
                                                     </>
                                                 )}
                                             </div>
@@ -408,34 +434,38 @@ const ExamQuestions = () => {
                                         {/* AI Tutor Panel — only on wrong answer */}
                                         {/* AI Tutor Panel */}
                                         {!results[q._id].correct && tutorSessions[q._id] && (
-                                            <div className="mt-4 p-5 bg-gray-900/50 border border-purple-500/30 rounded-xl relative overflow-hidden">
+                                            <div className="mt-4 p-5 bg-purple-50 dark:bg-gray-900/50 border border-purple-200 dark:border-purple-500/30 rounded-xl relative overflow-hidden">
                                                 {/* Ambient Glow */}
                                                 <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-3xl rounded-full pointer-events-none"></div>
 
                                                 <div className="flex items-center gap-2 mb-4 relative z-10">
-                                                    <div className="p-1.5 bg-purple-500/20 rounded-lg">
-                                                        <Sparkles className="h-5 w-5 text-purple-400" />
+                                                    <div className="p-1.5 bg-purple-100 dark:bg-purple-500/20 rounded-lg">
+                                                        <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                                                     </div>
-                                                    <span className="text-purple-300 font-bold">AI Tutor</span>
+                                                    <span className="text-purple-700 dark:text-purple-300 font-bold">AI Tutor</span>
                                                 </div>
 
-                                                <p className="text-gray-300 text-sm mb-4 leading-relaxed">{tutorSessions[q._id].message}</p>
+                                                <p className="text-gray-700 dark:text-gray-300 text-sm mb-4 leading-relaxed">{tutorSessions[q._id].message}</p>
 
                                                 {/* THEORY MODE */}
                                                 {tutorSessions[q._id].action === 'study_theory' && (
-                                                    <div className="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-4">
-                                                        <div className="flex items-center gap-2 mb-3 text-blue-400">
+                                                    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-4">
+                                                        <div className="flex items-center gap-2 mb-3 text-blue-600 dark:text-blue-400">
                                                             <Book className="h-5 w-5" />
                                                             <span className="font-semibold">Concept Study Required</span>
                                                         </div>
-                                                        <div className="prose prose-invert prose-sm max-w-none text-gray-300">
+                                                        <div className="prose dark:prose-invert prose-sm max-w-none text-gray-700 dark:text-gray-300">
                                                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                                                 {tutorSessions[q._id].studyText}
                                                             </ReactMarkdown>
                                                         </div>
                                                         <div className="mt-4 flex justify-end">
                                                             <button
-                                                                onClick={() => setTutorSessions(prev => ({ ...prev, [q._id]: undefined }))}
+                                                                onClick={() => {
+                                                                    setTutorSessions(prev => ({ ...prev, [q._id]: undefined }));
+                                                                    setResults(prev => { const n = { ...prev }; delete n[q._id]; return n; });
+                                                                    setSelectedAnswers(prev => { const n = { ...prev }; delete n[q._id]; return n; });
+                                                                }}
                                                                 className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
                                                             >
                                                                 I've Studied - Let me try again
@@ -444,56 +474,104 @@ const ExamQuestions = () => {
                                                     </div>
                                                 )}
 
-                                                {/* REMEDIAL QUESTION MODE */}
                                                 {tutorSessions[q._id].action !== 'study_theory' && !tutorSessions[q._id].isResolved && tutorSessions[q._id].followUpQuestion && (
-                                                    <div className="bg-gray-800/80 p-5 rounded-xl border border-gray-700/50">
-                                                        <p className="text-white font-medium mb-4 text-lg">
-                                                            {tutorSessions[q._id].followUpQuestion.question}
-                                                        </p>
+                                                    <div className="bg-white dark:bg-gray-800/80 p-5 rounded-xl border border-gray-200 dark:border-gray-700/50">
+                                                        <div className="flex items-center justify-between mb-4">
+                                                            <p className="text-gray-900 dark:text-white font-medium text-lg">
+                                                                {tutorSessions[q._id].followUpQuestion.question}
+                                                            </p>
+                                                            {/* <span className="text-xs px-2.5 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 whitespace-nowrap ml-3">
+                                                                ✓ {tutorSessions[q._id].correctCount || 0}/3 correct
+                                                            </span> */}
+                                                        </div>
                                                         <div className="space-y-3">
-                                                            {tutorSessions[q._id].followUpQuestion.options.map((opt, i) => (
-                                                                <button key={i}
-                                                                    onClick={() => setFollowUpAnswers(prev => ({ ...prev, [q._id]: i }))}
-                                                                    className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${followUpAnswers[q._id] === i
+                                                            {tutorSessions[q._id].followUpQuestion.options.map((opt, i) => {
+                                                                const fResult = followUpResults[q._id];
+                                                                const isSubmitted = !!fResult;
+                                                                const isThisCorrect = isSubmitted && i === fResult.correctIdx;
+                                                                const isThisWrongPick = isSubmitted && i === fResult.selected && !fResult.isCorrect;
+                                                                const isSelected = followUpAnswers[q._id] === i;
+
+                                                                let btnStyle = isDark 
+                                                                    ? 'border-gray-700 text-gray-400 hover:border-gray-600 hover:bg-gray-700/50'
+                                                                    : 'border-gray-200 text-gray-600 hover:border-gray-400 hover:bg-gray-50';
+                                                                
+                                                                if (isSubmitted) {
+                                                                    if (isThisCorrect) btnStyle = isDark ? 'border-green-500 bg-green-500/20 text-green-300' : 'border-green-500 bg-green-100 text-green-800';
+                                                                    else if (isThisWrongPick) btnStyle = isDark ? 'border-red-500 bg-red-500/20 text-red-300' : 'border-red-500 bg-red-100 text-red-800';
+                                                                    else btnStyle = isDark ? 'border-gray-700/50 bg-gray-800/20 text-gray-500' : 'border-gray-200 bg-gray-50 text-gray-400';
+                                                                } else if (isSelected) {
+                                                                    btnStyle = isDark 
                                                                         ? 'border-purple-500 bg-purple-500/20 text-white shadow-lg shadow-purple-900/20'
-                                                                        : 'border-gray-700 text-gray-400 hover:border-gray-600 hover:bg-gray-700/50'
-                                                                        }`}
+                                                                        : 'border-purple-500 bg-purple-50 text-purple-900 shadow-lg shadow-purple-200/50';
+                                                                }
+
+                                                                return (
+                                                                    <button key={i}
+                                                                        onClick={() => !isSubmitted && setFollowUpAnswers(prev => ({ ...prev, [q._id]: i }))}
+                                                                        disabled={isSubmitted}
+                                                                        className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${btnStyle} ${isSubmitted ? 'cursor-default' : ''}`}
+                                                                    >
+                                                                        <div className="flex items-center gap-3">
+                                                                            <span className={`w-6 h-6 flex items-center justify-center rounded-full border text-xs ${isThisCorrect ? 'border-green-400 text-green-600 dark:text-green-300' :
+                                                                                isThisWrongPick ? 'border-red-400 text-red-600 dark:text-red-300' :
+                                                                                    isSelected && !isSubmitted ? 'border-purple-400 text-purple-600 dark:text-purple-300' :
+                                                                                        'border-gray-400 dark:border-gray-600 text-gray-500'
+                                                                                }`}>
+                                                                                {String.fromCharCode(65 + i)}
+                                                                            </span>
+                                                                            <span className="flex-1 text-gray-700 dark:text-gray-300">{opt}</span>
+                                                                            {isThisCorrect && <CheckCircle className="h-5 w-5 text-green-500 dark:text-green-400 shrink-0" />}
+                                                                            {isThisWrongPick && <XCircle className="h-5 w-5 text-red-500 dark:text-red-400 shrink-0" />}
+                                                                        </div>
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                        {!followUpResults[q._id] && (
+                                                            <div className="mt-4 flex justify-end">
+                                                                <button
+                                                                    onClick={() => handleFollowUpSubmit(q._id)}
+                                                                    disabled={followUpAnswers[q._id] === undefined}
+                                                                    className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-200 dark:disabled:bg-gray-700 disabled:text-gray-400 dark:disabled:text-gray-500 text-white font-medium rounded-lg transition-all"
                                                                 >
-                                                                    <div className="flex items-center gap-3">
-                                                                        <span className={`w-6 h-6 flex items-center justify-center rounded-full border text-xs ${followUpAnswers[q._id] === i ? 'border-purple-400 text-purple-300' : 'border-gray-600 text-gray-500'}`}>
-                                                                            {String.fromCharCode(65 + i)}
-                                                                        </span>
-                                                                        {opt}
-                                                                    </div>
+                                                                    Submit Answer
                                                                 </button>
-                                                            ))}
-                                                        </div>
-                                                        <div className="mt-4 flex justify-end">
-                                                            <button
-                                                                onClick={() => handleFollowUpSubmit(q._id)}
-                                                                disabled={followUpAnswers[q._id] === undefined}
-                                                                className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-medium rounded-lg transition-all"
-                                                            >
-                                                                Submit Answer
-                                                            </button>
-                                                        </div>
+                                                            </div>
+                                                        )}
+                                                        {followUpResults[q._id] && (
+                                                            <div className={`mt-4 p-3 rounded-lg border flex items-center gap-2 ${followUpResults[q._id].isCorrect
+                                                                ? 'bg-green-100 dark:bg-green-500/10 border-green-200 dark:border-green-500/30'
+                                                                : 'bg-red-100 dark:bg-red-500/10 border-red-200 dark:border-red-500/30'
+                                                                }`}>
+                                                                {followUpResults[q._id].isCorrect ? (
+                                                                    <><CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" /><span className="text-green-700 dark:text-green-300 text-sm font-medium">Correct! Great understanding!</span></>
+                                                                ) : (
+                                                                    <><XCircle className="h-5 w-5 text-red-600 dark:text-red-400" /><span className="text-red-700 dark:text-red-300 text-sm font-medium">Not quite — loading next step...</span></>
+                                                                )}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
 
                                                 {/* RESOLVED MODE */}
                                                 {tutorSessions[q._id].isResolved && (
-                                                    <div className="flex flex-col gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+                                                    <div className="flex flex-col gap-3 p-4 bg-green-100 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 rounded-xl">
                                                         <div className="flex items-center gap-2">
-                                                            <CheckCircle className="h-5 w-5 text-green-400" />
-                                                            <span className="text-green-300 font-semibold">You've got the concept!</span>
+                                                            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                                                            <span className="text-green-700 dark:text-green-300 font-semibold">You've got the concept!</span>
                                                         </div>
-                                                        <p className="text-sm text-green-200/70 ml-7">
+                                                        <p className="text-sm text-green-800 dark:text-green-200/70 ml-7">
                                                             Great work working through the basics. functionality. Now try to solve the original question again.
                                                         </p>
                                                         <div className="self-end mt-2">
                                                             <button
-                                                                onClick={() => setTutorSessions(prev => ({ ...prev, [q._id]: undefined }))} // Close tutor
-                                                                className="px-3 py-1.5 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-300 border border-green-800 rounded-lg transition-colors"
+                                                                onClick={() => {
+                                                                    setTutorSessions(prev => ({ ...prev, [q._id]: undefined }));
+                                                                    setResults(prev => { const n = { ...prev }; delete n[q._id]; return n; });
+                                                                    setSelectedAnswers(prev => { const n = { ...prev }; delete n[q._id]; return n; });
+                                                                }}
+                                                                className="px-3 py-1.5 text-xs bg-green-200 dark:bg-green-900/30 hover:bg-green-300 dark:hover:bg-green-900/50 text-green-800 dark:text-green-300 border border-green-300 dark:border-green-800 rounded-lg transition-colors"
                                                             >
                                                                 Close Tutor
                                                             </button>
@@ -513,20 +591,20 @@ const ExamQuestions = () => {
                         <button
                             onClick={() => setCurrentIndex(prev => prev - 1)}
                             disabled={currentIndex === 0}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-gray-800/50 border border-gray-700 hover:border-gray-500 disabled:opacity-40 disabled:cursor-not-allowed text-gray-300 rounded-xl transition-all"
+                            className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:border-gray-500 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600 dark:text-gray-300 rounded-xl transition-all"
                         >
                             <ChevronLeft className="h-5 w-5" />
                             Previous
                         </button>
 
-                        <span className="text-gray-400 text-sm">
+                        <span className="text-gray-500 dark:text-gray-400 text-sm">
                             {currentIndex + 1} / {questions.length}
                         </span>
 
                         <button
                             onClick={() => setCurrentIndex(prev => prev + 1)}
                             disabled={currentIndex === questions.length - 1}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-gray-800/50 border border-gray-700 hover:border-gray-500 disabled:opacity-40 disabled:cursor-not-allowed text-gray-300 rounded-xl transition-all"
+                            className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:border-gray-500 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600 dark:text-gray-300 rounded-xl transition-all"
                         >
                             Next
                             <ChevronRight className="h-5 w-5" />

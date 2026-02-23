@@ -12,8 +12,10 @@ import {
   Target
 } from 'lucide-react';
 import API_URL from '../config';
+import usePageTitle from '../hooks/usePageTitle';
 
 const Problems = () => {
+  usePageTitle('Practice Problems');
   const [problemSubjects, setProblemSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -137,16 +139,16 @@ const Problems = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="animate-spin h-12 w-12 border-b-2 border-purple-600 rounded-full"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50 dark:bg-transparent transition-colors">
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-purple-900/20 via-gray-900/50 to-blue-900/20 border-b border-gray-800">
+      <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-gray-100 to-blue-50 dark:from-purple-900/20 dark:via-gray-900/50 dark:to-blue-900/20 border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-full mb-6">
@@ -164,31 +166,31 @@ const Problems = () => {
             </p>
 
             <div className="flex flex-wrap gap-4 justify-center text-sm">
-              <div className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 backdrop-blur-sm rounded-lg border border-gray-700">
+              <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg border border-gray-300 dark:border-gray-700">
                 <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-gray-300">1000+ Problems</span>
+                <span className="text-gray-700 dark:text-gray-300">1000+ Problems</span>
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 backdrop-blur-sm rounded-lg border border-gray-700">
+              <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg border border-gray-300 dark:border-gray-700">
                 <div className="h-2 w-2 bg-blue-400 rounded-full animate-pulse"></div>
-                <span className="text-gray-300">Multiple Exams</span>
+                <span className="text-gray-700 dark:text-gray-300">Multiple Exams</span>
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 backdrop-blur-sm rounded-lg border border-gray-700">
+              <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg border border-gray-300 dark:border-gray-700">
                 <div className="h-2 w-2 bg-purple-400 rounded-full animate-pulse"></div>
-                <span className="text-gray-300">Track Progress</span>
+                <span className="text-gray-700 dark:text-gray-300">Track Progress</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-50 dark:from-gray-900 via-transparent to-transparent pointer-events-none"></div>
       </div>
 
       {/* Exam Categories Section */}
       <div className="max-w-7xl mx-auto px-6 py-16">
         <div className="mb-12">
-          <h2 className="text-3xl font-bold text-white mb-3">Choose Your Exam Category</h2>
-          <p className="text-gray-400">Select the exam you're preparing for and start solving problems</p>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">Choose Your Exam Category</h2>
+          <p className="text-gray-600 dark:text-gray-400">Select the exam you're preparing for and start solving problems</p>
         </div>
 
         {/* Exam Cards Grid */}
@@ -199,7 +201,7 @@ const Problems = () => {
               <div
                 key={exam.id}
                 onClick={() => handleExamClick(exam.id)}
-                className={`group relative bg-gray-800/50 backdrop-blur-sm rounded-2xl border ${exam.borderColor} ${exam.hoverBorder} transition-all duration-300 cursor-pointer overflow-hidden hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-1`}
+                className={`group relative bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border ${exam.borderColor} ${exam.hoverBorder} transition-all duration-300 cursor-pointer overflow-hidden hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-1`}
               >
                 {/* Gradient overlay on hover */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${exam.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
@@ -212,12 +214,12 @@ const Problems = () => {
                     </div>
 
                     <div className="px-3 py-1 bg-gray-700/50 rounded-full">
-                      <span className="text-xs font-semibold text-gray-300">{exam.stats.difficulty}</span>
+                      <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{exam.stats.difficulty}</span>
                     </div>
                   </div>
 
                   {/* Exam Name */}
-                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 group-hover:bg-clip-text transition-all">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 group-hover:bg-clip-text transition-all">
                     {exam.shortName}
                   </h3>
 
@@ -231,7 +233,7 @@ const Problems = () => {
                       {exam.subjects.map((subject, idx) => (
                         <span
                           key={idx}
-                          className="text-xs px-2 py-1 bg-gray-700/50 text-gray-300 rounded-md border border-gray-600/50"
+                          className="text-xs px-2 py-1 bg-gray-700/50 text-gray-700 dark:text-gray-300 rounded-md border border-gray-600/50"
                         >
                           {subject}
                         </span>
@@ -240,8 +242,8 @@ const Problems = () => {
                   </div>
 
                   {/* Stats and CTA */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-700/50">
-                    <span className="text-sm font-semibold text-gray-400">
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-300 dark:border-gray-700/50">
+                    <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">
                       {exam.stats.problems} Problems
                     </span>
 
@@ -259,11 +261,11 @@ const Problems = () => {
         {/* Bottom CTA Section */}
         <div className="mt-16 text-center">
           <div className="inline-block bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-2xl p-8">
-            <h3 className="text-2xl font-bold text-white mb-3">Not sure where to start?</h3>
-            <p className="text-gray-400 mb-6">Try our General Problem Solving section with diverse topics</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Not sure where to start?</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">Try our General Problem Solving section with diverse topics</p>
             <button
               onClick={() => handleExamClick('general')}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50"
+              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-gray-900 dark:text-white font-semibold rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50"
             >
               Explore All Problems
             </button>

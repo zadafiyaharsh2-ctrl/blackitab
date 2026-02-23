@@ -32,7 +32,7 @@ const Post = ({ post, onPostDeleted }) => {
   };
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden mb-6 shadow-lg">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden mb-6 shadow-lg">
       {/* Header */}
       <div className="p-4 flex items-center justify-between relative">
         <div className="flex items-center gap-3">
@@ -40,13 +40,13 @@ const Post = ({ post, onPostDeleted }) => {
             {post.user?.profileImage ? (
                <img src={post.user.profileImage} alt={post.user.name} className="w-full h-full object-cover" />
             ) : (
-               <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-lg">
+               <div className="w-full h-full flex items-center justify-center text-gray-600 dark:text-gray-400 font-bold text-lg">
                  {post.user?.name?.charAt(0).toUpperCase()}
                </div>
             )}
           </div>
           <div>
-            <h3 className="text-white font-semibold text-sm">{post.user?.name}</h3>
+            <h3 className="text-gray-900 dark:text-white font-semibold text-sm">{post.user?.name}</h3>
             <span className="text-gray-500 text-xs">
               {new Date(post.createdAt).toLocaleDateString()}
             </span>
@@ -58,16 +58,16 @@ const Post = ({ post, onPostDeleted }) => {
             <div className="relative">
                 <button 
                     onClick={() => setShowMenu(!showMenu)}
-                    className="text-gray-500 hover:text-white p-2 rounded-full hover:bg-white/5 transition-colors"
+                    className="text-gray-500 hover:text-gray-900 dark:text-white p-2 rounded-full hover:bg-gray-100 dark:bg-white/5 transition-colors"
                 >
                     <FaEllipsisH />
                 </button>
                 
                 {showMenu && (
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-gray-900 border border-gray-700 rounded-xl shadow-xl overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
                         <button 
                             onClick={handleDelete}
-                            className="w-full text-left px-4 py-3 text-red-400 hover:bg-white/5 flex items-center gap-3 text-sm font-medium transition-colors"
+                            className="w-full text-left px-4 py-3 text-red-400 hover:bg-gray-100 dark:bg-white/5 flex items-center gap-3 text-sm font-medium transition-colors"
                         >
                             <FaTrash size={14} /> Delete Post
                         </button>
@@ -80,7 +80,7 @@ const Post = ({ post, onPostDeleted }) => {
       {/* Caption */}
       {post.caption && (
         <div className="px-4 pb-3">
-          <p className="text-gray-300 text-sm whitespace-pre-wrap">{post.caption}</p>
+          <p className="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap">{post.caption}</p>
         </div>
       )}
 
@@ -103,19 +103,19 @@ const Post = ({ post, onPostDeleted }) => {
       )}
 
       {/* Actions */}
-      <div className="p-4 flex items-center gap-6 border-t border-gray-800">
+      <div className="p-4 flex items-center gap-6 border-t border-gray-200 dark:border-gray-800">
         <button 
           onClick={() => setLiked(!liked)}
-          className={`flex items-center gap-2 text-sm font-medium transition-colors ${liked ? 'text-pink-500' : 'text-gray-400 hover:text-pink-500'}`}
+          className={`flex items-center gap-2 text-sm font-medium transition-colors ${liked ? 'text-pink-500' : 'text-gray-600 dark:text-gray-400 hover:text-pink-500'}`}
         >
           <FaHeart />
           <span>{post.likes?.length || 0}</span>
         </button>
-        <button className="flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-blue-400 transition-colors">
+        <button className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-blue-400 transition-colors">
           <FaComment />
           <span>{post.comments?.length || 0}</span>
         </button>
-        <button className="flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-green-400 transition-colors">
+        <button className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-green-400 transition-colors">
           <FaShare />
           <span>Share</span>
         </button>

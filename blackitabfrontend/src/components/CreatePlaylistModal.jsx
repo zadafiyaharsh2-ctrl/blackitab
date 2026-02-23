@@ -57,17 +57,17 @@ const CreatePlaylistModal = ({ isOpen, onClose, onPlaylistCreated }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-md mx-4">
+      <div className="bg-white dark:bg-gray-900 border border-gray-300 dark:border-white/10 rounded-2xl p-6 w-full max-w-md mx-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-white">Create New Playlist</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Create New Playlist</h2>
+          <button onClick={onClose} className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white">
             <FaTimes />
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-400 mb-2">
+            <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
               Title *
             </label>
             <input
@@ -75,13 +75,13 @@ const CreatePlaylistModal = ({ isOpen, onClose, onPlaylistCreated }) => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. My React Course"
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+              className="w-full bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg px-4 py-2 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
               required
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-400 mb-2">
+            <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
               Description (Optional)
             </label>
             <textarea
@@ -89,7 +89,7 @@ const CreatePlaylistModal = ({ isOpen, onClose, onPlaylistCreated }) => {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe your playlist..."
               rows={3}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-none"
+              className="w-full bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg px-4 py-2 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-none"
             />
           </div>
 
@@ -101,7 +101,7 @@ const CreatePlaylistModal = ({ isOpen, onClose, onPlaylistCreated }) => {
                 onChange={(e) => setIsPrivate(e.target.checked)}
                 className="w-4 h-4 rounded"
               />
-              <span className="text-sm text-gray-400">Make this playlist private</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Make this playlist private</span>
             </label>
           </div>
 
@@ -109,14 +109,14 @@ const CreatePlaylistModal = ({ isOpen, onClose, onPlaylistCreated }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors"
+              className="flex-1 px-4 py-2 bg-gray-100 dark:bg-white/5 hover:bg-white/10 text-gray-900 dark:text-white rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !title.trim()}
-              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors disabled:cursor-not-allowed"
             >
               {loading ? 'Creating...' : 'Create'}
             </button>

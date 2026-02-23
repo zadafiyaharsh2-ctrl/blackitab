@@ -1,15 +1,13 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) throw new Error('FATAL: JWT_SECRET environment variable is not set!');
 
 const authMiddleware = async (req, res, next) => {
     try {
         // Extract token from header or query param (query param for file downloads)
-        let token = req.headers.authorization?.split(' ')[1];
-        if (!token && req.query.token) {
-            token = req.query.token;
-        }
+        const token = req.headers.authorization?.split(' ')[1];
 
         if (!token) {
             return res.status(401).json({ success: false, message: 'No token provided. Please log in.' });

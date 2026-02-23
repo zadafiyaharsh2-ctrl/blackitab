@@ -39,7 +39,7 @@ const Logo = ({ className = "w-10 h-10", showText = true, textSize = "text-xl" }
       </svg>
       
       {showText && (
-        <span className={`font-bold tracking-tight text-white ${textSize}`}>
+        <span className={`font-bold tracking-tight text-gray-900 dark:text-white ${textSize}`}>
           Blackitab
         </span>
       )}
