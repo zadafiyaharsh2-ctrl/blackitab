@@ -12,8 +12,10 @@ import {
   Target
 } from 'lucide-react';
 import API_URL from '../config';
+import usePageTitle from '../hooks/usePageTitle';
 
 const Problems = () => {
+  usePageTitle('Practice Problems');
   const [problemSubjects, setProblemSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -153,13 +155,13 @@ const Problems = () => {
               <TrendingUp className="w-4 h-4 text-purple-400" />
               <span className="text-purple-300 text-sm font-medium">Master Your Exam Preparation</span>
             </div>
-            
+
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
               Practice. Perfect. <span className="bg-gradient-to-r from-purple-400 to-pink-600 text-transparent bg-clip-text">Succeed.</span>
             </h1>
-            
+
             <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-              Comprehensive problem sets tailored for India's most competitive exams. 
+              Comprehensive problem sets tailored for India's most competitive exams.
               Build confidence with structured practice and detailed solutions.
             </p>
 
@@ -220,7 +222,7 @@ const Problems = () => {
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 group-hover:bg-clip-text transition-all">
                     {exam.shortName}
                   </h3>
-                  
+
                   <p className="text-sm text-gray-400 mb-4 line-clamp-2 leading-relaxed">
                     {exam.description}
                   </p>

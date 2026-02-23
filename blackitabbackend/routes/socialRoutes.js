@@ -12,6 +12,7 @@ router.get('/user/:id', socialController.getUserProfile);
 
 // Notifications
 router.get('/notifications', socialController.getNotifications);
+router.get('/notifications/unread-count', socialController.getUnreadNotificationCount);
 
 // Follow/Unfollow
 router.post('/follow/:id', socialController.followUser);

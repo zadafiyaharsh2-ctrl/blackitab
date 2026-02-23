@@ -44,7 +44,7 @@ html.dark::-webkit-scrollbar-thumb {
 
 .dark ::-webkit-scrollbar-thumb:hover,
 html.dark::-webkit-scrollbar-thumb:hover {
-  background: #080029;
+  background: #000111;
 }
 
 /* Base Styles */

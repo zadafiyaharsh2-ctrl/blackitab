@@ -29,7 +29,12 @@ const aiQuestionRoutes = require('./routes/aiQuestionRoutes');
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5001;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+if (!process.env.JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET environment variable is not set!');
+  process.exit(1);
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // --- Socket.io ---
 
@@ -65,7 +70,15 @@ app.set('getReceiverSocketId', getReceiverSocketId);
 
 // --- Middleware ---
 
-app.use(cors());
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'https://blackitab.netlify.app'
+];
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 app.use(express.json());
 app.use((req, res, next) => {
   req.io = io;

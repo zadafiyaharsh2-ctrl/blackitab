@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../context/useTheme';
 import API_URL from '../config';
+import usePageTitle from '../hooks/usePageTitle';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -19,6 +20,7 @@ import {
 } from 'react-icons/fa';
 
 const AskAI = () => {
+  usePageTitle('Ask AI');
   const { isDark } = useTheme();
 
   const [messages, setMessages] = useState([
@@ -257,10 +259,10 @@ const AskAI = () => {
           <button
             onClick={() => setShowHistory(!showHistory)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${showHistory
-                ? 'bg-purple-600 text-gray-900 dark:text-white'
-                : isDark
-                  ? 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              ? 'bg-purple-600 text-gray-900 dark:text-white'
+              : isDark
+                ? 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
           >
             <FaHistory />
@@ -284,10 +286,10 @@ const AskAI = () => {
                   <div className={`flex items-start gap-3 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                     {/* Avatar */}
                     <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${msg.role === 'user'
-                        ? 'bg-blue-600'
-                        : msg.isError
-                          ? 'bg-red-600'
-                          : 'bg-gradient-to-br from-purple-500 to-blue-600'
+                      ? 'bg-blue-600'
+                      : msg.isError
+                        ? 'bg-red-600'
+                        : 'bg-gradient-to-br from-purple-500 to-blue-600'
                       }`}>
                       {msg.role === 'user' ? (
                         <FaUser className="text-gray-900 dark:text-white text-sm" />
@@ -298,14 +300,14 @@ const AskAI = () => {
 
                     {/* Message Bubble */}
                     <div className={`p-4 rounded-2xl ${msg.role === 'user'
-                        ? 'bg-blue-600 text-gray-900 dark:text-white rounded-tr-none'
-                        : msg.isError
-                          ? isDark
-                            ? 'bg-red-900/50 text-red-200 border border-red-800 rounded-tl-none'
-                            : 'bg-red-50 text-red-800 border border-red-200 rounded-tl-none'
-                          : isDark
-                            ? 'bg-gray-50 dark:bg-gray-800 text-gray-200 border border-gray-300 dark:border-gray-700 rounded-tl-none'
-                            : 'bg-white text-gray-800 border border-gray-200 shadow-sm rounded-tl-none'
+                      ? 'bg-blue-600 text-gray-900 dark:text-white rounded-tr-none'
+                      : msg.isError
+                        ? isDark
+                          ? 'bg-red-900/50 text-red-200 border border-red-800 rounded-tl-none'
+                          : 'bg-red-50 text-red-800 border border-red-200 rounded-tl-none'
+                        : isDark
+                          ? 'bg-gray-50 dark:bg-gray-800 text-gray-200 border border-gray-300 dark:border-gray-700 rounded-tl-none'
+                          : 'bg-white text-gray-800 border border-gray-200 shadow-sm rounded-tl-none'
                       }`}>
                       {msg.role === 'user' ? (
                         <p className="whitespace-pre-wrap break-words leading-relaxed">
@@ -356,8 +358,8 @@ const AskAI = () => {
                         key={idx}
                         onClick={() => setInput(q)}
                         className={`p-3 text-left rounded-lg transition-all ${isDark
-                            ? 'bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-                            : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
+                          ? 'bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
                           }`}
                       >
                         "{q}"
@@ -391,16 +393,16 @@ const AskAI = () => {
                   placeholder="Ask anything about your studies..."
                   disabled={isLoading}
                   className={`flex-1 px-4 py-3 rounded-xl border transition-all focus:ring-2 focus:ring-purple-500 focus:outline-none ${isDark
-                      ? 'bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-500'
-                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'
+                    ? 'bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-500'
+                    : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'
                     } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
                 <button
                   type="submit"
                   disabled={isLoading || !input.trim()}
                   className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 ${isLoading || !input.trim()
-                      ? 'bg-gray-600 cursor-not-allowed opacity-50'
-                      : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-gray-900 dark:text-white shadow-lg hover:shadow-xl'
+                    ? 'bg-gray-600 cursor-not-allowed opacity-50'
+                    : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-gray-900 dark:text-white shadow-lg hover:shadow-xl'
                     }`}
                 >
                   {isLoading ? <FaSpinner className="animate-spin" /> : <FaPaperPlane />}
@@ -452,8 +454,8 @@ const AskAI = () => {
                       key={item._id}
                       onClick={() => loadFromHistory(item)}
                       className={`p-3 rounded-lg cursor-pointer group transition-all ${isDark
-                          ? 'bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700'
-                          : 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
+                        ? 'bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700'
+                        : 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
                         }`}
                     >
                       <div className="flex items-start justify-between gap-2">

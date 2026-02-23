@@ -16,7 +16,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white dark:bg-gray-900/95 shadow-md border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50 backdrop-blur-md transition-colors duration-300">
+    <nav className="bg-white dark:bg-black shadow-md border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50 backdrop-blur-md transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Left Side - Company Name */}
@@ -35,8 +35,8 @@ const Navbar = () => {
                 key={item.name}
                 to={item.path}
                 className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 ${isActive(item.path)
-                    ? 'bg-purple-600 text-white shadow-md'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-purple-600 dark:hover:text-purple-400'
+                  ? 'bg-purple-600 text-white shadow-md'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-purple-600 dark:hover:text-purple-400'
                   }`}
               >
                 {item.name}

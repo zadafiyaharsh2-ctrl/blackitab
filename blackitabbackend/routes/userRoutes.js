@@ -27,8 +27,10 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage: storage });
 
-// Routes
 // PUT /api/user/update-profile
 router.put('/update-profile', protect, upload.single('profileImage'), userController.updateProfile);
+
+// GET /api/user/leaderboard — top users by points & streak
+router.get('/leaderboard', protect, userController.getLeaderboard);
 
 module.exports = router;

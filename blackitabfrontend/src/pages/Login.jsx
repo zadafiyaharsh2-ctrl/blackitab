@@ -9,6 +9,7 @@ const Login = ({ onLoginSuccess }) => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -101,7 +102,7 @@ const Login = ({ onLoginSuccess }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
               </svg>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 id="password"
                 name="password"
                 value={formData.password}
@@ -110,7 +111,19 @@ const Login = ({ onLoginSuccess }) => {
                 placeholder="Enter your password"
                 autoComplete="current-password"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(p => !p)}
+                className="login-input-icon"
+                style={{ left: 'auto', right: '14px', cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? '🙈' : '👁'}
+              </button>
             </div>
+          </div>
+          <div style={{ textAlign: 'right', marginTop: '-0.5rem' }}>
+            <a href="/forgot-password" className="login-link" style={{ fontSize: '0.8rem' }}>Forgot password?</a>
           </div>
 
           {/* Error */}

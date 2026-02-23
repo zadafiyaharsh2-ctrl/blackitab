@@ -13,8 +13,8 @@
 
 // Import React Router components for handling navigation
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-// Import React hooks for state and lifecycle
 import { useState, useEffect } from 'react';
+import { Toaster } from 'react-hot-toast';
 
 // Import centralized configuration (API URL)
 import API_URL from './config';
@@ -57,7 +57,9 @@ import PlaylistList from './pages/PlaylistList';
 import PlaylistDetail from './pages/PlaylistDetail';
 import Earnings from './pages/Earnings';
 import AIQuestionGenerator from './pages/AIQuestionGenerator';
-import ExamQuestions from './pages/ExamQuestions'
+import ExamQuestions from './pages/ExamQuestions';
+import Leaderboard from './pages/Leaderboard';
+import Onboarding from './pages/Onboarding';
 // ============================================================================
 // IMPORT COMPONENTS
 // ============================================================================
@@ -67,9 +69,6 @@ import PublicRoute from './components/PublicRoute';     // Wrapper for pages acc
 
 
 function App() {
-  // Debug log to verify environment connection
-  console.log('🚀 app initialized using api url:', API_URL);
-
   // ============================================================================
   // APP STATE
   // ============================================================================
@@ -124,8 +123,15 @@ function App() {
   // RENDER APP
   // ============================================================================
   return (
-    // Wrap entire app in ThemeProvider to enable Dark Mode
     <ThemeProvider>
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: { background: '#1a1a1a', color: '#fff', borderRadius: '10px', border: '1px solid #333' },
+          success: { iconTheme: { primary: '#22c55e', secondary: '#fff' } },
+          error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } }
+        }}
+      />
       {/* BrowserRouter enables URL-based routing */}
       {/* BrowserRouter enables URL-based routing */}
       <SocketContextProvider authUser={user}>
@@ -258,6 +264,28 @@ function App() {
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <Contest />
                   </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Leaderboard */}
+            <Route
+              path="/leaderboard"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Leaderboard />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Onboarding (full-screen, no sidebar) */}
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <Onboarding />
                 </ProtectedRoute>
               }
             />
@@ -503,8 +531,17 @@ function App() {
 
             />
 
-            {/* Fallback Route: Redirect unknown URLs to Dashboard */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            {/* 404 — catch all unknown routes */}
+            <Route path="*" element={
+              <div className="min-h-screen flex flex-col items-center justify-center text-center p-8 dark:bg-black bg-gray-50">
+                <div className="text-8xl font-black text-gray-200 dark:text-gray-800 mb-4 select-none">404</div>
+                <h1 className="text-2xl font-bold dark:text-white text-gray-900 mb-2">Page Not Found</h1>
+                <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm">The page you're looking for doesn't exist or has been moved.</p>
+                <a href="/dashboard" className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors">
+                  Go to Dashboard
+                </a>
+              </div>
+            } />
 
           </Routes>
         </BrowserRouter>
@@ -543,7 +580,7 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
   const socialSidebarWidth = socialSidebarOpen ? '16rem' : '4rem';
 
   return (
-    <div className="min-h-screen flex bg-gray-50 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-black text-gray-900 dark:text-white transition-colors duration-300">
+    <div className="min-h-screen flex bg-gray-50 dark:bg-black text-gray-900 dark:text-white transition-colors duration-300">
       {/* 1. Main Sidebar - ALWAYS VISIBLE, FIXED LEFT */}
       {/* Ensure z-50 to be on top */}
       <div className="z-50">

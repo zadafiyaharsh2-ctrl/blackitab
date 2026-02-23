@@ -1,11 +1,3 @@
-import React from 'react'
-
-function Social() {
-    return (
-        <div>
-            
-        </div>
-    )
-}
-
-export default Social
+import { Navigate } from 'react-router-dom';
+const Social = () => <Navigate to="/create-post" replace />;
+export default Social;

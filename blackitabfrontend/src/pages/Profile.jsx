@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { FaCog, FaTh, FaBookmark, FaUserTag, FaPlus, FaSearch, FaBell, FaEnvelope, FaPen, FaHeart, FaComment, FaPlay, FaLock, FaGraduationCap, FaRupeeSign, FaListUl, FaArrowLeft, FaShareAlt } from 'react-icons/fa';
 import API_URL from '../config';
+import usePageTitle from '../hooks/usePageTitle';
+import toast from 'react-hot-toast';
 
 import { SearchModal, NotificationModal, UserListModal } from '../components/SocialModals';
 import PostDetailModal from '../components/PostDetailModal';
@@ -13,14 +15,15 @@ import CreatePlaylistModal from '../components/CreatePlaylistModal';
 import { useSocketContext } from '../context/SocketContext';
 
 const Profile = () => {
+  usePageTitle('Profile');
   const { userId } = useParams(); // Get userId from URL parameters
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('user');
     const parsedUser = savedUser ? JSON.parse(savedUser) : null;
-    
+
     // If visiting a specific profile that isn't mine, start empty to avoid flashing my data
     if (userId && parsedUser && userId !== parsedUser._id && userId !== parsedUser.id) {
-        return null; 
+      return null;
     }
     return parsedUser;
   });
@@ -47,10 +50,10 @@ const Profile = () => {
   const [userListTitle, setUserListTitle] = useState('');
   const [userList, setUserList] = useState([]);
   const [isLoadingList, setIsLoadingList] = useState(false);
-  
+
   // Get online users from Socket Context
   const { onlineUsers } = useSocketContext();
-  
+
   // Helper to check if user is online
   const isUserOnline = (userId) => {
     return onlineUsers.includes(userId) || onlineUsers.includes(user?.id) || onlineUsers.includes(user?._id);
@@ -60,22 +63,22 @@ const Profile = () => {
     const fetchProfile = async () => {
       const token = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
-      
+
       if (token) {
         try {
           // Determine if we are fetching "me" or another "user"
           // If userId param is present AND generic "user" logic is needed
-          
+
           let endpoint = `${API_URL}/api/me`;
           let viewingMyProfile = true;
 
           if (userId && userId !== 'undefined' && storedUser && userId !== storedUser._id && userId !== storedUser.id) {
-               endpoint = `${API_URL}/api/social/user/${userId}`;
-               viewingMyProfile = false;
+            endpoint = `${API_URL}/api/social/user/${userId}`;
+            viewingMyProfile = false;
           } else if (userId === 'undefined') {
-              // Redirect to clean profile if undefined
-              navigate('/profile');
-              return;
+            // Redirect to clean profile if undefined
+            navigate('/profile');
+            return;
           }
 
           setIsMyProfile(viewingMyProfile);
@@ -83,16 +86,16 @@ const Profile = () => {
           const response = await axios.get(endpoint, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          
+
           if (response.data.success) {
             setUser(response.data.user);
             // If viewing MY profile, update local storage to keep it fresh
-            if(viewingMyProfile) {
-                localStorage.setItem('user', JSON.stringify(response.data.user));
-                // Ensure URL is unique/shareable
-                if (!userId) {
-                    window.history.replaceState(null, '', `/profile/${response.data.user.id}`);
-                }
+            if (viewingMyProfile) {
+              localStorage.setItem('user', JSON.stringify(response.data.user));
+              // Ensure URL is unique/shareable
+              if (!userId) {
+                window.history.replaceState(null, '', `/profile/${response.data.user.id}`);
+              }
             }
           }
         } catch (error) {
@@ -100,17 +103,16 @@ const Profile = () => {
           if (error.response && error.response.status === 401) {
             navigate('/login');
           }
-           // If 404, maybe redirect or show error?
-           if(error.response && error.response.status === 404) {
-               alert('User not found');
-               navigate('/dashboard');
-           }
+          if (error.response && error.response.status === 404) {
+            toast.error('User not found');
+            navigate('/dashboard');
+          }
         }
       } else {
         navigate('/login');
       }
     };
-    
+
     // Clear previous posts immediately when switching profiles
     setPosts([]);
     fetchProfile();
@@ -124,71 +126,71 @@ const Profile = () => {
 
   // List Navigation Handlers
   const fetchFollowers = () => {
-      const targetId = user._id || user.id;
-      if (!targetId) {
-          alert('User ID missing. Please refresh.');
-          return;
-      }
-      navigate(`/network/${targetId}/followers`);
+    const targetId = user._id || user.id;
+    if (!targetId) {
+      toast.error('User ID missing. Please refresh.');
+      return;
+    }
+    navigate(`/network/${targetId}/followers`);
   };
 
   const fetchFollowing = () => {
-      const targetId = user._id || user.id;
-      if (!targetId) {
-           alert('User ID missing. Please refresh.');
-           return;
-      }
-      navigate(`/network/${targetId}/following`);
+    const targetId = user._id || user.id;
+    if (!targetId) {
+      toast.error('User ID missing. Please refresh.');
+      return;
+    }
+    navigate(`/network/${targetId}/following`);
   };
 
   const handleUnfollowRequest = async (targetId) => {
-       if(!window.confirm("Are you sure you want to unfollow?")) return;
-       try {
-        const token = localStorage.getItem('token');
-        await axios.post(`${API_URL}/api/social/unfollow/${targetId}`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        // Update Lists (optimistic)
-        setUserList(prev => prev.map(u => u._id === targetId ? { ...u, isFollowing: false } : u));
-        setSearchResults(prev => prev.map(u => u._id === targetId ? { ...u, isFollowing: false } : u));
+    if (!window.confirm('Are you sure you want to unfollow?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/api/social/unfollow/${targetId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-        // Update Stats
-        if (isMyProfile) {
-             // If on my profile, my "following" count decreases
-             setUser(prev => ({ ...prev, followingCount: Math.max(0, (prev.followingCount || 0) - 1) }));
-        } else if (user._id === targetId) {
-             // If on their profile, their "follower" count decreases AND button toggles
-             setUser(prev => ({ 
-                 ...prev, 
-                 followerCount: Math.max(0, (prev.followerCount || 0) - 1),
-                 isFollowing: false 
-             }));
-        }
+      // Update Lists (optimistic)
+      setUserList(prev => prev.map(u => u._id === targetId ? { ...u, isFollowing: false } : u));
+      setSearchResults(prev => prev.map(u => u._id === targetId ? { ...u, isFollowing: false } : u));
 
-      } catch (err) {
-        console.error('Unfollow error:', err);
+      // Update Stats
+      if (isMyProfile) {
+        // If on my profile, my "following" count decreases
+        setUser(prev => ({ ...prev, followingCount: Math.max(0, (prev.followingCount || 0) - 1) }));
+      } else if (user._id === targetId) {
+        // If on their profile, their "follower" count decreases AND button toggles
+        setUser(prev => ({
+          ...prev,
+          followerCount: Math.max(0, (prev.followerCount || 0) - 1),
+          isFollowing: false
+        }));
       }
+
+    } catch (err) {
+      console.error('Unfollow error:', err);
+    }
   };
 
   // Search Logic (Debounce could be added here for better perf)
   useEffect(() => {
-     if(!searchQuery.trim()) {
-         setSearchResults([]);
-         return;
-     }
-     const timer = setTimeout(async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const res = await axios.get(`${API_URL}/api/social/search?query=${searchQuery}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.data.success) {
-              setSearchResults(res.data.data);
-            }
-        } catch(err) { console.error(err); }
-     }, 300); // 300ms debounce
-     return () => clearTimeout(timer);
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API_URL}/api/social/search?query=${searchQuery}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.success) {
+          setSearchResults(res.data.data);
+        }
+      } catch (err) { console.error(err); }
+    }, 300); // 300ms debounce
+    return () => clearTimeout(timer);
   }, [searchQuery]);
 
   const handleSearchSubmit = (e) => {
@@ -202,8 +204,8 @@ const Profile = () => {
       await axios.post(`${API_URL}/api/social/follow/${targetId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      alert('Follow request sent!');
+
+      toast.success('Follow request sent!');
 
       // Update Lists
       setSearchResults(prev => prev.map(u => u._id === targetId ? { ...u, isRequested: true } : u));
@@ -211,11 +213,11 @@ const Profile = () => {
 
       // Update Stats (Optimistic) - NO inc for pending request
       if (user._id === targetId) {
-           setUser(prev => ({ ...prev, isRequested: true }));
+        setUser(prev => ({ ...prev, isRequested: true }));
       }
     } catch (err) {
       console.error('Follow error:', err);
-      alert(err.response?.data?.message || 'Error following user');
+      toast.error(err.response?.data?.message || 'Error following user');
     }
   };
 
@@ -235,46 +237,46 @@ const Profile = () => {
   };
 
   const handleAcceptFollow = async (senderId, noteId) => {
-      // console.log("Accepting:", senderId, noteId);
-      try {
-        const token = localStorage.getItem('token');
-        await axios.post(`${API_URL}/api/social/accept-follow/${senderId}`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        // Update UI
-        setNotifications(prev => prev.map(n => 
-            (n.sender && n.sender._id === senderId) ? { ...n, isAccepted: true } : n
-        ));
+    // console.log("Accepting:", senderId, noteId);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/api/social/accept-follow/${senderId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-        // Refresh profile to update counts
-        const userRes = await axios.get(`${API_URL}/api/me`, {
-             headers: { Authorization: `Bearer ${token}` }
-        });
-        if(userRes.data.success) setUser(userRes.data.user);
+      // Update UI
+      setNotifications(prev => prev.map(n =>
+        (n.sender && n.sender._id === senderId) ? { ...n, isAccepted: true } : n
+      ));
 
-        alert("Request Accepted!");
+      // Refresh profile to update counts
+      const userRes = await axios.get(`${API_URL}/api/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (userRes.data.success) setUser(userRes.data.user);
 
-      } catch (err) {
-        console.error('Accept error:', err);
-        alert("Failed to accept: " + (err.response?.data?.message || err.message));
-      }
+      toast.success('Request Accepted!');
+
+    } catch (err) {
+      console.error('Accept error:', err);
+      toast.error('Failed to accept: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   const handleRejectFollow = async (senderId) => {
-       try {
-        const token = localStorage.getItem('token');
-        await axios.post(`${API_URL}/api/social/reject-follow/${senderId}`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        setNotifications(prev => prev.filter(n => n.sender && n.sender._id !== senderId));
-        alert("Request Deleted!");
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/api/social/reject-follow/${senderId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-      } catch (err) {
-        console.error('Reject error:', err);
-        alert("Failed to delete: " + (err.response?.data?.message || err.message));
-      }
+      setNotifications(prev => prev.filter(n => n.sender && n.sender._id !== senderId));
+      toast.success('Request Deleted!');
+
+    } catch (err) {
+      console.error('Reject error:', err);
+      toast.error('Failed to delete: ' + (err.response?.data?.message || err.message));
+    }
   };
 
 
@@ -295,11 +297,11 @@ const Profile = () => {
       setLoadingPlaylists(true);
       const token = localStorage.getItem('token');
       const targetUserId = userId || user?._id || user?.id;
-      
+
       const response = await axios.get(`${API_URL}/api/playlists/user/${targetUserId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       if (response.data.success) {
         setPlaylists(response.data.playlists);
       }
@@ -315,34 +317,34 @@ const Profile = () => {
   };
 
   const fetchPosts = async () => {
-      const targetId = user?._id || user?.id;
-      if (!targetId) return;
-      
-      try {
-        setLoadingPosts(true);
-        const token = localStorage.getItem('token');
-        const res = await axios.get(`${API_URL}/api/posts/user/${targetId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.data.success) {
-          setPosts(res.data.data);
-          // Debug: Log posts with their contentType
-          console.log('Profile: Fetched posts:', res.data.data.map(p => ({ 
-            id: p._id, 
-            contentType: p.contentType, 
-            title: p.title,
-            caption: p.caption?.substring(0, 30)
-          })));
-        }
-      } catch (err) {
-        console.error('Error fetching posts:', err);
-      } finally {
-        setLoadingPosts(false);
-      }
-    };
-    
+    const targetId = user?._id || user?.id;
+    if (!targetId) return;
 
-  
+    try {
+      setLoadingPosts(true);
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/api/posts/user/${targetId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        setPosts(res.data.data);
+        // Debug: Log posts with their contentType
+        console.log('Profile: Fetched posts:', res.data.data.map(p => ({
+          id: p._id,
+          contentType: p.contentType,
+          title: p.title,
+          caption: p.caption?.substring(0, 30)
+        })));
+      }
+    } catch (err) {
+      console.error('Error fetching posts:', err);
+    } finally {
+      setLoadingPosts(false);
+    }
+  };
+
+
+
   // Logic to handle Private Account Display
   const showPrivateMessage = posts.length === 0 && !loadingPosts && !isMyProfile && user?.isPrivate && !user?.isFollowing;
 
@@ -352,10 +354,10 @@ const Profile = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 text-gray-900 dark:text-white font-sans min-h-screen transition-all duration-500">
-      
+
       {/* MODALS */}
-      <SearchModal 
-        isOpen={showSearch} 
+      <SearchModal
+        isOpen={showSearch}
         onClose={() => setShowSearch(false)}
         query={searchQuery}
         setQuery={setSearchQuery}
@@ -365,7 +367,7 @@ const Profile = () => {
         currentUserId={user.id}
       />
 
-      <NotificationModal 
+      <NotificationModal
         isOpen={showNotifications}
         onClose={() => setShowNotifications(false)}
         notifications={notifications}
@@ -376,84 +378,84 @@ const Profile = () => {
 
       {/* TOP NAVIGATION BAR */}
       <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6">
-        
-          {!isMyProfile && (
-            <button 
-                onClick={() => navigate('/profile')}
-                className="p-3 rounded-full bg-white dark:bg-gray-900/50 hover:bg-gray-50 dark:bg-gray-800 transition-colors border border-gray-300 dark:border-gray-700 hover:border-gray-500 group flex-shrink-0"
-                title="Back to My Profile"
-            >
-                <FaArrowLeft className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:text-white" size={18} />
-            </button>
-          )}
 
-          {/* Search Bar - Prominent & Centered */}
-          <div className="relative w-full md:w-[90%] group z-20">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <FaSearch className="text-gray-500 group-focus-within:text-blue-400 transition-colors" />
-              </div>
-              <input 
-                  type="text" 
-                  placeholder="Search for creators..." 
-                  value={searchQuery}
-                  onChange={(e) => { 
-                      setSearchQuery(e.target.value); 
-                      setShowDropdown(true); 
-                  }}
-                  onFocus={() => setShowDropdown(true)}
-                  onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-                  className="w-full bg-white dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700 rounded-full py-3 pl-12 pr-4 text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all backdrop-blur-sm shadow-sm"
-              />
-              
-              {/* Live Search Dropdown */}
-              {showDropdown && searchQuery && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden z-30 max-h-80 overflow-y-auto custom-scrollbar">
-                      {searchResults.length > 0 ? (
-                          searchResults.map(result => (
-                              <div 
-                                  key={result._id} 
-                                  className="flex items-center gap-3 p-3 hover:bg-white/10 cursor-pointer transition-colors border-b border-gray-200 dark:border-gray-800 last:border-0"
-                                  onClick={() => {
-                                      navigate(`/profile/${result._id}`);
-                                      setShowDropdown(false);
-                                      setSearchQuery('');
-                                  }}
-                              >
-                                  <div className="w-10 h-10 rounded-full bg-gray-700 border border-gray-600 flex items-center justify-center overflow-hidden flex-shrink-0">
-                                      <span className="font-bold text-gray-700 dark:text-gray-300">{result.name?.charAt(0).toUpperCase()}</span>
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                      <div className="font-semibold text-gray-900 dark:text-white truncate">{result.name}</div>
-                                      <div className="text-xs text-blue-400 truncate">@user</div>
-                                  </div>
-{!result.isFollowing && String(result._id) !== String(user._id || user.id) && (
-    <span className="text-xs bg-blue-600 px-2 py-1 rounded text-gray-900 dark:text-white">Follow</span>
-)}
-                              </div>
-                          ))
-                      ) : (
-                          <div className="p-4 text-center text-gray-600 dark:text-gray-400 text-sm">No users found</div>
-                      )}
+        {!isMyProfile && (
+          <button
+            onClick={() => navigate('/profile')}
+            className="p-3 rounded-full bg-white dark:bg-gray-900/50 hover:bg-gray-50 dark:bg-gray-800 transition-colors border border-gray-300 dark:border-gray-700 hover:border-gray-500 group flex-shrink-0"
+            title="Back to My Profile"
+          >
+            <FaArrowLeft className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:text-white" size={18} />
+          </button>
+        )}
+
+        {/* Search Bar - Prominent & Centered */}
+        <div className="relative w-full md:w-[90%] group z-20">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <FaSearch className="text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search for creators..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setShowDropdown(true);
+            }}
+            onFocus={() => setShowDropdown(true)}
+            onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+            className="w-full bg-white dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700 rounded-full py-3 pl-12 pr-4 text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all backdrop-blur-sm shadow-sm"
+          />
+
+          {/* Live Search Dropdown */}
+          {showDropdown && searchQuery && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden z-30 max-h-80 overflow-y-auto custom-scrollbar">
+              {searchResults.length > 0 ? (
+                searchResults.map(result => (
+                  <div
+                    key={result._id}
+                    className="flex items-center gap-3 p-3 hover:bg-white/10 cursor-pointer transition-colors border-b border-gray-200 dark:border-gray-800 last:border-0"
+                    onClick={() => {
+                      navigate(`/profile/${result._id}`);
+                      setShowDropdown(false);
+                      setSearchQuery('');
+                    }}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-gray-700 border border-gray-600 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <span className="font-bold text-gray-700 dark:text-gray-300">{result.name?.charAt(0).toUpperCase()}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-gray-900 dark:text-white truncate">{result.name}</div>
+                      <div className="text-xs text-blue-400 truncate">@user</div>
+                    </div>
+                    {!result.isFollowing && String(result._id) !== String(user._id || user.id) && (
+                      <span className="text-xs bg-blue-600 px-2 py-1 rounded text-gray-900 dark:text-white">Follow</span>
+                    )}
                   </div>
+                ))
+              ) : (
+                <div className="p-4 text-center text-gray-600 dark:text-gray-400 text-sm">No users found</div>
               )}
-          </div>
+            </div>
+          )}
+        </div>
 
-          {/* Right Actions (Notifications & Settings) */}
-          <div className="flex items-center gap-4">
-              {isMyProfile && (
-                  <>
-                    <button 
-                        onClick={() => navigate('/notifications')}
-                        className="relative p-3 rounded-full bg-white dark:bg-gray-900/50 hover:bg-gray-50 dark:bg-gray-800 transition-colors border border-gray-300 dark:border-gray-700 hover:border-gray-500 group">
-                        <FaBell size={18} className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:text-white transition-colors" />
-                        {notifications.length > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>}
-                    </button>
-                    <button onClick={handleLogout} className="p-3 rounded-full bg-white dark:bg-gray-900/50 hover:bg-gray-50 dark:bg-gray-800 transition-colors border border-gray-300 dark:border-gray-700 hover:border-gray-500 group" title="Logout">
-                        <FaCog size={18} className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:text-white transition-colors" />
-                    </button>
-                  </>
-              )}
-          </div>
+        {/* Right Actions (Notifications & Settings) */}
+        <div className="flex items-center gap-4">
+          {isMyProfile && (
+            <>
+              <button
+                onClick={() => navigate('/notifications')}
+                className="relative p-3 rounded-full bg-white dark:bg-gray-900/50 hover:bg-gray-50 dark:bg-gray-800 transition-colors border border-gray-300 dark:border-gray-700 hover:border-gray-500 group">
+                <FaBell size={18} className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:text-white transition-colors" />
+                {notifications.length > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>}
+              </button>
+              <button onClick={handleLogout} className="p-3 rounded-full bg-white dark:bg-gray-900/50 hover:bg-gray-50 dark:bg-gray-800 transition-colors border border-gray-300 dark:border-gray-700 hover:border-gray-500 group" title="Logout">
+                <FaCog size={18} className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:text-white transition-colors" />
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* PROFILE HEADER CARD */}
@@ -462,146 +464,146 @@ const Profile = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 via-purple-900/20 to-pink-900/20 rounded-3xl blur-3xl -z-10 opacity-60"></div>
 
         <div className="bg-gray-100 dark:bg-white/5 backdrop-blur-xl border border-gray-300 dark:border-white/10 rounded-3xl p-8 md:p-12 shadow-2xl flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-16 relative overflow-hidden">
-             {/* Subtle internal shine */}
-             <div className="absolute top-0 right-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+          {/* Subtle internal shine */}
+          <div className="absolute top-0 right-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
 
-            {/* Profile Picture */}
-            <div className="flex-shrink-0 relative group">
-              <div className="w-36 h-36 md:w-48 md:h-48 rounded-full p-1 bg-gradient-to-tr from-blue-500 via-purple-500 to-pink-500 shadow-xl group-hover:scale-[1.02] transition-transform duration-300">
-                <div className="w-full h-full rounded-full border-4 border-black bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden">
-                   {user.profileImage ? (
-                       <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover" />
-                   ) : (
-                       <span className="text-6xl font-bold text-gray-700 dark:text-gray-300 select-none">
-                         {user.name.charAt(0).toUpperCase()}
-                       </span>
-                   )}
-                </div>
+          {/* Profile Picture */}
+          <div className="flex-shrink-0 relative group">
+            <div className="w-36 h-36 md:w-48 md:h-48 rounded-full p-1 bg-gradient-to-tr from-blue-500 via-purple-500 to-pink-500 shadow-xl group-hover:scale-[1.02] transition-transform duration-300">
+              <div className="w-full h-full rounded-full border-4 border-black bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden">
+                {user.profileImage ? (
+                  <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-6xl font-bold text-gray-700 dark:text-gray-300 select-none">
+                    {user.name.charAt(0).toUpperCase()}
+                  </span>
+                )}
               </div>
-              {(onlineUsers.includes(user._id) || onlineUsers.includes(user.id)) && (
-                <div className="absolute bottom-4 right-4 w-6 h-6 bg-green-500 border-4 border-black rounded-full shadow-lg" title="Online"></div>
+            </div>
+            {(onlineUsers.includes(user._id) || onlineUsers.includes(user.id)) && (
+              <div className="absolute bottom-4 right-4 w-6 h-6 bg-green-500 border-4 border-black rounded-full shadow-lg" title="Online"></div>
+            )}
+          </div>
+
+          {/* Profile Info Section */}
+          <div className="flex-1 text-center md:text-left space-y-6 w-full">
+
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div>
+                <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">{user.name}</h1>
+                {user.bio && (
+                  <p className="text-gray-700 dark:text-gray-300 max-w-lg text-sm leading-relaxed mb-4">{user.bio}</p>
+                )}
+              </div>
+
+              {/* Edit Profile (For Owner) */}
+              {isMyProfile && (
+                <div className="flex gap-3 mb-4 md:mb-0">
+                  <button
+                    onClick={() => setShowEditModal(true)}
+                    className="bg-gray-50 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:text-white text-gray-700 dark:text-gray-300 px-6 py-2.5 rounded-xl font-semibold border border-gray-300 dark:border-gray-700 transition-all shadow-lg flex items-center gap-2 text-sm"
+                  >
+                    <FaPen size={14} /> Edit Profile
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/profile/${user._id}`);
+                      toast.success('Profile link copied!');
+                    }}
+                    className="bg-gray-50 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:text-white text-gray-700 dark:text-gray-300 px-4 py-2.5 rounded-xl font-semibold border border-gray-300 dark:border-gray-700 transition-all shadow-lg flex items-center gap-2 text-sm"
+                    title="Copy Profile Link"
+                  >
+                    <FaShareAlt size={14} />
+                  </button>
+                </div>
+              )}
+
+              {/* Follow Actions (For Visitors) */}
+              {!isMyProfile && (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => navigate(`/messages/${user._id}`)}
+                    className="bg-gray-50 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white p-3 rounded-xl border border-gray-300 dark:border-gray-700 transition-all shadow-lg"
+                    title="Message">
+                    <FaEnvelope size={18} />
+                  </button>
+                  {user.isFollowing ? (
+                    <button
+                      onClick={() => handleUnfollowRequest(user._id)}
+                      className="bg-gray-50 dark:bg-gray-800 border border-gray-600 hover:border-red-500 hover:text-red-500 text-gray-700 dark:text-gray-300 px-8 py-2.5 rounded-xl font-semibold transition-all shadow-lg">
+                      Following
+                    </button>
+                  ) : user.isRequested ? (
+                    <button
+                      disabled
+                      className="bg-gray-50 dark:bg-gray-800 border border-gray-600 text-gray-600 dark:text-gray-400 px-8 py-2.5 rounded-xl font-semibold transition-all shadow-lg cursor-not-allowed">
+                      Requested
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleFollowRequest(user._id)}
+                      className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-gray-900 dark:text-white px-8 py-2.5 rounded-xl font-semibold shadow-lg shadow-blue-900/50 transition-all hover:scale-105 active:scale-95">
+                      Follow
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 
-            {/* Profile Info Section */}
-            <div className="flex-1 text-center md:text-left space-y-6 w-full">
-              
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div>
-                     <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">{user.name}</h1>
-                     {user.bio && (
-                        <p className="text-gray-700 dark:text-gray-300 max-w-lg text-sm leading-relaxed mb-4">{user.bio}</p>
-                     )}
-                  </div>
-
-                     {/* Edit Profile (For Owner) */}
-                  {isMyProfile && (
-                     <div className="flex gap-3 mb-4 md:mb-0">
-                        <button 
-                            onClick={() => setShowEditModal(true)}
-                            className="bg-gray-50 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:text-white text-gray-700 dark:text-gray-300 px-6 py-2.5 rounded-xl font-semibold border border-gray-300 dark:border-gray-700 transition-all shadow-lg flex items-center gap-2 text-sm"
-                        >
-                            <FaPen size={14} /> Edit Profile
-                        </button>
-                        <button 
-                            onClick={() => {
-                                navigator.clipboard.writeText(`${window.location.origin}/profile/${user._id}`);
-                                alert('Profile link copied to clipboard!');
-                            }}
-                            className="bg-gray-50 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:text-white text-gray-700 dark:text-gray-300 px-4 py-2.5 rounded-xl font-semibold border border-gray-300 dark:border-gray-700 transition-all shadow-lg flex items-center gap-2 text-sm"
-                            title="Copy Profile Link"
-                        >
-                            <FaShareAlt size={14} /> 
-                        </button>
-                     </div>
-                  )}
-
-                     {/* Follow Actions (For Visitors) */}
-                 {!isMyProfile && (
-                    <div className="flex items-center gap-3">
-                        <button 
-                             onClick={() => navigate(`/messages/${user._id}`)}
-                             className="bg-gray-50 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white p-3 rounded-xl border border-gray-300 dark:border-gray-700 transition-all shadow-lg"
-                             title="Message">
-                             <FaEnvelope size={18} />
-                        </button>
-                        {user.isFollowing ? (
-                          <button 
-                              onClick={() => handleUnfollowRequest(user._id)}
-                              className="bg-gray-50 dark:bg-gray-800 border border-gray-600 hover:border-red-500 hover:text-red-500 text-gray-700 dark:text-gray-300 px-8 py-2.5 rounded-xl font-semibold transition-all shadow-lg">
-                              Following
-                          </button>
-                        ) : user.isRequested ? (
-                          <button 
-                              disabled
-                              className="bg-gray-50 dark:bg-gray-800 border border-gray-600 text-gray-600 dark:text-gray-400 px-8 py-2.5 rounded-xl font-semibold transition-all shadow-lg cursor-not-allowed">
-                              Requested
-                          </button>
-                        ) : (
-                          <button 
-                              onClick={() => handleFollowRequest(user._id)}
-                              className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-gray-900 dark:text-white px-8 py-2.5 rounded-xl font-semibold shadow-lg shadow-blue-900/50 transition-all hover:scale-105 active:scale-95">
-                              Follow
-                          </button>
-                        )}
-                    </div>
-                 )}
-              </div>
-
-              {/* Bio */}
-              <div className="max-w-2xl text-gray-700 dark:text-gray-300 text-base leading-relaxed font-light mx-auto md:mx-0">
-                  {/* Bio Content */}
-              </div>
-
-              {/* Stats Grid */}
-              <div className="flex justify-center md:justify-start items-center gap-10 md:gap-14 pt-6 border-t border-gray-200 dark:border-white/5 mt-2">
-                  <div onClick={fetchFollowing} className="cursor-pointer group text-center md:text-left transition-all hover:-translate-y-1">
-                      <span className="block text-2xl font-bold text-gray-900 dark:text-white group-hover:text-blue-400 transition-colors">{user.followingCount || 0}</span>
-                      <span className="text-xs text-gray-500 font-bold uppercase tracking-wider group-hover:text-gray-700 dark:text-gray-300 transition-colors">Following</span>
-                  </div>
-                  <div className="w-px h-10 bg-white/10 hidden md:block"></div>
-                  <div onClick={fetchFollowers} className="cursor-pointer group text-center md:text-left transition-all hover:-translate-y-1">
-                      <span className="block text-2xl font-bold text-gray-900 dark:text-white group-hover:text-blue-400 transition-colors">{user.followerCount || 0}</span>
-                      <span className="text-xs text-gray-500 font-bold uppercase tracking-wider group-hover:text-gray-700 dark:text-gray-300 transition-colors">Followers</span>
-                  </div>
-                  <div className="w-px h-10 bg-white/10 hidden md:block"></div>
-                  <div className="group text-center md:text-left transition-all hover:-translate-y-1">
-                      <span className="block text-2xl font-bold text-gray-900 dark:text-white">{user.subscriberCount || 0}</span>
-                      <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">Subscribers</span>
-                  </div>
-              </div>
-
+            {/* Bio */}
+            <div className="max-w-2xl text-gray-700 dark:text-gray-300 text-base leading-relaxed font-light mx-auto md:mx-0">
+              {/* Bio Content */}
             </div>
+
+            {/* Stats Grid */}
+            <div className="flex justify-center md:justify-start items-center gap-10 md:gap-14 pt-6 border-t border-gray-200 dark:border-white/5 mt-2">
+              <div onClick={fetchFollowing} className="cursor-pointer group text-center md:text-left transition-all hover:-translate-y-1">
+                <span className="block text-2xl font-bold text-gray-900 dark:text-white group-hover:text-blue-400 transition-colors">{user.followingCount || 0}</span>
+                <span className="text-xs text-gray-500 font-bold uppercase tracking-wider group-hover:text-gray-700 dark:text-gray-300 transition-colors">Following</span>
+              </div>
+              <div className="w-px h-10 bg-white/10 hidden md:block"></div>
+              <div onClick={fetchFollowers} className="cursor-pointer group text-center md:text-left transition-all hover:-translate-y-1">
+                <span className="block text-2xl font-bold text-gray-900 dark:text-white group-hover:text-blue-400 transition-colors">{user.followerCount || 0}</span>
+                <span className="text-xs text-gray-500 font-bold uppercase tracking-wider group-hover:text-gray-700 dark:text-gray-300 transition-colors">Followers</span>
+              </div>
+              <div className="w-px h-10 bg-white/10 hidden md:block"></div>
+              <div className="group text-center md:text-left transition-all hover:-translate-y-1">
+                <span className="block text-2xl font-bold text-gray-900 dark:text-white">{user.subscriberCount || 0}</span>
+                <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">Subscribers</span>
+              </div>
+            </div>
+
+          </div>
         </div>
       </header>
 
       {/* POSTS SECTION */}
       <div className="mt-8 border-t border-gray-200 dark:border-white/5 pt-8">
         <div className="flex items-center justify-center gap-12 border-b border-gray-200 dark:border-gray-800 pb-0 mb-6">
-            <button 
+          <button
             onClick={() => setActiveTab('posts')}
             className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'posts' ? 'text-gray-900 dark:text-white border-t border-white -mt-[1px]' : 'text-gray-500 hover:text-gray-900 dark:text-white'}`}
-            >
+          >
             <FaTh size={12} /> Posts
-            </button>
-            <button 
+          </button>
+          <button
             onClick={() => setActiveTab('study-content')}
             className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'study-content' ? 'text-gray-900 dark:text-white border-t border-white -mt-[1px]' : 'text-gray-500 hover:text-gray-900 dark:text-white'}`}
-            >
+          >
             <FaGraduationCap size={12} /> Study Content
-            </button>
-            <button 
+          </button>
+          <button
             onClick={() => setActiveTab('paid-content')}
             className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'paid-content' ? 'text-gray-900 dark:text-white border-t border-white -mt-[1px]' : 'text-gray-500 hover:text-gray-900 dark:text-white'}`}
-            >
+          >
             <FaRupeeSign size={12} /> Paid Content
-            </button>
-            <button 
+          </button>
+          <button
             onClick={() => setActiveTab('playlists')}
             className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'playlists' ? 'text-gray-900 dark:text-white border-t border-white -mt-[1px]' : 'text-gray-500 hover:text-gray-900 dark:text-white'}`}
-            >
+          >
             <FaListUl size={12} /> Playlists
-            </button>
+          </button>
         </div>
 
         {activeTab === 'playlists' ? (
@@ -622,9 +624,9 @@ const Profile = () => {
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {playlists.map(playlist => (
-                  <PlaylistCard 
-                    key={playlist._id} 
-                    playlist={playlist} 
+                  <PlaylistCard
+                    key={playlist._id}
+                    playlist={playlist}
                     onDelete={handleDeletePlaylist}
                   />
                 ))}
@@ -647,14 +649,14 @@ const Profile = () => {
             </div>
           )
         ) : loadingPosts ? (
-            <div className="text-center py-10 text-gray-600 dark:text-gray-400">Loading {activeTab === 'posts' ? 'posts' : 'study content'}...</div>
+          <div className="text-center py-10 text-gray-600 dark:text-gray-400">Loading {activeTab === 'posts' ? 'posts' : 'study content'}...</div>
         ) : posts.filter(p => {
-             if (activeTab === 'posts') return p.contentType === 'post' || !p.contentType;
-             if (activeTab === 'study-content') return p.contentType === 'study-content';
-             if (activeTab === 'paid-content') return p.contentType === 'paid-content';
-             return false;
-          }).length > 0 ? (
-            <div className={`grid gap-4 ${activeTab === 'posts' ? 'grid-cols-3 gap-1 md:gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}`}>
+          if (activeTab === 'posts') return p.contentType === 'post' || !p.contentType;
+          if (activeTab === 'study-content') return p.contentType === 'study-content';
+          if (activeTab === 'paid-content') return p.contentType === 'paid-content';
+          return false;
+        }).length > 0 ? (
+          <div className={`grid gap-4 ${activeTab === 'posts' ? 'grid-cols-3 gap-1 md:gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}`}>
             {posts
               .filter(p => {
                 if (activeTab === 'posts') return p.contentType === 'post' || !p.contentType;
@@ -664,73 +666,73 @@ const Profile = () => {
               })
               .map(post => (
                 activeTab === 'study-content' || activeTab === 'paid-content' ? (
-                   <StudyContentCard key={post._id} content={post} />
+                  <StudyContentCard key={post._id} content={post} />
                 ) : (
-                  <div 
-                      key={post._id} 
-                      onClick={() => setSelectedPost(post)}
-                      className="relative aspect-square group cursor-pointer bg-white dark:bg-gray-900 overflow-hidden"
+                  <div
+                    key={post._id}
+                    onClick={() => setSelectedPost(post)}
+                    className="relative aspect-square group cursor-pointer bg-white dark:bg-gray-900 overflow-hidden"
                   >
-                      {/* Media Thumbnail */}
-                      {post.mediaType === 'video' ? (
-                           <video src={post.mediaUrl} className="w-full h-full object-cover" />
-                      ) : (
-                           <img src={post.mediaUrl} alt="Post" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                      )}
+                    {/* Media Thumbnail */}
+                    {post.mediaType === 'video' ? (
+                      <video src={post.mediaUrl} className="w-full h-full object-cover" />
+                    ) : (
+                      <img src={post.mediaUrl} alt="Post" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    )}
 
-                      {/* Video Indicator */}
-                      {post.mediaType === 'video' && (
-                          <div className="absolute top-2 right-2 text-gray-900 dark:text-white drop-shadow-md">
-                              <FaPlay size={16} />
-                          </div>
-                      )}
-
-                      {/* Hover Overlay */}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-6 md:gap-8 backdrop-blur-[2px]">
-                          <div className="flex items-center gap-2 text-gray-900 dark:text-white font-bold text-lg">
-                              <FaHeart />
-                              <span>{post.likes?.length || 0}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-gray-900 dark:text-white font-bold text-lg">
-                              <FaComment />
-                              <span>{post.comments?.length || 0}</span>
-                          </div>
+                    {/* Video Indicator */}
+                    {post.mediaType === 'video' && (
+                      <div className="absolute top-2 right-2 text-gray-900 dark:text-white drop-shadow-md">
+                        <FaPlay size={16} />
                       </div>
+                    )}
+
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-6 md:gap-8 backdrop-blur-[2px]">
+                      <div className="flex items-center gap-2 text-gray-900 dark:text-white font-bold text-lg">
+                        <FaHeart />
+                        <span>{post.likes?.length || 0}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-900 dark:text-white font-bold text-lg">
+                        <FaComment />
+                        <span>{post.comments?.length || 0}</span>
+                      </div>
+                    </div>
                   </div>
                 )
-            ))}
-            </div>
+              ))}
+          </div>
         ) : showPrivateMessage ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-300">
-                  <div className="w-24 h-24 rounded-full border-4 border-gray-300 dark:border-white/10 flex items-center justify-center mb-6 bg-gray-100 dark:bg-white/5">
-                      <FaLock size={40} className="text-gray-900 dark:text-white/50" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">This Account is Private</h3>
-                  <p className="text-gray-600 dark:text-gray-400 max-w-sm">Follow this account to see their photos and videos.</p>
-              </div>
-        ) : (
-            <div className="text-center py-20">
-                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Share Photos</div>
-                <div className="text-gray-600 dark:text-gray-400 mb-6 text-sm">When you share photos, they will appear on your profile.</div>
-                {isMyProfile && (
-                <button onClick={() => navigate('/create-post')} className="text-blue-400 font-semibold text-sm hover:text-gray-900 dark:text-white transition-colors">
-                    Share your first photo
-                </button>
-                )}
+          <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-300">
+            <div className="w-24 h-24 rounded-full border-4 border-gray-300 dark:border-white/10 flex items-center justify-center mb-6 bg-gray-100 dark:bg-white/5">
+              <FaLock size={40} className="text-gray-900 dark:text-white/50" />
             </div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">This Account is Private</h3>
+            <p className="text-gray-600 dark:text-gray-400 max-w-sm">Follow this account to see their photos and videos.</p>
+          </div>
+        ) : (
+          <div className="text-center py-20">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Share Photos</div>
+            <div className="text-gray-600 dark:text-gray-400 mb-6 text-sm">When you share photos, they will appear on your profile.</div>
+            {isMyProfile && (
+              <button onClick={() => navigate('/create-post')} className="text-blue-400 font-semibold text-sm hover:text-gray-900 dark:text-white transition-colors">
+                Share your first photo
+              </button>
+            )}
+          </div>
         )}
       </div>
 
       {selectedPost && (
-          <PostDetailModal 
-              isOpen={!!selectedPost} 
-              onClose={() => setSelectedPost(null)} 
-              post={selectedPost}
-              onPostDeleted={(postId) => {
-                setPosts(prev => prev.filter(p => p._id !== postId));
-                setSelectedPost(null);
-              }}
-          />
+        <PostDetailModal
+          isOpen={!!selectedPost}
+          onClose={() => setSelectedPost(null)}
+          post={selectedPost}
+          onPostDeleted={(postId) => {
+            setPosts(prev => prev.filter(p => p._id !== postId));
+            setSelectedPost(null);
+          }}
+        />
       )}
 
       {showCreatePlaylist && (
@@ -746,13 +748,13 @@ const Profile = () => {
       {showSearch && <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />}
       {showNotifications && <NotificationModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} />}
       {showEditModal && <EditProfileModal isOpen={showEditModal} onClose={() => setShowEditModal(false)} user={user} onUpdate={(updatedUser) => {
-             setUser(prev => ({ ...prev, ...updatedUser }));
-             // Update local storage if it's me
-             if(isMyProfile) {
-                 const stored = JSON.parse(localStorage.getItem('user') || '{}');
-                 localStorage.setItem('user', JSON.stringify({ ...stored, ...updatedUser }));
-             }
-          }}
+        setUser(prev => ({ ...prev, ...updatedUser }));
+        // Update local storage if it's me
+        if (isMyProfile) {
+          const stored = JSON.parse(localStorage.getItem('user') || '{}');
+          localStorage.setItem('user', JSON.stringify({ ...stored, ...updatedUser }));
+        }
+      }}
       />}
     </div>
   );

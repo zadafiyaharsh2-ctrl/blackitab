@@ -3,8 +3,10 @@ import axios from 'axios';
 import API_URL from '../config';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaBell, FaUserPlus, FaCheck, FaBan, FaReply, FaSpinner, FaArrowLeft } from 'react-icons/fa';
+import usePageTitle from '../hooks/usePageTitle';
 
 const Notifications = () => {
+    usePageTitle('Notifications');
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -47,8 +49,8 @@ const Notifications = () => {
             await axios.post(`${API_URL}/api/social/reject-follow/${senderId}`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-             // Remove from UI
-             setNotifications(prev => prev.filter(n => n._id !== notificationId));
+            // Remove from UI
+            setNotifications(prev => prev.filter(n => n._id !== notificationId));
         } catch (error) {
             console.error('Error rejecting request', error);
         }
@@ -69,10 +71,10 @@ const Notifications = () => {
 
     return (
         <div className="min-h-screen bg-transparent backdrop-blur-sm p-4 md:p-8 relative overflow-hidden">
-             {/* BACKGROUND GLOW */}
-             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0 opacity-30">
-                 <div className="absolute top-[10%] left-[20%] w-[30%] h-[30%] bg-blue-600/10 rounded-full blur-[100px]"></div>
-                 <div className="absolute bottom-[10%] right-[20%] w-[30%] h-[30%] bg-purple-600/10 rounded-full blur-[100px]"></div>
+            {/* BACKGROUND GLOW */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0 opacity-30">
+                <div className="absolute top-[10%] left-[20%] w-[30%] h-[30%] bg-blue-600/10 rounded-full blur-[100px]"></div>
+                <div className="absolute bottom-[10%] right-[20%] w-[30%] h-[30%] bg-purple-600/10 rounded-full blur-[100px]"></div>
             </div>
 
             <div className="max-w-2xl mx-auto relative z-10">
@@ -91,7 +93,7 @@ const Notifications = () => {
 
                 {loading ? (
                     <div className="flex justify-center items-center py-20">
-                         <FaSpinner className="animate-spin text-blue-500 text-2xl" />
+                        <FaSpinner className="animate-spin text-blue-500 text-2xl" />
                     </div>
                 ) : notifications.length === 0 ? (
                     <div className="text-center py-20 bg-gray-100 dark:bg-white/5 rounded-3xl border border-gray-200 dark:border-white/5 backdrop-blur-md">
@@ -117,20 +119,20 @@ const Notifications = () => {
                                         <div className={`mt-1 w-10 h-10 rounded-full flex items-center justify-center shadow-lg shrink-0 ${note.type === 'follow_request' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'}`}>
                                             {note.type === 'follow_request' ? <FaUserPlus size={16} /> : <FaCheck size={16} />}
                                         </div>
-                                        
+
                                         <div className="flex-1 min-w-0">
                                             <p className="text-gray-200 text-sm leading-relaxed mb-1">
                                                 <span className="font-bold text-gray-900 dark:text-white cursor-pointer hover:text-blue-400 transition-colors">
                                                     {note.sender?.name || 'Unknown User'}
                                                 </span>
                                                 <span className="text-gray-600 dark:text-gray-400 px-1">
-                                                    {note.type === 'follow_request' 
-                                                        ? 'requested to follow you' 
+                                                    {note.type === 'follow_request'
+                                                        ? 'requested to follow you'
                                                         : 'accepted your follow request'}
                                                 </span>
                                             </p>
                                             <span className="text-xs text-gray-600 font-medium block mb-3">
-                                                {new Date(note.createdAt).toLocaleDateString()} at {new Date(note.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                {new Date(note.createdAt).toLocaleDateString()} at {new Date(note.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </span>
 
                                             {/* ACTION BUTTONS */}
@@ -138,13 +140,13 @@ const Notifications = () => {
                                                 <div className="flex flex-wrap gap-2 mt-2">
                                                     {!note.isAccepted ? (
                                                         <>
-                                                            <button 
+                                                            <button
                                                                 onClick={() => handleAccept(note.sender._id, note._id)}
                                                                 className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-gray-900 dark:text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20"
                                                             >
                                                                 <FaCheck size={10} /> Confirm
                                                             </button>
-                                                            <button 
+                                                            <button
                                                                 onClick={() => handleReject(note.sender._id, note._id)}
                                                                 className="px-4 py-1.5 bg-gray-100 dark:bg-white/5 hover:bg-white/10 border border-gray-300 dark:border-white/10 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2"
                                                             >
@@ -153,7 +155,7 @@ const Notifications = () => {
                                                         </>
                                                     ) : (
                                                         !note.isFollowing ? (
-                                                            <button 
+                                                            <button
                                                                 onClick={() => handleFollowBack(note.sender._id)}
                                                                 className="px-4 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-gray-900 dark:text-white text-xs font-semibold rounded-lg transition-all shadow-lg flex items-center gap-2"
                                                             >

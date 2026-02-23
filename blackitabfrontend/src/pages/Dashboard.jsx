@@ -26,15 +26,12 @@ import {
 import { MdReportProblem } from 'react-icons/md';
 import ActivityHeatmap from '../components/ActivityHeatmap'; // Custom Heatmap Component
 import PlaylistCard from '../components/PlaylistCard'; // Import PlaylistCard
-import API_URL from '../config'; // Centralized API URL
+import API_URL from '../config';
+import usePageTitle from '../hooks/usePageTitle';
 
 
 const Dashboard = () => {
-
-
-  // ============================================================================
-  // LOCAL STATE
-  // ============================================================================
+  usePageTitle('Dashboard');
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
