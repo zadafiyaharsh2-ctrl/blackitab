@@ -12,7 +12,8 @@ import {
     ChevronLeft,
     ChevronRight,
     BrainCircuit,
-    Book
+    Book,
+    Maximize
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -35,6 +36,93 @@ const ExamQuestions = () => {
     const [tutorSessions, setTutorSessions] = useState({});
 
     const [followUpAnswers, setFollowUpAnswers] = useState({});
+
+    // --- FOCUS MODE STATE ---
+    const [isFocusMode, setIsFocusMode] = useState(false);
+    const [focusQuestions, setFocusQuestions] = useState([]);
+    const [focusIndex, setFocusIndex] = useState(0);
+    const [focusSelectedOption, setFocusSelectedOption] = useState();
+    const [focusResultIndicator, setFocusResultIndicator] = useState(null); // 'correct' | 'wrong' | null
+    const [focusResults, setFocusResults] = useState([]); 
+    const [showTheory, setShowTheory] = useState(false);
+    const [theoryContent, setTheoryContent] = useState('');
+    const [loadingTheory, setLoadingTheory] = useState(false);
+
+    const startFocusMode = () => {
+        const selectedQuestions = questions.slice(0, 8); // Limit to 8
+        setFocusQuestions(selectedQuestions);
+        setFocusIndex(0);
+        setFocusResults([]);
+        setFocusResultIndicator(null);
+        setFocusSelectedOption(undefined);
+        setShowTheory(false);
+        setIsFocusMode(true);
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(err => console.log('Fullscreen failed', err));
+        }
+    };
+
+    const stopFocusMode = () => {
+        setIsFocusMode(false);
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(err => console.log('Exit fullscreen failed', err));
+        }
+    };
+
+    const handleFocusSubmit = async () => {
+        if (focusSelectedOption === undefined) return;
+        const qId = focusQuestions[focusIndex]._id;
+        try {
+            setCheckingId(qId);
+            const token = localStorage.getItem('token');
+            const res = await axios.post(
+                `${API_URL}/api/problems/exam/${examId}/check-answer`,
+                { questionId: qId, selectedOption: focusSelectedOption },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (res.data.success) {
+                const isCorrect = res.data.data.correct;
+                setFocusResultIndicator(isCorrect ? 'correct' : 'wrong');
+                setFocusResults(prev => [...prev, { questionId: qId, correct: isCorrect }]);
+            }
+        } catch (err) {
+            console.error('Check error', err);
+        } finally {
+            setCheckingId(null);
+        }
+    };
+
+    const handleFocusNext = async () => {
+        if (focusIndex < focusQuestions.length - 1) {
+            setFocusIndex(prev => prev + 1);
+            setFocusResultIndicator(null);
+            setFocusSelectedOption(undefined);
+        } else {
+            const wrongCount = focusResults.filter(r => !r.correct).length;
+            if (wrongCount >= 3) {
+                setShowTheory(true);
+                setLoadingTheory(true);
+                try {
+                    const token = localStorage.getItem('token');
+                    const failedIds = focusResults.filter(r => !r.correct).map(r => r.questionId);
+                    const res = await axios.post(
+                        `${API_URL}/api/problems/exam/${examId}/theory`,
+                        { failedQuestionIds: failedIds },
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                    if (res.data.success) {
+                        setTheoryContent(res.data.theory);
+                    }
+                } catch (err) {
+                    setTheoryContent('Failed to load theory summary. Please refer to your textbooks.');
+                } finally {
+                    setLoadingTheory(false);
+                }
+            } else {
+                stopFocusMode();
+            }
+        }
+    };
 
     const examMeta = {
         jee: { name: 'JEE', subjects: ['Physics', 'Chemistry', 'Mathematics'], color: 'purple' },
@@ -196,6 +284,120 @@ const ExamQuestions = () => {
         return 'border-gray-700/50 bg-gray-800/20 text-gray-500';
     };
 
+    if (isFocusMode) {
+        const q = focusQuestions[focusIndex];
+        return (
+            <div className="fixed inset-0 z-[100] bg-gray-900 flex flex-col items-center justify-center p-4">
+                <button 
+                   onClick={stopFocusMode} 
+                   className="absolute top-6 right-8 text-gray-500 hover:text-red-400 font-bold text-sm bg-gray-800 px-4 py-2 rounded-lg border border-gray-700 transition-colors"
+                >
+                   Exit Exam Mode
+                </button>
+
+                <div className="w-full max-w-3xl">
+                    {showTheory ? (
+                        <div className="bg-gray-800 p-8 rounded-2xl border border-blue-500/50 shadow-2xl shadow-blue-900/20">
+                            <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                                <Book className="h-6 w-6 text-blue-400" />
+                                Study Review Session
+                            </h2>
+                            <p className="text-gray-400 mb-6 font-medium">You missed 3 or more questions. Review these core concepts before continuing.</p>
+                            
+                            {loadingTheory ? (
+                                <div className="flex flex-col items-center justify-center py-12 gap-4">
+                                    <Loader2 className="h-10 w-10 text-blue-400 animate-spin" />
+                                    <p className="text-blue-300">AI Tutor is compiling your tailored study guide...</p>
+                                </div>
+                            ) : (
+                                <div className="prose prose-invert max-w-none text-gray-300 max-h-[50vh] overflow-y-auto pr-4 mb-8 bg-gray-900/50 p-6 rounded-xl border border-gray-700/50">
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{theoryContent}</ReactMarkdown>
+                                </div>
+                            )}
+                            
+                            {!loadingTheory && (
+                                <button onClick={stopFocusMode} className="w-full px-6 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-blue-600/30">
+                                    Finish Review & Exit
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="bg-gray-800 p-8 flex flex-col rounded-2xl border border-purple-500/30 shadow-2xl shadow-purple-900/20">
+                            <div className="flex justify-between items-center mb-6">
+                                <span className="px-4 py-1.5 bg-purple-500/20 text-purple-300 font-bold rounded-full border border-purple-500/30">
+                                    Question {focusIndex + 1} of {focusQuestions.length}
+                                </span>
+                                <span className="text-gray-400 text-sm font-medium">Exam Mode Strict</span>
+                            </div>
+
+                            <p className="text-white text-2xl font-medium leading-relaxed mb-8">
+                                {q.question}
+                            </p>
+
+                            <div className="space-y-4 mb-8">
+                                {q.options.map((opt, i) => {
+                                    const isSelected = focusSelectedOption === i;
+                                    let optionStyle = 'border-gray-700 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50';
+                                    
+                                    if (focusResultIndicator) {
+                                        if (isSelected && focusResultIndicator === 'correct') {
+                                            optionStyle = 'border-green-500 bg-green-500/20 text-green-300 cursor-default';
+                                        } else if (isSelected && focusResultIndicator === 'wrong') {
+                                            optionStyle = 'border-red-500 bg-red-500/20 text-red-300 cursor-default';
+                                        } else {
+                                            optionStyle = 'border-gray-700/50 bg-gray-800/50 text-gray-500 cursor-default opacity-50';
+                                        }
+                                    } else if (isSelected) {
+                                        optionStyle = 'border-purple-500 bg-purple-500/20 text-white shadow-lg shadow-purple-900/20';
+                                    }
+
+                                    return (
+                                        <button 
+                                            key={i}
+                                            onClick={() => !focusResultIndicator && setFocusSelectedOption(i)}
+                                            disabled={focusResultIndicator !== null}
+                                            className={`w-full text-left px-5 py-4 rounded-xl border-2 transition-all ${optionStyle}`}
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <span className={`w-8 h-8 flex items-center justify-center rounded-full border ${isSelected && !focusResultIndicator ? 'border-purple-400 text-purple-300' : 'border-gray-600 text-gray-500'}`}>
+                                                    {String.fromCharCode(65 + i)}
+                                                </span>
+                                                <span className="text-lg">{opt}</span>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {!focusResultIndicator ? (
+                                <button
+                                    onClick={handleFocusSubmit}
+                                    disabled={focusSelectedOption === undefined || checkingId === q._id}
+                                    className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold text-lg rounded-xl transition-all"
+                                >
+                                    {checkingId === q._id ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : 'Lock Answer'}
+                                </button>
+                            ) : (
+                                <div className="flex flex-col sm:flex-row items-center gap-4 justify-between mt-4">
+                                    <div className={`flex items-center gap-3 px-6 py-4 rounded-xl border ${focusResultIndicator === 'correct' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+                                        {focusResultIndicator === 'correct' ? <CheckCircle className="h-6 w-6" /> : <XCircle className="h-6 w-6" />}
+                                        <span className="font-bold text-lg">{focusResultIndicator === 'correct' ? 'Correct!' : 'Incorrect'}</span>
+                                    </div>
+                                    <button
+                                        onClick={handleFocusNext}
+                                        className="w-full sm:w-auto px-8 py-4 bg-white text-gray-900 hover:bg-gray-200 font-bold text-lg rounded-xl transition-all"
+                                    >
+                                        {focusIndex < focusQuestions.length - 1 ? 'Next Question' : 'Finish Exam'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="max-w-5xl mx-auto px-4 py-8 relative">
             {/* Analyzing Overlay */}
@@ -231,19 +433,16 @@ const ExamQuestions = () => {
                         </p>
                     </div>
 
-                    {/* AI Generate Button */}
-                    {/* <button
-                        onClick={handleAIGenerate}
-                        disabled={generating}
-                        className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:from-gray-600 disabled:to-gray-600 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/30 disabled:cursor-not-allowed"
-                    >
-                        {generating ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                        ) : (
-                            <Sparkles className="h-5 w-5" />
-                        )}
-                        {generating ? 'Generating...' : 'Generate AI Questions'}
-                    </button> */}
+                    {/* Focus Mode Button */}
+                    {questions.length > 0 && (
+                        <button
+                            onClick={startFocusMode}
+                            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-bold rounded-xl transition-all duration-300 shadow-lg shadow-orange-500/30"
+                        >
+                            <Maximize className="h-5 w-5" />
+                            Start Exam Mode
+                        </button>
+                    )}
                 </div>
             </div>
 

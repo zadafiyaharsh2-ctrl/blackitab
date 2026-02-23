@@ -21,7 +21,8 @@ const {
     getExamQuestions,
     checkExamAnswer,
     generateExamQuestions,
-    startAiTutor
+    startAiTutor,
+    generateTheory
 } = require('../controllers/problemController');
 
 // Import Auth Middleware
@@ -93,4 +94,6 @@ router.post('/exam/:examId/check-answer', protect, checkExamAnswer);
 
 
 router.post('/exam/:examId/ai-tutor', protect, startAiTutor);
+router.post('/exam/:examId/theory', protect, generateTheory);
+
 module.exports = router;

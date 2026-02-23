@@ -388,3 +388,56 @@ exports.startAiTutor = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
+
+// POST /api/problems/exam/:examId/theory
+exports.generateTheory = async (req, res) => {
+    try {
+        const { failedQuestionIds } = req.body;
+        if (!failedQuestionIds || failedQuestionIds.length === 0) {
+            return res.status(400).json({ success: false, message: 'No questions provided.' });
+        }
+
+        const questions = await ExamQuestion.find({ _id: { $in: failedQuestionIds } });
+        if (!questions.length) {
+            return res.status(404).json({ success: false, message: 'Questions not found' });
+        }
+
+        const LANGCHAIN_API_URL = process.env.LANGCHAIN_API_URL || 'http://127.0.0.1:8000/query';
+        const subjects = [...new Set(questions.map(q => q.subject))].join(', ');
+
+        const systemContext = `You are a world-class Expert Tutor preparing a study guide.`;
+        const userTask = `
+        The student has recently failed ${questions.length} questions related to ${subjects}.
+        Please provide a concise but comprehensive study guide (Markdown format) covering the key principles they need to understand to solve these types of problems in the future. Focus mostly on the core concepts.
+        `;
+        const outputFormat = `
+        Output ONLY valid JSON:
+        {
+            "theory": "## Study Guide\\n\\nDetailed explanation here use Markdown..."
+        }
+        `;
+        
+        const prompt = `${systemContext}\n\n${userTask}\n\n${outputFormat}\n\nIMPORTANT: Return ONLY the raw JSON string. No markdown formatting.`;
+
+        try {
+            console.log('AI Tutor: Generating Theory for failed questions...');
+            const aiRes = await axios.post(LANGCHAIN_API_URL, { query: prompt, top_k: 3 }, { timeout: 120000 });
+            let aiText = aiRes.data.answer || aiRes.data.response || '';
+            const jsonStartIndex = aiText.indexOf('{');
+            const jsonEndIndex = aiText.lastIndexOf('}');
+            const jsonString = aiText.substring(jsonStartIndex, jsonEndIndex + 1);
+            const aiData = JSON.parse(jsonString);
+
+            res.json({ success: true, theory: aiData.theory });
+        } catch (aiErr) {
+            console.error('Theory Generation Error:', aiErr.message);
+            res.json({
+                success: true,
+                theory: `### Self Study Recommendation\\n\\nPlease review the core concepts for topics: ${subjects}.`
+            });
+        }
+    } catch (err) {
+        console.error('Error generating theory:', err);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
