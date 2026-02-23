@@ -28,7 +28,7 @@ const aiQuestionRoutes = require('./routes/aiQuestionRoutes');
 
 const app = express();
 const server = http.createServer(app);
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 
 if (!process.env.JWT_SECRET) {
   console.error('FATAL: JWT_SECRET environment variable is not set!');
