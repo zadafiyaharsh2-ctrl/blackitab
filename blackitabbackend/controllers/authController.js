@@ -6,7 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 // POST /api/register — create account and return token immediately
 exports.register = async (req, res) => {
     try {
-        const { email, password, name } = req.body;
+        const { email, password, name, role, instituteCode, batchYear, division } = req.body;
 
         if (!email || !password || !name) {
             return res.status(400).json({ success: false, message: 'All fields are required' });
@@ -17,10 +17,28 @@ exports.register = async (req, res) => {
             return res.status(400).json({ success: false, message: 'User already exists' });
         }
 
+        let instituteId = null;
+        if (instituteCode) {
+            const Institute = require('../models/Institute');
+            const institute = await Institute.findOne({ instituteCode: instituteCode.toUpperCase() });
+            if (!institute) {
+                return res.status(400).json({ success: false, message: 'Invalid Institute Code' });
+            }
+            instituteId = institute._id;
+        }
+
+        // Validate role if provided, otherwise default to 'student'
+        const validRoles = ['student', 'teacher', 'hod'];
+        const assignedRole = validRoles.includes(role) ? role : 'student';
+
         const newUser = new User({
             name,
             email: email.toLowerCase(),
-            password
+            password,
+            role: assignedRole,
+            instituteId,
+            batchYear,
+            division
         });
 
         await newUser.save();
@@ -35,7 +53,13 @@ exports.register = async (req, res) => {
             success: true,
             message: 'Account created successfully',
             token,
-            user: { _id: newUser._id, email: newUser.email, name: newUser.name }
+            user: { 
+                _id: newUser._id, 
+                email: newUser.email, 
+                name: newUser.name,
+                role: newUser.role,
+                instituteId: newUser.instituteId
+            }
         });
     } catch (error) {
         console.error('Registration error:', error);
@@ -72,7 +96,13 @@ exports.login = async (req, res) => {
             success: true,
             message: 'Login successful',
             token,
-            user: { _id: user._id, email: user.email, name: user.name }
+            user: { 
+                _id: user._id, 
+                email: user.email, 
+                name: user.name,
+                role: user.role,
+                instituteId: user.instituteId 
+            }
         });
     } catch (error) {
         console.error('Login error:', error);
