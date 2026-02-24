@@ -34,10 +34,7 @@ const ExamQuestions = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const [tutorSessions, setTutorSessions] = useState({});
-
     const [followUpAnswers, setFollowUpAnswers] = useState({});
-
-    // --- FOCUS MODE STATE ---
     const [isFocusMode, setIsFocusMode] = useState(false);
     const [focusQuestions, setFocusQuestions] = useState([]);
     const [focusIndex, setFocusIndex] = useState(0);
@@ -252,65 +249,18 @@ const ExamQuestions = () => {
         setSelectedAnswers(prev => ({ ...prev, [questionId]: optionIndex }));
     };
 
-    const handleFollowUpSubmit = async (questionId) => {
-        const session = tutorSessions[questionId];
-        
-        let selected;
-        if (session.newQuestions && session.newQuestions.length > 0) {
-            selected = session.newQuestions.map((_, i) => followUpAnswers[`${questionId}_${i}`]);
-            if (selected.includes(undefined)) return;
-        } else {
-            selected = followUpAnswers[questionId];
-            if (selected === undefined) return;
-        }
-
-        // Optimistic UI update or wait for server?
-        // Let's call server to get next step (or resolution)
-        
-        try {
-            setAnalyzing(true); // Freeze screen effect
-            const token = localStorage.getItem('token');
-            const res = await axios.post(
-                `${API_URL}/api/problems/exam/${examId}/ai-tutor`,
-                {
-                    questionId,
-                    userAnswer: selected,
-                    sessionHistory: session.history || []
-                },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            if (res.data.success) {
-                setTutorSessions(prev => ({ ...prev, [questionId]: res.data.data }));
-                setFollowUpAnswers(prev => ({ ...prev, [questionId]: undefined }));
-            }
-        } catch (err) {
-            console.error('Error in tutor follow-up:', err);
-        } finally {
-            setAnalyzing(false);
-        }
+    const handleReattempt = (questionId) => {
+        setResults(prev => {
+            const next = { ...prev };
+            delete next[questionId];
+            return next;
+        });
+        setSelectedAnswers(prev => {
+            const next = { ...prev };
+            delete next[questionId];
+            return next;
+        });
     };
-
-
-    const startTutorSession = async (questionId) => {
-        try {
-            setAnalyzing(true); // Freeze screen effect
-            const token = localStorage.getItem('token');
-            const res = await axios.post(
-                `${API_URL}/api/problems/exam/${examId}/ai-tutor`,
-                { questionId, sessionHistory: [] },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            if (res.data.success) {
-                setTutorSessions(prev => ({ ...prev, [questionId]: res.data.data }));
-            }
-        } catch (err) {
-            console.error('Error starting tutor session:', err);
-        } finally {
-            setAnalyzing(false);
-        }
-    }
-
-
     const handleSubmitAnswer = async (questionId) => {
         const selectedOption = selectedAnswers[questionId];
         if (selectedOption === undefined) return;
@@ -719,131 +669,16 @@ const ExamQuestions = () => {
                                             </div>
                                         </div>
 
-                                        {/* Action Button: Get AI Help (Manual Trigger) */}
-                                        {!results[q._id].correct && !tutorSessions[q._id] && (
+                                        {/* Action Button: Reattempt (Manual Trigger) */}
+                                        {!results[q._id].correct && (
                                             <div className="mt-4 flex justify-end">
                                                 <button
-                                                    onClick={() => startTutorSession(q._id)}
-                                                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg transition-all shadow-lg shadow-purple-900/20"
+                                                    onClick={() => handleReattempt(q._id)}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-600 hover:bg-gray-700 text-gray-300 rounded-lg transition-all"
                                                 >
-                                                    <BrainCircuit className="h-4 w-4" />
-                                                    Stuck? Get AI Help
+                                                    <ArrowLeft className="h-4 w-4" />
+                                                    Reattempt Question
                                                 </button>
-                                            </div>
-                                        )}
-
-                                        {/* AI Tutor Panel — only on wrong answer */}
-                                        {/* AI Tutor Panel */}
-                                        {!results[q._id].correct && tutorSessions[q._id] && (
-                                            <div className="mt-4 p-5 bg-gray-900/50 border border-purple-500/30 rounded-xl relative overflow-hidden">
-                                                {/* Ambient Glow */}
-                                                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-3xl rounded-full pointer-events-none"></div>
-
-                                                <div className="flex items-center gap-2 mb-4 relative z-10">
-                                                    <div className="p-1.5 bg-purple-500/20 rounded-lg">
-                                                        <Sparkles className="h-5 w-5 text-purple-400" />
-                                                    </div>
-                                                    <span className="text-purple-300 font-bold">AI Tutor</span>
-                                                </div>
-
-                                                <p className="text-gray-300 text-sm mb-4 leading-relaxed">{tutorSessions[q._id].message}</p>
-
-                                                {/* THEORY MODE */}
-                                                {tutorSessions[q._id].action === 'study_theory' && (
-                                                    <div className="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-4">
-                                                        <div className="flex items-center gap-2 mb-3 text-blue-400">
-                                                            <Book className="h-5 w-5" />
-                                                            <span className="font-semibold">Concept Study Required</span>
-                                                        </div>
-                                                        <div className="prose prose-invert prose-sm max-w-none text-gray-300">
-                                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                                                {tutorSessions[q._id].studyText}
-                                                            </ReactMarkdown>
-                                                        </div>
-                                                        <div className="mt-4 flex justify-end">
-                                                            <button
-                                                                onClick={() => setTutorSessions(prev => ({ ...prev, [q._id]: undefined }))}
-                                                                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
-                                                            >
-                                                                I've Studied - Let me try again
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* REMEDIAL QUESTION MODE */}
-                                                {tutorSessions[q._id].action !== 'study_theory' && !tutorSessions[q._id].isResolved && (tutorSessions[q._id].followUpQuestion || (tutorSessions[q._id].newQuestions && tutorSessions[q._id].newQuestions.length > 0)) && (
-                                                    <div className="bg-gray-800/80 p-5 rounded-xl border border-gray-700/50 space-y-6">
-                                                        {(tutorSessions[q._id].newQuestions || [tutorSessions[q._id].followUpQuestion]).map((fq, fqIdx) => (
-                                                            <div key={fqIdx} className="space-y-4">
-                                                                <p className="text-white font-medium mb-2 text-lg">
-                                                                    {fq.question}
-                                                                </p>
-                                                                <div className="space-y-3">
-                                                                    {fq.options.map((opt, i) => {
-                                                                        const isSelected = tutorSessions[q._id].newQuestions 
-                                                                            ? followUpAnswers[`${q._id}_${fqIdx}`] === i 
-                                                                            : followUpAnswers[q._id] === i;
-                                                                        return (
-                                                                            <button key={i}
-                                                                                onClick={() => {
-                                                                                    if (tutorSessions[q._id].newQuestions) {
-                                                                                        setFollowUpAnswers(prev => ({ ...prev, [`${q._id}_${fqIdx}`]: i }));
-                                                                                    } else {
-                                                                                        setFollowUpAnswers(prev => ({ ...prev, [q._id]: i }));
-                                                                                    }
-                                                                                }}
-                                                                                className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${isSelected
-                                                                                    ? 'border-purple-500 bg-purple-500/20 text-white shadow-lg shadow-purple-900/20'
-                                                                                    : 'border-gray-700 text-gray-400 hover:border-gray-600 hover:bg-gray-700/50'
-                                                                                    }`}
-                                                                            >
-                                                                                <div className="flex items-center gap-3">
-                                                                                    <span className={`w-6 h-6 flex items-center justify-center rounded-full border text-xs ${isSelected ? 'border-purple-400 text-purple-300' : 'border-gray-600 text-gray-500'}`}>
-                                                                                        {String.fromCharCode(65 + i)}
-                                                                                    </span>
-                                                                                    {opt}
-                                                                                </div>
-                                                                            </button>
-                                                                        );
-                                                                    })}
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                        <div className="mt-4 flex justify-end">
-                                                            <button
-                                                                onClick={() => handleFollowUpSubmit(q._id)}
-                                                                disabled={tutorSessions[q._id].newQuestions 
-                                                                    ? tutorSessions[q._id].newQuestions.some((_, i) => followUpAnswers[`${q._id}_${i}`] === undefined)
-                                                                    : followUpAnswers[q._id] === undefined}
-                                                                className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-medium rounded-lg transition-all"
-                                                            >
-                                                                Submit Answer
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* RESOLVED MODE */}
-                                                {tutorSessions[q._id].isResolved && (
-                                                    <div className="flex flex-col gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
-                                                        <div className="flex items-center gap-2">
-                                                            <CheckCircle className="h-5 w-5 text-green-400" />
-                                                            <span className="text-green-300 font-semibold">You've got the concept!</span>
-                                                        </div>
-                                                        <p className="text-sm text-green-200/70 ml-7">
-                                                            Great work working through the basics. functionality. Now try to solve the original question again.
-                                                        </p>
-                                                        <div className="self-end mt-2">
-                                                            <button
-                                                                onClick={() => setTutorSessions(prev => ({ ...prev, [q._id]: undefined }))} // Close tutor
-                                                                className="px-3 py-1.5 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-300 border border-green-800 rounded-lg transition-colors"
-                                                            >
-                                                                Close Tutor
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                )}
                                             </div>
                                         )}
                                     </>
