@@ -8,6 +8,7 @@ require('dotenv').config();
 
 const connectDB = require('./config/database');
 const User = require('./models/User');
+const { startCronJobs } = require('./services/cronService');
 
 // Controllers used directly in this file
 const authController = require('./controllers/authController');
@@ -23,6 +24,9 @@ const userRoutes = require('./routes/userRoutes');
 const playlistRoutes = require('./routes/playlistRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const aiQuestionRoutes = require('./routes/aiQuestionRoutes');
+const instituteRoutes = require('./routes/instituteRoutes');
+const attemptRoutes = require('./routes/attemptRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
 // --- Server Setup ---
 
@@ -115,6 +119,9 @@ app.use('/api/user', userRoutes);
 app.use('/api/playlists', playlistRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/ai-questions', aiQuestionRoutes);
+app.use('/api/institute', instituteRoutes);
+app.use('/api/attempts', attemptRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // --- GET /api/me — Current User (protected) ---
 
@@ -138,6 +145,8 @@ app.get('/api/me', async (req, res) => {
         id: user._id,
         email: user.email,
         name: user.name,
+        role: user.role,
+        instituteId: user.instituteId,
         bio: user.bio,
         profileImage: user.profileImage,
         followerCount: user.followerCount || 0,
@@ -159,4 +168,7 @@ app.get('/api/me', async (req, res) => {
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
   console.log(`MongoDB connection: ${process.env.MONGODB_URI || 'mongodb://localhost:27017/blackitab'}`);
+  
+  // Start background algorithmic jobs
+  startCronJobs();
 });

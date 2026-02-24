@@ -41,10 +41,44 @@ const examQuestionSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    topicId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Topic'
+    },
+    isPYQ: {
+        type: Boolean,
+        default: false
+    },
+    sourceYear: {
+        type: Number
+    },
+    sourceShift: {
+        type: String
+    },
+    tags: [{
+        type: String
+    }],
+    customMeta: {
+        type: Map,
+        of: mongoose.Schema.Types.Mixed,
+        default: {}
+    },
+    // Global Stats for Analytics
+    totalAttempts: {
+        type: Number,
+        default: 0
+    },
+    successfulAttempts: {
+        type: Number,
+        default: 0
+    },
+    averageSolveTimeMs: {
+        type: Number,
+        default: 0
+    },
     createdAt: {
         type: Date,
-        default: Date.now,
-
+        default: Date.now
     }
 });
 

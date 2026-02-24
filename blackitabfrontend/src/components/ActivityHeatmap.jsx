@@ -1,36 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import { useTheme } from '../context/useTheme';
-import API_URL from '../config';
+import React, { useEffect, useRef } from 'react';
+import { useTheme } from '../context/ThemeContext';
 
-const ActivityHeatmap = () => {
+const ActivityHeatmap = ({ heatmapData = [], loading = false }) => {
   const { isDark } = useTheme();
-  const [heatmapData, setHeatmapData] = useState([]);
-  const [loading, setLoading] = useState(true);
   const scrollRef = useRef(null);
-
-  useEffect(() => {
-    const fetchHeatmapData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        const res = await axios.get(`${API_URL}/api/progress/heatmap`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (res.data.success) {
-          setHeatmapData(res.data.data);
-        }
-      } catch (err) {
-        console.error('Error fetching heatmap data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHeatmapData();
-  }, []);
 
   // Auto-scroll to latest days
   useEffect(() => {

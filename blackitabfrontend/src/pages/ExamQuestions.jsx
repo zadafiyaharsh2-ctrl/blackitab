@@ -13,7 +13,8 @@ import {
     ChevronLeft,
     ChevronRight,
     BrainCircuit,
-    Book
+    Book,
+    Maximize
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -35,9 +36,184 @@ const ExamQuestions = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const [tutorSessions, setTutorSessions] = useState({});
-
     const [followUpAnswers, setFollowUpAnswers] = useState({});
-    const [followUpResults, setFollowUpResults] = useState({});
+    const [isFocusMode, setIsFocusMode] = useState(false);
+    const [focusQuestions, setFocusQuestions] = useState([]);
+    const [focusIndex, setFocusIndex] = useState(0);
+    const [focusSelectedOption, setFocusSelectedOption] = useState();
+    const [focusResultIndicator, setFocusResultIndicator] = useState(null); // 'correct' | 'wrong' | null
+    const [focusResults, setFocusResults] = useState([]); 
+    
+    // Adaptive Sequence States
+    const [isAdaptiveSequence, setIsAdaptiveSequence] = useState(false);
+    const [adaptiveStage, setAdaptiveStage] = useState(0); // Max 8
+    const [adaptiveFailedCount, setAdaptiveFailedCount] = useState(0); // Max 3
+    const [currentAdaptiveQuestion, setCurrentAdaptiveQuestion] = useState(null);
+    const [currentAdaptiveDifficulty, setCurrentAdaptiveDifficulty] = useState(1); // 1: Easy, 2: Medium, 3: Hard
+    const [isGeneratingAdaptive, setIsGeneratingAdaptive] = useState(false);
+
+    const [showTheory, setShowTheory] = useState(false);
+    const [theoryContent, setTheoryContent] = useState('');
+    const [loadingTheory, setLoadingTheory] = useState(false);
+
+    const difficultyMap = { 1: 'Easy', 2: 'Medium', 3: 'Hard' };
+
+    const startFocusMode = () => {
+        const selectedQuestions = questions.slice(0, 8); // Limit to 8
+        setFocusQuestions(selectedQuestions);
+        setFocusIndex(0);
+        setFocusResults([]);
+        setFocusResultIndicator(null);
+        setFocusSelectedOption(undefined);
+        setIsAdaptiveSequence(false);
+        setAdaptiveStage(0);
+        setAdaptiveFailedCount(0);
+        setCurrentAdaptiveQuestion(null);
+        setShowTheory(false);
+        setIsFocusMode(true);
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(err => console.log('Fullscreen failed', err));
+        }
+    };
+
+    const stopFocusMode = () => {
+        setIsFocusMode(false);
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(err => console.log('Exit fullscreen failed', err));
+        }
+    };
+
+    const handleFocusSubmit = async () => {
+        if (focusSelectedOption === undefined) return;
+        const qId = isAdaptiveSequence ? currentAdaptiveQuestion._id : focusQuestions[focusIndex]._id;
+        
+        try {
+            setCheckingId(qId);
+            const token = localStorage.getItem('token');
+            // Check answer (If it's adaptive, we might just validate client-side since correctAnswer is in the object, but let's be consistent or use local)
+            // Wait, for adaptive, `correctAnswer` is strictly local to `currentAdaptiveQuestion`.
+            // Let's do local validation for adaptive to save a DB trip since it's not saved in DB anyway.
+            let isCorrect = false;
+            if (isAdaptiveSequence) {
+                isCorrect = focusSelectedOption === currentAdaptiveQuestion.correctAnswer;
+                // Wait 500ms for UX
+                await new Promise(r => setTimeout(r, 500));
+            } else {
+                const res = await axios.post(
+                    `${API_URL}/api/attempts/submit`,
+                    { questionId: qId, selectedOption: focusSelectedOption, timeTakenSeconds: 30 },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                if (res.data.success) {
+                    isCorrect = res.data.isCorrect;
+                    setFocusResults(prev => [...prev, { questionId: qId, correct: isCorrect }]);
+                }
+            }
+
+            setFocusResultIndicator(isCorrect ? 'correct' : 'wrong');
+
+            if (isAdaptiveSequence) {
+                if (isCorrect) {
+                     setCurrentAdaptiveDifficulty(prev => Math.min(prev + 1, 3));
+                } else {
+                     setCurrentAdaptiveDifficulty(prev => Math.max(prev - 1, 1));
+                     setAdaptiveFailedCount(prev => prev + 1);
+                }
+            } else {
+                if (!isCorrect) {
+                    // Start Adaptive Sequence because original was wrong
+                    setIsAdaptiveSequence(true);
+                    setAdaptiveStage(0);
+                    setAdaptiveFailedCount(0);
+                    setCurrentAdaptiveDifficulty(1); // Start Easy
+                }
+            }
+        } catch (err) {
+            console.error('Check error', err);
+        } finally {
+            setCheckingId(null);
+        }
+    };
+
+    const fetchAdaptiveQuestion = async (difficultyDiff) => {
+        setIsGeneratingAdaptive(true);
+        setCurrentAdaptiveQuestion(null);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post(
+                `${API_URL}/api/problems/exam/${examId}/adaptive-question`,
+                { 
+                    failedQuestionId: focusQuestions[focusIndex]._id,
+                    targetDifficulty: difficultyMap[difficultyDiff]
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (res.data.success) {
+                setCurrentAdaptiveQuestion(res.data.data);
+            }
+        } catch (err) {
+            console.error('Error fetching adaptive part', err);
+            // Fallback if AI fails, just skip adaptive
+            setIsAdaptiveSequence(false);
+            setFocusIndex(prev => prev + 1);
+        } finally {
+            setIsGeneratingAdaptive(false);
+        }
+    };
+
+    const fetchTheory = async () => {
+        setShowTheory(true);
+        setLoadingTheory(true);
+        try {
+            const token = localStorage.getItem('token');
+            // Just use the current original question for theory
+            const failedIds = [focusQuestions[focusIndex]._id];
+            const res = await axios.post(
+                `${API_URL}/api/problems/exam/${examId}/theory`,
+                { failedQuestionIds: failedIds },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (res.data.success) {
+                setTheoryContent(res.data.theory);
+            }
+        } catch (err) {
+            setTheoryContent('Failed to load theory summary. Please refer to your textbooks.');
+        } finally {
+            setLoadingTheory(false);
+        }
+    }
+
+    const handleFocusNext = async () => {
+        setFocusResultIndicator(null);
+        setFocusSelectedOption(undefined);
+
+        if (isAdaptiveSequence) {
+            const nextStage = adaptiveStage + 1;
+            setAdaptiveStage(nextStage);
+            
+            if (adaptiveFailedCount >= 3) {
+                fetchTheory();
+            } else if (nextStage >= 8) {
+                // Adaptive sequence finished successfully
+                setIsAdaptiveSequence(false);
+                if (focusIndex < focusQuestions.length - 1) {
+                    setFocusIndex(prev => prev + 1);
+                } else {
+                    stopFocusMode();
+                }
+            } else {
+                // Fetch next adaptive question
+                fetchAdaptiveQuestion(currentAdaptiveDifficulty);
+            }
+        } else {
+            // we got it right, move to next original
+            if (focusIndex < focusQuestions.length - 1) {
+                setFocusIndex(prev => prev + 1);
+            } else {
+                stopFocusMode();
+            }
+        }
+    };
 
     const examMeta = {
         jee: { name: 'JEE', subjects: ['Physics', 'Chemistry', 'Mathematics'], color: 'purple' },
@@ -75,65 +251,18 @@ const ExamQuestions = () => {
         setSelectedAnswers(prev => ({ ...prev, [questionId]: optionIndex }));
     };
 
-    const handleFollowUpSubmit = async (questionId) => {
-        const session = tutorSessions[questionId];
-        
-        let selected;
-        if (session.newQuestions && session.newQuestions.length > 0) {
-            selected = session.newQuestions.map((_, i) => followUpAnswers[`${questionId}_${i}`]);
-            if (selected.includes(undefined)) return;
-        } else {
-            selected = followUpAnswers[questionId];
-            if (selected === undefined) return;
-        }
-
-        // Optimistic UI update or wait for server?
-        // Let's call server to get next step (or resolution)
-        
-        try {
-            setAnalyzing(true); // Freeze screen effect
-            const token = localStorage.getItem('token');
-            const res = await axios.post(
-                `${API_URL}/api/problems/exam/${examId}/ai-tutor`,
-                {
-                    questionId,
-                    userAnswer: selected,
-                    sessionHistory: session.history || []
-                },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            if (res.data.success) {
-                setTutorSessions(prev => ({ ...prev, [questionId]: res.data.data }));
-                setFollowUpAnswers(prev => ({ ...prev, [questionId]: undefined }));
-            }
-        } catch (err) {
-            console.error('Error in tutor follow-up:', err);
-        } finally {
-            setAnalyzing(false);
-        }
+    const handleReattempt = (questionId) => {
+        setResults(prev => {
+            const next = { ...prev };
+            delete next[questionId];
+            return next;
+        });
+        setSelectedAnswers(prev => {
+            const next = { ...prev };
+            delete next[questionId];
+            return next;
+        });
     };
-
-
-    const startTutorSession = async (questionId) => {
-        try {
-            setAnalyzing(true); // Freeze screen effect
-            const token = localStorage.getItem('token');
-            const res = await axios.post(
-                `${API_URL}/api/problems/exam/${examId}/ai-tutor`,
-                { questionId, sessionHistory: [] },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            if (res.data.success) {
-                setTutorSessions(prev => ({ ...prev, [questionId]: res.data.data }));
-            }
-        } catch (err) {
-            console.error('Error starting tutor session:', err);
-        } finally {
-            setAnalyzing(false);
-        }
-    }
-
-
     const handleSubmitAnswer = async (questionId) => {
         const selectedOption = selectedAnswers[questionId];
         if (selectedOption === undefined) return;
@@ -142,12 +271,15 @@ const ExamQuestions = () => {
             setCheckingId(questionId);
             const token = localStorage.getItem('token');
             const res = await axios.post(
-                `${API_URL}/api/problems/exam/${examId}/check-answer`,
-                { questionId, selectedOption },
+                `${API_URL}/api/attempts/submit`,
+                { questionId, selectedOption, timeTakenSeconds: 30 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             if (res.data.success) {
-                setResults(prev => ({ ...prev, [questionId]: res.data.data }));
+                setResults(prev => ({ 
+                    ...prev, 
+                    [questionId]: { correct: res.data.isCorrect, correctAnswer: res.data.correctAnswer } 
+                }));
             }
             // Logic removed: don't auto-start tutor on wrong answer. User must click "Get Help"
         } catch (err) {
@@ -199,6 +331,150 @@ const ExamQuestions = () => {
         return isDark ? 'border-gray-700/50 bg-gray-800/20 text-gray-500' : 'border-gray-200 bg-gray-50 text-gray-400';
     };
 
+    if (isFocusMode) {
+        const q = focusQuestions[focusIndex];
+        return (
+            <div className="fixed inset-0 z-[100] bg-gray-900 flex flex-col items-center justify-center p-4">
+                <button 
+                   onClick={stopFocusMode} 
+                   className="absolute top-6 right-8 text-gray-500 hover:text-red-400 font-bold text-sm bg-gray-800 px-4 py-2 rounded-lg border border-gray-700 transition-colors"
+                >
+                   Exit Exam Mode
+                </button>
+
+                <div className="w-full max-w-3xl">
+                    {showTheory ? (
+                        <div className="bg-gray-800 p-8 rounded-2xl border border-blue-500/50 shadow-2xl shadow-blue-900/20">
+                            <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                                <Book className="h-6 w-6 text-blue-400" />
+                                Study Review Session
+                            </h2>
+                            <p className="text-gray-400 mb-6 font-medium">You missed 3 or more questions. Review these core concepts before continuing.</p>
+                            
+                            {loadingTheory ? (
+                                <div className="flex flex-col items-center justify-center py-12 gap-4">
+                                    <Loader2 className="h-10 w-10 text-blue-400 animate-spin" />
+                                    <p className="text-blue-300">AI Tutor is compiling your tailored study guide...</p>
+                                </div>
+                            ) : (
+                                <div className="prose prose-invert max-w-none text-gray-300 max-h-[50vh] overflow-y-auto pr-4 mb-8 bg-gray-900/50 p-6 rounded-xl border border-gray-700/50">
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{theoryContent}</ReactMarkdown>
+                                </div>
+                            )}
+                            
+                            {!loadingTheory && (
+                                <button onClick={stopFocusMode} className="w-full px-6 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-blue-600/30">
+                                    Finish Review & Exit
+                                </button>
+                            )}
+                        </div>
+                    ) : isGeneratingAdaptive ? (
+                        <div className="bg-gray-800 flex flex-col items-center justify-center py-20 px-8 rounded-2xl border border-purple-500/30 shadow-2xl shadow-purple-900/20">
+                            <BrainCircuit className="h-16 w-16 text-purple-400 mb-6 animate-pulse" />
+                            <h2 className="text-2xl font-bold text-white mb-2">Generating Adaptive Question...</h2>
+                            <p className="text-gray-400 font-medium">Adjusting difficulty based on your previous answers.</p>
+                            <div className="mt-8 flex gap-2">
+                                <div className="h-2 w-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                <div className="h-2 w-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                <div className="h-2 w-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="bg-gray-800 p-8 flex flex-col rounded-2xl border border-purple-500/30 shadow-2xl shadow-purple-900/20 transition-all">
+                            <div className="flex justify-between items-center mb-6">
+                                <span className="px-4 py-1.5 bg-purple-500/20 text-purple-300 font-bold rounded-full border border-purple-500/30">
+                                    {isAdaptiveSequence ? `Adaptive Q${adaptiveStage}` : `Question ${focusIndex + 1} of ${focusQuestions.length}`}
+                                </span>
+                                <div className="flex gap-2 items-center">
+                                    {isAdaptiveSequence && (
+                                        <span className={`px-3 py-1 text-xs font-bold rounded-full border ${currentAdaptiveDifficulty === 1 ? 'border-green-500/50 text-green-400 bg-green-500/10' : currentAdaptiveDifficulty === 2 ? 'border-yellow-500/50 text-yellow-400 bg-yellow-500/10' : 'border-red-500/50 text-red-400 bg-red-500/10'}`}>
+                                            Diff: {difficultyMap[currentAdaptiveDifficulty]}
+                                        </span>
+                                    )}
+                                    <span className="text-gray-400 text-sm font-medium">Exam Mode Strict</span>
+                                </div>
+                            </div>
+
+                            <p className="text-white text-2xl font-medium leading-relaxed mb-8">
+                                {isAdaptiveSequence && currentAdaptiveQuestion ? currentAdaptiveQuestion.question : q.question}
+                            </p>
+
+                            <div className="space-y-4 mb-8">
+                                {(isAdaptiveSequence && currentAdaptiveQuestion ? currentAdaptiveQuestion.options : q.options).map((opt, i) => {
+                                    const isSelected = focusSelectedOption === i;
+                                    let optionStyle = 'border-gray-700 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50';
+                                    
+                                    if (focusResultIndicator) {
+                                        if (isSelected && focusResultIndicator === 'correct') {
+                                            optionStyle = 'border-green-500 bg-green-500/20 text-green-300 cursor-default';
+                                        } else if (isSelected && focusResultIndicator === 'wrong') {
+                                            optionStyle = 'border-red-500 bg-red-500/20 text-red-300 cursor-default';
+                                        } else {
+                                            optionStyle = 'border-gray-700/50 bg-gray-800/50 text-gray-500 cursor-default opacity-50';
+                                        }
+                                    } else if (isSelected) {
+                                        optionStyle = 'border-purple-500 bg-purple-500/20 text-white shadow-lg shadow-purple-900/20';
+                                    }
+
+                                    return (
+                                        <button 
+                                            key={i}
+                                            onClick={() => !focusResultIndicator && setFocusSelectedOption(i)}
+                                            disabled={focusResultIndicator !== null}
+                                            className={`w-full text-left px-5 py-4 rounded-xl border-2 transition-all ${optionStyle} ${focusResultIndicator && isAdaptiveSequence && currentAdaptiveQuestion && currentAdaptiveQuestion.correctAnswer === i ? '!border-green-500/80 !border-dashed' : ''}`}
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <span className={`w-8 h-8 flex items-center justify-center rounded-full border ${isSelected && !focusResultIndicator ? 'border-purple-400 text-purple-300' : 'border-gray-600 text-gray-500'}`}>
+                                                    {String.fromCharCode(65 + i)}
+                                                </span>
+                                                <span className="text-lg">{opt}</span>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {!focusResultIndicator ? (
+                                <button
+                                    onClick={handleFocusSubmit}
+                                    disabled={focusSelectedOption === undefined || checkingId !== null}
+                                    className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold text-lg rounded-xl transition-all"
+                                >
+                                    {checkingId !== null ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : 'Lock Answer'}
+                                </button>
+                            ) : (
+                                <div className="flex flex-col sm:flex-row items-center gap-4 justify-between mt-4">
+                                    <div className="flex-1 flex items-center gap-3 px-6 py-4 rounded-xl border bg-gray-900 border-gray-700">
+                                        {focusResultIndicator === 'correct' ? <CheckCircle className="h-6 w-6 text-green-400" /> : <XCircle className="h-6 w-6 text-red-400" />}
+                                        <div className="flex flex-col">
+                                            <span className={`font-bold text-lg ${focusResultIndicator === 'correct' ? 'text-green-400' : 'text-red-400'}`}>{focusResultIndicator === 'correct' ? 'Correct!' : 'Incorrect'}</span>
+                                            {focusResultIndicator === 'wrong' && !isAdaptiveSequence && (
+                                                <span className="text-gray-400 text-sm">Initiating adaptive sequence...</span>
+                                            )}
+                                            {isAdaptiveSequence && (
+                                                <span className="text-gray-400 text-sm">{focusResultIndicator === 'correct' ? 'Difficulty increasing ↑' : 'Difficulty decreasing ↓'}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={handleFocusNext}
+                                        className="w-full sm:w-auto px-8 py-4 bg-white text-gray-900 hover:bg-gray-200 font-bold text-lg rounded-xl transition-all whitespace-nowrap"
+                                    >
+                                        {(isAdaptiveSequence && adaptiveStage < 8 && adaptiveFailedCount < (focusResultIndicator === 'wrong' ? 3 : 4)) ? (
+                                            focusResultIndicator === 'wrong' && adaptiveStage === 0 ? 'Start Adaptive Flow' : 'Next Adaptive'
+                                        ) : (
+                                            focusIndex < focusQuestions.length - 1 ? 'Next Original Question' : 'Finish Exam'
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="max-w-5xl mx-auto px-4 py-8 relative">
             {/* Analyzing Overlay */}
@@ -234,19 +510,16 @@ const ExamQuestions = () => {
                         </p>
                     </div>
 
-                    {/* AI Generate Button */}
-                    {/* <button
-                        onClick={handleAIGenerate}
-                        disabled={generating}
-                        className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:from-gray-600 disabled:to-gray-600 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/30 disabled:cursor-not-allowed"
-                    >
-                        {generating ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                        ) : (
-                            <Sparkles className="h-5 w-5" />
-                        )}
-                        {generating ? 'Generating...' : 'Generate AI Questions'}
-                    </button> */}
+                    {/* Focus Mode Button */}
+                    {questions.length > 0 && (
+                        <button
+                            onClick={startFocusMode}
+                            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-bold rounded-xl transition-all duration-300 shadow-lg shadow-orange-500/30"
+                        >
+                            <Maximize className="h-5 w-5" />
+                            Start Exam Mode
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -401,139 +674,16 @@ const ExamQuestions = () => {
                                             </div>
                                         </div>
 
-                                        {/* Action Button: Get AI Help (Manual Trigger) */}
-                                        {!results[q._id].correct && !tutorSessions[q._id] && (
+                                        {/* Action Button: Reattempt (Manual Trigger) */}
+                                        {!results[q._id].correct && (
                                             <div className="mt-4 flex justify-end">
                                                 <button
-                                                    onClick={() => startTutorSession(q._id)}
-                                                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg transition-all shadow-lg shadow-purple-900/20"
+                                                    onClick={() => handleReattempt(q._id)}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-600 hover:bg-gray-700 text-gray-300 rounded-lg transition-all"
                                                 >
-                                                    <BrainCircuit className="h-4 w-4" />
-                                                    Stuck? Get AI Help
+                                                    <ArrowLeft className="h-4 w-4" />
+                                                    Reattempt Question
                                                 </button>
-                                            </div>
-                                        )}
-
-                                        {/* AI Tutor Panel — only on wrong answer */}
-                                        {/* AI Tutor Panel */}
-                                        {!results[q._id].correct && tutorSessions[q._id] && (
-                                            <div className="mt-4 p-5 bg-purple-50 dark:bg-gray-900/50 border border-purple-200 dark:border-purple-500/30 rounded-xl relative overflow-hidden">
-                                                {/* Ambient Glow */}
-                                                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-3xl rounded-full pointer-events-none"></div>
-
-                                                <div className="flex items-center gap-2 mb-4 relative z-10">
-                                                    <div className="p-1.5 bg-purple-100 dark:bg-purple-500/20 rounded-lg">
-                                                        <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                                                    </div>
-                                                    <span className="text-purple-700 dark:text-purple-300 font-bold">AI Tutor</span>
-                                                </div>
-
-                                                <p className="text-gray-700 dark:text-gray-300 text-sm mb-4 leading-relaxed">{tutorSessions[q._id].message}</p>
-
-                                                {/* THEORY MODE */}
-                                                {tutorSessions[q._id].action === 'study_theory' && (
-                                                    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-4">
-                                                        <div className="flex items-center gap-2 mb-3 text-blue-600 dark:text-blue-400">
-                                                            <Book className="h-5 w-5" />
-                                                            <span className="font-semibold">Concept Study Required</span>
-                                                        </div>
-                                                        <div className="prose dark:prose-invert prose-sm max-w-none text-gray-700 dark:text-gray-300">
-                                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                                                {tutorSessions[q._id].studyText}
-                                                            </ReactMarkdown>
-                                                        </div>
-                                                        <div className="mt-4 flex justify-end">
-                                                            <button
-                                                                onClick={() => {
-                                                                    setTutorSessions(prev => ({ ...prev, [q._id]: undefined }));
-                                                                    setResults(prev => { const n = { ...prev }; delete n[q._id]; return n; });
-                                                                    setSelectedAnswers(prev => { const n = { ...prev }; delete n[q._id]; return n; });
-                                                                }}
-                                                                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
-                                                            >
-                                                                I've Studied - Let me try again
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* REMEDIAL QUESTION MODE */}
-                                                {tutorSessions[q._id].action !== 'study_theory' && !tutorSessions[q._id].isResolved && (tutorSessions[q._id].followUpQuestion || (tutorSessions[q._id].newQuestions && tutorSessions[q._id].newQuestions.length > 0)) && (
-                                                    <div className="bg-gray-800/80 p-5 rounded-xl border border-gray-700/50 space-y-6">
-                                                        {(tutorSessions[q._id].newQuestions || [tutorSessions[q._id].followUpQuestion]).map((fq, fqIdx) => (
-                                                            <div key={fqIdx} className="space-y-4">
-                                                                <p className="text-white font-medium mb-2 text-lg">
-                                                                    {fq.question}
-                                                                </p>
-                                                                <div className="space-y-3">
-                                                                    {fq.options.map((opt, i) => {
-                                                                        const isSelected = tutorSessions[q._id].newQuestions 
-                                                                            ? followUpAnswers[`${q._id}_${fqIdx}`] === i 
-                                                                            : followUpAnswers[q._id] === i;
-                                                                        return (
-                                                                            <button key={i}
-                                                                                onClick={() => {
-                                                                                    if (tutorSessions[q._id].newQuestions) {
-                                                                                        setFollowUpAnswers(prev => ({ ...prev, [`${q._id}_${fqIdx}`]: i }));
-                                                                                    } else {
-                                                                                        setFollowUpAnswers(prev => ({ ...prev, [q._id]: i }));
-                                                                                    }
-                                                                                }}
-                                                                                className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${isSelected
-                                                                                    ? 'border-purple-500 bg-purple-500/20 text-white shadow-lg shadow-purple-900/20'
-                                                                                    : 'border-gray-700 text-gray-400 hover:border-gray-600 hover:bg-gray-700/50'
-                                                                                    }`}
-                                                                            >
-                                                                                <div className="flex items-center gap-3">
-                                                                                    <span className={`w-6 h-6 flex items-center justify-center rounded-full border text-xs ${isSelected ? 'border-purple-400 text-purple-300' : 'border-gray-600 text-gray-500'}`}>
-                                                                                        {String.fromCharCode(65 + i)}
-                                                                                    </span>
-                                                                                    {opt}
-                                                                                </div>
-                                                                            </button>
-                                                                        );
-                                                                    })}
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                        <div className="mt-4 flex justify-end">
-                                                            <button
-                                                                onClick={() => handleFollowUpSubmit(q._id)}
-                                                                disabled={tutorSessions[q._id].newQuestions 
-                                                                    ? tutorSessions[q._id].newQuestions.some((_, i) => followUpAnswers[`${q._id}_${i}`] === undefined)
-                                                                    : followUpAnswers[q._id] === undefined}
-                                                                className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-medium rounded-lg transition-all"
-                                                            >
-                                                                Submit Answer
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* RESOLVED MODE */}
-                                                {tutorSessions[q._id].isResolved && (
-                                                    <div className="flex flex-col gap-3 p-4 bg-green-100 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 rounded-xl">
-                                                        <div className="flex items-center gap-2">
-                                                            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                                                            <span className="text-green-700 dark:text-green-300 font-semibold">You've got the concept!</span>
-                                                        </div>
-                                                        <p className="text-sm text-green-800 dark:text-green-200/70 ml-7">
-                                                            Great work working through the basics. functionality. Now try to solve the original question again.
-                                                        </p>
-                                                        <div className="self-end mt-2">
-                                                            <button
-                                                                onClick={() => {
-                                                                    setTutorSessions(prev => ({ ...prev, [q._id]: undefined }));
-                                                                    setResults(prev => { const n = { ...prev }; delete n[q._id]; return n; });
-                                                                    setSelectedAnswers(prev => { const n = { ...prev }; delete n[q._id]; return n; });
-                                                                }}
-                                                                className="px-3 py-1.5 text-xs bg-green-200 dark:bg-green-900/30 hover:bg-green-300 dark:hover:bg-green-900/50 text-green-800 dark:text-green-300 border border-green-300 dark:border-green-800 rounded-lg transition-colors"
-                                                            >
-                                                                Close Tutor
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                )}
                                             </div>
                                         )}
                                     </>
