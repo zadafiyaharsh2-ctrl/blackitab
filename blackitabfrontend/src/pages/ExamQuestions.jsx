@@ -100,12 +100,12 @@ const ExamQuestions = () => {
                 await new Promise(r => setTimeout(r, 500));
             } else {
                 const res = await axios.post(
-                    `${API_URL}/api/attempts/submit`,
-                    { questionId: qId, selectedOption: focusSelectedOption, timeTakenSeconds: 30 },
+                    `${API_URL}/api/problems/exam/${examId}/check-answer`,
+                    { questionId: qId, selectedOption: focusSelectedOption },
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 if (res.data.success) {
-                    isCorrect = res.data.isCorrect;
+                    isCorrect = res.data.data.correct;
                     setFocusResults(prev => [...prev, { questionId: qId, correct: isCorrect }]);
                 }
             }
@@ -271,14 +271,14 @@ const ExamQuestions = () => {
             setCheckingId(questionId);
             const token = localStorage.getItem('token');
             const res = await axios.post(
-                `${API_URL}/api/attempts/submit`,
-                { questionId, selectedOption, timeTakenSeconds: 30 },
+                `${API_URL}/api/problems/exam/${examId}/check-answer`,
+                { questionId, selectedOption },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             if (res.data.success) {
                 setResults(prev => ({ 
                     ...prev, 
-                    [questionId]: { correct: res.data.isCorrect, correctAnswer: res.data.correctAnswer } 
+                    [questionId]: res.data.data 
                 }));
             }
             // Logic removed: don't auto-start tutor on wrong answer. User must click "Get Help"
