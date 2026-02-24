@@ -441,3 +441,86 @@ exports.generateTheory = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
+
+// POST /api/problems/exam/:examId/adaptive-question
+exports.generateAdaptiveQuestion = async (req, res) => {
+    try {
+        const { failedQuestionId, targetDifficulty } = req.body;
+        const { examId } = req.params;
+
+        if (!failedQuestionId) {
+            return res.status(400).json({ success: false, message: 'Missing failedQuestionId' });
+        }
+
+        const question = await ExamQuestion.findById(failedQuestionId);
+        if (!question) {
+            return res.status(404).json({ success: false, message: 'Original question not found' });
+        }
+
+        const LANGCHAIN_API_URL = process.env.LANGCHAIN_API_URL || 'http://127.0.0.1:8000/query';
+
+        const systemContext = `You are an Expert Question Generator specializing in adaptive testing.`;
+        const userTask = `
+        Context:
+        - Subject/Topic: ${question.subject}
+        - Exam Type: ${examId.toUpperCase()}
+        - Target Difficulty Level: ${targetDifficulty || 'Medium'}
+        - Original Question the student failed: "${question.question}"
+        
+        YOUR TASK:
+        Create EXACTLY ONE brand new multiple-choice question.
+        The question must test the same core concept as the Original Question, but strictly adhere to the requested Target Difficulty Level.
+        Make sure the question has exactly 4 options. Ensure the options are plausible.
+        `;
+        const outputFormat = `
+        Output ONLY valid JSON:
+        {
+            "question": "The new adaptive question text...",
+            "options": ["Option A", "Option B", "Option C", "Option D"],
+            "correctAnswer": 0,
+            "explanation": "Brief explanation of why the answer is correct."
+        }
+        `;
+        
+        const prompt = `${systemContext}\n\n${userTask}\n\n${outputFormat}\n\nIMPORTANT: Return ONLY the raw JSON string. No markdown formatting.`;
+
+        try {
+            console.log('Generating Adaptive Question...', { examId, targetDifficulty });
+            const aiRes = await axios.post(LANGCHAIN_API_URL, { query: prompt, top_k: 3 }, { timeout: 60000 });
+            let aiText = aiRes.data.answer || aiRes.data.response || '';
+            const jsonStartIndex = aiText.indexOf('{');
+            const jsonEndIndex = aiText.lastIndexOf('}');
+            
+            if (jsonStartIndex === -1 || jsonEndIndex === -1) {
+                throw new Error("Invalid format");
+            }
+
+            const jsonString = aiText.substring(jsonStartIndex, jsonEndIndex + 1);
+            const aiData = JSON.parse(jsonString);
+
+            // Give it an id similar to how they're structured, or just a temporary format
+            res.json({
+                success: true,
+                data: {
+                    _id: 'adaptive_' + Date.now(),
+                    exam: examId,
+                    subject: question.subject,
+                    question: aiData.question,
+                    options: aiData.options,
+                    correctAnswer: aiData.correctAnswer,
+                    explanation: aiData.explanation,
+                    difficulty: targetDifficulty,
+                    isAIGenerated: true,
+                    isAdaptive: true
+                }
+            });
+        } catch (aiErr) {
+            console.error('Adaptive Gen Error:', aiErr.message);
+            res.status(500).json({ success: false, message: 'Failed to generate adaptive question' });
+        }
+
+    } catch (err) {
+        console.error('Error generating adaptive question:', err);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};

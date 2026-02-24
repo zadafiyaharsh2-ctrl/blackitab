@@ -44,9 +44,20 @@ const ExamQuestions = () => {
     const [focusSelectedOption, setFocusSelectedOption] = useState();
     const [focusResultIndicator, setFocusResultIndicator] = useState(null); // 'correct' | 'wrong' | null
     const [focusResults, setFocusResults] = useState([]); 
+    
+    // Adaptive Sequence States
+    const [isAdaptiveSequence, setIsAdaptiveSequence] = useState(false);
+    const [adaptiveStage, setAdaptiveStage] = useState(0); // Max 8
+    const [adaptiveFailedCount, setAdaptiveFailedCount] = useState(0); // Max 3
+    const [currentAdaptiveQuestion, setCurrentAdaptiveQuestion] = useState(null);
+    const [currentAdaptiveDifficulty, setCurrentAdaptiveDifficulty] = useState(1); // 1: Easy, 2: Medium, 3: Hard
+    const [isGeneratingAdaptive, setIsGeneratingAdaptive] = useState(false);
+
     const [showTheory, setShowTheory] = useState(false);
     const [theoryContent, setTheoryContent] = useState('');
     const [loadingTheory, setLoadingTheory] = useState(false);
+
+    const difficultyMap = { 1: 'Easy', 2: 'Medium', 3: 'Hard' };
 
     const startFocusMode = () => {
         const selectedQuestions = questions.slice(0, 8); // Limit to 8
@@ -55,6 +66,10 @@ const ExamQuestions = () => {
         setFocusResults([]);
         setFocusResultIndicator(null);
         setFocusSelectedOption(undefined);
+        setIsAdaptiveSequence(false);
+        setAdaptiveStage(0);
+        setAdaptiveFailedCount(0);
+        setCurrentAdaptiveQuestion(null);
         setShowTheory(false);
         setIsFocusMode(true);
         if (document.documentElement.requestFullscreen) {
@@ -71,19 +86,48 @@ const ExamQuestions = () => {
 
     const handleFocusSubmit = async () => {
         if (focusSelectedOption === undefined) return;
-        const qId = focusQuestions[focusIndex]._id;
+        const qId = isAdaptiveSequence ? currentAdaptiveQuestion._id : focusQuestions[focusIndex]._id;
+        
         try {
             setCheckingId(qId);
             const token = localStorage.getItem('token');
-            const res = await axios.post(
-                `${API_URL}/api/problems/exam/${examId}/check-answer`,
-                { questionId: qId, selectedOption: focusSelectedOption },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            if (res.data.success) {
-                const isCorrect = res.data.data.correct;
-                setFocusResultIndicator(isCorrect ? 'correct' : 'wrong');
-                setFocusResults(prev => [...prev, { questionId: qId, correct: isCorrect }]);
+            // Check answer (If it's adaptive, we might just validate client-side since correctAnswer is in the object, but let's be consistent or use local)
+            // Wait, for adaptive, `correctAnswer` is strictly local to `currentAdaptiveQuestion`.
+            // Let's do local validation for adaptive to save a DB trip since it's not saved in DB anyway.
+            let isCorrect = false;
+            if (isAdaptiveSequence) {
+                isCorrect = focusSelectedOption === currentAdaptiveQuestion.correctAnswer;
+                // Wait 500ms for UX
+                await new Promise(r => setTimeout(r, 500));
+            } else {
+                const res = await axios.post(
+                    `${API_URL}/api/problems/exam/${examId}/check-answer`,
+                    { questionId: qId, selectedOption: focusSelectedOption },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                if (res.data.success) {
+                    isCorrect = res.data.data.correct;
+                    setFocusResults(prev => [...prev, { questionId: qId, correct: isCorrect }]);
+                }
+            }
+
+            setFocusResultIndicator(isCorrect ? 'correct' : 'wrong');
+
+            if (isAdaptiveSequence) {
+                if (isCorrect) {
+                     setCurrentAdaptiveDifficulty(prev => Math.min(prev + 1, 3));
+                } else {
+                     setCurrentAdaptiveDifficulty(prev => Math.max(prev - 1, 1));
+                     setAdaptiveFailedCount(prev => prev + 1);
+                }
+            } else {
+                if (!isCorrect) {
+                    // Start Adaptive Sequence because original was wrong
+                    setIsAdaptiveSequence(true);
+                    setAdaptiveStage(0);
+                    setAdaptiveFailedCount(0);
+                    setCurrentAdaptiveDifficulty(1); // Start Easy
+                }
             }
         } catch (err) {
             console.error('Check error', err);
@@ -92,32 +136,80 @@ const ExamQuestions = () => {
         }
     };
 
-    const handleFocusNext = async () => {
-        if (focusIndex < focusQuestions.length - 1) {
+    const fetchAdaptiveQuestion = async (difficultyDiff) => {
+        setIsGeneratingAdaptive(true);
+        setCurrentAdaptiveQuestion(null);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post(
+                `${API_URL}/api/problems/exam/${examId}/adaptive-question`,
+                { 
+                    failedQuestionId: focusQuestions[focusIndex]._id,
+                    targetDifficulty: difficultyMap[difficultyDiff]
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (res.data.success) {
+                setCurrentAdaptiveQuestion(res.data.data);
+            }
+        } catch (err) {
+            console.error('Error fetching adaptive part', err);
+            // Fallback if AI fails, just skip adaptive
+            setIsAdaptiveSequence(false);
             setFocusIndex(prev => prev + 1);
-            setFocusResultIndicator(null);
-            setFocusSelectedOption(undefined);
-        } else {
-            const wrongCount = focusResults.filter(r => !r.correct).length;
-            if (wrongCount >= 3) {
-                setShowTheory(true);
-                setLoadingTheory(true);
-                try {
-                    const token = localStorage.getItem('token');
-                    const failedIds = focusResults.filter(r => !r.correct).map(r => r.questionId);
-                    const res = await axios.post(
-                        `${API_URL}/api/problems/exam/${examId}/theory`,
-                        { failedQuestionIds: failedIds },
-                        { headers: { Authorization: `Bearer ${token}` } }
-                    );
-                    if (res.data.success) {
-                        setTheoryContent(res.data.theory);
-                    }
-                } catch (err) {
-                    setTheoryContent('Failed to load theory summary. Please refer to your textbooks.');
-                } finally {
-                    setLoadingTheory(false);
+        } finally {
+            setIsGeneratingAdaptive(false);
+        }
+    };
+
+    const fetchTheory = async () => {
+        setShowTheory(true);
+        setLoadingTheory(true);
+        try {
+            const token = localStorage.getItem('token');
+            // Just use the current original question for theory
+            const failedIds = [focusQuestions[focusIndex]._id];
+            const res = await axios.post(
+                `${API_URL}/api/problems/exam/${examId}/theory`,
+                { failedQuestionIds: failedIds },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (res.data.success) {
+                setTheoryContent(res.data.theory);
+            }
+        } catch (err) {
+            setTheoryContent('Failed to load theory summary. Please refer to your textbooks.');
+        } finally {
+            setLoadingTheory(false);
+        }
+    }
+
+    const handleFocusNext = async () => {
+        setFocusResultIndicator(null);
+        setFocusSelectedOption(undefined);
+
+        if (isAdaptiveSequence) {
+            const nextStage = adaptiveStage + 1;
+            setAdaptiveStage(nextStage);
+            
+            if (adaptiveFailedCount >= 3) {
+                fetchTheory();
+            } else if (nextStage >= 8) {
+                // Adaptive sequence finished successfully
+                setIsAdaptiveSequence(false);
+                if (focusIndex < focusQuestions.length - 1) {
+                    setFocusIndex(prev => prev + 1);
+                } else {
+                    stopFocusMode();
                 }
+            } else {
+                // Fetch next adaptive question
+                fetchAdaptiveQuestion(currentAdaptiveDifficulty);
+            }
+        } else {
+            // we got it right, move to next original
+            if (focusIndex < focusQuestions.length - 1) {
+                setFocusIndex(prev => prev + 1);
             } else {
                 stopFocusMode();
             }
@@ -321,21 +413,39 @@ const ExamQuestions = () => {
                                 </button>
                             )}
                         </div>
+                    ) : isGeneratingAdaptive ? (
+                        <div className="bg-gray-800 flex flex-col items-center justify-center py-20 px-8 rounded-2xl border border-purple-500/30 shadow-2xl shadow-purple-900/20">
+                            <BrainCircuit className="h-16 w-16 text-purple-400 mb-6 animate-pulse" />
+                            <h2 className="text-2xl font-bold text-white mb-2">Generating Adaptive Question...</h2>
+                            <p className="text-gray-400 font-medium">Adjusting difficulty based on your previous answers.</p>
+                            <div className="mt-8 flex gap-2">
+                                <div className="h-2 w-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                <div className="h-2 w-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                <div className="h-2 w-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                            </div>
+                        </div>
                     ) : (
-                        <div className="bg-gray-800 p-8 flex flex-col rounded-2xl border border-purple-500/30 shadow-2xl shadow-purple-900/20">
+                        <div className="bg-gray-800 p-8 flex flex-col rounded-2xl border border-purple-500/30 shadow-2xl shadow-purple-900/20 transition-all">
                             <div className="flex justify-between items-center mb-6">
                                 <span className="px-4 py-1.5 bg-purple-500/20 text-purple-300 font-bold rounded-full border border-purple-500/30">
-                                    Question {focusIndex + 1} of {focusQuestions.length}
+                                    {isAdaptiveSequence ? `Adaptive Q${adaptiveStage}` : `Question ${focusIndex + 1} of ${focusQuestions.length}`}
                                 </span>
-                                <span className="text-gray-400 text-sm font-medium">Exam Mode Strict</span>
+                                <div className="flex gap-2 items-center">
+                                    {isAdaptiveSequence && (
+                                        <span className={`px-3 py-1 text-xs font-bold rounded-full border ${currentAdaptiveDifficulty === 1 ? 'border-green-500/50 text-green-400 bg-green-500/10' : currentAdaptiveDifficulty === 2 ? 'border-yellow-500/50 text-yellow-400 bg-yellow-500/10' : 'border-red-500/50 text-red-400 bg-red-500/10'}`}>
+                                            Diff: {difficultyMap[currentAdaptiveDifficulty]}
+                                        </span>
+                                    )}
+                                    <span className="text-gray-400 text-sm font-medium">Exam Mode Strict</span>
+                                </div>
                             </div>
 
                             <p className="text-white text-2xl font-medium leading-relaxed mb-8">
-                                {q.question}
+                                {isAdaptiveSequence && currentAdaptiveQuestion ? currentAdaptiveQuestion.question : q.question}
                             </p>
 
                             <div className="space-y-4 mb-8">
-                                {q.options.map((opt, i) => {
+                                {(isAdaptiveSequence && currentAdaptiveQuestion ? currentAdaptiveQuestion.options : q.options).map((opt, i) => {
                                     const isSelected = focusSelectedOption === i;
                                     let optionStyle = 'border-gray-700 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50';
                                     
@@ -356,7 +466,7 @@ const ExamQuestions = () => {
                                             key={i}
                                             onClick={() => !focusResultIndicator && setFocusSelectedOption(i)}
                                             disabled={focusResultIndicator !== null}
-                                            className={`w-full text-left px-5 py-4 rounded-xl border-2 transition-all ${optionStyle}`}
+                                            className={`w-full text-left px-5 py-4 rounded-xl border-2 transition-all ${optionStyle} ${focusResultIndicator && isAdaptiveSequence && currentAdaptiveQuestion && currentAdaptiveQuestion.correctAnswer === i ? '!border-green-500/80 !border-dashed' : ''}`}
                                         >
                                             <div className="flex items-center gap-4">
                                                 <span className={`w-8 h-8 flex items-center justify-center rounded-full border ${isSelected && !focusResultIndicator ? 'border-purple-400 text-purple-300' : 'border-gray-600 text-gray-500'}`}>
@@ -372,22 +482,34 @@ const ExamQuestions = () => {
                             {!focusResultIndicator ? (
                                 <button
                                     onClick={handleFocusSubmit}
-                                    disabled={focusSelectedOption === undefined || checkingId === q._id}
+                                    disabled={focusSelectedOption === undefined || checkingId !== null}
                                     className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold text-lg rounded-xl transition-all"
                                 >
-                                    {checkingId === q._id ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : 'Lock Answer'}
+                                    {checkingId !== null ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : 'Lock Answer'}
                                 </button>
                             ) : (
                                 <div className="flex flex-col sm:flex-row items-center gap-4 justify-between mt-4">
-                                    <div className={`flex items-center gap-3 px-6 py-4 rounded-xl border ${focusResultIndicator === 'correct' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
-                                        {focusResultIndicator === 'correct' ? <CheckCircle className="h-6 w-6" /> : <XCircle className="h-6 w-6" />}
-                                        <span className="font-bold text-lg">{focusResultIndicator === 'correct' ? 'Correct!' : 'Incorrect'}</span>
+                                    <div className="flex-1 flex items-center gap-3 px-6 py-4 rounded-xl border bg-gray-900 border-gray-700">
+                                        {focusResultIndicator === 'correct' ? <CheckCircle className="h-6 w-6 text-green-400" /> : <XCircle className="h-6 w-6 text-red-400" />}
+                                        <div className="flex flex-col">
+                                            <span className={`font-bold text-lg ${focusResultIndicator === 'correct' ? 'text-green-400' : 'text-red-400'}`}>{focusResultIndicator === 'correct' ? 'Correct!' : 'Incorrect'}</span>
+                                            {focusResultIndicator === 'wrong' && !isAdaptiveSequence && (
+                                                <span className="text-gray-400 text-sm">Initiating adaptive sequence...</span>
+                                            )}
+                                            {isAdaptiveSequence && (
+                                                <span className="text-gray-400 text-sm">{focusResultIndicator === 'correct' ? 'Difficulty increasing ↑' : 'Difficulty decreasing ↓'}</span>
+                                            )}
+                                        </div>
                                     </div>
                                     <button
                                         onClick={handleFocusNext}
-                                        className="w-full sm:w-auto px-8 py-4 bg-white text-gray-900 hover:bg-gray-200 font-bold text-lg rounded-xl transition-all"
+                                        className="w-full sm:w-auto px-8 py-4 bg-white text-gray-900 hover:bg-gray-200 font-bold text-lg rounded-xl transition-all whitespace-nowrap"
                                     >
-                                        {focusIndex < focusQuestions.length - 1 ? 'Next Question' : 'Finish Exam'}
+                                        {(isAdaptiveSequence && adaptiveStage < 8 && adaptiveFailedCount < (focusResultIndicator === 'wrong' ? 3 : 4)) ? (
+                                            focusResultIndicator === 'wrong' && adaptiveStage === 0 ? 'Start Adaptive Flow' : 'Next Adaptive'
+                                        ) : (
+                                            focusIndex < focusQuestions.length - 1 ? 'Next Original Question' : 'Finish Exam'
+                                        )}
                                     </button>
                                 </div>
                             )}
