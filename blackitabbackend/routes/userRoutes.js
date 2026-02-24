@@ -31,4 +31,7 @@ const upload = multer({ storage: storage });
 // PUT /api/user/update-profile
 router.put('/update-profile', protect, upload.single('profileImage'), userController.updateProfile);
 
+// PUT /api/user/link-manager
+router.put('/link-manager', protect, userController.linkManager);
+
 module.exports = router;
