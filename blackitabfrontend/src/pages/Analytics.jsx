@@ -35,43 +35,16 @@ import {
 import ActivityHeatmap from '../components/ActivityHeatmap';
 
 const Analytics = () => {
-  const [loading, setLoading] = useState(true);
-  const [analyticsData, setAnalyticsData] = useState({
-    totalQuestions: 0,
-    accuracy: 0,
-    averageSpeedSeconds: 0,
-    heatmap: []
-  });
-
-  useEffect(() => {
-    const fetchAnalytics = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        const res = await axios.get(`${API_URL}/api/analytics/overview`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        if (res.data.success) {
-          setAnalyticsData(res.data.data);
-        }
-      } catch (err) {
-        console.error('Failed to fetch analytics', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAnalytics();
-  }, []);
-
-  // Mock data for demonstration of UI components that don't have APIs yet
+  // Mock data for demonstration
   const stats = {
-    problemsSolved: analyticsData.totalQuestions,
-    accuracy: analyticsData.accuracy,
-    currentStreak: 0,
-    studyHours: Math.round((analyticsData.totalQuestions * analyticsData.averageSpeedSeconds) / 3600)
+    problemsSolved: 127,
+    problemsChange: 12,
+    accuracy: 87.5,
+    accuracyChange: 3.2,
+    currentStreak: 15,
+    streakChange: 0,
+    studyHours: 42,
+    hoursChange: -2
   };
 
   const subjectProgress = [
@@ -171,27 +144,27 @@ const Analytics = () => {
             icon={Target}
             title="Problems Solved"
             value={stats.problemsSolved}
-            change={0}
+            change={stats.problemsChange}
           />
           <StatCard
             icon={TrendingUp}
             title="Accuracy Rate"
             value={stats.accuracy}
-            change={0}
+            change={stats.accuracyChange}
             suffix="%"
           />
           <StatCard
-            icon={Activity}
-            title="Avg Speed / Question"
-            value={analyticsData.averageSpeedSeconds ? Math.round(analyticsData.averageSpeedSeconds) : 0}
-            change={0}
-            suffix="s"
+            icon={Flame}
+            title="Current Streak"
+            value={stats.currentStreak}
+            change={stats.streakChange}
+            suffix=" days"
           />
           <StatCard
             icon={Clock}
-            title="Total Study Hours"
+            title="Study Hours (Week)"
             value={stats.studyHours}
-            change={0}
+            change={stats.hoursChange}
             suffix="h"
           />
         </div>
@@ -199,7 +172,7 @@ const Analytics = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Activity Heatmap */}
           <div className="lg:col-span-2">
-            <ActivityHeatmap heatmapData={analyticsData.heatmap} loading={loading} />
+            <ActivityHeatmap />
           </div>
 
           {/* Weekly Activity Chart */}
