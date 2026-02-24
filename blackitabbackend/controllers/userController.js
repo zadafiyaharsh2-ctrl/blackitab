@@ -47,3 +47,29 @@ exports.updateProfile = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+exports.linkManager = async (req, res) => {
+    try {
+        const { managerId } = req.body;
+        const userId = req.user._id;
+
+        const user = await User.findById(userId);
+        const manager = await User.findById(managerId);
+
+        if (!manager || !['hod', 'teacher'].includes(manager.role)) {
+            return res.status(400).json({ success: false, message: 'Invalid manager' });
+        }
+
+        if (user.instituteId && manager.instituteId && user.instituteId.toString() !== manager.instituteId.toString()) {
+            return res.status(400).json({ success: false, message: 'Must be in same institute' });
+        }
+
+        user.reportsToUser = manager._id;
+        await user.save();
+
+        res.json({ success: true, message: 'Supervisor linked successfully' });
+    } catch (error) {
+        console.error('Link manager error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
