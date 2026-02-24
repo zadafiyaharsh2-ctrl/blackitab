@@ -1,0 +1,8 @@
+const express = require('express');
+const router = express.Router();
+const attemptController = require('../controllers/attemptController');
+const protect = require('../middleware/auth');
+
+router.post('/submit', protect, attemptController.submitAttempt);
+
+module.exports = router;
