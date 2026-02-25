@@ -17,8 +17,13 @@ import {
     Maximize
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
+const itemVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } } };
 import remarkGfm from 'remark-gfm';
 import API_URL from '../config';
+import { getMockExamQuestions } from '../data/mockExamData';
 
 const ExamQuestions = () => {
     const { examId } = useParams();
@@ -233,11 +238,19 @@ const ExamQuestions = () => {
                     ? `${API_URL}/api/problems/exam/${examId}/questions`
                     : `${API_URL}/api/problems/exam/${examId}/questions?subject=${activeSubject}`;
                 const res = await axios.get(url);
-                if (res.data.success) {
+                if (res.data.success && res.data.data && res.data.data.length > 0) {
                     setQuestions(res.data.data);
+                    setCurrentIndex(0);
+                } else {
+                    console.log('Backend returned empty questions, using intelligent fallback data.');
+                    setQuestions(getMockExamQuestions(examId, activeSubject));
                     setCurrentIndex(0);
                 }
             } catch (err) {
+                console.error('Error fetching exam questions, falling back to mock data: ', err);
+                setQuestions(getMockExamQuestions(examId, activeSubject));
+                setCurrentIndex(0);
+                // 
                 console.error('Error fetching exam questions:', err);
             } finally {
                 setLoading(false);
@@ -334,7 +347,11 @@ const ExamQuestions = () => {
     if (isFocusMode) {
         const q = focusQuestions[focusIndex];
         return (
-            <div className="fixed inset-0 z-[100] bg-gray-900 flex flex-col items-center justify-center p-4">
+            <div className="fixed inset-0 z-[100] bg-[#050505] flex flex-col items-center justify-center p-4">
+        {/* Immersive Focus Mode Background */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-purple-900/10 rounded-full blur-[200px] animate-pulse" />
+        </div>
                 <button 
                    onClick={stopFocusMode} 
                    className="absolute top-6 right-8 text-gray-500 hover:text-red-400 font-bold text-sm bg-gray-800 px-4 py-2 rounded-lg border border-gray-700 transition-colors"
@@ -380,7 +397,7 @@ const ExamQuestions = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className="bg-gray-800 p-8 flex flex-col rounded-2xl border border-purple-500/30 shadow-2xl shadow-purple-900/20 transition-all">
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-panel border-purple-500/20 p-8 flex flex-col rounded-[2rem] shadow-[0_0_50px_rgba(168,85,247,0.15)] relative z-10">
                             <div className="flex justify-between items-center mb-6">
                                 <span className="px-4 py-1.5 bg-purple-500/20 text-purple-300 font-bold rounded-full border border-purple-500/30">
                                     {isAdaptiveSequence ? `Adaptive Q${adaptiveStage}` : `Question ${focusIndex + 1} of ${focusQuestions.length}`}
@@ -413,7 +430,7 @@ const ExamQuestions = () => {
                                             optionStyle = 'border-gray-700/50 bg-gray-800/50 text-gray-500 cursor-default opacity-50';
                                         }
                                     } else if (isSelected) {
-                                        optionStyle = 'border-purple-500 bg-purple-500/20 text-white shadow-lg shadow-purple-900/20';
+                                        optionStyle = 'border-purple-500 bg-purple-500/20 text-white drop-shadow-[0_0_15px_rgba(168,85,247,0.4)] scale-[1.02] shadow-lg';
                                     }
 
                                     return (
@@ -468,7 +485,7 @@ const ExamQuestions = () => {
                                     </button>
                                 </div>
                             )}
-                        </div>
+                        </motion.div>
                     )}
                 </div>
             </div>
@@ -476,14 +493,20 @@ const ExamQuestions = () => {
     }
 
     return (
-        <div className="max-w-5xl mx-auto px-4 py-8 relative">
+        <motion.div variants={containerVariants} initial="hidden" animate="visible" className="min-h-screen bg-[#050505] text-white p-6 relative overflow-hidden font-sans">
+        {/* Background Orbs */}
+        <div className="fixed inset-0 z-0 pointer-events-none">
+            <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px] mix-blend-screen" />
+            <div className="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[150px] mix-blend-screen" />
+        </div>
+        <div className="max-w-5xl mx-auto relative z-10 pt-4">
             {/* Analyzing Overlay */}
             {analyzing && (
                 <div className="fixed inset-0 z-50 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm flex flex-col items-center justify-center">
                     <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl border border-purple-200 dark:border-purple-500/50 flex flex-col items-center max-w-sm text-center shadow-2xl shadow-purple-500/20">
                         <Loader2 className="h-12 w-12 text-purple-600 dark:text-purple-400 animate-spin mb-4" />
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">AI Agent Analyzing...</h3>
-                        <p className="text-gray-600 dark:text-gray-400">Identifying your learning gap and preparing a remedial step.</p>
+                        <h3 className="text-xl font-bold text-white mb-2">AI Agent Analyzing...</h3>
+                        <p className="text-gray-400">Identifying your learning gap and preparing a remedial step.</p>
                     </div>
                 </div>
             )}
@@ -491,7 +514,7 @@ const ExamQuestions = () => {
             <div className="mb-8">
                 <button
                     onClick={() => navigate('/problems')}
-                    className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors mb-4"
+                    className="flex items-center gap-2 text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors mb-4"
                 >
                     <ArrowLeft className="h-5 w-5" />
                     Back to Exams
@@ -499,13 +522,13 @@ const ExamQuestions = () => {
 
                 <div className="flex items-center justify-between flex-wrap gap-4">
                     <div>
-                        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
+                        <h1 className="text-4xl font-bold text-white">
                             {currentExam.name}{' '}
                             <span className="bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-500 text-transparent bg-clip-text">
                                 Practice
                             </span>
                         </h1>
-                        <p className="text-gray-600 dark:text-gray-400 mt-2">
+                        <p className="text-gray-400 mt-2">
                             {questions.length} question{questions.length !== 1 ? 's' : ''} available
                         </p>
                     </div>
@@ -514,7 +537,7 @@ const ExamQuestions = () => {
                     {questions.length > 0 && (
                         <button
                             onClick={startFocusMode}
-                            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-bold rounded-xl transition-all duration-300 shadow-lg shadow-orange-500/30"
+                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-full transition-all duration-300 shadow-[0_0_20px_rgba(219,39,119,0.3)] hover:shadow-[0_0_30px_rgba(219,39,119,0.5)] scale-100 hover:scale-[1.02]"
                         >
                             <Maximize className="h-5 w-5" />
                             Start Exam Mode
@@ -529,7 +552,7 @@ const ExamQuestions = () => {
                     onClick={() => setActiveSubject('All')}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeSubject === 'All'
                         ? 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/50'
-                        : 'bg-white dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
+                        : 'bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
                         }`}
                 >
                     <div className="flex items-center gap-2">
@@ -543,7 +566,7 @@ const ExamQuestions = () => {
                         onClick={() => setActiveSubject(subject)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeSubject === subject
                             ? 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/50'
-                            : 'bg-white dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
+                            : 'bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
                             }`}
                     >
                         {subject}
@@ -559,7 +582,7 @@ const ExamQuestions = () => {
             ) : questions.length === 0 ? (
                 <div className="text-center py-20 bg-gray-50 dark:bg-gray-800/30 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
                     <BookOpen className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-600 dark:text-gray-400 text-lg mb-2">No questions found for this exam yet.</p>
+                    <p className="text-gray-400 text-lg mb-2">No questions found for this exam yet.</p>
                     <p className="text-gray-500 text-sm mb-6">Click the button above to generate some AI questions!</p>
                     {/* <button
                         onClick={handleAIGenerate}
@@ -577,9 +600,10 @@ const ExamQuestions = () => {
                     {(() => {
                         const q = questions[currentIndex];
                         return (
-                            <div
+                            <motion.div
                                 key={q._id}
-                                className="bg-white/80 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 p-6 transition-all shadow-sm dark:shadow-none"
+                                variants={itemVariants}
+                                className="glass-panel border-white/5 rounded-2xl p-6 transition-all group"
                             >
                                 {/* Question Header */}
                                 <div className="flex items-start justify-between mb-4">
@@ -589,7 +613,7 @@ const ExamQuestions = () => {
                                                 Q{currentIndex + 1} of {questions.length}
                                             </span>
                                             {q.subject && (
-                                                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 text-xs rounded-full">
+                                                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700/50 text-gray-400 text-xs rounded-full">
                                                     {q.subject}
                                                 </span>
                                             )}
@@ -607,7 +631,7 @@ const ExamQuestions = () => {
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-gray-900 dark:text-white text-lg font-medium leading-relaxed">
+                                        <p className="text-white text-lg font-medium leading-relaxed">
                                             {q.question}
                                         </p>
                                     </div>
@@ -688,7 +712,7 @@ const ExamQuestions = () => {
                                         )}
                                     </>
                                 )}
-                            </div>
+                            </motion.div>
                         );
                     })()}
 
@@ -697,20 +721,20 @@ const ExamQuestions = () => {
                         <button
                             onClick={() => setCurrentIndex(prev => prev - 1)}
                             disabled={currentIndex === 0}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:border-gray-500 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600 dark:text-gray-300 rounded-xl transition-all"
+                            className="flex items-center gap-2 px-5 py-2.5 bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:border-gray-500 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600 dark:text-gray-300 rounded-xl transition-all"
                         >
                             <ChevronLeft className="h-5 w-5" />
                             Previous
                         </button>
 
-                        <span className="text-gray-500 dark:text-gray-400 text-sm">
+                        <span className="text-gray-400 text-sm">
                             {currentIndex + 1} / {questions.length}
                         </span>
 
                         <button
                             onClick={() => setCurrentIndex(prev => prev + 1)}
                             disabled={currentIndex === questions.length - 1}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:border-gray-500 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600 dark:text-gray-300 rounded-xl transition-all"
+                            className="flex items-center gap-2 px-5 py-2.5 bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:border-gray-500 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600 dark:text-gray-300 rounded-xl transition-all"
                         >
                             Next
                             <ChevronRight className="h-5 w-5" />
@@ -718,7 +742,8 @@ const ExamQuestions = () => {
                     </div>
                 </div>
             )}
-        </div>
+                </div>
+        </motion.div>
     );
 };
 
