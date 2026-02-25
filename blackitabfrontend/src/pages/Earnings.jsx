@@ -19,7 +19,7 @@ const Earnings = () => {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div>
-          <h1 className="text-3xl font-bold mb-2">dummy data of Earnings</h1>
+          <h1 className="text-3xl font-bold mb-2">Revenue Dashboard</h1>
           <p className="text-gray-600 dark:text-gray-400">Manage your revenue and payouts</p>
         </div>
         <div className="flex gap-3">
