@@ -30,7 +30,7 @@ const upload = multer({ storage: storage });
 // PUT /api/user/update-profile
 router.put('/update-profile', protect, upload.single('profileImage'), userController.updateProfile);
 
-// GET /api/user/leaderboard — top users by points & streak
-router.get('/leaderboard', protect, userController.getLeaderboard);
+// PUT /api/user/link-manager
+router.put('/link-manager', protect, userController.linkManager);
 
 module.exports = router;

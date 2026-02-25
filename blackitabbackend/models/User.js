@@ -51,8 +51,31 @@ const userSchema = new mongoose.Schema({
   profileImage: {
     type: String,
     default: ''
-  }
-});
+  },
+
+  // --- HIERARCHY & ROLES ---
+  role: {
+    type: String,
+    enum: ['student', 'teacher', 'hod'],
+    default: 'student'
+  },
+  instituteId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Institute',
+    default: null
+  },
+  batchYear: { type: String },
+  division: { type: String },
+  reportsToUser: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+
+  // --- MASSIVE SCALE METRICS ---
+  globalRank: { type: Number, default: 0 },
+  longestStreak: { type: Number, default: 0 }
+}, { strict: false });
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {
