@@ -33,28 +33,56 @@ import {
   Share2
 } from 'lucide-react';
 import ActivityHeatmap from '../components/ActivityHeatmap';
+import { motion } from 'framer-motion';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
+};
 
 const Analytics = () => {
-  // Mock data for demonstration
-  const stats = {
-    problemsSolved: 127,
-    problemsChange: 12,
-    accuracy: 87.5,
-    accuracyChange: 3.2,
-    currentStreak: 15,
-    streakChange: 0,
-    studyHours: 42,
-    hoursChange: -2
-  };
+  
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState({
+    stats: {
+      problemsSolved: 0, problemsChange: 0, accuracy: 0, accuracyChange: 0,
+      currentStreak: 0, streakChange: 0, studyHours: 0, hoursChange: 0
+    },
+    subjectProgress: [],
+    strengths: [],
+    weaknesses: [],
+    recentActivity: []
+  });
 
-  const subjectProgress = [
-    { name: 'Data Structures', progress: 85, color: 'from-purple-500 to-indigo-600', mastery: 'Advanced' },
-    { name: 'Algorithms', progress: 72, color: 'from-blue-500 to-cyan-600', mastery: 'Intermediate' },
-    { name: 'Mathematics', progress: 65, color: 'from-green-500 to-emerald-600', mastery: 'Intermediate' },
-    { name: 'Database Systems', progress: 90, color: 'from-orange-500 to-red-600', mastery: 'Advanced' },
-    { name: 'Operating Systems', progress: 58, color: 'from-pink-500 to-rose-600', mastery: 'Beginner' },
-    { name: 'Computer Networks', progress: 45, color: 'from-teal-500 to-cyan-600', mastery: 'Beginner' }
-  ];
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return setLoading(false);
+        const res = await axios.get(`${API_URL}/api/attempts/analytics`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.success) {
+          setData(prev => ({ ...prev, ...res.data.data }));
+        }
+      } catch (err) {
+        console.error('Failed to load analytics:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAnalytics();
+  }, []);
+
+  const { stats, subjectProgress, strengths, weaknesses, recentActivity } = data;
 
   const weeklyActivity = [
     { day: 'Mon', problems: 8 },
@@ -66,28 +94,6 @@ const Analytics = () => {
     { day: 'Sun', problems: 14 }
   ];
 
-  const strengths = [
-    'Array Manipulation',
-    'Hash Tables',
-    'Database Queries',
-    'Tree Traversal',
-    'Dynamic Programming'
-  ];
-
-  const weaknesses = [
-    'Graph Algorithms',
-    'Backtracking',
-    'Bit Manipulation',
-    'System Design'
-  ];
-
-  const recentActivity = [
-    { type: 'completed', title: 'Binary Tree Maximum Path Sum', time: '2 hours ago', difficulty: 'Hard' },
-    { type: 'completed', title: 'Longest Palindromic Substring', time: '5 hours ago', difficulty: 'Medium' },
-    { type: 'attempted', title: 'Word Ladder II', time: '1 day ago', difficulty: 'Hard' },
-    { type: 'completed', title: 'Valid Parentheses', time: '1 day ago', difficulty: 'Easy' },
-    { type: 'completed', title: 'Merge K Sorted Lists', time: '2 days ago', difficulty: 'Hard' }
-  ];
 
 
 
@@ -96,7 +102,10 @@ const Analytics = () => {
     const isNeutral = change === 0;
     
     return (
-      <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6 hover:border-purple-500/30 transition-all duration-300 group">
+      <motion.div 
+        variants={itemVariants}
+        whileHover={{ scale: 1.02, y: -2 }}
+        className="glass-panel border-white/5 rounded-xl p-6 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] transition-all duration-300 group">
         <div className="flex items-start justify-between mb-4">
           <div className={`p-3 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-lg group-hover:scale-110 transition-transform duration-300`}>
             <Icon className="h-6 w-6 text-purple-400" />
@@ -115,16 +124,21 @@ const Analytics = () => {
           )}
         </div>
         <h3 className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-1">{title}</h3>
-        <p className="text-3xl font-bold text-gray-900 dark:text-white">{value}{suffix}</p>
-      </div>
+        <p className="text-3xl text-glow font-bold text-gray-900 dark:text-white">{value}{suffix}</p>
+      </motion.div>
     );
   };
 
   const maxActivity = Math.max(...weeklyActivity.map(d => d.problems));
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen p-6 relative bg-[#050505] selection:bg-purple-500/30 overflow-hidden text-white">
+      {/* Dynamic Background Effects */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px] mix-blend-screen animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[150px] mix-blend-screen" />
+      </div>
+      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-3">
@@ -139,7 +153,7 @@ const Analytics = () => {
         </div>
 
         {/* Overview Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
             icon={Target}
             title="Problems Solved"
@@ -167,16 +181,15 @@ const Analytics = () => {
             change={stats.hoursChange}
             suffix="h"
           />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        </motion.div>
+        <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Activity Heatmap */}
           <div className="lg:col-span-2">
             <ActivityHeatmap />
           </div>
 
           {/* Weekly Activity Chart */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
+          <div className="glass-panel border-white/5 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <BarChart3 className="h-5 w-5 text-purple-400" />
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Weekly Activity</h2>
@@ -200,16 +213,15 @@ const Analytics = () => {
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Subject Progress */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6 mb-8">
+        <motion.div variants={itemVariants} className="glass-panel border-white/5 rounded-xl p-6 mb-8 relative overflow-hidden group hover:border-purple-500/30 transition-colors">
           <div className="flex items-center gap-2 mb-6">
             <BookOpen className="h-5 w-5 text-purple-400" />
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">Subject Performance</h2>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {subjectProgress.map((subject, idx) => (
               <div key={idx} className="bg-gray-700/30 rounded-lg p-5 hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-all cursor-pointer group">
                 <div className="flex items-center justify-between mb-4">
@@ -238,12 +250,11 @@ const Analytics = () => {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          </motion.div>
+        </motion.div>
+        <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Strengths */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
+          <div className="glass-panel border-white/5 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <Award className="h-5 w-5 text-green-400" />
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Your Strengths</h2>
@@ -260,7 +271,7 @@ const Analytics = () => {
           </div>
 
           {/* Weaknesses */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
+          <div className="glass-panel border-white/5 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <Brain className="h-5 w-5 text-red-400" />
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Areas to Improve</h2>
@@ -278,10 +289,10 @@ const Analytics = () => {
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Recent Activity */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
+        <div className="glass-panel border-white/5 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-6">
             <Code className="h-5 w-5 text-purple-400" />
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">Recent Activity</h2>
@@ -322,9 +333,9 @@ const Analytics = () => {
         </div>
 
         {/* Learning Velocity & Peak Study Hours */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Learning Velocity */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
+          <div className="glass-panel border-white/5 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <Activity className="h-5 w-5 text-purple-400" />
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Learning Velocity</h2>
@@ -356,7 +367,7 @@ const Analytics = () => {
           </div>
 
           {/* Peak Study Hours */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
+          <div className="glass-panel border-white/5 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <CalendarDays className="h-5 w-5 text-purple-400" />
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Peak Study Hours</h2>
@@ -391,12 +402,12 @@ const Analytics = () => {
               </p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Global Rankings & Monthly Summary */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Global Rankings */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
+          <div className="glass-panel border-white/5 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <Trophy className="h-5 w-5 text-yellow-400" />
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Global Rankings</h2>
@@ -433,7 +444,7 @@ const Analytics = () => {
           </div>
 
           {/* Monthly Summary */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
+          <div className="glass-panel border-white/5 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <CalendarDays className="h-5 w-5 text-purple-400" />
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">This Month Summary</h2>
@@ -473,10 +484,10 @@ const Analytics = () => {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Skill Progression Tracker */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6 mb-8">
+        <motion.div variants={itemVariants} className="glass-panel border-white/5 rounded-xl p-6 mb-8 relative overflow-hidden group hover:border-purple-500/30 transition-colors">
           <div className="flex items-center gap-2 mb-6">
             <TrendingUp className="h-5 w-5 text-purple-400" />
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">Skill Progression Tracker</h2>
@@ -532,7 +543,7 @@ const Analytics = () => {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* AI-Powered Insights */}
         <div className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-xl p-6">
@@ -540,8 +551,7 @@ const Analytics = () => {
             <Lightbulb className="h-6 w-6 text-yellow-400" />
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">AI-Powered Insights & Recommendations</h2>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg p-5 border border-gray-300 dark:border-gray-700">
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-green-500/20 rounded-lg">
@@ -597,13 +607,13 @@ const Analytics = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Difficulty Distribution & Topic Performance */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Difficulty Distribution */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
+          <div className="glass-panel border-white/5 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <PieChart className="h-5 w-5 text-purple-400" />
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Difficulty Distribution</h2>
@@ -645,7 +655,7 @@ const Analytics = () => {
           </div>
 
           {/* Topic-Wise Performance */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
+          <div className="glass-panel border-white/5 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <BookOpen className="h-5 w-5 text-purple-400" />
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Top Performing Topics</h2>
@@ -680,10 +690,10 @@ const Analytics = () => {
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Achievements & Badges */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6 mb-8">
+        <motion.div variants={itemVariants} className="glass-panel border-white/5 rounded-xl p-6 mb-8 relative overflow-hidden group hover:border-purple-500/30 transition-colors">
           <div className="flex items-center gap-2 mb-6">
             <Medal className="h-5 w-5 text-yellow-400" />
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">Achievements & Badges</h2>
@@ -725,12 +735,12 @@ const Analytics = () => {
               );
             })}
           </div>
-        </div>
+        </motion.div>
 
         {/* Peer Comparison & Solving Speed */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Peer Comparison */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
+          <div className="glass-panel border-white/5 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <Users className="h-5 w-5 text-purple-400" />
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Peer Comparison</h2>
@@ -773,7 +783,7 @@ const Analytics = () => {
           </div>
 
           {/* Solving Speed */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
+          <div className="glass-panel border-white/5 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <Timer className="h-5 w-5 text-purple-400" />
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Solving Speed Metrics</h2>
@@ -804,12 +814,12 @@ const Analytics = () => {
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Consistency Score & Study Recommendations */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Consistency Score */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
+          <div className="glass-panel border-white/5 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <Gauge className="h-5 w-5 text-purple-400" />
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Consistency Score</h2>
@@ -878,7 +888,7 @@ const Analytics = () => {
           </div>
 
           {/* Quick Win Suggestions */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-xl p-6">
+          <div className="glass-panel border-white/5 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <Gift className="h-5 w-5 text-purple-400" />
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Quick Win Suggestions</h2>
@@ -942,8 +952,8 @@ const Analytics = () => {
               })}
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };
