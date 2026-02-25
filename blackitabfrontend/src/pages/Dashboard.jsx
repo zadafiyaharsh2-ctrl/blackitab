@@ -4,31 +4,37 @@
  * ============================================================================
  * 
  * The main landing page for logged-in users.
- * Displays:
- * 1. Introduction with User Name
- * 2. Key Stats (Topics Completed, Streak, Points, Rank)
- * 3. Daily Motivation Quote
- * 4. Heatmap of Activity (Progress)
- * 5. Quick Actions for Navigation
- * 6. Dynamic Subject Progress bars
- * 
- * Uses a Bento Grid layout for responsive design.
+ * Refactored for 'Addictive UI' with Framer Motion, Glassmorphism, and glowing aesthetics.
  */
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { motion } from 'framer-motion';
 import {
   FaBook, FaCode, FaTrophy, FaFire, FaChartLine,
-  FaClock, FaArrowRight, FaCheckCircle, FaDatabase,
+  FaArrowRight, FaCheckCircle, FaDatabase,
   FaLaptopCode, FaCloud, FaQuoteLeft, FaCalendarAlt, FaListUl
 } from 'react-icons/fa';
 import { MdReportProblem } from 'react-icons/md';
-import ActivityHeatmap from '../components/ActivityHeatmap'; // Custom Heatmap Component
-import PlaylistCard from '../components/PlaylistCard'; // Import PlaylistCard
+import ActivityHeatmap from '../components/ActivityHeatmap';
+import PlaylistCard from '../components/PlaylistCard';
 import API_URL from '../config';
 import usePageTitle from '../hooks/usePageTitle';
 
+// Framer Motion Variants for Staggered Entrances
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 15 } }
+};
 
 const Dashboard = () => {
   usePageTitle('Dashboard');
@@ -37,7 +43,7 @@ const Dashboard = () => {
 
   // Data State
   const [subjects, setSubjects] = useState([]);
-  const [playlists, setPlaylists] = useState([]); // State for playlists
+  const [playlists, setPlaylists] = useState([]);
   const [progressStats, setProgressStats] = useState({
     totalCompleted: 0,
     bySubject: []
@@ -51,13 +57,12 @@ const Dashboard = () => {
 
   const [quote, setQuote] = useState({ text: '', author: '' });
 
-  // Static Data (Static for now, could be dynamic in future)
   const quotes = [
     { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
-    { text: "Code is like humor. When you have to explain it, it’s bad.", author: "Cory House" },
+    { text: "Consistency is what transforms average into excellence.", author: "Unknown" },
     { text: "First, solve the problem. Then, write the code.", author: "John Johnson" },
-    { text: "Experience is the name everyone gives to their mistakes.", author: "Oscar Wilde" },
-    { text: "Java is to JavaScript what car is to Carpet.", author: "Chris Heilmann" }
+    { text: "Code is like humor. When you have to explain it, it’s bad.", author: "Cory House" },
+    { text: "Don't stop when you're tired. Stop when you're done.", author: "David Goggins" }
   ];
 
   const nextContest = {
@@ -74,14 +79,9 @@ const Dashboard = () => {
     link: "/problems"
   };
 
-  /**
-   * DATA FETCHING
-   * Runs on component mount.
-   */
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. Get User Info from LocalStorage
         const userData = localStorage.getItem('user');
         const token = localStorage.getItem('token');
 
@@ -89,19 +89,16 @@ const Dashboard = () => {
           setUser(JSON.parse(userData));
         }
 
-        // 2. Fetch Subjects List
         const subjectsRes = await axios.get(`${API_URL}/api/subjects`);
         if (subjectsRes.data.success) {
           setSubjects(subjectsRes.data.data);
         }
 
-        // 3. Fetch Playlists (New)
         const playlistsRes = await axios.get(`${API_URL}/api/playlists/all`);
         if (playlistsRes.data.success) {
           setPlaylists(playlistsRes.data.playlists);
         }
 
-        // 4. Fetch User Progress (Auth required)
         if (token) {
           const progressRes = await axios.get(`${API_URL}/api/progress/stats`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -123,339 +120,363 @@ const Dashboard = () => {
     };
 
     fetchData();
-
-    // Pick a random quote
     const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
     setQuote(randomQuote);
-  }, []); // Empty dependency array = runs once
+  }, []);
 
-  // ============================================================================
-  // DISPLAY LOGIC
-  // ============================================================================
-
-  // Configuration for Stats Cards (Top Row)
   const statsCards = [
     {
       title: 'Topics Completed',
       value: progressStats.totalCompleted,
       icon: FaCheckCircle,
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-600'
+      gradient: 'from-blue-500/20 to-cyan-500/20',
+      iconColor: 'text-cyan-400',
+      borderColor: 'group-hover:border-cyan-500/50'
     },
     {
       title: 'Current Streak',
       value: `${stats.streak} days`,
       icon: FaFire,
-      color: 'from-orange-500 to-red-600',
-      bgColor: 'bg-orange-50',
-      textColor: 'text-orange-600'
+      gradient: 'from-orange-500/20 to-red-500/20',
+      iconColor: 'text-orange-400',
+      borderColor: 'group-hover:border-orange-500/50'
     },
     {
       title: 'Total Points',
       value: stats.totalPoints,
       icon: FaTrophy,
-      color: 'from-yellow-500 to-yellow-600',
-      bgColor: 'bg-yellow-50',
-      textColor: 'text-yellow-600'
+      gradient: 'from-yellow-500/20 to-amber-500/20',
+      iconColor: 'text-yellow-400',
+      borderColor: 'group-hover:border-yellow-500/50'
     },
     {
-      title: 'Rank',
+      title: 'Global Rank',
       value: stats.rank,
       icon: FaChartLine,
-      color: 'from-purple-500 to-purple-600',
-      bgColor: 'bg-purple-50',
-      textColor: 'text-purple-600'
+      gradient: 'from-purple-500/20 to-fuchsia-500/20',
+      iconColor: 'text-fuchsia-400',
+      borderColor: 'group-hover:border-fuchsia-500/50'
     }
   ];
 
-  // Quick Action Buttons Conf
   const quickActions = [
-    {
-      title: 'Theory',
-      description: 'Learn DBMS, SQL, CCBDI',
-      icon: FaBook,
-      link: '/theory',
-      color: 'from-indigo-500 to-indigo-600'
-    },
-    {
-      title: 'Practice Problems',
-      description: 'Solve coding challenges',
-      icon: MdReportProblem,
-      link: '/problems',
-      color: 'from-green-500 to-green-600'
-    },
-    {
-      title: 'Projects',
-      description: 'Code online',
-      icon: FaLaptopCode,
-      link: '/ide',
-      color: 'from-pink-500 to-pink-600'
-    },
-    {
-      title: 'Analytics',
-      description: 'Track your progress',
-      icon: FaChartLine,
-      link: '/analytics',
-      color: 'from-cyan-500 to-cyan-600'
-    }
+    { title: 'Theory', description: 'Core Concepts', icon: FaBook, link: '/theory', color: 'from-indigo-500 to-indigo-600' },
+    { title: 'Practice', description: 'Coding Challenges', icon: MdReportProblem, link: '/problems', color: 'from-emerald-500 to-emerald-600' },
+    { title: 'Projects', description: 'Real-world tasks', icon: FaLaptopCode, link: '/ide', color: 'from-pink-500 to-pink-600' },
+    { title: 'Analytics', description: 'Track progress', icon: FaChartLine, link: '/analytics', color: 'from-cyan-500 to-cyan-600' }
   ];
 
-  // Calculate Progress Percentages for each subject
   const recentSubjects = subjects.map(subject => {
-    // Find progress for this subject
     const subjectProgress = progressStats.bySubject.find(s => s._id === subject._id);
     const completed = subjectProgress ? subjectProgress.totalCompleted : 0;
     const total = subject.topicCount || 0;
-    // Math to get percentage (handle divide by zero)
     const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-    // Default styling
     let icon = FaBook;
-    let color = 'text-gray-600';
-    let barColor = 'from-gray-500 to-gray-600';
+    let color = 'text-gray-400';
+    let barColor = 'from-gray-600 to-gray-500';
 
-    // Custom styling per subject name
-    if (subject.name === 'DBMS') {
-      icon = FaDatabase;
-      color = 'text-blue-600';
-      barColor = 'from-blue-500 to-blue-600';
-    } else if (subject.name === 'SQL') {
-      icon = FaCode;
-      color = 'text-green-600';
-      barColor = 'from-green-500 to-green-600';
-    } else if (subject.name === 'CCBDI') {
-      icon = FaCloud;
-      color = 'text-purple-600';
-      barColor = 'from-purple-500 to-purple-600';
-    }
+    if (subject.name === 'DBMS') { icon = FaDatabase; color = 'text-blue-400'; barColor = 'from-blue-500 to-blue-400'; }
+    else if (subject.name === 'SQL') { icon = FaCode; color = 'text-emerald-400'; barColor = 'from-emerald-500 to-emerald-400'; }
+    else if (subject.name === 'CCBDI') { icon = FaCloud; color = 'text-purple-400'; barColor = 'from-purple-500 to-purple-400'; }
 
-    return {
-      name: subject.name,
-      icon,
-      progress: percentage,
-      completed,
-      total,
-      color,
-      barColor
-    };
+    return { name: subject.name, icon, progress: percentage, completed, total, color, barColor };
   });
 
   return (
-    <div className="min-h-screen bg-transparent p-6 md:p-8">
-      {/* HEADER SECTION */}
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-2">
-          Welcome back, {user?.name || 'Student'}! 👋
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">Here's what's happening with your learning journey today.</p>
+    <div className="min-h-screen relative p-4 md:p-8 lg:p-10 font-sans text-gray-100 overflow-x-hidden pt-20">
+      {/* Ambient Background Orbs */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+         <motion.div 
+            animate={{ x: [-20, 20, -20], y: [-20, 20, -20], opacity: [0.3, 0.5, 0.3] }}
+            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+            className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] mix-blend-screen"
+         />
+         <motion.div 
+            animate={{ x: [20, -20, 20], y: [20, -20, 20], opacity: [0.2, 0.4, 0.2] }}
+            transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+            className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[120px] mix-blend-screen"
+         />
       </div>
 
-      {/* STATS ROW (Four Cards) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {statsCards.map((stat, index) => (
-          <div
-            key={index}
-            className="bg-white dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 backdrop-blur-sm rounded-2xl shadow-lg p-5 flex items-center justify-between group hover:border-blue-500/30 transition-all duration-300"
-          >
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">{stat.title}</p>
-              <h3 className="text-2xl font-bold text-gray-800 dark:text-white group-hover:text-blue-400 transition-colors">
-                {stat.value}
+      <motion.div 
+        className="relative z-10 max-w-7xl mx-auto"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* HEADER */}
+        <motion.div variants={itemVariants} className="mb-10">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-3">
+             <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Hello, </span> 
+             <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">{user?.name || 'Architect'}</span>
+             <span className="inline-block animate-bounce ml-2">👋</span>
+          </h1>
+          <p className="text-gray-400 text-lg">Your dashboard is looking sharp today. Ready to crush some goals?</p>
+        </motion.div>
+
+        {/* STATS ROW (Four Cards) */}
+        <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-10">
+          {statsCards.map((stat, index) => (
+            <motion.div
+              key={index}
+              whileHover={{ y: -5, scale: 1.02 }}
+              className={`glass-panel p-6 flex items-center justify-between group transition-all duration-300 border border-white/5 ${stat.borderColor}`}
+            >
+              <div>
+                <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">{stat.title}</p>
+                <h3 className="text-3xl font-bold text-white group-hover:text-glow transition-all">
+                  {stat.value}
+                </h3>
+              </div>
+              <div className={`p-4 rounded-2xl bg-gradient-to-br ${stat.gradient} border border-white/5 group-hover:scale-110 transition-transform shadow-inner`}>
+                <stat.icon className={`text-2xl ${stat.iconColor}`} />
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* BENTO GRID (Main Content) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+          
+          {/* ROW 1: Motivation (Wide) & Problem of Day (Narrow) */}
+          <motion.div variants={itemVariants} className="lg:col-span-2 relative overflow-hidden rounded-3xl p-8 md:p-10 border border-indigo-500/30 shadow-[0_0_40px_rgba(79,70,229,0.15)] group">
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 to-purple-900/80 backdrop-blur-xl z-0" />
+            
+            {/* Animated Background Elements inside the card */}
+            <motion.div 
+               animate={{ rotate: 360 }}
+               transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+               className="absolute top-[-50%] right-[-10%] w-[300px] h-[300px] bg-gradient-to-br from-indigo-500/30 to-purple-500/30 rounded-full blur-[60px] z-0 pointer-events-none"
+            />
+
+            <FaQuoteLeft className="text-white/5 text-9xl absolute -top-6 -left-6 z-0" />
+            <div className="relative z-10 flex flex-col justify-center h-full">
+              <div className="flex items-center gap-2 mb-4">
+                 <FaFire className="text-orange-400 text-xl" />
+                 <h3 className="text-indigo-300 font-bold uppercase tracking-widest text-xs">Daily Spark</h3>
+              </div>
+              <p className="text-2xl md:text-4xl font-extrabold italic mb-6 leading-tight text-white drop-shadow-lg">"{quote.text}"</p>
+              <div className="flex items-center">
+                <div className="h-1 w-10 bg-indigo-500 rounded-full mr-4" />
+                <p className="text-indigo-200 font-medium tracking-wide">{quote.author}</p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Problem of the Day Card */}
+          <motion.div variants={itemVariants} whileHover={{ y: -5 }} className="lg:col-span-1 glass-panel p-6 flex flex-col relative overflow-hidden group border border-emerald-500/20 hover:border-emerald-500/40">
+            <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-500 z-0">
+              <FaCode className="text-9xl text-emerald-500 transform rotate-12" />
+            </div>
+            <div className="flex justify-between items-start mb-6 relative z-10">
+              <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400 border border-emerald-500/20 shadow-inner">
+                <FaCode className="text-2xl" />
+              </div>
+              <span className="px-3 py-1 text-xs font-bold text-red-300 bg-red-500/10 border border-red-500/20 rounded-full backdrop-blur-md">
+                {problemOfTheDay.difficulty}
+              </span>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2 relative z-10 tracking-tight">Problem of the Day</h3>
+            <p className="text-gray-400 text-sm mb-6 relative z-10">{problemOfTheDay.title}</p>
+            <div className="mt-auto relative z-10">
+              <Link
+                to={problemOfTheDay.link}
+                className="group/btn flex items-center justify-center w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-bold text-sm transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]"
+              >
+                Solve Challenge 
+                <FaArrowRight className="ml-2 transition-transform group-hover/btn:translate-x-1" />
+              </Link>
+            </div>
+          </motion.div>
+
+          {/* ROW 2: Activity Heatmap (Wide) & Upcoming Contest (Narrow) */}
+          <motion.div variants={itemVariants} className="lg:col-span-2 glass-panel overflow-hidden border border-white/10 flex flex-col">
+            <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+              <h3 className="font-bold text-lg text-white flex items-center tracking-tight">
+                <FaFire className="text-orange-400 mr-3 text-xl" /> Activity Log
               </h3>
             </div>
-            <div className={`p-3 rounded-xl ${stat.bgColor.replace('bg-', 'bg-opacity-10 bg-')} ${stat.textColor} group-hover:scale-110 transition-transform`}>
-              <stat.icon className="text-xl" />
+            <div className="p-6 flex-1 flex flex-col justify-center bg-black/20">
+              <ActivityHeatmap />
             </div>
-          </div>
-        ))}
-      </div>
+          </motion.div>
 
-      {/* BENTO GRID (Main Content) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Upcoming Contest Card */}
+          <motion.div variants={itemVariants} whileHover={{ y: -5 }} className="lg:col-span-1 glass-panel p-6 flex flex-col border border-yellow-500/20 hover:border-yellow-500/40 relative overflow-hidden group">
+             {/* Glow effect behind */}
+             <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity z-0" />
 
-        {/* ROW 1: Motivation (Wide) & Problem of Day (Narrow) */}
-        <div className="lg:col-span-2 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl shadow-lg p-8 text-gray-900 dark:text-white relative overflow-hidden flex flex-col justify-center min-h-[200px]">
-          {/* Background Decorative Element */}
-          <FaQuoteLeft className="text-gray-900 dark:text-white opacity-10 text-8xl absolute -top-4 -left-4" />
-          <div className="relative z-10">
-            <h3 className="text-indigo-200 font-semibold mb-3 uppercase tracking-wider text-sm">Daily Motivation</h3>
-            <p className="text-2xl md:text-3xl font-bold italic mb-6 leading-relaxed">"{quote.text}"</p>
-            <p className="text-gray-900 dark:text-white font-medium flex items-center">
-              <span className="w-8 h-0.5 bg-indigo-400 mr-3"></span>
-              {quote.author}
-            </p>
-          </div>
-          <div className="absolute right-0 bottom-0 opacity-10">
-            <FaTrophy className="text-9xl transform translate-x-10 translate-y-10" />
-          </div>
-        </div>
-
-        {/* Problem of the Day Card */}
-        <div className="lg:col-span-1 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-300 dark:border-gray-700/50 flex flex-col relative overflow-hidden group hover:border-blue-500/30 transition-all duration-300">
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <FaCode className="text-8xl text-indigo-600 transform rotate-12" />
-          </div>
-          <div className="flex justify-between items-start mb-4 relative z-10">
-            <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-400">
-              <FaCode className="text-xl" />
+            <div className="flex items-center justify-between mb-8 relative z-10">
+              <h3 className="font-bold text-lg text-white flex items-center tracking-tight">
+                <FaTrophy className="text-yellow-400 mr-2" /> Upcoming
+              </h3>
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                Registered
+              </span>
             </div>
-            <span className="px-3 py-1 text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-full">
-              {problemOfTheDay.difficulty}
-            </span>
-          </div>
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 relative z-10">Problem of the Day</h3>
-          <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 relative z-10">{problemOfTheDay.title}</p>
-          <div className="mt-auto relative z-10">
-            <Link
-              to={problemOfTheDay.link}
-              className="flex items-center justify-center w-full py-2.5 rounded-xl bg-blue-600 text-gray-900 dark:text-white font-semibold text-sm hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
-            >
-              Solve Challenge <FaArrowRight className="ml-2 text-xs" />
+
+            <div className="text-center flex-1 flex flex-col justify-center relative z-10">
+              <h4 className="text-2xl font-bold text-white mb-3 tracking-tight">{nextContest.title}</h4>
+              <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-300 text-sm mb-8 mx-auto">
+                <FaCalendarAlt className="mr-2 text-blue-400" /> {nextContest.date}
+              </div>
+              
+              <div className="grid grid-cols-3 gap-3 text-center mb-8">
+                <div className="bg-black/30 backdrop-blur-md rounded-xl p-3 border border-white/5">
+                  <span className="block text-[10px] uppercase tracking-wider text-gray-400 mb-1">Time</span>
+                  <span className="font-bold text-white text-lg">2h</span>
+                </div>
+                <div className="bg-black/30 backdrop-blur-md rounded-xl p-3 border border-white/5">
+                  <span className="block text-[10px] uppercase tracking-wider text-gray-400 mb-1">Ques</span>
+                  <span className="font-bold text-white text-lg">4</span>
+                </div>
+                <div className="bg-black/30 backdrop-blur-md rounded-xl p-3 border border-white/5">
+                  <span className="block text-[10px] uppercase tracking-wider text-gray-400 mb-1">XP</span>
+                  <span className="font-bold text-yellow-400 text-lg">+100</span>
+                </div>
+              </div>
+            </div>
+
+            <Link to={nextContest.link} className="relative z-10 w-full py-3 rounded-xl border border-white/10 bg-white/5 text-white font-bold text-sm text-center hover:bg-white/10 transition-colors backdrop-blur-md">
+              View Arena Details
             </Link>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* ROW 2: Activity Heatmap (Wide) & Upcoming Contest (Narrow) */}
-        <div className="lg:col-span-2 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-300 dark:border-gray-700/50 p-1 overflow-hidden">
-          <div className="p-5 border-b border-gray-300 dark:border-gray-700/50">
-            <h3 className="font-bold text-gray-900 dark:text-white flex items-center">
-              <FaFire className="text-orange-500 mr-2" /> Activity Log
-            </h3>
-          </div>
-          <div className="p-4">
-            {/* Reusable Heatmap Component */}
-            <ActivityHeatmap />
-          </div>
-        </div>
+          {/* ROW 3: Subject Progress (Wide) & Quick Actions (Narrow) */}
+          <motion.div variants={itemVariants} className="lg:col-span-2 glass-panel p-6 border border-white/10 relative overflow-hidden">
+            {/* Subtle radial gradient background */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-[80px] z-0 pointer-events-none" />
 
-        {/* Upcoming Contest Card */}
-        <div className="lg:col-span-1 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-300 dark:border-gray-700/50 flex flex-col hover:border-blue-500/30 transition-all duration-300">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-gray-900 dark:text-white flex items-center">
-              <FaTrophy className="text-yellow-500 mr-2" /> Upcoming
-            </h3>
-            <span className="text-xs font-semibold bg-green-500/10 text-green-400 px-2 py-1 rounded-md border border-green-500/20">
-              Registered
-            </span>
-          </div>
-
-          <div className="text-center py-4 flex-1 flex flex-col justify-center">
-            <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{nextContest.title}</h4>
-            <div className="flex items-center justify-center text-gray-600 dark:text-gray-400 text-sm mb-6">
-              <FaCalendarAlt className="mr-2" /> {nextContest.date}
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center mb-6">
-              <div className="bg-gray-700/50 rounded-lg p-2">
-                <span className="block text-xs text-gray-600 dark:text-gray-400">Time</span>
-                <span className="font-bold text-gray-900 dark:text-white">2h</span>
-              </div>
-              <div className="bg-gray-700/50 rounded-lg p-2">
-                <span className="block text-xs text-gray-600 dark:text-gray-400">Ques</span>
-                <span className="font-bold text-gray-900 dark:text-white">4</span>
-              </div>
-              <div className="bg-gray-700/50 rounded-lg p-2">
-                <span className="block text-xs text-gray-600 dark:text-gray-400">XP</span>
-                <span className="font-bold text-gray-900 dark:text-white">100</span>
-              </div>
-            </div>
-          </div>
-
-          <Link to={nextContest.link} className="w-full py-2.5 rounded-xl border border-blue-500/50 text-blue-400 font-bold text-sm text-center hover:bg-blue-500/10 transition-colors">
-            View Details
-          </Link>
-        </div>
-
-        {/* ROW 3: Subject Progress (Wide) & Quick Actions (Narrow) */}
-        <div className="lg:col-span-2 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-300 dark:border-gray-700/50 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
-              <FaChartLine className="mr-2 text-blue-400" />
-              Learning Progress
-            </h2>
-            <Link to="/analytics" className="text-sm text-blue-400 font-medium hover:text-blue-300">
-              View All
-            </Link>
-          </div>
-
-          {/* List of Subjects with Progress Bars */}
-          <div className="space-y-4">
-            {recentSubjects.map((subject, index) => (
-              <div key={index} className="group flex items-center p-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-colors border border-transparent hover:border-gray-300 dark:border-gray-700">
-                <div className={`p-3 rounded-xl bg-gray-700/50 ${subject.color.replace('text-', 'text-opacity-90 text-')} group-hover:scale-105 transition-transform`}>
-                  <subject.icon className="text-xl" />
-                </div>
-                <div className="ml-4 flex-1">
-                  <div className="flex justify-between mb-1">
-                    <h3 className="font-bold text-gray-200">{subject.name}</h3>
-                    <span className="text-sm font-bold text-gray-600 dark:text-gray-400">{subject.progress}%</span>
-                  </div>
-                  {/* Progress Bar Track */}
-                  <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
-                    {/* Progress Bar Fill */}
-                    <div
-                      className={`h-2 rounded-full bg-gradient-to-r ${subject.barColor} transition-all duration-1000 ease-out`}
-                      style={{ width: `${subject.progress}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Quick Actions Grid */}
-        <div className="lg:col-span-1 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-300 dark:border-gray-700/50 p-6">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-            <FaArrowRight className="mr-2 text-blue-400" />
-            Quick Actions
-          </h2>
-          <div className="grid grid-cols-1 gap-3">
-            {quickActions.map((action, index) => (
-              <Link
-                key={index}
-                to={action.link}
-                className="flex items-center p-3 rounded-xl bg-gray-700/30 hover:bg-gray-200 dark:hover:bg-gray-700/80 border border-gray-300 dark:border-gray-700/50 hover:border-blue-500/30 transition-all duration-300 group"
-              >
-                <div className={`p-2 rounded-lg bg-gray-50 dark:bg-gray-800 shadow-sm ${action.color.replace('from-', 'text-').replace('to-', '')} group-hover:text-gray-900 dark:text-white group-hover:bg-gradient-to-r ${action.color} transition-all`}>
-                  <action.icon className="text-lg" />
-                </div>
-                <span className="ml-3 font-semibold text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:text-white">{action.title}</span>
-                <FaArrowRight className="ml-auto text-gray-600 group-hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-all transform -translate-x-2 group-hover:translate-x-0" />
+            <div className="flex items-center justify-between mb-8 relative z-10">
+              <h2 className="text-xl font-bold text-white flex items-center tracking-tight">
+                <FaChartLine className="mr-3 text-blue-400" />
+                Learning Progress
+              </h2>
+              <Link to="/analytics" className="text-sm text-blue-400 font-semibold hover:text-blue-300 transition-colors border border-blue-500/20 px-3 py-1.5 rounded-full hover:bg-blue-500/10">
+                View Deep Report
               </Link>
-            ))}
+            </div>
+
+            <div className="space-y-5 relative z-10">
+              {recentSubjects.map((subject, index) => (
+                <div key={index} className="group flex flex-col sm:flex-row sm:items-center p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors relative overflow-hidden">
+                  <div className={`p-4 rounded-xl bg-black/40 border border-white/5 shadow-inner ${subject.color} group-hover:scale-110 transition-transform mb-4 sm:mb-0 shrink-0`}>
+                    <subject.icon className="text-2xl" />
+                  </div>
+                  <div className="sm:ml-6 flex-1 w-full">
+                    <div className="flex justify-between items-end mb-2">
+                      <h3 className="font-bold text-white tracking-wide">{subject.name}</h3>
+                      <div className="text-right">
+                         <span className="text-2xl font-black text-white">{subject.progress}%</span>
+                         <span className="text-xs text-gray-500 ml-2 font-medium bg-black/40 px-2 py-0.5 rounded-md border border-white/5">
+                            {subject.completed}/{subject.total}
+                         </span>
+                      </div>
+                    </div>
+                    {/* Glowing Progress Bar */}
+                    <div className="w-full bg-black/50 rounded-full h-2.5 overflow-hidden border border-white/5 shadow-inner">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${subject.progress}%` }}
+                        transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+                        className={`h-full rounded-full bg-gradient-to-r ${subject.barColor} relative`}
+                      >
+                         {/* Shine effect on progress bar */}
+                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent w-full animate-[shimmer_2s_infinite]" style={{ backgroundSize: '200% 100%' }} />
+                      </motion.div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Quick Actions Grid */}
+          <motion.div variants={itemVariants} className="lg:col-span-1 glass-panel p-6 border border-white/10 flex flex-col">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center tracking-tight">
+              <FaArrowRight className="mr-3 text-cyan-400" />
+              Quick Actions
+            </h2>
+            <div className="grid grid-cols-1 gap-3 flex-1">
+              {quickActions.map((action, index) => (
+                <motion.div key={index} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Link
+                    to={action.link}
+                    className="flex items-center p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300 group relative overflow-hidden"
+                  >
+                    <div className={`p-3 rounded-xl bg-black/40 border border-white/10 shadow-inner group-hover:bg-gradient-to-br ${action.color} group-hover:border-transparent transition-all duration-300 shrink-0`}>
+                      <action.icon className="text-xl text-gray-400 group-hover:text-white transition-colors" />
+                    </div>
+                    <div className="ml-4 flex flex-col">
+                       <span className="font-bold text-gray-200 group-hover:text-white transition-colors tracking-wide">{action.title}</span>
+                       <span className="text-xs text-gray-500 group-hover:text-gray-300">{action.description}</span>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+            
+            {/* Quick Actions footer area */}
+            <div className="mt-4 p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-center relative overflow-hidden group">
+               <div className="absolute inset-0 bg-blue-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+               <p className="text-xs text-blue-300 font-medium relative z-10 flex items-center justify-center">
+                  <FaLaptopCode className="mr-2" /> Resume last session
+               </p>
+            </div>
+          </motion.div>
+
+        </div>
+
+        {/* FEATURED SERIES */}
+        <motion.div variants={itemVariants} className="mb-10 relative">
+          <div className="flex items-end justify-between mb-6">
+            <div>
+               <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center tracking-tight mb-2">
+                 <FaListUl className="mr-3 text-purple-400" />
+                 Featured Series
+               </h2>
+               <p className="text-gray-400 text-sm">Curated playlists to master specific domains</p>
+            </div>
+            <Link to="/playlists" className="hidden sm:flex group items-center px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-white font-medium hover:bg-white/10 transition-colors">
+              View All <FaArrowRight className="ml-2 text-xs text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
+            </Link>
           </div>
-        </div>
 
-      </div>
-
-      {/* NEW SECTION: Featured Series (Playlists) */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-            <FaListUl className="mr-3 text-purple-500" />
-            Featured Series
-          </h2>
-          <Link to="/playlists" className="text-sm text-purple-400 font-medium hover:text-purple-300 flex items-center">
-            View All <FaArrowRight className="ml-1 text-xs" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {playlists.slice(0, 4).map((playlist, index) => (
-            <div key={playlist._id} className="transform hover:-translate-y-1 transition-transform duration-300">
-              <PlaylistCard playlist={playlist} />
-            </div>
-          ))}
-          {playlists.length === 0 && !loading && (
-            <div className="col-span-full text-center py-10 bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
-              <p className="text-gray-500">No series available yet.</p>
-            </div>
-          )}
-        </div>
-      </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {playlists.slice(0, 4).map((playlist, index) => (
+              <motion.div key={playlist._id} whileHover={{ y: -5 }}>
+                {/* Assume PlaylistCard handles its own dark mode / glass styling inside now, 
+                    or we wrap it here */}
+                <div className="h-full">
+                   <PlaylistCard playlist={playlist} />
+                </div>
+              </motion.div>
+            ))}
+            {playlists.length === 0 && !loading && (
+              <div className="col-span-full text-center py-16 glass-panel rounded-2xl border border-white/5 border-dashed">
+                <FaCloud className="text-5xl text-gray-600 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-gray-300 mb-2">No series available yet</h3>
+                <p className="text-gray-500">Premium learning content is currently being prepared.</p>
+              </div>
+            )}
+          </div>
+        </motion.div>
+        
+      </motion.div>
     </div>
   );
 };
+
+// Add keyframes for shimmer effect globally if not in tailwind config
+// In a real project, this is better off in index.css
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+`;
+document.head.appendChild(style);
 
 export default Dashboard;
