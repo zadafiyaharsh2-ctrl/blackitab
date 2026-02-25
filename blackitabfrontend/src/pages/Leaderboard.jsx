@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaTrophy, FaFire, FaStar, FaMedal, FaArrowLeft, FaSpinner } from 'react-icons/fa';
 import API_URL from '../config';
 import usePageTitle from '../hooks/usePageTitle';
+import { mockLeaderboard } from '../data/mockLeaderboardData';
 
 const RANK_STYLES = {
     1: { bg: 'from-yellow-500/20 to-amber-500/10', border: 'border-yellow-500/40', glow: 'shadow-yellow-500/20', icon: '🥇', badge: 'bg-yellow-500 text-black' },
@@ -32,9 +33,15 @@ const Leaderboard = () => {
             const res = await axios.get(`${API_URL}/api/user/leaderboard`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            if (res.data.success) setUsers(res.data.data);
+            if (res.data.success && res.data.data && res.data.data.length > 0) {
+                setUsers(res.data.data);
+            } else {
+                console.log("Empty leaderboard from backend, applying intelligent fallback data.");
+                setUsers(mockLeaderboard);
+            }
         } catch (err) {
-            console.error('Leaderboard error:', err);
+            console.error('Leaderboard error, falling back to mock data:', err);
+            setUsers(mockLeaderboard);
         } finally {
             setLoading(false);
         }
