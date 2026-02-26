@@ -101,8 +101,8 @@ const SchoolAnalytics = () => {
   return (
     <div className="min-h-screen bg-[#050505] text-white p-6 relative overflow-hidden font-sans pt-20">
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[10%] left-[10%] w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] mix-blend-screen animate-pulse" />
-        <div className="absolute bottom-[10%] right-[10%] w-[600px] h-[600px] bg-cyan-600/10 rounded-full blur-[150px] mix-blend-screen" />
+        <div className="absolute top-[10%] left-[10%] w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[120px] mix-blend-screen animate-pulse" />
+        <div className="absolute bottom-[10%] right-[10%] w-[600px] h-[600px] bg-cyan-600/15 rounded-full blur-[150px] mix-blend-screen" />
       </div>
 
       <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-7xl mx-auto relative z-10 space-y-8">
@@ -132,7 +132,7 @@ const SchoolAnalytics = () => {
           ].map((s, i) => (
             <motion.div key={i} whileHover={{ y: -3 }} className="glass-panel p-5 border border-white/5 flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">{s.label}</p>
+                <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">{s.label}</p>
                 <p className="text-2xl font-bold text-white">{s.value}</p>
               </div>
               <div className={`p-3 rounded-2xl bg-gradient-to-br ${s.bg} border border-white/5`}>
@@ -155,7 +155,7 @@ const SchoolAnalytics = () => {
                     <span className="text-2xl">{medals[i]}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-bold text-sm truncate">{studentNames[p._id] || `Student ${p._id.slice(-4)}`}</p>
-                      <p className="text-gray-500 text-xs">{p.correct}/{p.solved} correct</p>
+                      <p className="text-gray-400 text-xs">{p.correct}/{p.solved} correct</p>
                     </div>
                     <span className={`text-lg font-bold ${accuracy >= 80 ? 'text-emerald-400' : accuracy >= 60 ? 'text-yellow-400' : 'text-red-400'}`}>{accuracy}%</span>
                   </div>
@@ -170,7 +170,7 @@ const SchoolAnalytics = () => {
           <div className="p-4 border-b border-white/5 bg-white/[0.02] flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-lg font-bold text-white flex items-center gap-2"><FaUserGraduate className="text-blue-400" /> Student Performance</h3>
             <div className="relative">
-              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 text-xs" />
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-xs" />
               <input type="text" value={search} onChange={e => setSearch(e.target.value)}
                 placeholder="Search students..." className="pl-8 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-white outline-none focus:ring-1 focus:ring-blue-500/50 w-48" />
             </div>
@@ -183,13 +183,13 @@ const SchoolAnalytics = () => {
                 return (
                   <div key={p._id} className="flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <span className="text-gray-600 text-xs font-mono w-6">{i + 1}</span>
+                      <span className="text-gray-300 text-xs font-mono w-6">{i + 1}</span>
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
                         {(studentNames[p._id] || 'S')[0].toUpperCase()}
                       </div>
                       <div className="min-w-0">
                         <p className="text-white text-sm font-medium truncate">{studentNames[p._id] || `Student ${p._id.slice(-6)}`}</p>
-                        <p className="text-gray-600 text-xs">{p.solved} attempts • {p.correct} correct</p>
+                        <p className="text-gray-300 text-xs">{p.solved} attempts • {p.correct} correct</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
