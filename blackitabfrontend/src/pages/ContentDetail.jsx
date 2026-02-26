@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API_URL from '../config';
@@ -23,6 +23,8 @@ const ContentDetail = () => {
     });
     const [relatedContent, setRelatedContent] = useState([]);
     const [isFollowing, setIsFollowing] = useState(false);
+    const [relatedFilter, setRelatedFilter] = useState('all');
+    const commentInputRef = useRef(null);
 
 
     useEffect(() => {
@@ -342,7 +344,7 @@ const ContentDetail = () => {
                                     {liked ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
                                     <span className="font-medium text-sm">{content.likes?.length || 0}</span>
                                 </button>
-                                <button className="px-3 py-2 hover:bg-white/10 transition-colors text-gray-200 hover:text-gray-900 dark:text-white">
+                                <button onClick={() => toast.success('Feedback noted! Thank you.')} className="px-3 py-2 hover:bg-white/10 transition-colors text-gray-200 hover:text-gray-900 dark:text-white" title="Dislike">
                                     <FaEllipsisH className="rotate-90" size={14} />
                                 </button>
                             </div>
@@ -394,6 +396,7 @@ const ContentDetail = () => {
                                     value={commentText}
                                     onChange={(e) => setCommentText(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleComment()}
+                                    ref={commentInputRef}
                                     placeholder="Add a comment..."
                                     className="w-full bg-transparent border-b border-gray-300 dark:border-gray-700 pb-1 focus:border-white focus:outline-none transition-colors text-sm mb-2"
                                 />
@@ -436,7 +439,7 @@ const ContentDetail = () => {
                                                 >
                                                     {cLike.liked ? <FaHeart /> : <FaRegHeart />} {cLike.count || 0}
                                                 </button>
-                                                <button className="text-xs font-semibold px-2 py-1 rounded-full hover:bg-white/10 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Reply</button>
+                                                <button onClick={() => { commentInputRef.current?.focus(); setCommentText(`@${comment.user?.name} `); }} className="text-xs font-semibold px-2 py-1 rounded-full hover:bg-white/10 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Reply</button>
                                             </div>
                                         </div>
                                     </div>
@@ -450,14 +453,14 @@ const ContentDetail = () => {
                 <div className="hidden lg:block space-y-4">
                     {/* Filter Buttons */}
                     <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
-                        <button className="bg-white text-black px-3 py-1.5 rounded-lg text-sm font-bold whitespace-nowrap">All</button>
-                        <button className="bg-[#222] text-gray-900 dark:text-white hover:bg-[#333] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">From {content.user?.name}</button>
-                        <button className="bg-[#222] text-gray-900 dark:text-white hover:bg-[#333] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">Related</button>
+                        <button onClick={() => setRelatedFilter('all')} className={`${relatedFilter === 'all' ? 'bg-white text-black' : 'bg-[#222] text-gray-900 dark:text-white hover:bg-[#333]'} px-3 py-1.5 rounded-lg text-sm font-bold whitespace-nowrap transition-colors`}>All</button>
+                        <button onClick={() => setRelatedFilter('author')} className={`${relatedFilter === 'author' ? 'bg-white text-black' : 'bg-[#222] text-gray-900 dark:text-white hover:bg-[#333]'} px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap`}>From {content.user?.name}</button>
+                        <button onClick={() => setRelatedFilter('related')} className={`${relatedFilter === 'related' ? 'bg-white text-black' : 'bg-[#222] text-gray-900 dark:text-white hover:bg-[#333]'} px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap`}>Related</button>
                     </div>
 
                     {/* Real Recommended List */}
-                    {relatedContent.length > 0 ? (
-                        relatedContent.map((post) => (
+                    {(relatedFilter === 'author' ? relatedContent.filter(p => p.user?._id === content.user?._id) : relatedContent).length > 0 ? (
+                        (relatedFilter === 'author' ? relatedContent.filter(p => p.user?._id === content.user?._id) : relatedContent).map((post) => (
                             <div
                                 key={post._id}
                                 onClick={() => {
@@ -472,7 +475,6 @@ const ContentDetail = () => {
                                     ) : (
                                         <img src={post.mediaUrl} alt="" className="w-full h-full object-cover" />
                                     )}
-                                    {/* Duration Label (Mock) */}
                                     {post.mediaType === 'video' && <div className="absolute bottom-1 right-1 bg-black/80 text-gray-900 dark:text-white text-[10px] font-bold px-1 rounded">Video</div>}
                                 </div>
                                 <div className="flex flex-col gap-1 min-w-0">
