@@ -60,6 +60,12 @@ import AIQuestionGenerator from './pages/AIQuestionGenerator';
 import ExamQuestions from './pages/ExamQuestions';
 import Leaderboard from './pages/Leaderboard';
 import Onboarding from './pages/Onboarding';
+import TeacherDashboard from './pages/TeacherDashboard';
+import CreateExamQuestion from './pages/CreateExamQuestion';
+import MyQuestions from './pages/MyQuestions';
+import InstituteDashboard from './pages/InstituteDashboard';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
 // ============================================================================
 // IMPORT COMPONENTS
 // ============================================================================
@@ -539,6 +545,60 @@ function App() {
 
             />
 
+            {/* ===== ROLE-BASED ROUTES ===== */}
+
+            {/* Teacher / HOD Dashboard */}
+            <Route
+              path="/teacher-dashboard"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherDashboard />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Create Exam Question */}
+            <Route
+              path="/create-question"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <CreateExamQuestion />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* My Questions */}
+            <Route
+              path="/my-questions"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <MyQuestions />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Institute Admin Dashboard */}
+            <Route
+              path="/institute-dashboard"
+              element={
+                <ProtectedRoute requiredRoles={['institute_admin']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <InstituteDashboard />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* System Admin — separate layout (no sidebar) */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
             {/* 404 — catch all unknown routes */}
             <Route path="*" element={
               <div className="min-h-screen flex flex-col items-center justify-center text-center p-8 dark:bg-black bg-gray-50">
@@ -576,6 +636,27 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
   // Determine if we are in a Social context
   const location = useLocation();
   const isSocial = ['/social', '/profile', '/network', '/messages', '/earnings', '/create-post', '/playlists', '/playlist', '/notifications'].some(path => location.pathname.startsWith(path));
+
+  // Track last visited page for "Resume Last Session" on Dashboard
+  useEffect(() => {
+    const skip = ['/dashboard', '/login', '/signup', '/onboarding', '/admin'];
+    if (!skip.some(p => location.pathname.startsWith(p))) {
+      const pageNames = {
+        '/problems': 'Practice Problems', '/theory': 'Theory', '/social': 'Social Feed',
+        '/analytics': 'Analytics', '/contest': 'Contest', '/ask-ai': 'AI Assistant',
+        '/store': 'Store', '/jobs': 'Jobs', '/ide': 'Projects', '/leaderboard': 'Leaderboard',
+        '/profile': 'Profile', '/messages': 'Messages', '/playlists': 'Playlists',
+        '/earnings': 'Earnings', '/teacher-dashboard': 'Teacher Panel',
+        '/create-question': 'Create Question', '/my-questions': 'My Questions',
+        '/institute-dashboard': 'Institute Panel', '/school-analytics': 'School Analytics',
+        '/ai-questions': 'AI Questions', '/notifications': 'Notifications'
+      };
+      const label = Object.entries(pageNames).find(([k]) => location.pathname.startsWith(k));
+      if (label) {
+        localStorage.setItem('blackitab_last_page', JSON.stringify({ path: location.pathname, label: label[1], time: Date.now() }));
+      }
+    }
+  }, [location.pathname]);
 
   // State for Social Sidebar (independent toggle)
   const [socialSidebarOpen, setSocialSidebarOpen] = useState(true);
