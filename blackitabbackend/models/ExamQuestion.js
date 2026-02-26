@@ -76,6 +76,21 @@ const examQuestionSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    // Attribution & Scoping
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
+    },
+    instituteId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Institute',
+        default: null
+    },
+    isPublic: {
+        type: Boolean,
+        default: true
+    },
     createdAt: {
         type: Date,
         default: Date.now

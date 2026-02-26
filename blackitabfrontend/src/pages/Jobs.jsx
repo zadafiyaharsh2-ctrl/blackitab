@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import {
   FaSuitcase,
@@ -16,6 +17,7 @@ import {
 
 const Jobs = () => {
   const { isDark } = useTheme();
+  const navigate = useNavigate();
 
   const jobFeatures = [
     {
@@ -249,7 +251,7 @@ const Jobs = () => {
             Whether you're looking for your first internship or your next big role, we provide the tools
             to showcase your true potential to the world's top companies.
           </p>
-          <button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-gray-900 dark:text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg">
+          <button onClick={() => navigate('/profile')} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-gray-900 dark:text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg">
             Build Your Profile Now
           </button>
         </div>

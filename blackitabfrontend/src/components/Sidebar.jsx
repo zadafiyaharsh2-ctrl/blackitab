@@ -45,13 +45,29 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
+  // Get user role for conditional nav items
+  const userRole = (() => {
+    try { return JSON.parse(localStorage.getItem('user') || '{}').role || 'student'; } catch { return 'student'; }
+  })();
+  const isTeacherOrAbove = ['teacher', 'hod', 'institute_admin'].includes(userRole);
+  const isInstituteAdmin = userRole === 'institute_admin';
+
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
     { path: '/social', label: 'Social', icon: <FaUsers /> },
     { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot className="text-purple-400" /> },
     { path: '/ai-questions', label: 'AI Questions', icon: <FaGraduationCap className="text-emerald-400" /> },
     { path: '/analytics', label: 'Analytics', icon: <FaChartBar /> },
-    { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
+    // Role-based items
+    ...(isTeacherOrAbove ? [
+      { path: '/teacher-dashboard', label: 'Teacher Panel', icon: <FaSchool className="text-indigo-400" /> },
+      { path: '/create-question', label: 'Create Question', icon: <FaGraduationCap className="text-teal-400" /> },
+      { path: '/my-questions', label: 'My Questions', icon: <FaListUl className="text-cyan-400" /> },
+      { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
+    ] : []),
+    ...(isInstituteAdmin ? [
+      { path: '/institute-dashboard', label: 'Institute Panel', icon: <FaSchool className="text-orange-400" /> },
+    ] : []),
     { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
     { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
     { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy className="text-yellow-400" /> },
