@@ -27,6 +27,11 @@ const aiQuestionRoutes = require('./routes/aiQuestionRoutes');
 const instituteRoutes = require('./routes/instituteRoutes');
 const attemptRoutes = require('./routes/attemptRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const examRoutes = require('./routes/examRoutes');
+const earningRoutes = require('./routes/earningRoutes');
+const contestRoutes = require('./routes/contestRoutes');
+const ExamQuestion = require('./models/ExamQuestion');
 
 // --- Server Setup ---
 
@@ -122,6 +127,29 @@ app.use('/api/ai-questions', aiQuestionRoutes);
 app.use('/api/institute', instituteRoutes);
 app.use('/api/attempts', attemptRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/exams', examRoutes);
+app.use('/api/earnings', earningRoutes);
+app.use('/api/contests', contestRoutes);
+
+// --- Daily Problem Endpoint ---
+app.get('/api/problems/daily', async (req, res) => {
+  try {
+    // Use today's date as a seed for a deterministic "random" question per day
+    const today = new Date();
+    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+    const totalQuestions = await ExamQuestion.countDocuments();
+    if (totalQuestions === 0) {
+      return res.json({ success: true, data: null, message: 'No questions available' });
+    }
+    const skipIndex = dayOfYear % totalQuestions;
+    const question = await ExamQuestion.findOne().skip(skipIndex).select('question subject difficulty exam options');
+    res.json({ success: true, data: question });
+  } catch (error) {
+    console.error('Daily problem error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 
 // --- GET /api/me — Current User (protected) ---
 
