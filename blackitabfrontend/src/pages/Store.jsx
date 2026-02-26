@@ -1,4 +1,5 @@
 import { useTheme } from '../context/useTheme';
+import { CustomToast } from '../utils/CustomToast';
 import { 
   FaStore, 
   FaLaptop, 
@@ -258,7 +259,7 @@ const Store = () => {
             The ultimate student store is coming soon. Sign up for notifications to get early access 
             and exclusive launch discounts.
           </p>
-          <button className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-gray-900 dark:text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg">
+          <button onClick={() => CustomToast.success('🔔 You\'ll be notified when the Store goes live!')} className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-gray-900 dark:text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg">
             Notify Me When Live
           </button>
         </div>
