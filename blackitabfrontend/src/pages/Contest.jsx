@@ -60,7 +60,7 @@ function ContestCard({ contest, type }) {
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <h3 className="text-xl font-bold text-white mb-1 tracking-tight">{contest.title}</h3>
-          {contest.description && <p className="text-gray-500 text-sm line-clamp-2">{contest.description}</p>}
+          {contest.description && <p className="text-gray-400 text-sm line-clamp-2">{contest.description}</p>}
         </div>
         <span className={`px-3 py-1 text-xs font-bold rounded-full border ${dc}`}>
           {contest.difficultyLevel || 'Intermediate'}
@@ -71,17 +71,17 @@ function ContestCard({ contest, type }) {
         <div className="bg-white/[0.03] rounded-xl p-3 text-center border border-white/5">
           <FaClock className="text-blue-400 mx-auto mb-1 text-sm" />
           <span className="text-white font-bold text-sm">{durationH}h</span>
-          <span className="block text-[10px] text-gray-500 uppercase">Duration</span>
+          <span className="block text-[10px] text-gray-400 uppercase">Duration</span>
         </div>
         <div className="bg-white/[0.03] rounded-xl p-3 text-center border border-white/5">
           <FaCode className="text-emerald-400 mx-auto mb-1 text-sm" />
           <span className="text-white font-bold text-sm">{qCount}</span>
-          <span className="block text-[10px] text-gray-500 uppercase">Questions</span>
+          <span className="block text-[10px] text-gray-400 uppercase">Questions</span>
         </div>
         <div className="bg-white/[0.03] rounded-xl p-3 text-center border border-white/5">
           <FaCalendarAlt className="text-purple-400 mx-auto mb-1 text-sm" />
           <span className="text-white font-bold text-xs">{start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-          <span className="block text-[10px] text-gray-500 uppercase">Date</span>
+          <span className="block text-[10px] text-gray-400 uppercase">Date</span>
         </div>
       </div>
 
@@ -135,14 +135,14 @@ const Contest = () => {
     { name: 'Expert', range: '1900-2099', color: 'text-purple-500', bg: 'bg-purple-500/10 border-purple-500/30' },
     { name: 'Specialist', range: '1600-1899', color: 'text-cyan-500', bg: 'bg-cyan-500/10 border-cyan-500/30' },
     { name: 'Pupil', range: '1400-1599', color: 'text-green-500', bg: 'bg-green-500/10 border-green-500/30' },
-    { name: 'Newbie', range: '0-1399', color: 'text-gray-500', bg: 'bg-gray-500/10 border-gray-500/30' },
+    { name: 'Newbie', range: '0-1399', color: 'text-gray-400', bg: 'bg-gray-500/10 border-gray-500/30' },
   ];
 
   return (
     <div className="min-h-screen bg-[#050505] text-white p-6 relative overflow-hidden font-sans pt-20">
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[10%] left-[10%] w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[120px] mix-blend-screen animate-pulse" />
-        <div className="absolute bottom-[10%] right-[10%] w-[600px] h-[600px] bg-orange-600/10 rounded-full blur-[150px] mix-blend-screen" />
+        <div className="absolute top-[10%] left-[10%] w-[500px] h-[500px] bg-red-600/15 rounded-full blur-[120px] mix-blend-screen animate-pulse" />
+        <div className="absolute bottom-[10%] right-[10%] w-[600px] h-[600px] bg-orange-600/15 rounded-full blur-[150px] mix-blend-screen" />
       </div>
 
       <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-7xl mx-auto relative z-10 space-y-10">
@@ -179,7 +179,7 @@ const Contest = () => {
         {/* Contests Grid */}
         <motion.div variants={itemVariants}>
           {loading ? (
-            <div className="text-center py-20 text-gray-500">
+            <div className="text-center py-20 text-gray-400">
               <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4" />
               Loading contests...
             </div>
@@ -189,9 +189,9 @@ const Contest = () => {
             </div>
           ) : (
             <div className="text-center py-20 glass-panel rounded-2xl border border-white/5">
-              <FaTrophy className="text-5xl text-gray-700 mx-auto mb-4" />
-              <p className="text-gray-500 font-medium text-lg mb-2">No {tab} contests</p>
-              <p className="text-gray-600 text-sm">{tab === 'upcoming' ? 'Check back soon — new contests are scheduled regularly!' : 'All caught up.'}</p>
+              <FaTrophy className="text-5xl text-gray-700 dark:text-gray-500 mx-auto mb-4" />
+              <p className="text-gray-400 font-medium text-lg mb-2">No {tab} contests</p>
+              <p className="text-gray-300 text-sm">{tab === 'upcoming' ? 'Check back soon — new contests are scheduled regularly!' : 'All caught up.'}</p>
             </div>
           )}
         </motion.div>
