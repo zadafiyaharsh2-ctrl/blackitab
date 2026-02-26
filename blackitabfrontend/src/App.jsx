@@ -127,9 +127,17 @@ function App() {
       <Toaster
         position="bottom-right"
         toastOptions={{
-          style: { background: '#1a1a1a', color: '#fff', borderRadius: '10px', border: '1px solid #333' },
-          success: { iconTheme: { primary: '#22c55e', secondary: '#fff' } },
-          error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } }
+          className: 'dark:bg-gray-800/90 bg-white/90 backdrop-blur-md dark:text-white text-gray-900 shadow-xl border dark:border-gray-700/50 border-gray-200/50',
+          duration: 4000,
+          style: {
+            borderRadius: '12px',
+          },
+          success: {
+            iconTheme: { primary: '#10b981', secondary: '#fff' },
+          },
+          error: {
+            iconTheme: { primary: '#ef4444', secondary: '#fff' },
+          },
         }}
       />
       {/* BrowserRouter enables URL-based routing */}

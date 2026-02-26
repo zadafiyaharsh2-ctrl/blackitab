@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FaHome, FaUsers, FaRobot, FaChartBar, FaUser, FaSignOutAlt, FaBars, FaStore, FaSuitcase, FaBook, FaLaptopCode, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaBell, FaSearch } from 'react-icons/fa';
 import { MdReportProblem } from 'react-icons/md';
 import { useTheme } from '../context/ThemeContext';
@@ -62,111 +63,166 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     { path: '/profile', label: 'Profile', icon: <FaUser /> },
   ];
 
+  const sidebarWidth = isOpen ? 280 : 80;
+
   return (
     <>
       <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
 
-      <div className={`bg-white dark:bg-black border-r border-gray-200 dark:border-gray-800 backdrop-blur-md shadow-xl h-screen fixed left-0 top-0 flex flex-col transition-all duration-300 ${isOpen ? 'w-64' : 'w-16'} z-50`}>
-        <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
-          {isOpen && (
-            <Link to="/dashboard" className="flex items-center gap-2">
-              <Logo showText={true} className="w-8 h-8" textSize="text-xl" />
-            </Link>
-          )}
-          <button
+      <motion.div
+        initial={false}
+        animate={{ width: sidebarWidth }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="fixed left-0 top-0 h-screen z-50 flex flex-col glass-panel border-r border-gray-200/20 dark:border-gray-800/50 shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_30px_-5px_rgba(168,85,247,0.1)]"
+      >
+        <div className="h-20 border-b border-gray-200/50 dark:border-gray-800/50 flex items-center justify-between px-4 relative overflow-hidden">
+           {/* Subtle gradient glow behind logo */}
+           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-purple-500/5 to-pink-500/5 opacity-50 pointer-events-none" />
+          
+          <AnimatePresence>
+            {isOpen && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="flex items-center gap-2"
+              >
+                <Logo showText={true} className="w-8 h-8" textSize="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-500" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => setIsOpen(!isOpen)}
-            className="p-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white rounded-md transition-colors"
+            className="p-2.5 bg-gray-100 dark:bg-gray-800/80 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 rounded-xl transition-colors shadow-sm ring-1 ring-gray-200 dark:ring-gray-700/50 relative z-10"
           >
             <FaBars />
-          </button>
+          </motion.button>
         </div>
 
         {/* Search button */}
-        <div className="px-3 pt-3">
-          <button
+        <div className="px-4 pt-6 pb-2">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setSearchOpen(true)}
-            className={`w-full flex items-center ${isOpen ? 'px-3 py-2 gap-2' : 'justify-center py-3'} text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800/80 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors`}
+            className={`w-full flex items-center ${isOpen ? 'justify-between px-4 py-3' : 'justify-center py-3'} bg-gray-100/80 dark:bg-gray-800/60 hover:bg-white dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-xl border border-gray-200/50 dark:border-gray-700/50 transition-all shadow-inner group`}
             title="Search (Ctrl+K)"
           >
-            <FaSearch className="flex-shrink-0" />
-            {isOpen && <span className="flex-1 text-left">Search...</span>}
-            {isOpen && <kbd className="text-xs bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded font-mono text-gray-400">⌘K</kbd>}
-          </button>
+            <div className="flex items-center gap-3">
+              <FaSearch className="group-hover:text-purple-500 transition-colors" />
+              {isOpen && <span className="text-sm font-medium">Search...</span>}
+            </div>
+            {isOpen && <kbd className="text-[10px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-2 py-1 rounded-md font-mono text-gray-400 shadow-sm">⌘K</kbd>}
+          </motion.button>
         </div>
 
-        <nav className="flex-1 p-3 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 mt-1">
-          <ul className="space-y-1">
-            {navItems.map((item) => (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className={`relative flex items-center ${isOpen ? 'px-4 py-2' : 'px-2 py-3 justify-center'} rounded-md text-sm font-medium transition-all duration-200 ${location.pathname === item.path
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
-                    }`}
-                >
-                  <span className={`relative ${isOpen ? 'mr-3' : ''}`}>
-                    {item.icon}
-                    {/* Notification badge on Notifications link */}
-                    {item.path === '/notifications' && unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_6px_rgba(239,68,68,0.7)]" />
-                    )}
-                  </span>
-                  {isOpen && (
-                    <span className="flex-1">{item.label}</span>
-                  )}
-                  {/* Badge count when sidebar open */}
-                  {isOpen && item.path === '/notifications' && unreadCount > 0 && (
-                    <span className="ml-auto text-xs bg-red-500 text-white rounded-full px-1.5 py-0.5 font-bold min-w-[1.25rem] text-center">
-                      {unreadCount > 99 ? '99+' : unreadCount}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            ))}
+        <nav className="flex-1 px-3 py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-800 hover:scrollbar-thumb-purple-500/50">
+          <ul className="space-y-1.5">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path || (location.pathname.startsWith(item.path) && item.path !== '/');
+              return (
+                <li key={item.path}>
+                  <Link to={item.path}>
+                    <motion.div
+                      whileHover={{ scale: 1.02, x: isOpen ? 4 : 0 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`relative flex items-center ${isOpen ? 'px-4 py-3' : 'px-0 py-3 justify-center'} rounded-xl text-sm font-semibold transition-all duration-300 overflow-hidden group ${
+                        isActive
+                          ? 'text-white shadow-[0_4px_20px_-4px_rgba(168,85,247,0.5)]'
+                          : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
+                      }`}
+                    >
+                      {/* Active Background Gradient */}
+                      {isActive && (
+                        <motion.div 
+                          layoutId="active-nav-bg"
+                          className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-600 rounded-xl -z-10"
+                        />
+                      )}
+
+                      <span className={`relative z-10 text-lg ${isOpen ? 'mr-4' : ''} ${isActive ? 'text-white' : 'group-hover:text-purple-500 transition-colors'}`}>
+                        {item.icon}
+                        {item.path === '/notifications' && unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-gray-900 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                        )}
+                      </span>
+                      
+                      <AnimatePresence>
+                        {isOpen && (
+                          <motion.span 
+                            initial={{ opacity: 0, width: 0 }}
+                            animate={{ opacity: 1, width: 'auto' }}
+                            exit={{ opacity: 0, width: 0 }}
+                            className="flex-1 whitespace-nowrap z-10"
+                          >
+                            {item.label}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+
+                      {isOpen && item.path === '/notifications' && unreadCount > 0 && (
+                        <span className="ml-auto z-10 text-[10px] bg-red-500 text-white rounded-full px-2 py-0.5 font-black shadow-sm">
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                      )}
+                    </motion.div>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
-        <div className="p-3 border-t border-gray-200 dark:border-gray-800 space-y-1">
-          {/* Notifications shortcut */}
-          <Link
-            to="/notifications"
-            className={`w-full flex items-center ${isOpen ? 'px-4 py-2 justify-start gap-3' : 'px-2 py-3 justify-center'} text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-blue-500/10 hover:text-blue-400 rounded-md transition-colors relative`}
-          >
-            <span className="relative flex-shrink-0">
-              <FaBell />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_6px_rgba(239,68,68,0.7)]" />
-              )}
-            </span>
-            {isOpen && <span>Notifications</span>}
-            {isOpen && unreadCount > 0 && (
-              <span className="ml-auto text-xs bg-red-500 text-white rounded-full px-1.5 py-0.5 font-bold min-w-[1.25rem] text-center">
-                {unreadCount > 99 ? '99+' : unreadCount}
+        <div className="p-4 border-t border-gray-200/50 dark:border-gray-800/50 space-y-2 bg-gray-50/50 dark:bg-black/20">
+          <Link to="/notifications">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`w-full flex items-center ${isOpen ? 'px-4 py-3 justify-start gap-4' : 'px-0 py-3 justify-center'} text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-purple-500/10 hover:text-purple-500 rounded-xl transition-colors relative group`}
+            >
+              <span className="relative flex-shrink-0 text-lg group-hover:text-purple-500">
+                <FaBell />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-gray-900 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                )}
               </span>
-            )}
+              {isOpen && <span>Notifications</span>}
+              {isOpen && unreadCount > 0 && (
+                <span className="ml-auto text-[10px] bg-red-500 text-white rounded-full px-2 py-0.5 font-black shadow-sm">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </motion.div>
           </Link>
 
-          {/* Theme Toggle Button */}
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={toggleTheme}
-            className={`w-full flex items-center ${isOpen ? 'px-4 py-2 justify-start' : 'px-2 py-3 justify-center'} text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-blue-500/10 hover:text-blue-400 rounded-md transition-colors`}
+            className={`w-full flex items-center ${isOpen ? 'px-4 py-3 justify-start gap-4' : 'px-0 py-3 justify-center'} text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-yellow-500/10 hover:text-yellow-500 rounded-xl transition-colors group`}
             title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
-            {isDark ? <FaSun className={isOpen ? 'mr-3' : ''} /> : <FaMoon className={isOpen ? 'mr-3' : ''} />}
+            <span className="text-lg group-hover:text-yellow-500 transition-colors">
+               {isDark ? <FaSun /> : <FaMoon />}
+            </span>
             {isOpen && (isDark ? 'Light Mode' : 'Dark Mode')}
-          </button>
+          </motion.button>
 
-          {/* Logout Button */}
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={onLogout}
-            className={`w-full flex items-center ${isOpen ? 'px-4 py-2 justify-start' : 'px-2 py-3 justify-center'} text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-red-500/10 hover:text-red-400 rounded-md transition-colors`}
+            className={`w-full flex items-center ${isOpen ? 'px-4 py-3 justify-start gap-4' : 'px-0 py-3 justify-center'} text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-colors group mt-2`}
           >
-            <FaSignOutAlt className={isOpen ? 'mr-3' : ''} />
+            <span className="text-lg group-hover:text-red-500 transition-colors">
+              <FaSignOutAlt />
+            </span>
             {isOpen && 'Logout'}
-          </button>
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
     </>
   );
 };

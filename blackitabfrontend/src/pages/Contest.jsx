@@ -1,123 +1,146 @@
-import { useTheme } from '../context/useTheme';
+import { motion } from 'framer-motion';
 import { 
   FaTrophy, 
   FaChartLine, 
   FaCode, 
   FaGlobe, 
   FaMedal, 
-  FaClock, 
-  FaUserFriends, 
-  FaRocket,
-  FaStar,
-  FaShieldAlt
+  FaShieldAlt,
+  FaRocket
 } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
+};
 
 const Contest = () => {
-  const { isDark } = useTheme();
+  const navigate = useNavigate();
 
   const contestFeatures = [
     {
       icon: FaGlobe,
       title: 'Global Competitive Arena',
-      description: 'Join thousands of developers worldwide in real-time coding battles. Test your algorithmic skills against the best minds and see where you stand on the global stage.',
+      description: 'Join thousands of developers worldwide in real-time coding battles. Test your algorithmic skills against the best minds and see where you stand.',
       color: 'blue',
-      gradient: 'from-blue-500 to-cyan-500'
+      gradient: 'from-blue-500 to-cyan-500',
+      shadow: 'shadow-[0_0_15px_rgba(59,130,246,0.3)]'
     },
     {
       icon: FaChartLine,
       title: 'Dynamic Rating System',
-      description: 'Earn your rank through a sophisticated ELO-based rating system. Your rating updates after every contest based on your performance relative to other participants and the difficulty of problems solved.',
+      description: 'Earn your rank through a sophisticated ELO-based rating system. Your rating updates after every contest based on your performance relative to others.',
       color: 'green',
-      gradient: 'from-green-500 to-emerald-500'
+      gradient: 'from-green-500 to-emerald-500',
+      shadow: 'shadow-[0_0_15px_rgba(16,185,129,0.3)]'
     },
     {
       icon: FaTrophy,
       title: 'Weekly Championships',
-      description: 'Participate in regularly scheduled contests with varying difficulty levels. From beginner-friendly rounds to elite grandmaster challenges, there\'s a competition for every skill level.',
+      description: 'Participate in regularly scheduled contests with varying difficulty levels. From beginner rounds to elite grandmaster challenges.',
       color: 'yellow',
-      gradient: 'from-yellow-500 to-orange-500'
+      gradient: 'from-yellow-500 to-orange-500',
+      shadow: 'shadow-[0_0_15px_rgba(245,158,11,0.3)]'
     },
     {
       icon: FaCode,
       title: 'Post-Contest Analysis',
-      description: 'Access detailed editorials, optimal solutions, and performance analytics immediately after the contest. Understand what you missed and learn how to solve problems more efficiently.',
+      description: 'Access detailed editorials, optimal solutions, and performance analytics immediately after the contest. Understand what you missed.',
       color: 'purple',
-      gradient: 'from-purple-500 to-pink-500'
+      gradient: 'from-purple-500 to-pink-500',
+      shadow: 'shadow-[0_0_15px_rgba(168,85,247,0.3)]'
     }
   ];
 
   const ratingTiers = [
-    { name: 'Grandmaster', range: '2400+', color: 'text-red-500', bg: 'bg-red-500/10' },
-    { name: 'Master', range: '2100-2399', color: 'text-orange-500', bg: 'bg-orange-500/10' },
-    { name: 'Expert', range: '1900-2099', color: 'text-purple-500', bg: 'bg-purple-500/10' },
-    { name: 'Specialist', range: '1600-1899', color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
-    { name: 'Pupil', range: '1400-1599', color: 'text-green-500', bg: 'bg-green-500/10' },
-    { name: 'Newbie', range: '0-1399', color: 'text-gray-500', bg: 'bg-gray-500/10' },
+    { name: 'Grandmaster', range: '2400+', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30' },
+    { name: 'Master', range: '2100-2399', color: 'text-orange-500', bg: 'bg-orange-500/10 border-orange-500/30' },
+    { name: 'Expert', range: '1900-2099', color: 'text-purple-500', bg: 'bg-purple-500/10 border-purple-500/30' },
+    { name: 'Specialist', range: '1600-1899', color: 'text-cyan-500', bg: 'bg-cyan-500/10 border-cyan-500/30' },
+    { name: 'Pupil', range: '1400-1599', color: 'text-green-500', bg: 'bg-green-500/10 border-green-500/30' },
+    { name: 'Newbie', range: '0-1399', color: 'text-gray-500', bg: 'bg-gray-500/10 border-gray-500/30' },
   ];
 
   return (
-    <div className="min-h-screen p-6">
-      {/* Coming Soon Banner */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className={`${isDark ? 'bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border-yellow-700/50' : 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-300'} rounded-xl p-4 border backdrop-blur-md text-center`}>
-          <h2 className={`text-2xl md:text-3xl font-bold ${isDark ? 'text-yellow-400' : 'text-yellow-600'} mb-1 flex items-center justify-center gap-2`}>
-            🚀 Coming Soon!
-          </h2>
-          <p className={`${isDark ? 'text-yellow-200' : 'text-yellow-700'} font-medium`}>
-            The Competitive Programming Arena is currently under development.
-          </p>
-        </div>
+    <div className="min-h-screen bg-[#050505] text-white p-6 relative overflow-hidden font-sans">
+      {/* Dynamic Background */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[10%] left-[10%] w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[120px] mix-blend-screen animate-pulse" />
+        <div className="absolute bottom-[10%] right-[10%] w-[600px] h-[600px] bg-orange-600/10 rounded-full blur-[150px] mix-blend-screen" />
       </div>
 
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto mb-12">
-        <div className={`${isDark ? 'bg-gradient-to-br from-red-900/40 via-orange-900/40 to-yellow-900/40 border-red-700/50' : 'bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 border-red-200'} rounded-3xl p-8 md:p-12 border backdrop-blur-md shadow-2xl relative overflow-hidden`}>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/10 rounded-full blur-3xl"></div>
-          
-          <div className="relative z-10">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="p-4 bg-gradient-to-br from-red-500 to-orange-600 rounded-2xl shadow-lg">
-                <FaTrophy className="text-4xl text-gray-900 dark:text-white" />
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="max-w-7xl mx-auto relative z-10 space-y-12"
+      >
+        {/* Coming Soon Banner */}
+        <motion.div variants={itemVariants}>
+          <div className="glass-panel border-yellow-500/30 rounded-2xl p-4 text-center shadow-[0_0_20px_rgba(234,179,8,0.15)] bg-gradient-to-r from-yellow-900/20 to-orange-900/20">
+            <h2 className="text-2xl font-bold text-yellow-500 mb-1 flex items-center justify-center gap-3">
+              <span className="animate-bounce">🚀</span> Coming Soon!
+            </h2>
+            <p className="text-yellow-200/80 font-medium">
+              The Competitive Programming Arena is currently being forged by our engineers.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Hero Section */}
+        <motion.div variants={itemVariants}>
+          <div className="glass-panel border-white/5 rounded-[2rem] p-8 md:p-12 shadow-[0_0_50px_rgba(239,68,68,0.1)] relative overflow-hidden group">
+            {/* Subtle internal shine */}
+            <div className="absolute top-0 right-0 w-full h-[1px] bg-gradient-to-r from-transparent via-red-500/30 to-transparent"></div>
+            
+            <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
+              <div className="p-6 bg-gradient-to-br from-red-500 to-orange-600 rounded-3xl shadow-[0_0_30px_rgba(239,68,68,0.4)] transform group-hover:scale-105 transition-transform duration-500">
+                <FaTrophy className="text-6xl text-white drop-shadow-md" />
               </div>
-              <div>
-                <h1 className={`text-4xl md:text-5xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'}`}>
+              <div className="text-center md:text-left flex-1">
+                <h1 className="text-5xl md:text-6xl font-black text-white mb-4 tracking-tight">
                   Competitive Arena
                 </h1>
-                <p className={`text-lg ${isDark ? 'text-red-300' : 'text-red-600'} font-semibold mt-1`}>
+                <p className="text-xl md:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400 font-bold mb-6">
                   Prove Your Skills. Climb the Ranks. Become a Legend.
+                </p>
+                <p className="text-lg text-gray-400 leading-relaxed max-w-3xl">
+                  Step into the ultimate coding battleground. Participate in high-stakes contests, solve complex algorithmic 
+                  challenges under pressure, and earn your place on the global leaderboard. Our sophisticated rating system 
+                  ensures you're always competing against worthy adversaries.
                 </p>
               </div>
             </div>
-            
-            <p className={`text-xl ${isDark ? 'text-gray-200' : 'text-gray-700'} mb-8 leading-relaxed max-w-4xl`}>
-              Step into the ultimate coding battleground. Participate in high-stakes contests, solve complex algorithmic 
-              challenges under pressure, and earn your place on the global leaderboard. Our sophisticated rating system 
-              ensures you're always competing against worthy adversaries.
-            </p>
           </div>
-        </div>
-      </div>
+        </motion.div>
 
-      {/* Main Features Grid */}
-      <div className="max-w-7xl mx-auto mb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Features Grid */}
+        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {contestFeatures.map((feature, index) => {
             const Icon = feature.icon;
             return (
               <div
                 key={index}
-                className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700' : 'bg-white border-gray-200'} rounded-2xl p-8 border backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] group`}
+                className="glass-panel border-white/5 rounded-2xl p-8 hover:bg-white/5 transition-all duration-300 group hover:-translate-y-1 hover:border-white/10"
               >
-                <div className="flex items-start gap-4">
-                  <div className={`p-4 rounded-xl bg-gradient-to-br ${feature.gradient} shadow-lg group-hover:scale-110 transition-transform`}>
-                    <Icon className="text-3xl text-gray-900 dark:text-white" />
+                <div className="flex items-start gap-6">
+                  <div className={`p-4 rounded-2xl bg-gradient-to-br ${feature.gradient} ${feature.shadow} group-hover:scale-110 transition-transform duration-300 text-white shrink-0`}>
+                    <Icon className="text-3xl" />
                   </div>
                   <div>
-                    <h3 className={`text-2xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'} mb-3`}>
+                    <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-glow transition-all">
                       {feature.title}
                     </h3>
-                    <p className={`${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'} text-lg leading-relaxed`}>
+                    <p className="text-gray-400 text-lg leading-relaxed">
                       {feature.description}
                     </p>
                   </div>
@@ -125,90 +148,90 @@ const Contest = () => {
               </div>
             );
           })}
-        </div>
-      </div>
+        </motion.div>
 
-      {/* Rating System Explained */}
-      <div className="max-w-7xl mx-auto mb-12">
-        <div className={`${isDark ? 'bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border-blue-700/50' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'} rounded-2xl p-8 border backdrop-blur-md`}>
-          <div className="flex items-center gap-3 mb-8">
-            <FaShieldAlt className="text-4xl text-blue-500" />
-            <h2 className={`text-3xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'}`}>
-              The Rating System
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div>
-              <p className={`${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'} text-lg mb-6 leading-relaxed`}>
-                Our rating system is designed to accurately reflect your skill level. You start with a base rating, 
-                and after every contest, your rating changes based on:
-              </p>
-              <ul className="space-y-4 mb-8">
-                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'}`}>
-                  <FaCheckCircle className="text-green-500" />
-                  <span>Your rank in the contest</span>
-                </li>
-                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'}`}>
-                  <FaCheckCircle className="text-green-500" />
-                  <span>The ratings of your opponents</span>
-                </li>
-                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'}`}>
-                  <FaCheckCircle className="text-green-500" />
-                  <span>The difficulty of problems solved</span>
-                </li>
-              </ul>
-              <p className={`${isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-600'} italic`}>
-                "Consistency is key. Regular participation and steady improvement are rewarded over lucky spikes."
-              </p>
+        {/* Rating System */}
+        <motion.div variants={itemVariants}>
+          <div className="glass-panel border-blue-500/20 rounded-[2rem] p-8 md:p-12 shadow-[0_0_30px_rgba(59,130,246,0.1)]">
+            <div className="flex items-center gap-4 mb-10">
+              <div className="p-3 bg-blue-500/20 rounded-xl border border-blue-500/30 text-blue-400">
+                <FaShieldAlt className="text-3xl" />
+              </div>
+              <h2 className="text-4xl font-bold text-white">The Rating System</h2>
             </div>
 
-            {/* Rating Tiers Visualization */}
-            <div className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/60' : 'bg-white/90'} rounded-xl p-6 border ${isDark ? 'border-gray-300 dark:border-gray-700' : 'border-gray-200'}`}>
-              <h3 className={`text-xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'} mb-4 text-center`}>
-                Rating Tiers
-              </h3>
-              <div className="space-y-3">
-                {ratingTiers.map((tier, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-500/5 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <FaMedal className={`${tier.color}`} />
-                      <span className={`font-bold ${tier.color}`}>{tier.name}</span>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <p className="text-gray-400 text-lg mb-8 leading-relaxed">
+                  Our rating system is designed to accurately reflect your skill level. You start with a base rating, 
+                  and after every contest, your rating changes based on:
+                </p>
+                <ul className="space-y-6 mb-8">
+                  {[
+                    "Your rank in the contest",
+                    "The ratings of your opponents",
+                    "The difficulty of problems solved"
+                  ].map((text, i) => (
+                    <li key={i} className="flex items-center gap-4 text-gray-300 text-lg font-medium">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center border border-green-500/30">
+                        ✓
+                      </div>
+                      {text}
+                    </li>
+                  ))}
+                </ul>
+                <div className="p-4 bg-gray-900/50 rounded-xl border border-gray-800">
+                  <p className="text-gray-500 italic">
+                    "Consistency is key. Regular participation and steady improvement are rewarded over lucky spikes."
+                  </p>
+                </div>
+              </div>
+
+              {/* Tiers */}
+              <div className="bg-black/40 rounded-3xl p-8 border border-white/5 custom-scrollbar">
+                <h3 className="text-2xl font-bold text-white mb-6 text-center text-glow">Rating Tiers</h3>
+                <div className="space-y-4">
+                  {ratingTiers.map((tier, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group">
+                      <div className="flex items-center gap-4">
+                        <FaMedal className={`text-xl ${tier.color} group-hover:scale-125 transition-transform`} />
+                        <span className={`text-lg font-bold ${tier.color} tracking-wide`}>{tier.name}</span>
+                      </div>
+                      <span className={`px-4 py-1.5 rounded-full text-sm font-mono font-bold border ${tier.bg} ${tier.color} shadow-sm`}>
+                        {tier.range}
+                      </span>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-mono font-bold ${tier.bg} ${tier.color}`}>
-                      {tier.range}
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
 
-      {/* Call to Action */}
-      <div className="max-w-4xl mx-auto text-center">
-        <div className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700' : 'bg-white border-gray-200'} rounded-2xl p-8 md:p-12 border backdrop-blur-md shadow-xl`}>
-          <FaRocket className={`text-5xl ${isDark ? 'text-blue-400' : 'text-blue-600'} mx-auto mb-4`} />
-          <h2 className={`text-3xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'} mb-4`}>
-            Ready to Compete?
-          </h2>
-          <p className={`text-lg ${isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-600'} mb-8 max-w-2xl mx-auto leading-relaxed`}>
-            Prepare yourself for the ultimate challenge. Practice problems, learn algorithms, and get ready 
-            to make your mark on the leaderboard when the arena opens.
-          </p>
-          <button className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-gray-900 dark:text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg">
-            Start Practicing Now
-          </button>
-        </div>
-      </div>
+        {/* CTA */}
+        <motion.div variants={itemVariants} className="pb-12 text-center">
+          <div className="glass-panel border-white/5 rounded-[2rem] p-10 md:p-16 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-red-900/10 z-0"></div>
+            <FaRocket className="text-6xl text-red-500 mx-auto mb-6 relative z-10 group-hover:-translate-y-4 group-hover:scale-110 transition-all duration-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
+            <h2 className="text-4xl font-black text-white mb-4 relative z-10 text-glow">
+              Ready to Compete?
+            </h2>
+            <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed relative z-10">
+              Prepare yourself for the ultimate challenge. Practice problems, learn algorithms, and get ready 
+              to make your mark on the leaderboard when the arena opens.
+            </p>
+            <button 
+              onClick={() => navigate('/problems')}
+              className="relative z-10 bg-white hover:bg-gray-200 text-black font-bold py-4 px-10 rounded-full shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] transition-all duration-300 transform hover:scale-[1.05] text-lg uppercase tracking-wider"
+            >
+              Start Practicing Now
+            </button>
+          </div>
+        </motion.div>
+
+      </motion.div>
     </div>
   );
 };
-
-// Helper Icon for the list
-const FaCheckCircle = ({ className }) => (
-  <svg className={`w-5 h-5 ${className}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-);
 
 export default Contest;

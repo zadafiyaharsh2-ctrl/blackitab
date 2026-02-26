@@ -70,71 +70,79 @@ const SocialListPage = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 text-gray-900 dark:text-white font-sans relative">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6 border-b border-gray-200 dark:border-gray-800 pb-4">
-        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-50 dark:bg-gray-800 rounded-full transition-colors">
-          <FaArrowLeft size={20} />
-        </button>
-        <h1 className="text-xl font-bold capitalize">{type}</h1>
+    <div className="min-h-screen bg-[#050505] text-white p-6 relative overflow-hidden font-sans">
+      {/* Background Orbs */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] mix-blend-screen" />
+        <div className="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[150px] mix-blend-screen" />
       </div>
 
-      {/* Content */}
-      <div className="max-w-2xl mx-auto">
-        {loading ? (
-           <div className="flex justify-center py-10">
-               <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-           </div>
-        ) : error ? (
-           <div className="text-center text-red-400 py-10">{error}</div>
-        ) : users.length === 0 ? (
-           <div className="text-center text-gray-500 py-10">No users found</div>
-        ) : (
-           <div className="divide-y divide-gray-800">
-             {users.map(u => (
-               <div key={u._id} className="flex items-center justify-between py-4 hover:bg-gray-100 dark:bg-white/5 px-2 rounded-lg transition-colors cursor-pointer" onClick={() => navigate(`/profile/${u._id}`)}>
-                  <div className="flex items-center gap-3">
-                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-lg font-bold shadow-lg">
-                        {u.name?.charAt(0).toUpperCase()}
-                     </div>
-                     <div>
-                        <div className="font-semibold text-gray-900 dark:text-white">{u.name}</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">{u.followerCount || 0} followers</div>
-                     </div>
-                  </div>
+      <div className="max-w-3xl mx-auto relative z-10 pt-8">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-8">
+          <button onClick={() => navigate(-1)} className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-colors group">
+            <FaArrowLeft size={20} className="text-gray-400 group-hover:text-white transition-colors" />
+          </button>
+          <h1 className="text-3xl font-bold capitalize text-glow">{type}</h1>
+        </div>
 
-                  {/* Action Button */}
-                  {currentUser._id !== u._id && (
-                    <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-2">
-                       <button 
-                          onClick={() => navigate(`/messages/${u._id}`)}
-                          className="p-2.5 rounded-full bg-gray-50 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white transition-colors border border-gray-300 dark:border-gray-700"
-                          title="Message"
-                       >
-                          <FaEnvelope size={14} />
-                       </button>
-
-                       {u.isFollowing ? (
-                          <button 
-                            onClick={() => handleUnfollow(u._id)}
-                            className="px-5 py-2 rounded-full border border-gray-600 hover:border-red-500 hover:text-red-500 text-sm font-medium transition-all"
-                          >
-                            Following
-                          </button>
-                       ) : (
-                          <button 
-                            onClick={() => handleFollow(u._id)}
-                            className="px-5 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-gray-900 dark:text-white text-sm font-medium transition-all shadow-md"
-                          >
-                            Follow
-                          </button>
-                       )}
+        {/* Content */}
+        <div className="glass-panel border-white/5 rounded-[2rem] p-6 shadow-2xl">
+          {loading ? (
+             <div className="flex justify-center py-20">
+                 <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+             </div>
+          ) : error ? (
+             <div className="text-center text-red-400 py-20 font-medium">{error}</div>
+          ) : users.length === 0 ? (
+             <div className="text-center text-gray-500 py-20 font-medium text-lg">No users found</div>
+          ) : (
+             <div className="divide-y divide-white/5">
+               {users.map(u => (
+                 <div key={u._id} className="flex items-center justify-between py-5 hover:bg-white/5 px-4 -mx-4 rounded-xl transition-all cursor-pointer group" onClick={() => navigate(`/profile/${u._id}`)}>
+                    <div className="flex items-center gap-4">
+                       <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-xl font-bold text-white shadow-[0_0_15px_rgba(59,130,246,0.4)] group-hover:scale-105 transition-transform">
+                          {u.name?.charAt(0).toUpperCase()}
+                       </div>
+                       <div>
+                          <div className="font-bold text-lg text-white group-hover:text-blue-400 transition-colors">{u.name}</div>
+                          <div className="text-sm text-gray-400 font-medium">{u.followerCount || 0} followers</div>
+                       </div>
                     </div>
-                  )}
-               </div>
-             ))}
-           </div>
-        )}
+
+                    {/* Action Button */}
+                    {currentUser._id !== u._id && (
+                      <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-3">
+                         <button 
+                            onClick={() => navigate(`/messages/${u._id}`)}
+                            className="p-3 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors border border-white/10"
+                            title="Message"
+                         >
+                            <FaEnvelope size={16} />
+                         </button>
+
+                         {u.isFollowing ? (
+                            <button 
+                              onClick={() => handleUnfollow(u._id)}
+                              className="px-6 py-2.5 rounded-full border border-gray-600 hover:border-red-500 hover:text-red-500 hover:bg-red-500/10 text-sm font-bold transition-all text-gray-300"
+                            >
+                              Following
+                            </button>
+                         ) : (
+                            <button 
+                              onClick={() => handleFollow(u._id)}
+                              className="px-6 py-2.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-bold transition-all shadow-[0_0_15px_rgba(37,99,235,0.4)] hover:shadow-[0_0_20px_rgba(37,99,235,0.6)] hover:scale-105"
+                            >
+                              Follow
+                            </button>
+                         )}
+                      </div>
+                    )}
+                 </div>
+               ))}
+             </div>
+          )}
+        </div>
       </div>
     </div>
   );

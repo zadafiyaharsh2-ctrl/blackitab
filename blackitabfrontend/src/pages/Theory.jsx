@@ -28,6 +28,7 @@ import { BookOpen, ChevronRight, Menu, CheckCircle, ArrowRight } from "lucide-re
 // Import the TopicSidebar component that shows the list of topics
 import TopicSidebar from "../components/TopicSidebar";
 import API_URL from "../config";
+import { mockSubjects, getMockTopics, getMockTopicContent } from "../data/mockTheoryData";
 
 const Theory = () => {
   // ============================================================================
@@ -78,16 +79,18 @@ const Theory = () => {
     // Define async function to fetch subjects
     const fetchSubjects = async () => {
       try {
-        // Make GET request to subjects API endpoint
-        // Make GET request to subjects API endpoint
         const res = await axios.get(`${API_URL}/api/subjects`);
         
-        // Check if response indicates success
-        // Backend returns { success: true, data: [...subjects] }
-        if (res.data.success) setSubjects(res.data.data);
+        // If we get an empty array or the request succeeds but has no data, use mock data
+        if (res.data.success && res.data.data && res.data.data.length > 0) {
+          setSubjects(res.data.data);
+        } else {
+          console.log("Empty subjects array from backend, applying intelligent fallback data.");
+          setSubjects(mockSubjects);
+        }
       } catch (err) {
-        // Log any errors that occur during fetch
-        console.error("Error fetching subjects:", err);
+        console.error("Error fetching subjects, falling back to mock data:", err);
+        setSubjects(mockSubjects);
       } finally {
         // Always set loading to false, whether request succeeds or fails
         // This hides the loading spinner
@@ -143,26 +146,24 @@ const Theory = () => {
     // Define async function to fetch topics
     const fetchTopics = async () => {
       try {
-        // Make GET request to topics API endpoint
-        // Uses selectedSubject._id to get topics for specific subject
         const res = await axios.get(
           `${API_URL}/api/subjects/${selectedSubject._id}/topics`
         );
 
-        // Check if response indicates success
-        if (res.data.success) {
-          // Update topics state with fetched data
+        if (res.data.success && res.data.data && res.data.data.length > 0) {
           setTopics(res.data.data);
-
-          // Auto-select the first topic for better UX
-          // This immediately shows content instead of blank page
-          if (res.data.data.length > 0) {
-            setSelectedTopic(res.data.data[0]);
-          }
+          setSelectedTopic(res.data.data[0]);
+        } else {
+          console.log("Empty topics from backend, applying intelligent fallback data.");
+          const dummyTopics = getMockTopics(selectedSubject._id);
+          setTopics(dummyTopics);
+          setSelectedTopic(dummyTopics[0]);
         }
       } catch (err) {
-        // Log any errors that occur during fetch
-        console.error("Error fetching topics:", err);
+        console.error("Error fetching topics, falling back:", err);
+        const dummyTopics = getMockTopics(selectedSubject._id);
+        setTopics(dummyTopics);
+        setSelectedTopic(dummyTopics[0]);
       }
     };
 
@@ -182,22 +183,19 @@ const Theory = () => {
     // Define async function to fetch topic content
     const fetchTopicData = async () => {
       try {
-        // Make GET request to full content API endpoint
-        // Uses selectedTopic._id to get full content for specific topic
-        // Backend queries full_data_of_topics collection where topicId matches
         const res = await axios.get(
           `${API_URL}/api/topics/${selectedTopic._id}/full`
         );
 
-        // Check if response indicates success
-        if (res.data.success) {
-          // Update topicContent state with fetched data
-          // This contains the full content array with all blocks
+        if (res.data.success && res.data.data && res.data.data.content && res.data.data.content.length > 0) {
           setTopicContent(res.data.data);
+        } else {
+          console.log("Empty content from backend, applying intelligent fallback data.");
+          setTopicContent(getMockTopicContent(selectedTopic));
         }
       } catch (err) {
-        // Log any errors that occur during fetch
-        console.error("Error fetching topic content:", err);
+        console.error("Error fetching topic content, falling back:", err);
+        setTopicContent(getMockTopicContent(selectedTopic));
       }
     };
 
