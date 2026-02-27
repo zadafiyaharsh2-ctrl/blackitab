@@ -7,7 +7,7 @@ const ModalBackdrop = ({ children, onClose }) => (
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-[1px] p-4"
     onClick={onClose}
   >
     {children}
@@ -20,10 +20,10 @@ const ModalContent = ({ children, title, onClose, maxWidth = "max-w-md" }) => (
     animate={{ scale: 1, opacity: 1, y: 0 }}
     exit={{ scale: 0.95, opacity: 0, y: 20 }}
     onClick={(e) => e.stopPropagation()}
-    className={`w-full ${maxWidth} bg-white dark:bg-gray-900/90 border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]`}
+    className={`w-full ${maxWidth} bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-2xl shadow-lg overflow-hidden flex flex-col max-h-[85vh]`}
   >
     <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50">
-      <h2 className="text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">{title}</h2>
+      <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
       <button 
         onClick={onClose} 
         className="p-2 rounded-full hover:bg-white/10 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white transition-colors"
@@ -81,7 +81,7 @@ export const SearchModal = ({ isOpen, onClose, query, setQuery, onSearch, result
                      className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 dark:bg-white/5 transition-colors group"
                    >
                       <div className="flex items-center gap-3">
-                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-gray-900 dark:text-white font-bold text-sm shadow-md overflow-hidden">
+                         <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm shadow-sm overflow-hidden">
                             {u.profileImage ? (
                                 <img src={u.profileImage} alt={u.name} className="w-full h-full object-cover" />
                             ) : (
@@ -188,7 +188,7 @@ export const NotificationModal = ({ isOpen, onClose, notifications, onAccept, on
                                                 !note.isFollowing ? (
                                                     <button 
                                                         onClick={() => onFollowBack(note.sender._id)}
-                                                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-gray-900 dark:text-white text-xs font-bold py-2 px-4 rounded-lg transition-all shadow-lg flex items-center justify-center gap-2"
+                                                        className="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2"
                                                     >
                                                          <FaReply size={12} /> Follow Back
                                                     </button>
@@ -238,7 +238,7 @@ export const UserListModal = ({ isOpen, onClose, title, users, currentUserId, on
                                 onClick={() => onUserClick && onUserClick(u._id)}
                            >
                                 <div className="flex items-center gap-3">
-                                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center text-gray-900 dark:text-white font-bold text-sm shadow-md overflow-hidden">
+                                   <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm shadow-sm overflow-hidden">
                                       {u.profileImage ? (
                                           <img src={u.profileImage} alt={u.name} className="w-full h-full object-cover" />
                                       ) : (
@@ -270,7 +270,7 @@ export const UserListModal = ({ isOpen, onClose, title, users, currentUserId, on
                                     ) : (
                                         <button 
                                             onClick={() => onFollow(u._id)}
-                                            className="px-4 py-1.5 rounded-full bg-blue-600 hover:bg-blue-500 text-gray-900 dark:text-white text-sm font-medium transition-all shadow-lg"
+                                            className="px-4 py-1.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors shadow-sm"
                                         >
                                             Follow
                                         </button>

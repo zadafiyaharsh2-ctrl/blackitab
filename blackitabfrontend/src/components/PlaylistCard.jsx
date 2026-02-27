@@ -40,7 +40,7 @@ const PlaylistCard = ({ playlist, onDelete }) => {
   return (
     <motion.div
       whileHover={{ y: -5, scale: 1.02 }}
-      className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden cursor-pointer group relative border border-gray-200 dark:border-white/5 hover:border-purple-500/30 transition-all shadow-lg hover:shadow-purple-500/10"
+      className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden cursor-pointer group relative border border-gray-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 transition-all shadow-sm"
       onClick={() => navigate(`/playlist/${playlist._id}`)}
       onMouseLeave={() => setShowMenu(false)}
     >
@@ -53,7 +53,7 @@ const PlaylistCard = ({ playlist, onDelete }) => {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gradient-to-br from-gray-800 to-gray-900">
+          <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-100 dark:bg-slate-800">
             <FaListUl size={32} className="mb-2 opacity-50" />
             <span className="text-xs font-medium">Empty Playlist</span>
           </div>
@@ -97,7 +97,7 @@ const PlaylistCard = ({ playlist, onDelete }) => {
 
       {/* Info content remains same */}
       <div className="p-4">
-        <h3 className="text-gray-900 dark:text-white font-bold text-lg mb-1 line-clamp-1 group-hover:text-purple-400 transition-colors">
+        <h3 className="text-gray-900 dark:text-white font-semibold text-lg mb-1 line-clamp-1 group-hover:text-blue-500 transition-colors">
             {playlist.title}
         </h3>
         <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-1 mb-3">
