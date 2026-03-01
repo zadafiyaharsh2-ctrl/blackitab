@@ -155,7 +155,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdate }) => {
                                 <button 
                                     type="submit" 
                                     disabled={loading}
-                                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-gray-900 dark:text-white font-bold py-3 rounded-xl shadow-lg transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {loading ? <FaSpinner className="animate-spin" /> : <FaSave />}
                                     Save Changes

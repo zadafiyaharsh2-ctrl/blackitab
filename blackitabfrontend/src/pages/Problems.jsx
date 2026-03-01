@@ -146,21 +146,21 @@ const Problems = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-transparent transition-colors">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors">
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-gray-100 to-blue-50 dark:from-purple-900/20 dark:via-gray-900/50 dark:to-blue-900/20 border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-full mb-6">
               <TrendingUp className="w-4 h-4 text-purple-400" />
-              <span className="text-purple-300 text-sm font-medium">Master Your Exam Preparation</span>
+              <span className="text-purple-700 dark:text-purple-300 text-sm font-medium">Master Your Exam Preparation</span>
             </div>
 
-            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
               Practice. Perfect. <span className="bg-gradient-to-r from-purple-400 to-pink-600 text-transparent bg-clip-text">Succeed.</span>
             </h1>
 
-            <p className="text-xl text-gray-300 mb-8 leading-relaxed">
+            <p className="text-xl text-gray-700 dark:text-gray-300 mb-8 leading-relaxed">
               Comprehensive problem sets tailored for India's most competitive exams.
               Build confidence with structured practice and detailed solutions.
             </p>
@@ -213,7 +213,7 @@ const Problems = () => {
                       <Icon className={`${exam.iconColor} h-7 w-7`} />
                     </div>
 
-                    <div className="px-3 py-1 bg-gray-700/50 rounded-full">
+                    <div className="px-3 py-1 bg-gray-100 dark:bg-gray-700/50 rounded-full">
                       <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{exam.stats.difficulty}</span>
                     </div>
                   </div>
@@ -223,7 +223,7 @@ const Problems = () => {
                     {exam.shortName}
                   </h3>
 
-                  <p className="text-sm text-gray-400 mb-4 line-clamp-2 leading-relaxed">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 line-clamp-2 leading-relaxed">
                     {exam.description}
                   </p>
 
@@ -233,7 +233,7 @@ const Problems = () => {
                       {exam.subjects.map((subject, idx) => (
                         <span
                           key={idx}
-                          className="text-xs px-2 py-1 bg-gray-700/50 text-gray-700 dark:text-gray-300 rounded-md border border-gray-600/50"
+                          className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 rounded-md border border-gray-300 dark:border-gray-600/50"
                         >
                           {subject}
                         </span>

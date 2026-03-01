@@ -89,7 +89,7 @@ exports.createContest = async (req, res) => {
             description: description || '',
             startTime: new Date(startTime),
             endTime: new Date(endTime),
-            difficulty: difficulty || 'Medium',
+            difficultyLevel: difficulty || 'Intermediate',
             questions: questions || [],
             isActive: true,
             createdBy: req.user._id

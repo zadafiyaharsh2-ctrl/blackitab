@@ -120,7 +120,7 @@ const MyQuestions = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                  <button className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+                  <button onClick={() => navigate(`/create-question?edit=${q._id}`)} className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
                     <FaEdit />
                   </button>
                   {deleteConfirm === q._id ? (

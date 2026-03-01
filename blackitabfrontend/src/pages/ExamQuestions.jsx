@@ -178,6 +178,7 @@ const ExamQuestions = () => {
             }
         } catch (err) {
             setTheoryContent('Failed to load theory summary. Please refer to your textbooks.');
+            console.error('Error fetching theory content:', err);
         } finally {
             setLoadingTheory(false);
         }
@@ -573,7 +574,7 @@ const ExamQuestions = () => {
                     </button> */}
                 </div>
             ) : (
-                <div>
+                <motion.div initial="hidden" animate="visible">
                     {(() => {
                         const q = questions[currentIndex];
                         return (
@@ -716,7 +717,7 @@ const ExamQuestions = () => {
                             <ChevronRight className="h-5 w-5" />
                         </button>
                     </div>
-                </div>
+                </motion.div>
             )}
         </div>
     );
