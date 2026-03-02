@@ -4,13 +4,13 @@
  * ============================================================================
  * 
  * A compact sidebar version of the AskAI chat, designed to be embedded 
- * in the Theory page's right panel. Provides the same AI query functionality 
- * but in a slimmer, sidebar-friendly layout.
+ * in the Theory page's right panel. Uses the shared useAskAIChat hook
+ * so all chat logic is shared with the full AskAI page — no duplicate API calls.
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useTheme } from '../context/useTheme';
-import API_URL from '../config';
+import useAskAIChat from '../hooks/useAskAIChat';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -28,90 +28,29 @@ import { ChevronLeft, ChevronRight, X, MessageSquare } from 'lucide-react';
 const AskAISidebar = ({ isOpen, onToggle, subjectName, topicName }) => {
     const { isDark } = useTheme();
 
-    const [messages, setMessages] = useState([
-        {
-            role: 'assistant',
-            content: `Hi! Ask me anything about **${topicName || subjectName || 'this topic'}** and I'll help you understand it better. 🎓`
-        }
-    ]);
-    const [input, setInput] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
+    // Use the shared hook — pass subject/topic context, skip history loading for sidebar
+    const {
+        messages,
+        input,
+        setInput,
+        isLoading,
+        error,
+        setError,
+        chatEndRef,
+        inputRef,
+        handleSendMessage,
+    } = useAskAIChat({
+        subjectContext: subjectName,
+        topicContext: topicName,
+        loadHistory: false, // Sidebar doesn't need full history panel
+    });
 
-    const chatEndRef = useRef(null);
-    const inputRef = useRef(null);
-
-    const getToken = () => localStorage.getItem('token');
-
-    // Reset welcome message when topic changes
-    useEffect(() => {
-        setMessages([
-            {
-                role: 'assistant',
-                content: `Hi! Ask me anything about **${topicName || subjectName || 'this topic'}** and I'll help you understand it better. 🎓`
-            }
-        ]);
-    }, [topicName, subjectName]);
-
-    useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
-
+    // Focus input when sidebar opens
     useEffect(() => {
         if (isOpen) {
             setTimeout(() => inputRef.current?.focus(), 300);
         }
     }, [isOpen]);
-
-    // Send message using the AI query endpoint
-    const handleSendMessage = async (e) => {
-        e.preventDefault();
-        if (!input.trim() || isLoading) return;
-
-        const contextPrefix = topicName ? `[Context: ${subjectName} - ${topicName}] ` : '';
-        const userMessage = { role: 'user', content: input.trim() };
-        setMessages(prev => [...prev, userMessage]);
-        const currentInput = input;
-        setInput('');
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            const response = await fetch(`${API_URL}/api/ai/query`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getToken()}`
-                },
-                body: JSON.stringify({
-                    query: contextPrefix + currentInput
-                })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || 'Failed to get response');
-            }
-
-            const aiResponse = {
-                role: 'assistant',
-                content: data.aiResponse?.content || 'No response content'
-            };
-
-            setMessages(prev => [...prev, aiResponse]);
-        } catch (err) {
-            console.error('Error:', err);
-            setError(err.message);
-            setMessages(prev => [...prev, {
-                role: 'assistant',
-                content: '❌ Sorry, I encountered an error. Please try again.',
-                isError: true
-            }]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     // Compact markdown rendering
     const markdownComponents = {

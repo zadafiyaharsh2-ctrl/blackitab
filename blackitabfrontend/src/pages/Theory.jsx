@@ -19,6 +19,9 @@
 // Import React hooks for state management and side effects
 import React, { useState, useEffect, useRef } from "react";
 
+// Import React Router hooks for dynamic routing
+import { useParams, useNavigate } from "react-router-dom";
+
 // Import axios for making HTTP requests to the backend API
 import axios from "axios";
 
@@ -33,6 +36,12 @@ import API_URL from "../config";
 import { mockSubjects, getMockTopics, getMockTopicContent } from "../data/mockTheoryData";
 
 const Theory = () => {
+  // ============================================================================
+  // ROUTING
+  // ============================================================================
+  const { subjectId } = useParams(); // Get subjectId from URL (e.g., /theory/:subjectId)
+  const navigate = useNavigate();
+
   // ============================================================================
   // STATE MANAGEMENT
   // ============================================================================
@@ -134,6 +143,29 @@ const Theory = () => {
 
     fetchCompletedTopics();
   }, []); // Empty dependency array means this runs only once on mount
+
+  // ============================================================================
+  // EFFECT: SYNC URL PARAM WITH SELECTED SUBJECT
+  // ============================================================================
+  // When subjects are loaded and we have a subjectId from URL, auto-select that subject
+  useEffect(() => {
+    if (subjectId && subjects.length > 0 && !selectedSubject) {
+      const found = subjects.find(s => s._id === subjectId);
+      if (found) {
+        setSelectedSubject(found);
+      } else {
+        // Invalid subjectId in URL, redirect to /theory
+        navigate('/theory', { replace: true });
+      }
+    }
+    // If no subjectId in URL but a subject is selected, clear it
+    if (!subjectId && selectedSubject) {
+      setSelectedSubject(null);
+      setTopics([]);
+      setSelectedTopic(null);
+      setTopicContent(null);
+    }
+  }, [subjectId, subjects]);
 
   // ============================================================================
   // EFFECT 2: FETCH TOPICS WHEN SUBJECT IS SELECTED
@@ -563,7 +595,7 @@ const Theory = () => {
               return (
                 <div
                   key={subject._id} // Unique key for React list rendering
-                  onClick={() => setSelectedSubject(subject)} // Set selected subject on click
+                  onClick={() => navigate(`/theory/${subject._id}`)} // Navigate to dynamic subject route
                   className="bg-white dark:bg-gray-800/50 backdrop-blur-md rounded-xl shadow-lg hover:shadow-xl cursor-pointer p-6 border border-gray-300 dark:border-gray-700 group transition hover:border-blue-500/30"
                 >
                   {/* Icon container with hover effect */}
@@ -633,7 +665,7 @@ const Theory = () => {
             setSelectedTopic(t);
           }}
           subjectName={selectedSubject.name}
-          onBackToSubjects={() => setSelectedSubject(null)}
+          onBackToSubjects={() => navigate('/theory')}
           completedTopics={completedTopics[selectedSubject._id] || {}}
         />
       </div>

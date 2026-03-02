@@ -118,8 +118,6 @@ exports.getProgressStats = async (req, res) => {
         const recentActivity = await UserProgress.find({ userId, completed: true })
             .sort({ completedAt: -1 })
             .limit(5)
-            .populate('topicId', 'name')
-            .populate('subjectId', 'name')
             .lean();
 
         const user = await require('../models/User').findById(userId);
