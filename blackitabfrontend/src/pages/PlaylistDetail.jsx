@@ -4,6 +4,7 @@ import axios from 'axios';
 import API_URL from '../config';
 import { FaPlay, FaRandom, FaShare, FaArrowLeft, FaClock, FaListOl, FaCamera, FaPen } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { CustomToast } from '../utils/CustomToast';
 
 const PlaylistDetail = () => {
     const { id } = useParams();
@@ -187,10 +188,10 @@ const PlaylistDetail = () => {
                             <FaPlay size={24} className="ml-1" />
                         </button>
                     )}
-                    <button className="text-gray-900 dark:text-white/50 hover:text-gray-900 dark:text-white transition-colors">
+                    <button onClick={() => { if (playlist.posts?.length > 0) { const rand = playlist.posts[Math.floor(Math.random() * playlist.posts.length)]; navigate(`/content/${rand._id}`); } else { CustomToast.info('No videos to shuffle'); } }} className="text-gray-900 dark:text-white/50 hover:text-gray-900 dark:text-white transition-colors" title="Shuffle">
                         <FaRandom size={24} />
                     </button>
-                     <button className="text-gray-900 dark:text-white/50 hover:text-gray-900 dark:text-white transition-colors">
+                     <button onClick={() => { navigator.clipboard.writeText(window.location.href); CustomToast.success('🔗 Playlist link copied!'); }} className="text-gray-900 dark:text-white/50 hover:text-gray-900 dark:text-white transition-colors" title="Share">
                         <FaShare size={24} />
                     </button>
                 </div>

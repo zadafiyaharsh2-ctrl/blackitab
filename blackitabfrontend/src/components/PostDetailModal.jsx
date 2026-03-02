@@ -105,7 +105,7 @@ const PostDetailModal = ({ isOpen, onClose, post, onPostDeleted }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-[1px] animate-in fade-in duration-300">
       
       {/* Close Area */}
       <div className="absolute inset-0 cursor-default" onClick={onClose}></div>
@@ -118,7 +118,7 @@ const PostDetailModal = ({ isOpen, onClose, post, onPostDeleted }) => {
       </button>
 
       {/* Main Container */}
-      <div className="relative w-full max-w-7xl h-full md:h-[90vh] flex flex-col md:flex-row bg-black rounded-none md:rounded-2xl overflow-hidden shadow-2xl z-10 animate-in zoom-in-95 duration-300 border border-gray-200 dark:border-white/5">
+      <div className="relative w-full max-w-7xl h-full md:h-[90vh] flex flex-col md:flex-row bg-black rounded-none md:rounded-2xl overflow-hidden shadow-lg z-10 animate-in zoom-in-95 duration-300 border border-gray-200 dark:border-white/5">
         
         {/* LEFT: MEDIA (Cinematic) */}
         <div className="flex-1 relative bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden">
@@ -154,7 +154,7 @@ const PostDetailModal = ({ isOpen, onClose, post, onPostDeleted }) => {
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-white/5 bg-gray-950/50 backdrop-blur-md sticky top-0 z-20">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-orange-400 p-[2px]">
+                    <div className="w-10 h-10 rounded-full bg-blue-600 p-[2px]">
                         <img 
                             src={currentPost.user?.profileImage || `https://ui-avatars.com/api/?name=${currentPost.user?.name}&background=1f2937&color=fff`} 
                             alt={currentPost.user?.name} 

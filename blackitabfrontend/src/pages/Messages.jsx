@@ -5,6 +5,7 @@ import API_URL from '../config';
 import { FaPaperPlane, FaSearch, FaArrowLeft, FaEllipsisV, FaPhone, FaVideo, FaCircle, FaTimes, FaFileAlt, FaFilePdf, FaImage, FaDownload, FaSpinner } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSocketContext } from '../context/SocketContext';
+import { CustomToast } from '../utils/CustomToast';
 
 const Messages = () => {
     const { userId } = useParams();
@@ -341,9 +342,9 @@ const Messages = () => {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 md:gap-4 text-gray-600 dark:text-gray-400">
-                                <button className="p-3 hover:bg-white/10 rounded-full transition-colors"><FaPhone /></button>
-                                <button className="p-3 hover:bg-white/10 rounded-full transition-colors"><FaVideo /></button>
-                                <button className="p-3 hover:bg-white/10 rounded-full transition-colors"><FaEllipsisV /></button>
+                                <button onClick={() => CustomToast.info('📞 Voice calls coming soon!')} className="p-3 hover:bg-white/10 rounded-full transition-colors" title="Voice call"><FaPhone /></button>
+                                <button onClick={() => CustomToast.info('📹 Video calls coming soon!')} className="p-3 hover:bg-white/10 rounded-full transition-colors" title="Video call"><FaVideo /></button>
+                                <button onClick={() => CustomToast.info('More options coming soon')} className="p-3 hover:bg-white/10 rounded-full transition-colors" title="More"><FaEllipsisV /></button>
                             </div>
                         </div>
 

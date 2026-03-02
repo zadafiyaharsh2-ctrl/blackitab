@@ -56,7 +56,7 @@ const userSchema = new mongoose.Schema({
   // --- HIERARCHY & ROLES ---
   role: {
     type: String,
-    enum: ['student', 'teacher', 'hod'],
+    enum: ['student', 'teacher', 'hod', 'institute_admin'],
     default: 'student'
   },
   instituteId: {
@@ -74,7 +74,10 @@ const userSchema = new mongoose.Schema({
 
   // --- MASSIVE SCALE METRICS ---
   globalRank: { type: Number, default: 0 },
-  longestStreak: { type: Number, default: 0 }
+  longestStreak: { type: Number, default: 0 },
+
+  // --- MODERATION ---
+  isBanned: { type: Boolean, default: false }
 }, { strict: false });
 
 // Hash password before saving

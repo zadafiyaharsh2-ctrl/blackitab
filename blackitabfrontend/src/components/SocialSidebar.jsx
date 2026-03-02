@@ -23,7 +23,7 @@ const SocialSidebar = ({ onLogout, isOpen, setIsOpen, user, leftOffset = 0 }) =>
   return (
     <div
       style={{ left: leftOffset }}
-      className={`bg-white dark:bg-black border-r border-gray-200 dark:border-gray-800 backdrop-blur-md shadow-xl h-screen fixed top-0 flex flex-col transition-all duration-300 ${isOpen ? 'w-64' : 'w-16'} z-40`}
+      className={`bg-white dark:bg-slate-950 border-r border-gray-200 dark:border-slate-800 backdrop-blur-sm shadow-sm h-screen fixed top-0 flex flex-col transition-all duration-300 ${isOpen ? 'w-64' : 'w-16'} z-40`}
     >
       <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
         {isOpen && (
@@ -46,7 +46,7 @@ const SocialSidebar = ({ onLogout, isOpen, setIsOpen, user, leftOffset = 0 }) =>
               <Link
                 to={item.path}
                 className={`flex items-center ${isOpen ? 'px-4 py-2' : 'px-2 py-3 justify-center'} rounded-md text-sm font-medium transition-all duration-200 ${location.pathname === item.path
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                  ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                   }`}
               >

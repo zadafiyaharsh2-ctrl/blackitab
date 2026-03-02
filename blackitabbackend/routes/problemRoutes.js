@@ -33,6 +33,7 @@ const protect = require('../middleware/auth');
 // Import JWT for optional auth logic
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const ExamQuestion = require('../models/ExamQuestion');
 
 /**
  * MIDDLEWARE: Optional Protection
@@ -77,6 +78,24 @@ router.route('/subjects/:subjectId/chapters')
 // Uses optionalProtect to show user progress if they are logged in
 router.route('/chapters/:chapterId/problems')
     .get(optionalProtect, getProblemsByChapter);
+
+// Daily Problem: deterministic "problem of the day" — MUST come before /:id
+router.get('/daily', async (req, res) => {
+  try {
+    const today = new Date();
+    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+    const totalQuestions = await ExamQuestion.countDocuments();
+    if (totalQuestions === 0) {
+      return res.json({ success: true, data: null, message: 'No questions available' });
+    }
+    const skipIndex = dayOfYear % totalQuestions;
+    const question = await ExamQuestion.findOne().skip(skipIndex).select('question subject difficulty exam options');
+    res.json({ success: true, data: question });
+  } catch (error) {
+    console.error('Daily problem error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 
 // Single Problem: Get by ID
 router.route('/:id')

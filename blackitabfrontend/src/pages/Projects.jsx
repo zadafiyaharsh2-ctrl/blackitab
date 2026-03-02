@@ -1,4 +1,6 @@
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import { CustomToast } from '../utils/CustomToast';
 import { 
   FaCode, 
   FaLaptopCode, 
@@ -12,6 +14,7 @@ import {
 
 const Projects = () => {
   const { isDark } = useTheme();
+  const navigate = useNavigate();
 
   const ideFeatures = [
     {
@@ -199,7 +202,7 @@ const Projects = () => {
           <p className={`text-lg ${isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-600'} mb-8 max-w-2xl mx-auto leading-relaxed`}>
             No installation required. Access a full-featured coding environment directly from your browser.
           </p>
-          <button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-gray-900 dark:text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg flex items-center gap-2 mx-auto">
+          <button onClick={() => { CustomToast.success('🚀 Full IDE coming soon! Redirecting to Practice...'); navigate('/problems'); }} className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-gray-900 dark:text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg flex items-center gap-2 mx-auto">
             <FaPlay className="text-sm" /> Launch Playground
           </button>
         </div>

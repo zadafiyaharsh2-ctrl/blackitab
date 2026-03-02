@@ -65,19 +65,21 @@ const Dashboard = () => {
     { text: "Don't stop when you're tired. Stop when you're done.", author: "David Goggins" }
   ];
 
-  const nextContest = {
-    title: "Bi-Weekly Contest #12",
-    date: "Tomorrow, 8:00 PM",
-    participants: 530,
+  const [nextContest, setNextContest] = useState({
+    title: "No upcoming contests",
+    date: "—",
+    participants: 0,
     link: "/contest"
-  };
+  });
 
-  const problemOfTheDay = {
-    title: "Merge K Sorted Lists",
-    difficulty: "Hard",
-    topic: "Linked List",
+  const [problemOfTheDay, setProblemOfTheDay] = useState({
+    title: "Loading...",
+    difficulty: "—",
+    topic: "",
     link: "/problems"
-  };
+  });
+
+  const [lastSession, setLastSession] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -112,6 +114,43 @@ const Dashboard = () => {
             });
           }
         }
+        // Fetch daily problem
+        try {
+          const dailyRes = await axios.get(`${API_URL}/api/problems/daily`);
+          if (dailyRes.data.success && dailyRes.data.data) {
+            const d = dailyRes.data.data;
+            setProblemOfTheDay({
+              title: d.question || 'Practice Challenge',
+              difficulty: d.difficulty || 'Medium',
+              topic: d.subject || '',
+              link: `/problems`
+            });
+          }
+        } catch { }
+
+        // Fetch upcoming contest
+        try {
+          const contestRes = await axios.get(`${API_URL}/api/contests/upcoming`);
+          if (contestRes.data.success && contestRes.data.data?.length > 0) {
+            const c = contestRes.data.data[0];
+            const date = new Date(c.startTime);
+            const isToday = date.toDateString() === new Date().toDateString();
+            const isTomorrow = date.toDateString() === new Date(Date.now() + 86400000).toDateString();
+            const dateStr = isToday ? `Today, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` :
+                           isTomorrow ? `Tomorrow, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` :
+                           date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            setNextContest({ title: c.title, date: dateStr, participants: 0, link: '/contest' });
+          }
+        } catch { }
+
+        // Resume last session
+        const savedSession = localStorage.getItem('blackitab_last_page');
+        if (savedSession) {
+          try {
+            setLastSession(JSON.parse(savedSession));
+          } catch { }
+        }
+
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -417,13 +456,20 @@ const Dashboard = () => {
               ))}
             </div>
             
-            {/* Quick Actions footer area */}
-            <div className="mt-4 p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-center relative overflow-hidden group">
-               <div className="absolute inset-0 bg-blue-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-               <p className="text-xs text-blue-300 font-medium relative z-10 flex items-center justify-center">
-                  <FaLaptopCode className="mr-2" /> Resume last session
-               </p>
-            </div>
+            {/* Resume Last Session */}
+            {lastSession ? (
+              <Link to={lastSession.path} className="mt-4 p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-center relative overflow-hidden group block hover:bg-blue-500/15 transition-colors">
+                 <p className="text-xs text-blue-300 font-medium relative z-10 flex items-center justify-center">
+                   <FaLaptopCode className="mr-2" /> Resume: {lastSession.label}
+                 </p>
+              </Link>
+            ) : (
+              <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/5 text-center">
+                 <p className="text-xs text-gray-500 font-medium flex items-center justify-center">
+                   <FaLaptopCode className="mr-2" /> No recent session
+                 </p>
+              </div>
+            )}
           </motion.div>
 
         </div>

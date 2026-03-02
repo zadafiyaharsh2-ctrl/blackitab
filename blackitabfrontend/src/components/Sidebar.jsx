@@ -45,13 +45,29 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
+  // Get user role for conditional nav items
+  const userRole = (() => {
+    try { return JSON.parse(localStorage.getItem('user') || '{}').role || 'student'; } catch { return 'student'; }
+  })();
+  const isTeacherOrAbove = ['teacher', 'hod', 'institute_admin'].includes(userRole);
+  const isInstituteAdmin = userRole === 'institute_admin';
+
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
     { path: '/social', label: 'Social', icon: <FaUsers /> },
-    { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot className="text-purple-400" /> },
+    { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
     { path: '/ai-questions', label: 'AI Questions', icon: <FaGraduationCap className="text-emerald-400" /> },
     { path: '/analytics', label: 'Analytics', icon: <FaChartBar /> },
-    { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
+    // Role-based items
+    ...(isTeacherOrAbove ? [
+      { path: '/teacher-dashboard', label: 'Teacher Panel', icon: <FaSchool className="text-indigo-400" /> },
+      { path: '/create-question', label: 'Create Question', icon: <FaGraduationCap className="text-teal-400" /> },
+      { path: '/my-questions', label: 'My Questions', icon: <FaListUl className="text-cyan-400" /> },
+      { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
+    ] : []),
+    ...(isInstituteAdmin ? [
+      { path: '/institute-dashboard', label: 'Institute Panel', icon: <FaSchool className="text-orange-400" /> },
+    ] : []),
     { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
     { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
     { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy className="text-yellow-400" /> },
@@ -76,8 +92,8 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
         className="fixed left-0 top-0 h-screen z-50 flex flex-col glass-panel border-r border-gray-200/20 dark:border-gray-800/50 shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_30px_-5px_rgba(168,85,247,0.1)]"
       >
         <div className="h-20 border-b border-gray-200/50 dark:border-gray-800/50 flex items-center justify-between px-4 relative overflow-hidden">
-           {/* Subtle gradient glow behind logo */}
-           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-purple-500/5 to-pink-500/5 opacity-50 pointer-events-none" />
+           {/* Minimal header surface */}
+           <div className="absolute top-0 left-0 w-full h-full bg-white/10 dark:bg-slate-900/20 pointer-events-none" />
           
           <AnimatePresence>
             {isOpen && (
@@ -87,7 +103,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
                 exit={{ opacity: 0, x: -20 }}
                 className="flex items-center gap-2"
               >
-                <Logo showText={true} className="w-8 h-8" textSize="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-500" />
+                <Logo showText={true} className="w-8 h-8" textSize="text-2xl font-bold text-slate-900 dark:text-slate-100" />
               </motion.div>
             )}
           </AnimatePresence>
@@ -95,7 +111,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => setIsOpen(!isOpen)}
-            className="p-2.5 bg-gray-100 dark:bg-gray-800/80 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 rounded-xl transition-colors shadow-sm ring-1 ring-gray-200 dark:ring-gray-700/50 relative z-10"
+            className="p-2.5 bg-gray-100 dark:bg-gray-800/80 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl transition-colors shadow-sm ring-1 ring-gray-200 dark:ring-gray-700/50 relative z-10"
           >
             <FaBars />
           </motion.button>
@@ -111,14 +127,14 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
             title="Search (Ctrl+K)"
           >
             <div className="flex items-center gap-3">
-              <FaSearch className="group-hover:text-purple-500 transition-colors" />
+              <FaSearch className="group-hover:text-blue-500 transition-colors" />
               {isOpen && <span className="text-sm font-medium">Search...</span>}
             </div>
-            {isOpen && <kbd className="text-[10px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-2 py-1 rounded-md font-mono text-gray-400 shadow-sm">⌘K</kbd>}
+            {isOpen && <kbd className="text-[10px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-2 py-1 rounded-md font-mono text-gray-400 shadow-sm">Ctrl+K</kbd>}
           </motion.button>
         </div>
 
-        <nav className="flex-1 px-3 py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-800 hover:scrollbar-thumb-purple-500/50">
+        <nav className="flex-1 px-3 py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-800 hover:scrollbar-thumb-slate-500/50">
           <ul className="space-y-1.5">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path || (location.pathname.startsWith(item.path) && item.path !== '/');
@@ -130,7 +146,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
                       whileTap={{ scale: 0.98 }}
                       className={`relative flex items-center ${isOpen ? 'px-4 py-3' : 'px-0 py-3 justify-center'} rounded-xl text-sm font-semibold transition-all duration-300 overflow-hidden group ${
                         isActive
-                          ? 'text-white shadow-[0_4px_20px_-4px_rgba(168,85,247,0.5)]'
+                          ? 'text-white shadow-sm'
                           : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
                       }`}
                     >
@@ -138,14 +154,14 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
                       {isActive && (
                         <motion.div 
                           layoutId="active-nav-bg"
-                          className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-600 rounded-xl -z-10"
+                          className="absolute inset-0 bg-blue-600 dark:bg-blue-500 rounded-xl -z-10"
                         />
                       )}
 
-                      <span className={`relative z-10 text-lg ${isOpen ? 'mr-4' : ''} ${isActive ? 'text-white' : 'group-hover:text-purple-500 transition-colors'}`}>
+                      <span className={`relative z-10 text-lg ${isOpen ? 'mr-4' : ''} ${isActive ? 'text-white' : 'group-hover:text-blue-500 transition-colors'}`}>
                         {item.icon}
                         {item.path === '/notifications' && unreadCount > 0 && (
-                          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-gray-900 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-gray-900 rounded-full" />
                         )}
                       </span>
                       
@@ -163,7 +179,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
                       </AnimatePresence>
 
                       {isOpen && item.path === '/notifications' && unreadCount > 0 && (
-                        <span className="ml-auto z-10 text-[10px] bg-red-500 text-white rounded-full px-2 py-0.5 font-black shadow-sm">
+                        <span className="ml-auto z-10 text-[10px] bg-red-500 text-white rounded-full px-2 py-0.5 font-semibold shadow-sm">
                           {unreadCount > 99 ? '99+' : unreadCount}
                         </span>
                       )}
@@ -180,17 +196,17 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
             <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className={`w-full flex items-center ${isOpen ? 'px-4 py-3 justify-start gap-4' : 'px-0 py-3 justify-center'} text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-purple-500/10 hover:text-purple-500 rounded-xl transition-colors relative group`}
+              className={`w-full flex items-center ${isOpen ? 'px-4 py-3 justify-start gap-4' : 'px-0 py-3 justify-center'} text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-blue-500/10 hover:text-blue-500 rounded-xl transition-colors relative group`}
             >
-              <span className="relative flex-shrink-0 text-lg group-hover:text-purple-500">
+              <span className="relative flex-shrink-0 text-lg group-hover:text-blue-500">
                 <FaBell />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-gray-900 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-gray-900 rounded-full" />
                 )}
               </span>
               {isOpen && <span>Notifications</span>}
               {isOpen && unreadCount > 0 && (
-                <span className="ml-auto text-[10px] bg-red-500 text-white rounded-full px-2 py-0.5 font-black shadow-sm">
+                <span className="ml-auto text-[10px] bg-red-500 text-white rounded-full px-2 py-0.5 font-semibold shadow-sm">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
