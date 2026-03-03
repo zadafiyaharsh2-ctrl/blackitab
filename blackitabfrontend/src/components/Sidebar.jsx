@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaHome, FaUsers, FaRobot, FaChartBar, FaUser, FaSignOutAlt, FaBars, FaStore, FaSuitcase, FaBook, FaLaptopCode, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaBell, FaSearch } from 'react-icons/fa';
+import { FaHome, FaUsers, FaRobot, FaChartBar, FaUser, FaSignOutAlt, FaBars, FaBook, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaBell, FaSearch } from 'react-icons/fa';
 import { MdReportProblem } from 'react-icons/md';
 import { useTheme } from '../context/ThemeContext';
 import Logo from './Logo';
@@ -14,15 +14,16 @@ import API_URL from '../config';
  *
  * Visibility rules:
  * ─────────────────
- * • ALL users    → Dashboard, Social, Ask AI, AI Questions, Analytics,
- *                  Problems, Contest, Leaderboard, Theory, Projects,
- *                  Playlists, Store, Jobs, Profile
+ * • ALL users    → Dashboard, Social, Ask AI, Analytics,
+ *                  Problems, Contest, Leaderboard, Theory, Profile
  *
- * • teacher+     → Teacher Panel, Create Question, My Questions, School Analytics
- * • institute_admin → Institute Panel (includes everything teacher can see)
+ * • teacher+     → AI Questions, Teacher Panel, Create Question,
+ *                  My Questions, School Analytics, Question Paper
+ * • institute_admin → Institute Panel (+ everything teacher can see)
  * • hod          → same as teacher (TeacherDashboard shows HOD sections)
  *
- * • System Admin → completely separate at /admin/login — NO sidebar link.
+ * Removed (Coming Soon): Projects, Playlists, Store, Jobs
+ * System Admin → completely separate at /admin/login — NO sidebar link.
  */
 const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
   const location = useLocation();
@@ -70,35 +71,32 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
 
   // ── Build nav items based on role ──
   const navItems = [
-    // Everyone sees these
+    // ─── Everyone sees these ───
     { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
     { path: '/social', label: 'Social', icon: <FaUsers /> },
     { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
-    { path: '/ai-questions', label: 'AI Questions', icon: <FaGraduationCap className="text-emerald-400" /> },
     { path: '/analytics', label: 'Analytics', icon: <FaChartBar /> },
 
-    // Teacher / HOD / Institute Admin only
+    // ─── Teacher / HOD / Institute Admin only ───
     ...(canAccessTeacher ? [
+      { path: '/ai-questions', label: 'AI Questions', icon: <FaGraduationCap className="text-emerald-400" /> },
       { path: '/teacher-dashboard', label: 'Teacher Panel', icon: <FaSchool className="text-indigo-400" /> },
       { path: '/create-question', label: 'Create Question', icon: <FaGraduationCap className="text-teal-400" /> },
       { path: '/my-questions', label: 'My Questions', icon: <FaListUl className="text-cyan-400" /> },
       { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
+      { path: '/question-paper', label: 'Question Paper', icon: <FaBook className="text-rose-400" /> },
     ] : []),
 
-    // Institute Admin only
+    // ─── Institute Admin only ───
     ...(canAccessInstitute ? [
       { path: '/institute-dashboard', label: 'Institute Panel', icon: <FaSchool className="text-orange-400" /> },
     ] : []),
 
-    // Everyone sees these
+    // ─── Everyone sees these ───
     { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
     { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
     { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy className="text-yellow-400" /> },
     { path: '/theory', label: 'Theory', icon: <FaBook /> },
-    { path: '/ide', label: 'Projects', icon: <FaLaptopCode /> },
-    { path: '/playlists', label: 'Playlists', icon: <FaListUl /> },
-    { path: '/store', label: 'Store', icon: <FaStore /> },
-    { path: '/jobs', label: 'Jobs', icon: <FaSuitcase /> },
     { path: '/profile', label: 'Profile', icon: <FaUser /> },
   ];
 
