@@ -237,8 +237,6 @@ exports.getProgressStats = async (req, res) => {
         const recentActivity = await UserProgress.find({ userId, completed: true })
             .sort({ completedAt: -1 })
             .limit(5)
-            .populate('topicId', 'name')
-            .populate('subjectId', 'name')
             .lean();
 
         // 4. Compute TRUE streak from activity data (not from stored User.streak)

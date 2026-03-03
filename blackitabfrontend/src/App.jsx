@@ -364,6 +364,18 @@ function App() {
               }
             />
 
+            {/* Theory Subject Page (Dynamic Route) */}
+            <Route
+              path="/theory/:subjectId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Theory />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
             {/* Online Projects */}
             <Route
               path="/ide"
