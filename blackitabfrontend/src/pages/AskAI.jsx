@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useTheme } from '../context/useTheme';
-import API_URL from '../config';
+import useAskAIChat from '../hooks/useAskAIChat';
 import usePageTitle from '../hooks/usePageTitle';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -23,179 +23,29 @@ const AskAI = () => {
   usePageTitle('Ask AI');
   const { isDark } = useTheme();
 
-  const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      content: 'Hello! I\'m your AI learning assistant. Ask me anything about your studies, and I\'ll help you understand concepts better. 🎓'
-    }
-  ]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const [history, setHistory] = useState([]);
-  const [showHistory, setShowHistory] = useState(false);
-  const [loadingHistory, setLoadingHistory] = useState(false);
-
-  const chatEndRef = useRef(null);
-  const inputRef = useRef(null);
-
-  const getToken = () => localStorage.getItem('token');
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  // Use the shared hook — full page loads history
+  const {
+    messages,
+    input,
+    setInput,
+    isLoading,
+    error,
+    setError,
+    history,
+    showHistory,
+    setShowHistory,
+    loadingHistory,
+    chatEndRef,
+    inputRef,
+    handleSendMessage,
+    loadFromHistory,
+    deleteHistoryItem,
+    clearAllHistory,
+  } = useAskAIChat({ loadHistory: true });
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
-
-  // Fetch conversation-thread history on mount (BlackBookEDU.ai style)
-  useEffect(() => {
-    fetchChatHistory();
-    fetchHistory();
-  }, []);
-
-  // Fetch conversation-thread (BlackBookEDU.ai style)
-  const fetchChatHistory = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/ai/chat-history`, {
-        headers: {
-          'Authorization': `Bearer ${getToken()}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.ok && data.messages && data.messages.length > 0) {
-          const formattedMessages = data.messages.map(msg => ({
-            role: msg.role,
-            content: msg.content
-          }));
-          setMessages(formattedMessages);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load chat history:', err);
-    }
-  };
-
-  // Fetch individual Q&A history for sidebar
-  const fetchHistory = async () => {
-    try {
-      setLoadingHistory(true);
-      const response = await fetch(`${API_URL}/api/ai/history?limit=20`, {
-        headers: {
-          'Authorization': `Bearer ${getToken()}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setHistory(data.data || []);
-      }
-    } catch (err) {
-      console.error('Failed to fetch history:', err);
-    } finally {
-      setLoadingHistory(false);
-    }
-  };
-
-  // Send message using BlackBookEDU.ai-style /query endpoint
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
-
-    const userMessage = { role: 'user', content: input.trim() };
-    setMessages(prev => [...prev, userMessage]);
-    const currentInput = input;
-    setInput('');
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`${API_URL}/api/ai/query`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getToken()}`
-        },
-        body: JSON.stringify({
-          query: currentInput
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to get response');
-      }
-
-      const aiResponse = {
-        role: 'assistant',
-        content: data.aiResponse?.content || 'No response content'
-      };
-
-      setMessages(prev => [...prev, aiResponse]);
-      fetchHistory();
-
-    } catch (err) {
-      console.error('Error:', err);
-      setError(err.message);
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: '❌ Sorry, I encountered an error. Please try again.',
-        isError: true
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadFromHistory = (item) => {
-    setMessages([
-      { role: 'user', content: item.question },
-      { role: 'assistant', content: item.answer }
-    ]);
-    setShowHistory(false);
-  };
-
-  const deleteHistoryItem = async (id, e) => {
-    e.stopPropagation();
-    try {
-      await fetch(`${API_URL}/api/ai/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${getToken()}`
-        }
-      });
-      setHistory(prev => prev.filter(item => item._id !== id));
-    } catch (err) {
-      console.error('Failed to delete:', err);
-    }
-  };
-
-  const clearAllHistory = async () => {
-    if (!window.confirm('Are you sure you want to clear all history?')) return;
-
-    try {
-      await fetch(`${API_URL}/api/ai/history/clear`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${getToken()}`
-        }
-      });
-      setHistory([]);
-      setMessages([
-        {
-          role: 'assistant',
-          content: 'Hello! I\'m your AI learning assistant. Ask me anything about your studies, and I\'ll help you understand concepts better. 🎓'
-        }
-      ]);
-    } catch (err) {
-      console.error('Failed to clear history:', err);
-    }
-  };
 
   const sampleQuestions = [
     "What is a database?",
@@ -204,7 +54,7 @@ const AskAI = () => {
     "How do indexes work?"
   ];
 
-  // Markdown components for rendering AI responses (BlackBookEDU.ai style)
+  // Markdown components for rendering AI responses
   const markdownComponents = {
     code({ node, inline, className, children, ...props }) {
       const match = /language-(\w+)/.exec(className || '');

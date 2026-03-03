@@ -246,11 +246,11 @@ function App() {
               }
             />
 
-            {/* School Analytics */}
+            {/* School Analytics — teacher/hod/institute_admin only */}
             <Route
               path="/school-analytics"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <SchoolAnalytics />
                   </MainLayout>
@@ -355,6 +355,18 @@ function App() {
             {/* Theory Learning Page */}
             <Route
               path="/theory"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Theory />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Theory Subject Page (Dynamic Route) */}
+            <Route
+              path="/theory/:subjectId"
               element={
                 <ProtectedRoute>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>

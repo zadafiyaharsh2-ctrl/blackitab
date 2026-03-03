@@ -21,17 +21,17 @@ const userProgressSchema = new mongoose.Schema({
     },
 
     // Reference to the subject (DBMS, SQL, etc.)
+    // Uses String to support both ObjectId and mock string IDs
     subjectId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Subject',
+        type: String,
         required: true,
         index: true
     },
 
     // Reference to the specific topic
+    // Uses String to support both ObjectId and mock string IDs
     topicId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Topic',
+        type: String,
         required: true,
         index: true
     },
