@@ -246,11 +246,11 @@ function App() {
               }
             />
 
-            {/* School Analytics */}
+            {/* School Analytics — teacher/hod/institute_admin only */}
             <Route
               path="/school-analytics"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <SchoolAnalytics />
                   </MainLayout>
