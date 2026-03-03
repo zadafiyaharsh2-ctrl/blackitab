@@ -75,6 +75,7 @@ const userSchema = new mongoose.Schema({
   // --- MASSIVE SCALE METRICS ---
   globalRank: { type: Number, default: 0 },
   longestStreak: { type: Number, default: 0 },
+  rating: { type: Number, default: 0 }, // Percentile rating (0-100)
 
   // --- MODERATION ---
   isBanned: { type: Boolean, default: false }
