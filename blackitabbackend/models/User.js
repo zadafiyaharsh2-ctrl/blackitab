@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema({
   streak: { type: Number, default: 0 },
   lastActiveDate: { type: Date },
   points: { type: Number, default: 0 },
+  xp: { type: Number, default: 0 },
 
   // Social metrics
   followerCount: { type: Number, default: 0 },

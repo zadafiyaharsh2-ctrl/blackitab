@@ -32,8 +32,10 @@ const useAskAIChat = ({ subjectContext, topicContext, loadHistory = true } = {})
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const [history, setHistory] = useState([]);
+    const [chatList, setChatList] = useState([]);
+    const [currentChatId, setCurrentChatId] = useState(null);
     const [showHistory, setShowHistory] = useState(false);
+    const [history, setHistory] = useState([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
 
     const chatEndRef = useRef(null);
@@ -51,35 +53,65 @@ const useAskAIChat = ({ subjectContext, topicContext, loadHistory = true } = {})
         const newGreeting = contextLabel
             ? `Hi! Ask me anything about **${contextLabel}** and I'll help you understand it better. 🎓`
             : DEFAULT_GREETING;
-        setMessages([{ role: 'assistant', content: newGreeting }]);
-    }, [topicContext, subjectContext]);
+        if (!currentChatId) {
+             setMessages([{ role: 'assistant', content: newGreeting }]);
+        }
+    }, [topicContext, subjectContext, currentChatId]);
 
     // Fetch conversation-thread history on mount
     useEffect(() => {
         if (!loadHistory) return;
-        fetchChatHistory();
-        fetchHistory();
+        fetchChatList();
+        fetchHistory(); // Legacy QA history
     }, [loadHistory]);
 
-    const fetchChatHistory = async () => {
+    const fetchChatList = async () => {
         try {
-            const response = await fetch(`${API_URL}/api/ai/chat-history`, {
+            const response = await fetch(`${API_URL}/api/ai/chats`, {
                 headers: { 'Authorization': `Bearer ${getToken()}` }
             });
 
             if (response.ok) {
                 const data = await response.json();
-                if (data.ok && data.messages && data.messages.length > 0) {
-                    const formattedMessages = data.messages.map(msg => ({
-                        role: msg.role,
-                        content: msg.content
-                    }));
-                    setMessages(formattedMessages);
+                if (data.ok && data.chats) {
+                    setChatList(data.chats);
                 }
             }
         } catch (err) {
-            console.error('Failed to load chat history:', err);
+            console.error('Failed to load chat list:', err);
         }
+    };
+
+    const loadChat = async (chatId) => {
+        try {
+            setIsLoading(true);
+            const response = await fetch(`${API_URL}/api/ai/chats/${chatId}`, {
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.ok && data.chat && data.chat.messages) {
+                    setCurrentChatId(chatId);
+                    setMessages(data.chat.messages.map(msg => ({
+                        role: msg.role,
+                        content: msg.content
+                    })));
+                    // On mobile, you might want to hide the sidebar when a chat is selected
+                    setShowHistory(false); 
+                }
+            }
+        } catch (err) {
+            console.error('Failed to load chat messages:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const createNewChat = () => {
+        setCurrentChatId(null);
+        setMessages([{ role: 'assistant', content: greeting }]);
+        setShowHistory(false);
     };
 
     const fetchHistory = async () => {
@@ -120,13 +152,16 @@ const useAskAIChat = ({ subjectContext, topicContext, loadHistory = true } = {})
         setError(null);
 
         try {
-            const response = await fetch(`${API_URL}/api/ai/query`, {
+            const response = await fetch(`${API_URL}/api/ai/chats`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${getToken()}`
                 },
-                body: JSON.stringify({ query: contextPrefix + currentInput })
+                body: JSON.stringify({ 
+                    query: contextPrefix + currentInput,
+                    chatId: currentChatId 
+                })
             });
 
             const data = await response.json();
@@ -141,7 +176,14 @@ const useAskAIChat = ({ subjectContext, topicContext, loadHistory = true } = {})
             };
 
             setMessages(prev => [...prev, aiResponse]);
-            if (loadHistory) fetchHistory();
+            
+            // If it's a new chat, update ID and refresh sidebar
+            if (data.isNewChat || (!currentChatId && data.chatId)) {
+                setCurrentChatId(data.chatId);
+                if (loadHistory) fetchChatList();
+            }
+
+            if (loadHistory) fetchHistory(); // Also refresh Q&A history
         } catch (err) {
             console.error('Error:', err);
             setError(err.message);
@@ -163,10 +205,28 @@ const useAskAIChat = ({ subjectContext, topicContext, loadHistory = true } = {})
         setShowHistory(false);
     };
 
+    const deleteChatSession = async (id, e) => {
+        e?.stopPropagation();
+        try {
+            await fetch(`${API_URL}/api/ai/chats/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+            // Remove from sidebar list
+            setChatList(prev => prev.filter(chat => chat._id !== id));
+            // If currently viewing the deleted chat, reset to new chat
+            if (currentChatId === id) {
+                createNewChat();
+            }
+        } catch (err) {
+            console.error('Failed to delete chat:', err);
+        }
+    };
+
     const deleteHistoryItem = async (id, e) => {
         e?.stopPropagation();
         try {
-            await fetch(`${API_URL}/api/ai/${id}`, {
+            await fetch(`${API_URL}/api/ai/chats/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${getToken()}` }
             });
@@ -199,7 +259,9 @@ const useAskAIChat = ({ subjectContext, topicContext, loadHistory = true } = {})
         isLoading,
         error,
         setError,
-        history,
+        history, // old Q&A history
+        chatList, // new ChatGPT-style chat list
+        currentChatId,
         showHistory,
         setShowHistory,
         loadingHistory,
@@ -211,7 +273,10 @@ const useAskAIChat = ({ subjectContext, topicContext, loadHistory = true } = {})
         // Actions
         handleSendMessage,
         loadFromHistory,
+        loadChat,
+        createNewChat,
         deleteHistoryItem,
+        deleteChatSession,
         clearAllHistory,
     };
 };

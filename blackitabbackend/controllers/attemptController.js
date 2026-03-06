@@ -34,13 +34,13 @@ exports.submitAttempt = async (req, res) => {
             }
         });
 
-        // 5. Update User Gamification — Difficulty-weighted XP
+        // 5. Update User Gamification — Difficulty-weighted Points & 10 XP per correct question
         //    Easy=5, Medium=15, Hard=30 (industry-standard weighted scoring)
         if (isCorrect) {
             const XP_BY_DIFFICULTY = { 'Easy': 5, 'Medium': 15, 'Hard': 30 };
-            const xpGain = XP_BY_DIFFICULTY[question.difficulty] || 10;
+            const pointsGain = XP_BY_DIFFICULTY[question.difficulty] || 10;
             await User.findByIdAndUpdate(userId, {
-                $inc: { points: xpGain }
+                $inc: { points: pointsGain, xp: 10 }
             });
         }
 

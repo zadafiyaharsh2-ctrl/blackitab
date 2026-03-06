@@ -4,8 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { FaTrophy, FaFire, FaStar, FaMedal, FaArrowLeft, FaSpinner } from 'react-icons/fa';
 import API_URL from '../config';
 import usePageTitle from '../hooks/usePageTitle';
-import { mockLeaderboard } from '../data/mockLeaderboardData';
-
 const RANK_STYLES = {
     1: { bg: 'from-yellow-500/20 to-amber-500/10', border: 'border-yellow-500/40', glow: 'shadow-yellow-500/20', icon: '🥇', badge: 'bg-yellow-500 text-black' },
     2: { bg: 'from-slate-400/20 to-gray-400/10', border: 'border-slate-400/40', glow: 'shadow-slate-400/20', icon: '🥈', badge: 'bg-slate-400 text-black' },
@@ -36,12 +34,11 @@ const Leaderboard = () => {
             if (res.data.success && res.data.data && res.data.data.length > 0) {
                 setUsers(res.data.data);
             } else {
-                console.log("Empty leaderboard from backend, applying intelligent fallback data.");
-                setUsers(mockLeaderboard);
+                setUsers([]);
             }
         } catch (err) {
-            console.error('Leaderboard error, falling back to mock data:', err);
-            setUsers(mockLeaderboard);
+            console.error('Leaderboard error:', err);
+            setUsers([]);
         } finally {
             setLoading(false);
         }
@@ -107,7 +104,7 @@ const Leaderboard = () => {
                                         <p className="text-gray-900 dark:text-white font-bold text-sm text-center max-w-[80px] truncate">{user.name}</p>
                                         <div className="flex items-center gap-1 mt-1">
                                             <FaStar className="text-yellow-400 text-xs" />
-                                            <span className="text-yellow-400 text-xs font-bold">{user.points?.toLocaleString() || 0} XP</span>
+                                            <span className="text-yellow-400 text-xs font-bold">{(user.xp ?? user.points)?.toLocaleString() || 0} XP</span>
                                         </div>
                                         {user.streak > 0 && (
                                             <div className="flex items-center gap-1 mt-0.5">
@@ -155,7 +152,7 @@ const Leaderboard = () => {
                                                 </span>
                                             )}
                                             <span className="flex items-center gap-1 text-yellow-400 font-bold">
-                                                <FaStar className="text-xs" />{user.points?.toLocaleString() || 0}
+                                                <FaStar className="text-xs" />{(user.xp ?? user.points)?.toLocaleString() || 0}
                                             </span>
                                         </div>
                                     </div>
