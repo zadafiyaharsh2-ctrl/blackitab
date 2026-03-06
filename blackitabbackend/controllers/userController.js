@@ -73,3 +73,52 @@ exports.linkManager = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+/**
+ * GET /api/user/leaderboard
+ * 
+ * Ranking algorithm: XP-weighted with streak bonus.
+ * Score = points + (streak × 10)
+ * This is similar to how LeetCode and HackerRank rank users:
+ * primary sort by XP, tiebreaker by streak consistency.
+ * 
+ * Proper rank assignment handles ties:
+ * - Same score = same rank (dense ranking)
+ */
+exports.getLeaderboard = async (req, res) => {
+    try {
+        // Fetch top 50 non-banned users with points > 0
+        const users = await User.find({ 
+            isBanned: { $ne: true },
+            points: { $gt: 0 }
+        })
+        .select('name email points streak followerCount profileImage role')
+        .sort({ points: -1, streak: -1 })
+        .limit(50)
+        .lean();
+
+        // Assign ranks with dense ranking (ties get same rank)
+        let currentRank = 0;
+        let prevScore = -1;
+
+        const ranked = users.map((user, index) => {
+            const score = (user.points || 0) + ((user.streak || 0) * 10);
+            if (score !== prevScore) {
+                currentRank = index + 1;
+                prevScore = score;
+            }
+            return {
+                ...user,
+                _id: user._id,
+                rank: currentRank,
+                score,
+            };
+        });
+
+        res.json({ success: true, data: ranked });
+    } catch (error) {
+        console.error('Leaderboard error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+

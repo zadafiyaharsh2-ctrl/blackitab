@@ -63,6 +63,7 @@ import Onboarding from './pages/Onboarding';
 import TeacherDashboard from './pages/TeacherDashboard';
 import CreateExamQuestion from './pages/CreateExamQuestion';
 import MyQuestions from './pages/MyQuestions';
+import QuestionPaper from './pages/QuestionPaper';
 import InstituteDashboard from './pages/InstituteDashboard';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
@@ -246,11 +247,11 @@ function App() {
               }
             />
 
-            {/* School Analytics */}
+            {/* School Analytics — teacher/hod/institute_admin only */}
             <Route
               path="/school-analytics"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <SchoolAnalytics />
                   </MainLayout>
@@ -590,6 +591,18 @@ function App() {
                 <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <MyQuestions />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Question Paper Generator */}
+            <Route
+              path="/question-paper"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <QuestionPaper />
                   </MainLayout>
                 </ProtectedRoute>
               }

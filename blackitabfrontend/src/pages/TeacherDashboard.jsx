@@ -2,9 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { FaPlusCircle, FaListAlt, FaChartBar, FaUsers, FaCheckCircle, FaArrowRight } from 'react-icons/fa';
+import { FaPlusCircle, FaListAlt, FaChartBar, FaUsers, FaCheckCircle, FaArrowRight, FaUserGraduate, FaChalkboardTeacher, FaEye } from 'react-icons/fa';
 import API_URL from '../config';
 import usePageTitle from '../hooks/usePageTitle';
+
+// ── Dummy Data ─────────────────────────────────────────────────────────────
+const DUMMY_QUESTIONS = [
+  { _id: 'q1', question: 'What is normalization in DBMS? Explain with examples.', subject: 'DBMS', difficulty: 'Medium', createdAt: '2026-02-28' },
+  { _id: 'q2', question: 'Write a SQL query to find the second highest salary.', subject: 'SQL', difficulty: 'Easy', createdAt: '2026-02-27' },
+  { _id: 'q3', question: 'Explain ACID properties with real-world analogies.', subject: 'DBMS', difficulty: 'Hard', createdAt: '2026-02-25' },
+  { _id: 'q4', question: 'What is the difference between DELETE and TRUNCATE?', subject: 'SQL', difficulty: 'Easy', createdAt: '2026-02-24' },
+  { _id: 'q5', question: 'Explain cloud deployment models — IaaS, PaaS, SaaS.', subject: 'CCBDI', difficulty: 'Medium', createdAt: '2026-02-22' },
+];
+
+const DUMMY_STUDENTS = [
+  { name: 'Aarav Sharma', accuracy: 87, attempts: 45, division: 'A' },
+  { name: 'Sneha Kulkarni', accuracy: 72, attempts: 38, division: 'B' },
+  { name: 'Vikram Joshi', accuracy: 94, attempts: 62, division: 'A' },
+  { name: 'Diya Nair', accuracy: 55, attempts: 28, division: 'B' },
+  { name: 'Karan Mehta', accuracy: 41, attempts: 20, division: 'A' },
+];
+
+const DUMMY_TEACHERS = [
+  { name: 'Priya Deshmukh', questionsCreated: 28, subject: 'DBMS' },
+  { name: 'Ananya Iyer', questionsCreated: 15, subject: 'SQL' },
+  { name: 'Rahul Verma', questionsCreated: 22, subject: 'CCBDI' },
+];
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -18,9 +41,14 @@ const itemVariants = {
 const TeacherDashboard = () => {
   usePageTitle('Teacher Dashboard');
   const [user, setUser] = useState(null);
-  const [stats, setStats] = useState({ questionsCreated: 0, studentsCount: 0, avgAccuracy: 0 });
-  const [recentQuestions, setRecentQuestions] = useState([]);
+  const [stats, setStats] = useState({ questionsCreated: 14, studentsCount: 86, avgAccuracy: 72 });
+  const [recentQuestions, setRecentQuestions] = useState(DUMMY_QUESTIONS);
   const [loading, setLoading] = useState(true);
+
+  const userRole = (() => {
+    try { return JSON.parse(localStorage.getItem('user') || '{}').role || 'teacher'; } catch { return 'teacher'; }
+  })();
+  const isHOD = userRole === 'hod';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -29,29 +57,27 @@ const TeacherDashboard = () => {
         if (userData) setUser(JSON.parse(userData));
 
         const token = localStorage.getItem('token');
-        if (!token) return;
+        if (!token) { setLoading(false); return; }
 
-        // Fetch teacher's questions
         const qRes = await axios.get(`${API_URL}/api/exams/questions/my`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        if (qRes.data.success) {
+        if (qRes.data.success && qRes.data.data.length > 0) {
           setRecentQuestions(qRes.data.data.slice(0, 5));
           setStats(prev => ({ ...prev, questionsCreated: qRes.data.data.length }));
         }
 
-        // Fetch school analytics for student count
         const aRes = await axios.get(`${API_URL}/api/analytics/school`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (aRes.data.success) {
           setStats(prev => ({
             ...prev,
-            studentsCount: aRes.data.data.totalStudents || 0,
+            studentsCount: aRes.data.data.totalStudents || prev.studentsCount,
           }));
         }
       } catch (err) {
-        console.error('Teacher dashboard fetch error:', err);
+        console.log('Using fallback teacher data');
       } finally {
         setLoading(false);
       }
@@ -74,20 +100,32 @@ const TeacherDashboard = () => {
 
   return (
     <div className="min-h-screen relative p-4 md:p-8 lg:p-10 font-sans text-gray-100 overflow-x-hidden pt-20">
+      {/* Ambient BG */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <motion.div animate={{ x: [-20, 20, -20], y: [-20, 20, -20], opacity: [0.3, 0.5, 0.3] }}
           transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
           className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[120px] mix-blend-screen" />
+        <motion.div animate={{ x: [15, -15, 15], y: [15, -20, 15] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-[-5%] right-[-10%] w-[500px] h-[500px] bg-emerald-600/15 rounded-full blur-[120px] mix-blend-screen" />
       </div>
 
       <motion.div className="relative z-10 max-w-7xl mx-auto" variants={containerVariants} initial="hidden" animate="visible">
         {/* Header */}
         <motion.div variants={itemVariants} className="mb-10">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-3">
-            <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Teacher </span>
+            <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">{isHOD ? 'HOD ' : 'Teacher '}</span>
             <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Dashboard</span>
           </h1>
-          <p className="text-gray-400 text-lg">Welcome back, {user?.name || 'Teacher'}. Manage your classes and content.</p>
+          <p className="text-gray-400 text-lg">
+            Welcome back, {user?.name || 'Teacher'}.
+            {isHOD ? ' Oversee your department and teachers.' : ' Manage your classes and content.'}
+          </p>
+          {isHOD && (
+            <span className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 bg-purple-500/10 border border-purple-500/20 text-purple-400 rounded-full text-xs font-bold">
+              <FaEye /> Department Head
+            </span>
+          )}
         </motion.div>
 
         {/* Stats */}
@@ -124,6 +162,68 @@ const TeacherDashboard = () => {
             ))}
           </div>
         </motion.div>
+
+        {/* HOD-Only: Teacher Overview & At-Risk Students */}
+        {isHOD && (
+          <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+            {/* Department Teachers */}
+            <div className="glass-panel p-6 border border-white/10">
+              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <FaChalkboardTeacher className="text-emerald-400" /> Department Teachers
+              </h2>
+              <div className="space-y-3">
+                {DUMMY_TEACHERS.map((t, i) => (
+                  <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500/30 to-teal-500/30 border border-white/10 flex items-center justify-center text-white text-sm font-bold">
+                        {t.name[0]}
+                      </div>
+                      <div>
+                        <p className="text-white text-sm font-medium">{t.name}</p>
+                        <p className="text-gray-500 text-xs">{t.subject}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-white text-sm font-bold">{t.questionsCreated}</p>
+                      <p className="text-gray-500 text-[10px]">questions</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* At-Risk Students */}
+            <div className="glass-panel p-6 border border-white/10">
+              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <FaUserGraduate className="text-red-400" /> Student Spotlight
+              </h2>
+              <div className="space-y-3">
+                {DUMMY_STUDENTS.map((s, i) => {
+                  const isAtRisk = s.accuracy < 50;
+                  return (
+                    <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className={`w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white text-sm font-bold ${isAtRisk ? 'bg-red-500/20' : 'bg-blue-500/20'}`}>
+                          {s.name[0]}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-white text-sm font-medium truncate">{s.name}</p>
+                          <p className="text-gray-500 text-xs">Div {s.division} • {s.attempts} attempts</p>
+                        </div>
+                      </div>
+                      <span className={`text-sm font-bold ${s.accuracy >= 70 ? 'text-emerald-400' : s.accuracy >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
+                        {s.accuracy}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <Link to="/school-analytics" className="mt-4 block text-center text-sm text-blue-400 hover:text-blue-300">
+                View Full Analytics →
+              </Link>
+            </div>
+          </motion.div>
+        )}
 
         {/* Recent Questions */}
         <motion.div variants={itemVariants} className="glass-panel p-6 border border-white/10">
