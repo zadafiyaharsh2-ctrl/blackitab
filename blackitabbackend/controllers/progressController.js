@@ -146,6 +146,7 @@ exports.markTopicComplete = async (req, res) => {
         // Update user: points + streak + longestStreak + lastActiveDate
         const user = await require('../models/User').findById(userId);
         user.points = (user.points || 0) + xpGain;
+        user.xp = (user.xp || 0) + 10;
         user.streak = currentStreak;
         user.longestStreak = Math.max(user.longestStreak || 0, longestStreak);
         user.lastActiveDate = new Date();
@@ -242,9 +243,10 @@ exports.getProgressStats = async (req, res) => {
         // 4. Compute TRUE streak from activity data (not from stored User.streak)
         const streakData = await computeStreakFromActivity(userId);
 
-        // 5. Get user's current points
+        // 5. Get user's current points and xp
         const user = await User.findById(userId);
         const currentPoints = user.points || 0;
+        const currentXP = user.xp || 0;
 
         // Sync streak on User doc (keep it accurate for other queries)
         if (user.streak !== streakData.currentStreak || user.longestStreak < streakData.longestStreak) {
@@ -254,9 +256,9 @@ exports.getProgressStats = async (req, res) => {
         }
 
         // 6. Percentile-based rank
-        //    rank = position (1 = highest points)
+        //    rank = position (1 = highest xp)
         //    percentile = what % of users you're better than
-        const betterUsersCount = await User.countDocuments({ points: { $gt: currentPoints } });
+        const betterUsersCount = await User.countDocuments({ xp: { $gt: currentXP } });
         const rank = betterUsersCount + 1;
         const totalUsers = await User.countDocuments();
         const percentile = totalUsers > 1
@@ -281,7 +283,8 @@ exports.getProgressStats = async (req, res) => {
                 totalCompleted,
                 bySubject: subjectStats,
                 recentActivity,
-                totalPoints: currentPoints,
+                totalPoints: currentXP, // Dashboard uses this to display "XP"
+                totalCoins: currentPoints, // If you ever need old points
                 streak: streakData.currentStreak,
                 longestStreak: streakData.longestStreak,
                 totalActiveDays: streakData.totalActiveDays,

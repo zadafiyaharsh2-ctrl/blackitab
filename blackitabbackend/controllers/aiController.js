@@ -52,7 +52,7 @@ debugLog("AI Controller Initialized", {
   NODE_ENV: process.env.NODE_ENV || "NOT SET",
 });
 
-// POST /api/ai/query — BlackBookEDU.ai-style: conversation thread with chat history
+// POST /api/ai/chats — Create new chat or append to existing
 const queryAI = async (req, res) => {
   debugLog("queryAI - Request Received", {
     body: req.body,
@@ -65,7 +65,7 @@ const queryAI = async (req, res) => {
       : "NOT AUTHENTICATED",
   });
 
-  const { query } = req.body;
+  const { query, chatId } = req.body;
   const userId = req.user._id;
 
   if (!query || !query.trim()) {
@@ -75,20 +75,32 @@ const queryAI = async (req, res) => {
 
   debugLog("queryAI - Processing", {
     query: query.trim(),
+    chatId: chatId || "NEW",
     userId: userId.toString(),
   });
 
   try {
-    let chatHistory = await ChatHistory.findOne({ userId });
-    debugLog("queryAI - Chat History Lookup", {
-      found: !!chatHistory,
-      existingMessagesCount: chatHistory?.messages?.length || 0,
-    });
+    let chatHistory = null;
+    let isNewChat = false;
+
+    if (chatId) {
+      chatHistory = await ChatHistory.findOne({ _id: chatId, userId });
+      debugLog("queryAI - Chat History Lookup", {
+        found: !!chatHistory,
+        existingMessagesCount: chatHistory?.messages?.length || 0,
+      });
+    }
 
     if (!chatHistory) {
-      chatHistory = new ChatHistory({ userId, messages: [] });
+      // Create a short title from the first query
+      let title = query.trim().split('\n')[0].substring(0, 40);
+      if (title.length < query.trim().length) title += '...';
+
+      chatHistory = new ChatHistory({ userId, title, messages: [] });
+      isNewChat = true;
       debugLog("queryAI - Created New Chat History", {
         userId: userId.toString(),
+        title
       });
     }
 
@@ -120,7 +132,6 @@ const queryAI = async (req, res) => {
         dataKeys: Object.keys(response.data || {}),
         hasAnswer: !!response.data?.answer,
         hasResponse: !!response.data?.response,
-        rawData: response.data,
       });
 
       aiResponseContent =
@@ -139,14 +150,16 @@ const queryAI = async (req, res) => {
     debugLog("queryAI - Saving Chat History", {
       totalMessages: chatHistory.messages.length,
       lastUserMessage: userMessage.content.substring(0, 50) + "...",
-      lastAIResponse: aiResponseContent.substring(0, 100) + "...",
+      lastAIResponse: aiResponseContent.substring(0, 50) + "...",
     });
 
     await chatHistory.save();
 
     const responsePayload = {
       ok: true,
-      session: { id: chatHistory._id, messages: [aiMessage] },
+      chatId: chatHistory._id,
+      title: chatHistory.title,
+      isNewChat,
       aiResponse: aiMessage,
     };
 
@@ -159,7 +172,7 @@ const queryAI = async (req, res) => {
   }
 };
 
-// GET /api/ai/chat-history — get full conversation history for current user
+// GET /api/ai/chats — get list of all chat sessions for current user
 const getChatHistory = async (req, res) => {
   debugLog("getChatHistory - Request Received", {
     user: req.user
@@ -168,20 +181,41 @@ const getChatHistory = async (req, res) => {
   });
 
   try {
-    const history = await ChatHistory.findOne({ userId: req.user._id });
+    const chats = await ChatHistory.find({ userId: req.user._id })
+      .select('_id title updatedAt')
+      .sort({ updatedAt: -1 });
 
     debugLog("getChatHistory - Result", {
-      found: !!history,
-      messagesCount: history?.messages?.length || 0,
-      lastMessage: history?.messages?.slice(-1)[0] || null,
+      chatsCount: chats.length,
     });
 
-    res.json({ ok: true, messages: history ? history.messages : [] });
+    res.json({ ok: true, chats });
   } catch (err) {
     debugError("getChatHistory - Error", err);
     res
       .status(500)
-      .json({ ok: false, message: "Failed to fetch chat history" });
+      .json({ ok: false, message: "Failed to fetch chat history list" });
+  }
+};
+
+// GET /api/ai/chats/:id — get full messages for a specific chat
+const getSingleChat = async (req, res) => {
+  debugLog("getSingleChat - Request Received", {
+    chatId: req.params.id,
+    user: req.user ? { _id: req.user._id } : "NOT AUTHENTICATED",
+  });
+
+  try {
+    const chat = await ChatHistory.findOne({ _id: req.params.id, userId: req.user._id });
+    
+    if (!chat) {
+      return res.status(404).json({ ok: false, message: "Chat not found" });
+    }
+
+    res.json({ ok: true, chat });
+  } catch (err) {
+    debugError("getSingleChat - Error", err);
+    res.status(500).json({ ok: false, message: "Failed to fetch chat messages" });
   }
 };
 
@@ -357,51 +391,40 @@ const getHistory = async (req, res) => {
   }
 };
 
-// DELETE /api/ai/:id — delete a question
-const deleteQuestion = async (req, res) => {
-  debugLog("deleteQuestion - Request Received", {
-    params: req.params,
-    questionId: req.params.id,
-    user: req.user
-      ? { _id: req.user._id, email: req.user.email }
-      : "NOT AUTHENTICATED",
+// DELETE /api/ai/chats/:id — delete a chat session (or question)
+const deleteChat = async (req, res) => {
+  debugLog("deleteChat - Request Received", {
+    chatId: req.params.id,
+    user: req.user ? { _id: req.user._id } : "NOT AUTHENTICATED",
   });
 
   try {
-    const question = await AIQuestion.findOneAndDelete({
+    // Try deleting from ChatHistory first
+    const chat = await ChatHistory.findOneAndDelete({
       _id: req.params.id,
       userId: req.user._id,
     });
 
-    debugLog("deleteQuestion - Result", {
-      found: !!question,
-      deletedId: question?._id || null,
-      deletedQuestion: question?.question?.substring(0, 50) + "..." || null,
-    });
-
-    if (!question) {
-      debugLog("deleteQuestion - Not Found", {
-        reason: "Question not found or user not authorized",
-        requestedId: req.params.id,
-        userId: req.user._id.toString(),
-      });
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "Question not found or unauthorized",
-        });
+    if (chat) {
+      debugLog("deleteChat - Deleted ChatHistory", { id: chat._id });
+      return res.json({ success: true, ok: true, message: "Chat deleted successfully" });
     }
-    res.json({ success: true, message: "Question deleted successfully" });
+
+    // Try APIQuestion as fallback (legacy)
+    const question = await AIQuestion.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user._id,
+    });
+    
+    if (question) {
+      debugLog("deleteChat - Deleted AIQuestion", { id: question._id });
+      return res.json({ success: true, ok: true, message: "Question deleted successfully" });
+    }
+
+    return res.status(404).json({ success: false, ok: false, message: "Not found or unauthorized" });
   } catch (error) {
-    debugError("deleteQuestion - Error", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Failed to delete question",
-        error: error.message,
-      });
+    debugError("deleteChat - Error", error);
+    res.status(500).json({ success: false, ok: false, message: "Failed to delete" });
   }
 };
 
@@ -417,13 +440,13 @@ const clearHistory = async (req, res) => {
     const aiQuestionsResult = await AIQuestion.deleteMany({
       userId: req.user._id,
     });
-    const chatHistoryResult = await ChatHistory.findOneAndDelete({
+    const chatHistoryResult = await ChatHistory.deleteMany({
       userId: req.user._id,
     });
 
     debugLog("clearHistory - Result", {
       aiQuestionsDeleted: aiQuestionsResult.deletedCount,
-      chatHistoryDeleted: !!chatHistoryResult,
+      chatHistoryDeleted: chatHistoryResult.deletedCount,
       userId: req.user._id.toString(),
     });
 
@@ -443,8 +466,9 @@ const clearHistory = async (req, res) => {
 module.exports = {
   askQuestion,
   getHistory,
-  deleteQuestion,
+  deleteChat,
   clearHistory,
   queryAI,
   getChatHistory,
+  getSingleChat,
 };

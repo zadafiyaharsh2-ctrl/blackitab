@@ -6,13 +6,15 @@ const authMiddleware = require('../middleware/auth');
 router.use(authMiddleware);
 
 // BlackBookEDU.ai-style conversation routes
-router.post('/query', aiController.queryAI);
-router.get('/chat-history', aiController.getChatHistory);
+router.post('/chats', aiController.queryAI);              // Create or append to a chat (optionally pass chatId)
+router.get('/chats', aiController.getChatHistory);        // Get list of all chat sessions for user
+router.get('/chats/:id', aiController.getSingleChat);     // Get full messages for a specific chat session
+router.delete('/chats/:id', aiController.deleteChat);     // Delete a specific chat session
 
 // Original blackitab routes (kept for compatibility)
 router.post('/ask', aiController.askQuestion);
 router.get('/history', aiController.getHistory);
 router.delete('/history/clear', aiController.clearHistory);
-router.delete('/:id', aiController.deleteQuestion);
+router.delete('/:id', aiController.deleteChat);
 
 module.exports = router;
