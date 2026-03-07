@@ -319,10 +319,17 @@ exports.getActivityHeatmap = async (req, res) => {
             { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$completedAt" } }, count: { $sum: 1 } } }
         ]);
 
-        // Merge topic + problem activity by date
+        const Attempt = require('../models/Attempt');
+        const examActivity = await Attempt.aggregate([
+            { $match: { userId, attemptedAt: { $exists: true } } },
+            { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$attemptedAt" } }, count: { $sum: 1 } } }
+        ]);
+
+        // Merge topic + problem + exam activity by date
         const activityMap = {};
         topicActivity.forEach(item => { activityMap[item._id] = (activityMap[item._id] || 0) + item.count; });
         problemActivity.forEach(item => { activityMap[item._id] = (activityMap[item._id] || 0) + item.count; });
+        examActivity.forEach(item => { activityMap[item._id] = (activityMap[item._id] || 0) + item.count; });
 
         const heatmapData = Object.keys(activityMap).map(date => ({ date, count: activityMap[date] }));
 
