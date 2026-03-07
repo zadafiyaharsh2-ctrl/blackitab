@@ -115,10 +115,10 @@ exports.getUserPosts = async (req, res) => {
 
         // Privacy: only show posts if public, self, or accepted follower
         if (targetUser.isPrivate && req.params.userId !== req.user._id.toString()) {
-            const isFollowing = await require('../models/FollowerList').exists({
-                userId: req.params.userId,
-                followerId: req.user._id,
-                status: 'accepted'
+            const isFollowing = await require('../models/Connection').exists({
+                sourceUserId: req.user._id,
+                targetUserId: req.params.userId,
+                connectionType: 'follow'
             });
 
             if (!isFollowing) {
@@ -289,8 +289,8 @@ exports.getContentById = async (req, res) => {
 
         let isFollowing = false;
         if (req.user && content.user) {
-            const FollowerList = require('../models/FollowerList');
-            const exists = await FollowerList.exists({ userId: content.user._id, followerId: req.user._id });
+            const Connection = require('../models/Connection');
+            const exists = await Connection.exists({ sourceUserId: req.user._id, targetUserId: content.user._id, connectionType: 'follow' });
             isFollowing = !!exists;
         }
 

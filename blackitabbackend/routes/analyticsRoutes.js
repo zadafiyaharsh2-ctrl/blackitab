@@ -2,8 +2,14 @@ const express = require('express');
 const router = express.Router();
 const analyticsController = require('../controllers/analyticsController');
 const protect = require('../middleware/auth');
+const { requireRole } = require('../middleware/roleMiddleware');
 
+// Student's own analytics
 router.get('/overview', protect, analyticsController.getUserAnalytics);
-router.get('/school', protect, analyticsController.getSchoolAnalytics);
+
+// Institute-level analytics (teacher, hod, institute_admin only)
+router.get('/school', protect, requireRole('teacher', 'hod', 'institute_admin'), analyticsController.getSchoolAnalytics);
+router.get('/school/trends', protect, requireRole('teacher', 'hod', 'institute_admin'), analyticsController.getInstituteTrends);
+router.get('/school/student/:studentId', protect, requireRole('teacher', 'hod', 'institute_admin'), analyticsController.getStudentDetail);
 
 module.exports = router;
