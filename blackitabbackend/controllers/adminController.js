@@ -540,3 +540,153 @@ exports.deleteContest = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+// ══════════════════════════════════════════════════════════════
+// PHASE A: ADDITIONAL ADMIN CRUD (USER EDIT, QUESTION CREATE, CONTEST CREATE/EDIT)
+// ══════════════════════════════════════════════════════════════
+
+// PUT /api/admin/users/:id — Edit any user field
+exports.editUser = async (req, res) => {
+    try {
+        const allowedFields = ['name', 'email', 'role', 'bio', 'points', 'xp', 'streak', 'isVerified', 'isPrivate', 'batchYear', 'division'];
+        const updates = {};
+
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        }
+
+        // Handle institute code change
+        if (req.body.instituteCode !== undefined) {
+            if (req.body.instituteCode === '' || req.body.instituteCode === null) {
+                updates.instituteId = null;
+            } else {
+                const institute = await Institute.findOne({ instituteCode: req.body.instituteCode.toUpperCase() });
+                if (!institute) {
+                    return res.status(400).json({ success: false, message: `Invalid institute code: ${req.body.instituteCode}` });
+                }
+                updates.instituteId = institute._id;
+            }
+        }
+
+        if (Object.keys(updates).length === 0) {
+            return res.status(400).json({ success: false, message: 'No valid fields to update' });
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { $set: updates },
+            { new: true, runValidators: true }
+        ).select('-password');
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        res.json({ success: true, message: 'User updated', data: user });
+    } catch (error) {
+        console.error('Edit user error:', error);
+        res.status(500).json({ success: false, message: error.message || 'Server error' });
+    }
+};
+
+// POST /api/admin/questions — Admin creates question (auto-approved)
+exports.createQuestion = async (req, res) => {
+    try {
+        const { exam, subject, question, options, correctAnswer, difficulty, explanation, tags, isPublic } = req.body;
+
+        if (!exam || !subject || !question || !options || correctAnswer === undefined) {
+            return res.status(400).json({ success: false, message: 'Exam, subject, question, options, and correctAnswer are required' });
+        }
+
+        if (!Array.isArray(options) || options.length < 2) {
+            return res.status(400).json({ success: false, message: 'At least 2 options are required' });
+        }
+
+        const newQuestion = await ExamQuestion.create({
+            exam,
+            subject,
+            question,
+            options,
+            correctAnswer: parseInt(correctAnswer),
+            difficulty: difficulty || 'Medium',
+            explanation: explanation || '',
+            tags: tags || [],
+            isPublic: isPublic !== false,
+            approvalStatus: 'approved', // Admin-created = auto-approved
+            approvedBy: req.admin._id,
+            createdBy: null, // Created by system admin, not a regular user
+            instituteId: null
+        });
+
+        res.status(201).json({ success: true, message: 'Question created and auto-approved', data: newQuestion });
+    } catch (error) {
+        console.error('Admin create question error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// POST /api/admin/contests — Create contest
+exports.createContest = async (req, res) => {
+    try {
+        const { title, description, startTime, endTime, difficultyLevel, questionIds } = req.body;
+
+        if (!title || !startTime || !endTime) {
+            return res.status(400).json({ success: false, message: 'Title, startTime, and endTime are required' });
+        }
+
+        const contest = await Contest.create({
+            title,
+            description: description || '',
+            startTime: new Date(startTime),
+            endTime: new Date(endTime),
+            difficultyLevel: difficultyLevel || 'Intermediate',
+            questions: questionIds || [],
+            isActive: false
+        });
+
+        res.status(201).json({ success: true, message: 'Contest created', data: contest });
+    } catch (error) {
+        console.error('Create contest error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// PUT /api/admin/contests/:id — Edit contest
+exports.editContest = async (req, res) => {
+    try {
+        const allowedFields = ['title', 'description', 'startTime', 'endTime', 'difficultyLevel', 'isActive'];
+        const updates = {};
+
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        }
+
+        // Handle question IDs update
+        if (req.body.questionIds !== undefined) {
+            updates.questions = req.body.questionIds;
+        }
+
+        if (Object.keys(updates).length === 0) {
+            return res.status(400).json({ success: false, message: 'No valid fields to update' });
+        }
+
+        const contest = await Contest.findByIdAndUpdate(
+            req.params.id,
+            { $set: updates },
+            { new: true }
+        );
+
+        if (!contest) {
+            return res.status(404).json({ success: false, message: 'Contest not found' });
+        }
+
+        res.json({ success: true, message: 'Contest updated', data: contest });
+    } catch (error) {
+        console.error('Edit contest error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
