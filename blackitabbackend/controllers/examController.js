@@ -19,6 +19,7 @@ exports.createQuestion = async (req, res) => {
             explanation: explanation || 'No explanation available',
             tags: tags || [],
             isPublic: isPublic !== false,
+            approvalStatus: 'pending',
             createdBy: req.user._id,
             instituteId: req.user.instituteId || null,
         });
