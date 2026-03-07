@@ -371,42 +371,6 @@ function App() {
               }
             />
 
-            {/* Online Projects */}
-            <Route
-              path="/ide"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Projects />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Store / Marketplace */}
-            <Route
-              path="/store"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Store />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Job Board */}
-            <Route
-              path="/jobs"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Jobs />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
             {/* User Profile */}
             <Route
               path="/profile"
