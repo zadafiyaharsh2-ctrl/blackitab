@@ -354,7 +354,7 @@ const Profile = () => {
   if (!user) return <div className="text-white text-center mt-20">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white p-4 py-8 relative overflow-hidden font-sans">
+    <div className="min-h-screen text-gray-900 dark:text-white p-4 py-8 relative overflow-hidden font-sans">
       {/* Background Orbs */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] mix-blend-screen" />
@@ -384,7 +384,7 @@ const Profile = () => {
       />
 
       {/* TOP NAVIGATION BAR */}
-      <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6">
+      <div className="flex flex-col md:flex-row items-center justify-between mb-8 md:mb-12 gap-4 md:gap-6 w-full z-20">
 
         {!isMyProfile && (
           <button
@@ -397,7 +397,7 @@ const Profile = () => {
         )}
 
         {/* Search Bar - Prominent & Centered */}
-        <div className="relative w-full md:w-[90%] group z-20">
+        <div className="relative w-full md:flex-1 max-w-2xl group z-20">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <FaSearch className="text-gray-500 group-focus-within:text-blue-400 transition-colors" />
           </div>
@@ -411,7 +411,7 @@ const Profile = () => {
             }}
             onFocus={() => setShowDropdown(true)}
             onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-            className="w-full bg-white dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700 rounded-full py-3 pl-12 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all backdrop-blur-sm shadow-sm"
+            className="w-full bg-white dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700 rounded-full py-3 pl-12 pr-4 text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all backdrop-blur-sm shadow-sm"
           />
 
           {/* Live Search Dropdown */}
@@ -432,7 +432,7 @@ const Profile = () => {
                       <span className="font-bold text-gray-700 dark:text-gray-300">{result.name?.charAt(0).toUpperCase()}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-white truncate">{result.name}</div>
+                      <div className="font-semibold text-gray-900 dark:text-white truncate">{result.name}</div>
                       <div className="text-xs text-blue-400 truncate">@user</div>
                     </div>
                     {!result.isFollowing && String(result._id) !== String(user._id || user.id) && (
@@ -453,12 +453,9 @@ const Profile = () => {
             <>
               <button
                 onClick={() => navigate('/notifications')}
-                className="relative p-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white hover:bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white transition-colors border border-gray-300 dark:border-gray-700 hover:border-gray-500 group">
-                <FaBell size={18} className="text-gray-600 dark:text-gray-400 group-hover:text-white transition-colors" />
+                className="relative p-3 rounded-full bg-white dark:bg-white/5 backdrop-blur-md border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-white transition-colors group">
+                <FaBell size={18} className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors" />
                 {notifications.length > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>}
-              </button>
-              <button onClick={handleLogout} className="p-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white hover:bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white transition-colors border border-gray-300 dark:border-gray-700 hover:border-gray-500 group" title="Logout">
-                <FaCog size={18} className="text-gray-600 dark:text-gray-400 group-hover:text-white transition-colors" />
               </button>
             </>
           )}
@@ -470,13 +467,13 @@ const Profile = () => {
         {/* Decorative Glow */}
         <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 via-purple-900/20 to-pink-900/20 rounded-3xl blur-3xl -z-10 opacity-60"></div>
 
-        <div className="glass-panel border-white/5 rounded-[2rem] p-8 md:p-12 shadow-[0_0_50px_rgba(59,130,246,0.1)] flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-16 relative overflow-hidden group">
+        <div className="glass-panel border-white/5 rounded-2xl md:rounded-[2rem] p-6 sm:p-8 md:p-12 shadow-[0_0_50px_rgba(59,130,246,0.1)] flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-16 relative overflow-hidden group">
           {/* Subtle internal shine */}
           <div className="absolute top-0 right-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
 
           {/* Profile Picture */}
           <div className="flex-shrink-0 relative group">
-            <div className="w-36 h-36 md:w-48 md:h-48 rounded-full p-1 bg-gradient-to-tr from-blue-500 via-purple-500 to-pink-500 shadow-xl group-hover:scale-[1.02] transition-transform duration-300">
+            <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-48 md:h-48 rounded-full p-1 bg-gradient-to-tr from-blue-500 via-purple-500 to-pink-500 shadow-xl group-hover:scale-[1.02] transition-transform duration-300">
               <div className="w-full h-full rounded-full border-4 border-black bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden">
                 {user.profileImage ? (
                   <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover" />
@@ -495,9 +492,9 @@ const Profile = () => {
           {/* Profile Info Section */}
           <div className="flex-1 text-center md:text-left space-y-6 w-full">
 
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div>
-                <h1 className="text-4xl font-bold tracking-tight text-white mb-2">{user.name}</h1>
+            <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-4">
+              <div className="text-center md:text-left">
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">{user.name}</h1>
                 {user.bio && (
                   <p className="text-gray-700 dark:text-gray-300 max-w-lg text-sm leading-relaxed mb-4">{user.bio}</p>
                 )}
@@ -505,10 +502,10 @@ const Profile = () => {
 
               {/* Edit Profile (For Owner) */}
               {isMyProfile && (
-                <div className="flex gap-3 mb-4 md:mb-0">
+                <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-4 md:mb-0">
                   <button
                     onClick={() => setShowEditModal(true)}
-                    className="bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-white text-gray-700 dark:text-gray-300 px-6 py-2.5 rounded-xl font-semibold border border-gray-300 dark:border-gray-700 transition-all shadow-lg flex items-center gap-2 text-sm"
+                    className="bg-white dark:bg-white/5 backdrop-blur-md border border-gray-300 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white px-6 py-2.5 rounded-xl font-semibold transition-all shadow-lg flex items-center gap-2 text-sm"
                   >
                     <FaPen size={14} /> Edit Profile
                   </button>
@@ -517,7 +514,7 @@ const Profile = () => {
                       navigator.clipboard.writeText(`${window.location.origin}/profile/${user._id}`);
                       toast.success('Profile link copied!');
                     }}
-                    className="bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-white text-gray-700 dark:text-gray-300 px-4 py-2.5 rounded-xl font-semibold border border-gray-300 dark:border-gray-700 transition-all shadow-lg flex items-center gap-2 text-sm"
+                    className="bg-white dark:bg-white/5 backdrop-blur-md border border-gray-300 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white px-4 py-2.5 rounded-xl font-semibold transition-all shadow-lg flex items-center gap-2 text-sm"
                     title="Copy Profile Link"
                   >
                     <FaShareAlt size={14} />
@@ -527,7 +524,7 @@ const Profile = () => {
 
               {/* Follow Actions (For Visitors) */}
               {!isMyProfile && (
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap justify-center md:justify-start items-center gap-3">
                   <button
                     onClick={() => navigate(`/messages/${user._id}`)}
                     className="bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white hover:bg-gray-200 dark:hover:bg-gray-700 text-white p-3 rounded-xl border border-gray-300 dark:border-gray-700 transition-all shadow-lg"
@@ -563,19 +560,19 @@ const Profile = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="flex justify-center md:justify-start items-center gap-10 md:gap-14 pt-6 border-t border-gray-200 dark:border-white/5 mt-2">
+            <div className="flex flex-wrap justify-center md:justify-start items-center gap-6 sm:gap-10 md:gap-14 pt-6 border-t border-gray-200 dark:border-white/5 mt-2">
               <div onClick={fetchFollowing} className="cursor-pointer group text-center md:text-left transition-all hover:-translate-y-1">
-                <span className="block text-3xl font-black text-white group-hover:text-glow group-hover:text-blue-400 transition-all">{user.followingCount || 0}</span>
+                <span className="block text-3xl font-black text-gray-900 dark:text-white group-hover:text-glow group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-all">{user.followingCount || 0}</span>
                 <span className="text-xs text-gray-500 font-bold uppercase tracking-wider group-hover:text-gray-700 dark:text-gray-300 transition-colors">Following</span>
               </div>
               <div className="w-px h-10 bg-white/10 hidden md:block"></div>
               <div onClick={fetchFollowers} className="cursor-pointer group text-center md:text-left transition-all hover:-translate-y-1">
-                <span className="block text-3xl font-black text-white group-hover:text-glow group-hover:text-blue-400 transition-all">{user.followerCount || 0}</span>
+                <span className="block text-3xl font-black text-gray-900 dark:text-white group-hover:text-glow group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-all">{user.followerCount || 0}</span>
                 <span className="text-xs text-gray-500 font-bold uppercase tracking-wider group-hover:text-gray-700 dark:text-gray-300 transition-colors">Followers</span>
               </div>
               <div className="w-px h-10 bg-white/10 hidden md:block"></div>
               <div className="group text-center md:text-left transition-all hover:-translate-y-1">
-                <span className="block text-2xl font-bold text-white">{user.subscriberCount || 0}</span>
+                <span className="block text-2xl font-bold text-gray-900 dark:text-white">{user.subscriberCount || 0}</span>
                 <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">Subscribers</span>
               </div>
             </div>
@@ -586,28 +583,28 @@ const Profile = () => {
 
       {/* POSTS SECTION */}
       <div className="mt-8 border-t border-gray-200 dark:border-white/5 pt-8">
-        <div className="flex items-center justify-center gap-12 border-b border-gray-200 dark:border-gray-800 pb-0 mb-6">
+        <div className="flex items-center justify-start md:justify-center gap-6 md:gap-12 border-b border-gray-200 dark:border-gray-800 pb-0 mb-6 overflow-x-auto w-full hide-scrollbar">
           <button
             onClick={() => setActiveTab('posts')}
-            className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'posts' ? 'text-white border-t border-white -mt-[1px]' : 'text-gray-500 hover:text-white'}`}
+            className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'posts' ? 'text-gray-900 border-gray-900 dark:text-white border-t dark:border-white -mt-[1px]' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
           >
             <FaTh size={12} /> Posts
           </button>
           <button
             onClick={() => setActiveTab('study-content')}
-            className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'study-content' ? 'text-white border-t border-white -mt-[1px]' : 'text-gray-500 hover:text-white'}`}
+            className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'study-content' ? 'text-gray-900 border-gray-900 dark:text-white border-t dark:border-white -mt-[1px]' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
           >
             <FaGraduationCap size={12} /> Study Content
           </button>
           <button
             onClick={() => setActiveTab('paid-content')}
-            className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'paid-content' ? 'text-white border-t border-white -mt-[1px]' : 'text-gray-500 hover:text-white'}`}
+            className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'paid-content' ? 'text-gray-900 border-gray-900 dark:text-white border-t dark:border-white -mt-[1px]' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
           >
             <FaRupeeSign size={12} /> Paid Content
           </button>
           <button
             onClick={() => setActiveTab('playlists')}
-            className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'playlists' ? 'text-white border-t border-white -mt-[1px]' : 'text-gray-500 hover:text-white'}`}
+            className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'playlists' ? 'text-gray-900 border-gray-900 dark:text-white border-t dark:border-white -mt-[1px]' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
           >
             <FaListUl size={12} /> Playlists
           </button>
@@ -641,7 +638,7 @@ const Profile = () => {
             </>
           ) : (
             <div className="text-center py-20">
-              <div className="text-2xl font-bold text-white mb-2">No Playlists Yet</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No Playlists Yet</div>
               <div className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
                 {isMyProfile ? 'Create your first playlist to organize your videos' : 'This user has no playlists'}
               </div>
@@ -714,12 +711,12 @@ const Profile = () => {
             <div className="w-24 h-24 rounded-full border-4 border-gray-300 dark:border-white/10 flex items-center justify-center mb-6 bg-gray-100 dark:bg-white/5">
               <FaLock size={40} className="text-white/50" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">This Account is Private</h3>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">This Account is Private</h3>
             <p className="text-gray-600 dark:text-gray-400 max-w-sm">Follow this account to see their photos and videos.</p>
           </div>
         ) : (
           <div className="text-center py-20">
-            <div className="text-2xl font-bold text-white mb-2">Share Photos</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Share Photos</div>
             <div className="text-gray-600 dark:text-gray-400 mb-6 text-sm">When you share photos, they will appear on your profile.</div>
             {isMyProfile && (
               <button onClick={() => navigate('/create-post')} className="text-blue-400 font-semibold text-sm hover:text-white transition-colors">
@@ -754,15 +751,21 @@ const Profile = () => {
 
       {showSearch && <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />}
       {showNotifications && <NotificationModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} />}
-      {showEditModal && <EditProfileModal isOpen={showEditModal} onClose={() => setShowEditModal(false)} user={user} onUpdate={(updatedUser) => {
-        setUser(prev => ({ ...prev, ...updatedUser }));
-        // Update local storage if it's me
-        if (isMyProfile) {
-          const stored = JSON.parse(localStorage.getItem('user') || '{}');
-          localStorage.setItem('user', JSON.stringify({ ...stored, ...updatedUser }));
-        }
-      }}
-      />}
+      {showEditModal && (
+        <EditProfileModal 
+          isOpen={showEditModal} 
+          onClose={() => setShowEditModal(false)} 
+          user={user} 
+          onUpdate={(updatedUser) => {
+            setUser(prev => ({ ...prev, ...updatedUser }));
+            // Update local storage if it's me
+            if (isMyProfile) {
+              const stored = JSON.parse(localStorage.getItem('user') || '{}');
+              localStorage.setItem('user', JSON.stringify({ ...stored, ...updatedUser }));
+            }
+          }}
+        />
+      )}
     </div>
     </div>
   );

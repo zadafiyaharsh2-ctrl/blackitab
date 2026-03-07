@@ -46,7 +46,7 @@ const SocialFeed = () => {
             <FaUserFriends className="text-blue-500" />
             Social Feed
           </h1>
-          <p className="text-gray-500 text-sm mt-1">See what your network is sharing and discussing</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">See what your network is sharing and discussing</p>
         </div>
         <Link 
           to="/create-post"
@@ -63,7 +63,7 @@ const SocialFeed = () => {
         </div>
         <Link 
           to="/create-post"
-          className="flex-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 px-4 py-3 rounded-full text-sm text-left transition-colors"
+          className="flex-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 px-4 py-3 rounded-full text-sm text-left transition-colors"
         >
           Share something with your network...
         </Link>
@@ -90,7 +90,7 @@ const SocialFeed = () => {
               <FaFire className="text-3xl text-blue-500" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">It's quiet here...</h3>
-            <p className="text-gray-500 mb-6">Follow more people to see their posts, or create one yourself to get started!</p>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">Follow more people to see their posts, or create one yourself to get started!</p>
             <Link 
               to="/create-post"
               className="inline-block bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white px-6 py-3 rounded-xl font-medium transition-colors border border-gray-200 dark:border-gray-700"

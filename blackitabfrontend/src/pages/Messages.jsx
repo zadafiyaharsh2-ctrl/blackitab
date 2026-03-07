@@ -262,7 +262,7 @@ const Messages = () => {
                         <input 
                             type="text" 
                             placeholder="Search..." 
-                            className="w-full bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl py-2 pl-10 pr-3 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all placeholder-gray-500"
+                            className="w-full bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl py-2 pl-10 pr-3 text-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all placeholder-gray-500"
                         />
                     </div>
                 </div>
@@ -296,7 +296,7 @@ const Messages = () => {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-baseline mb-1">
-                                        <h3 className={`font-semibold truncate ${currentChatUser?._id === conv._id ? 'text-gray-900 dark:text-white' : 'text-gray-200'}`}>{conv.name}</h3>
+                                        <h3 className={`font-semibold truncate ${currentChatUser?._id === conv._id ? 'text-gray-900 dark:text-white' : 'text-gray-800 dark:text-gray-200'}`}>{conv.name}</h3>
                                         <span className="text-[10px] text-gray-500">12:30 PM</span> 
                                     </div>
                                     <p className={`text-sm truncate ${currentChatUser?._id === conv._id ? 'text-blue-200' : 'text-gray-600 dark:text-gray-400'}`}>Click to verify message history...</p>
@@ -371,9 +371,9 @@ const Messages = () => {
                                         >
                                             <div className={`max-w-[85%] md:max-w-[70%] flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                                                 <div className={`px-4 py-2 rounded-2xl shadow-md backdrop-blur-sm relative border ${
-                                                    isMe 
-                                                        ? 'bg-blue-600 text-gray-900 dark:text-white rounded-br-none border-blue-500 shadow-blue-900/20 ' 
-                                                        : 'bg-white/10 text-gray-100 rounded-bl-none border-gray-200 dark:border-white/5 shadow-black/10'
+                                                        isMe 
+                                                            ? 'bg-blue-600 text-white rounded-br-none border-blue-500 shadow-blue-900/20 ' 
+                                                            : 'bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-gray-100 rounded-bl-none border-gray-200 dark:border-white/5 shadow-black/10'
                                                 }`}>
                                                     {renderMessageContent(msg)}
                                                 </div>
