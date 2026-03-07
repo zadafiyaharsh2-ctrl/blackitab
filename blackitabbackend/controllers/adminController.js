@@ -3,9 +3,15 @@ const User = require('../models/User');
 const Institute = require('../models/Institute');
 const Attempt = require('../models/Attempt');
 const Post = require('../models/Post');
+const ExamQuestion = require('../models/ExamQuestion');
+const Contest = require('../models/Contest');
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET;
+
+// ══════════════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════════════
 
 // POST /api/admin/login
 exports.login = async (req, res) => {
@@ -50,14 +56,20 @@ exports.login = async (req, res) => {
     }
 };
 
+// ══════════════════════════════════════════════════════════════
+// PLATFORM STATS
+// ══════════════════════════════════════════════════════════════
+
 // GET /api/admin/stats
 exports.getPlatformStats = async (req, res) => {
     try {
-        const [totalUsers, totalInstitutes, totalAttempts, totalPosts] = await Promise.all([
+        const [totalUsers, totalInstitutes, totalAttempts, totalPosts, totalQuestions, pendingQuestions] = await Promise.all([
             User.countDocuments(),
             Institute.countDocuments(),
             Attempt.countDocuments(),
-            Post.countDocuments()
+            Post.countDocuments(),
+            ExamQuestion.countDocuments(),
+            ExamQuestion.countDocuments({ approvalStatus: 'pending' })
         ]);
 
         const roleCounts = await User.aggregate([
@@ -75,6 +87,8 @@ exports.getPlatformStats = async (req, res) => {
                 totalInstitutes,
                 totalAttempts,
                 totalPosts,
+                totalQuestions,
+                pendingQuestions,
                 dailyActiveUsers: dailyActiveUsers.length,
                 roleCounts: roleCounts.reduce((acc, r) => { acc[r._id] = r.count; return acc; }, {})
             }
@@ -84,6 +98,10 @@ exports.getPlatformStats = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+// ══════════════════════════════════════════════════════════════
+// USER MANAGEMENT
+// ══════════════════════════════════════════════════════════════
 
 // GET /api/admin/users?page=1&limit=20&role=student&search=name
 exports.listUsers = async (req, res) => {
@@ -189,6 +207,86 @@ exports.toggleBanUser = async (req, res) => {
     }
 };
 
+// POST /api/admin/users — Admin creates a new user (any role, bypass validations)
+exports.createUser = async (req, res) => {
+    try {
+        const { name, email, password, role, instituteCode, batchYear, division } = req.body;
+
+        if (!name || !email || !password) {
+            return res.status(400).json({ success: false, message: 'Name, email, and password are required' });
+        }
+
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
+        if (existingUser) {
+            return res.status(400).json({ success: false, message: 'A user with this email already exists' });
+        }
+
+        // Resolve institute code to ID if provided
+        let instituteId = null;
+        if (instituteCode) {
+            const institute = await Institute.findOne({ instituteCode: instituteCode.toUpperCase() });
+            if (!institute) {
+                return res.status(400).json({ success: false, message: `Invalid institute code: ${instituteCode}` });
+            }
+            instituteId = institute._id;
+        }
+
+        const validRoles = ['student', 'teacher', 'hod', 'institute_admin'];
+        const assignedRole = validRoles.includes(role) ? role : 'student';
+
+        const newUser = new User({
+            name,
+            email: email.toLowerCase(),
+            password,
+            role: assignedRole,
+            instituteId,
+            batchYear: batchYear || undefined,
+            division: division || undefined
+        });
+
+        await newUser.save();
+
+        res.status(201).json({
+            success: true,
+            message: `User "${name}" created as ${assignedRole}`,
+            data: {
+                _id: newUser._id,
+                name: newUser.name,
+                email: newUser.email,
+                role: newUser.role,
+                instituteId: newUser.instituteId
+            }
+        });
+    } catch (error) {
+        console.error('Admin create user error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// DELETE /api/admin/users/:id
+exports.deleteUser = async (req, res) => {
+    try {
+        const user = await User.findByIdAndDelete(req.params.id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        // Clean up related data
+        await Promise.all([
+            Post.deleteMany({ userId: req.params.id }),
+            Attempt.deleteMany({ userId: req.params.id }),
+            ExamQuestion.updateMany({ createdBy: req.params.id }, { $set: { createdBy: null } })
+        ]);
+        res.json({ success: true, message: 'User deleted and related data cleaned up' });
+    } catch (error) {
+        console.error('Delete user error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
+// INSTITUTE MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+
 // GET /api/admin/institutes
 exports.listInstitutes = async (req, res) => {
     try {
@@ -248,6 +346,197 @@ exports.deleteInstitute = async (req, res) => {
         res.json({ success: true, message: 'Institute deleted and users unlinked' });
     } catch (error) {
         console.error('Delete institute error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
+// QUESTION APPROVAL MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+
+// GET /api/admin/questions?page=1&limit=20&status=pending&exam=jee&subject=Physics
+exports.listQuestions = async (req, res) => {
+    try {
+        const { page = 1, limit = 20, status, exam, subject, search } = req.query;
+        const filter = {};
+
+        if (status) filter.approvalStatus = status;
+        if (exam) filter.exam = exam;
+        if (subject) filter.subject = { $regex: subject, $options: 'i' };
+        if (search) filter.question = { $regex: search, $options: 'i' };
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const [questions, total] = await Promise.all([
+            ExamQuestion.find(filter)
+                .populate('createdBy', 'name email role')
+                .populate('instituteId', 'name instituteCode')
+                .populate('approvedBy', 'username')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            ExamQuestion.countDocuments(filter)
+        ]);
+
+        res.json({
+            success: true,
+            data: questions,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('List questions error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// GET /api/admin/questions/pending
+exports.listPendingQuestions = async (req, res) => {
+    try {
+        const questions = await ExamQuestion.find({ approvalStatus: 'pending' })
+            .populate('createdBy', 'name email role')
+            .populate('instituteId', 'name instituteCode')
+            .sort({ createdAt: -1 });
+
+        res.json({ success: true, data: questions, total: questions.length });
+    } catch (error) {
+        console.error('List pending questions error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// PUT /api/admin/questions/:id/approve
+exports.approveQuestion = async (req, res) => {
+    try {
+        const question = await ExamQuestion.findById(req.params.id);
+        if (!question) {
+            return res.status(404).json({ success: false, message: 'Question not found' });
+        }
+
+        question.approvalStatus = 'approved';
+        question.approvedBy = req.admin._id;
+        question.approvalNote = '';
+        await question.save();
+
+        res.json({ success: true, message: 'Question approved for global visibility', data: question });
+    } catch (error) {
+        console.error('Approve question error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// PUT /api/admin/questions/:id/reject
+exports.rejectQuestion = async (req, res) => {
+    try {
+        const { note } = req.body;
+        const question = await ExamQuestion.findById(req.params.id);
+        if (!question) {
+            return res.status(404).json({ success: false, message: 'Question not found' });
+        }
+
+        question.approvalStatus = 'rejected';
+        question.approvalNote = note || 'Rejected by admin';
+        question.approvedBy = req.admin._id;
+        await question.save();
+
+        res.json({ success: true, message: 'Question rejected', data: question });
+    } catch (error) {
+        console.error('Reject question error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// DELETE /api/admin/questions/:id
+exports.deleteQuestion = async (req, res) => {
+    try {
+        const question = await ExamQuestion.findByIdAndDelete(req.params.id);
+        if (!question) {
+            return res.status(404).json({ success: false, message: 'Question not found' });
+        }
+        res.json({ success: true, message: 'Question deleted' });
+    } catch (error) {
+        console.error('Delete question error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
+// POST MODERATION
+// ══════════════════════════════════════════════════════════════
+
+// GET /api/admin/posts?page=1&limit=20
+exports.listPosts = async (req, res) => {
+    try {
+        const { page = 1, limit = 20 } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const [posts, total] = await Promise.all([
+            Post.find()
+                .populate('userId', 'name email profileImage')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Post.countDocuments()
+        ]);
+
+        res.json({
+            success: true,
+            data: posts,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('List posts error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// DELETE /api/admin/posts/:id
+exports.deletePost = async (req, res) => {
+    try {
+        const post = await Post.findByIdAndDelete(req.params.id);
+        if (!post) {
+            return res.status(404).json({ success: false, message: 'Post not found' });
+        }
+        res.json({ success: true, message: 'Post deleted' });
+    } catch (error) {
+        console.error('Delete post error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
+// CONTEST MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+
+// GET /api/admin/contests
+exports.listContests = async (req, res) => {
+    try {
+        const contests = await Contest.find().sort({ createdAt: -1 });
+        res.json({ success: true, data: contests });
+    } catch (error) {
+        console.error('List contests error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// DELETE /api/admin/contests/:id
+exports.deleteContest = async (req, res) => {
+    try {
+        const contest = await Contest.findByIdAndDelete(req.params.id);
+        if (!contest) {
+            return res.status(404).json({ success: false, message: 'Contest not found' });
+        }
+        res.json({ success: true, message: 'Contest deleted' });
+    } catch (error) {
+        console.error('Delete contest error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
