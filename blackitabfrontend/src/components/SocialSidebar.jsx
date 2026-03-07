@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { FaEnvelope, FaWallet, FaPlusSquare, FaUser, FaBars, FaUserFriends, FaUserPlus, FaStar, FaBell } from 'react-icons/fa';
+import { FaEnvelope, FaWallet, FaPlusSquare, FaUser, FaBars, FaUserFriends, FaUserPlus, FaStar, FaBell, FaBook } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 import Logo from './Logo';
 
@@ -10,12 +10,12 @@ const SocialSidebar = ({ onLogout, isOpen, setIsOpen, user, leftOffset = 0 }) =>
   const userId = user?._id || user?.id;
 
   const navItems = [
+    { path: '/dashboard', label: 'Switch to Learning', icon: <FaBook className="text-blue-500" /> },
     { path: `/network/${userId}/followers`, label: 'Followers', icon: <FaUserFriends /> },
     { path: `/network/${userId}/following`, label: 'Following', icon: <FaUserPlus /> },
     { path: `/network/${userId}/subscribers`, label: 'Subscription', icon: <FaStar /> },
     { path: '/notifications', label: 'Notifications', icon: <FaBell /> },
     { path: '/messages', label: 'Message', icon: <FaEnvelope /> },
-    { path: '/earnings', label: 'My Earning', icon: <FaWallet /> },
     { path: '/create-post', label: 'Add Post', icon: <FaPlusSquare /> },
     { path: '/profile', label: 'Profile', icon: <FaUser /> },
   ];
