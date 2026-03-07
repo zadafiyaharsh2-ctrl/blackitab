@@ -41,21 +41,15 @@ import Contest from './pages/Contest';
 import ProblemChapters from './pages/ProblemChapters';
 import ProblemList from './pages/ProblemList';
 import ProblemDetail from './pages/ProblemDetail';
-import Store from './pages/Store';
-import Jobs from './pages/Jobs';
 import Profile from './pages/Profile';
 import LandingPage from './pages/LandingPage';
 import Theory from './pages/Theory';
-import Projects from './pages/Projects';
 import SocialListPage from './pages/SocialListPage';
 import Messages from './pages/Messages';
 import Notifications from './pages/Notifications';
 import CreatePost from './pages/CreatePost';
 import StudyContent from './pages/StudyContent';
 import ContentDetail from './pages/ContentDetail';
-import PlaylistList from './pages/PlaylistList';
-import PlaylistDetail from './pages/PlaylistDetail';
-import Earnings from './pages/Earnings';
 import AIQuestionGenerator from './pages/AIQuestionGenerator';
 import ExamQuestions from './pages/ExamQuestions';
 import Leaderboard from './pages/Leaderboard';
@@ -365,42 +359,6 @@ function App() {
               }
             />
 
-            {/* Online Projects */}
-            <Route
-              path="/ide"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Projects />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Store / Marketplace */}
-            <Route
-              path="/store"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Store />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Job Board */}
-            <Route
-              path="/jobs"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Jobs />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
             {/* User Profile */}
             <Route
               path="/profile"
@@ -491,39 +449,7 @@ function App() {
               }
             />
 
-            {/* Playlist Routes */}
-            <Route
-              path="/playlists"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <PlaylistList />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/playlist/:id"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <PlaylistDetail />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
             {/* Individual Content Detail Route */}
-            <Route
-              path="/earnings"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Earnings />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
             <Route
               path="/content/:contentId"
               element={
@@ -642,13 +568,12 @@ function App() {
  * - sidebarOpen, setSidebarOpen: Controls sidebar state
  * - onLogout: Function to handle logout action
  */
-// Import Social Sidebar
+
 import SocialSidebar from './components/SocialSidebar';
 
 function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
-  // Determine if we are in a Social context
   const location = useLocation();
-  const isSocial = ['/social', '/profile', '/network', '/messages', '/earnings', '/create-post', '/playlists', '/playlist', '/notifications'].some(path => location.pathname.startsWith(path));
+  const isSocial = ['/social', '/profile', '/network', '/messages', '/create-post', '/notifications'].some(path => location.pathname.startsWith(path));
 
   // Track last visited page for "Resume Last Session" on Dashboard
   useEffect(() => {
@@ -657,9 +582,8 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
       const pageNames = {
         '/problems': 'Practice Problems', '/theory': 'Theory', '/social': 'Social Feed',
         '/analytics': 'Analytics', '/contest': 'Contest', '/ask-ai': 'AI Assistant',
-        '/store': 'Store', '/jobs': 'Jobs', '/ide': 'Projects', '/leaderboard': 'Leaderboard',
-        '/profile': 'Profile', '/messages': 'Messages', '/playlists': 'Playlists',
-        '/earnings': 'Earnings', '/teacher-dashboard': 'Teacher Panel',
+        '/leaderboard': 'Leaderboard', '/profile': 'Profile', '/messages': 'Messages',
+        '/teacher-dashboard': 'Teacher Panel', '/question-paper': 'Question Paper',
         '/create-question': 'Create Question', '/my-questions': 'My Questions',
         '/institute-dashboard': 'Institute Panel', '/school-analytics': 'School Analytics',
         '/ai-questions': 'AI Questions', '/notifications': 'Notifications'
@@ -671,45 +595,40 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
     }
   }, [location.pathname]);
 
-  // State for Social Sidebar (independent toggle)
+  // State for Social Sidebar (independent toggle if needed)
   const [socialSidebarOpen, setSocialSidebarOpen] = useState(true);
 
   // If user is not passed as prop, try to get from localStorage (fallback)
   const currentUser = user || JSON.parse(localStorage.getItem('user') || '{}');
 
-  // Calculate Layout Dimensions
-  const mainSidebarWidth = sidebarOpen ? '16rem' : '4rem'; // w-64 vs w-16
-  const socialSidebarWidth = socialSidebarOpen ? '16rem' : '4rem';
+  // Calculate Layout Dimensions based on which sidebar is active
+  const activeSidebarWidth = isSocial 
+    ? (socialSidebarOpen ? '16rem' : '4rem')
+    : (sidebarOpen ? '16rem' : '4rem');
 
   return (
     <div className="min-h-screen flex bg-gray-50 dark:bg-black text-gray-900 dark:text-white transition-colors duration-300">
-      {/* 1. Main Sidebar - ALWAYS VISIBLE, FIXED LEFT */}
-      {/* Ensure z-50 to be on top */}
-      <div className="z-50">
-        <Sidebar onLogout={onLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-      </div>
-
-      {/* 2. Social Sidebar - RENDER ONLY IF SOCIAL, POSITIONED NEXT TO MAIN */}
-      {/* Animate presence could be added here later, for now conditional rendering */}
-      {isSocial && (
-        <SocialSidebar
-          onLogout={onLogout}
-          isOpen={socialSidebarOpen}
-          setIsOpen={setSocialSidebarOpen}
-          user={currentUser}
-          leftOffset={mainSidebarWidth} // Position it right after Main Sidebar
-        />
+      {/* Contextual Sidebar: Show Social Sidebar if on social routes, otherwise Main Sidebar */}
+      {isSocial ? (
+         <div className="z-50">
+           <SocialSidebar
+             onLogout={onLogout}
+             isOpen={socialSidebarOpen}
+             setIsOpen={setSocialSidebarOpen}
+             user={currentUser}
+             leftOffset={0} // Fixed to the extreme left, replacing the main sidebar
+           />
+         </div>
+      ) : (
+         <div className="z-50">
+           <Sidebar onLogout={onLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+         </div>
       )}
 
-      {/* 3. Main Content Area */}
-      {/* Margin Left = Main Sidebar Width + (Social Sidebar Width if visible) */}
+      {/* Main Content Area */}
       <div
         className={`flex-1 transition-all duration-300 ${location.pathname.startsWith('/messages') ? '' : 'p-6'}`}
-        style={{
-          marginLeft: isSocial
-            ? `calc(${mainSidebarWidth} + ${socialSidebarWidth})`
-            : mainSidebarWidth
-        }}
+        style={{ marginLeft: activeSidebarWidth }}
       >
         {children}
       </div>
