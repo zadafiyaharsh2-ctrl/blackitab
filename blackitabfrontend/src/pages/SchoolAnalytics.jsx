@@ -3,261 +3,380 @@ import { motion } from 'framer-motion';
 import {
   FaSchool, FaChalkboardTeacher, FaUserGraduate, FaChartPie,
   FaBrain, FaUsers, FaChartLine, FaCheckCircle, FaTimesCircle,
-  FaSearch, FaSpinner
+  FaSearch, FaSpinner, FaFire, FaTrophy, FaArrowUp, FaArrowDown
 } from 'react-icons/fa';
 import axios from 'axios';
-import API_URL from '../config';
-import { CustomToast } from '../utils/CustomToast';
-import usePageTitle from '../hooks/usePageTitle';
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-};
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
-};
+import API from '../config';
+const fadeIn = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } };
+const stagger = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } };
 
-// ── Dummy fallback data ──
-const DUMMY_ANALYTICS = {
-  totalStudents: 86,
-  totalInstitutionAttempts: 1248,
-  performances: [
-    { _id: 'ds1', solved: 45, correct: 39 },
-    { _id: 'ds2', solved: 38, correct: 28 },
-    { _id: 'ds3', solved: 62, correct: 58 },
-    { _id: 'ds4', solved: 28, correct: 15 },
-    { _id: 'ds5', solved: 20, correct: 8 },
-    { _id: 'ds6', solved: 50, correct: 42 },
-    { _id: 'ds7', solved: 35, correct: 30 },
-    { _id: 'ds8', solved: 15, correct: 4 },
-  ]
-};
-const DUMMY_NAMES = {
-  ds1: 'Aarav Sharma', ds2: 'Sneha Kulkarni', ds3: 'Vikram Joshi',
-  ds4: 'Diya Nair', ds5: 'Karan Mehta', ds6: 'Meera Gupta',
-  ds7: 'Arjun Reddy', ds8: 'Nisha Patel'
-};
-
-const SchoolAnalytics = () => {
-  usePageTitle('School Analytics');
-  const [data, setData] = useState(null);
+export default function SchoolAnalytics() {
+  const [schoolData, setSchoolData] = useState(null);
+  const [trends, setTrends] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
-  const [studentNames, setStudentNames] = useState({});
+  const [activeTab, setActiveTab] = useState('overview'); // overview | students | trends
 
-  useEffect(() => { fetchAnalytics(); }, []);
+  const token = localStorage.getItem('token');
+  const headers = { Authorization: `Bearer ${token}` };
 
-  const fetchAnalytics = async () => {
+  useEffect(() => {
+    fetchAll();
+  }, []);
+
+  const fetchAll = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) { setError('Please log in'); setLoading(false); return; }
-
-      const res = await axios.get(`${API_URL}/api/analytics/school`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (res.data.success) {
-        setData(res.data.data);
-        // Fetch student names for performances
-        if (res.data.data.performances?.length > 0) {
-          try {
-            const namesRes = await axios.get(`${API_URL}/api/institute/members`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            if (namesRes.data.success) {
-              const nameMap = {};
-              namesRes.data.data.forEach(m => { nameMap[m._id] = m.name; });
-              setStudentNames(nameMap);
-            }
-          } catch { }
-        }
-      }
+      setLoading(true);
+      const [schoolRes, trendsRes] = await Promise.all([
+        axios.get(`${API}/api/analytics/school`, { headers }),
+        axios.get(`${API}/api/analytics/school/trends`, { headers })
+      ]);
+      setSchoolData(schoolRes.data.data);
+      setTrends(trendsRes.data.data);
     } catch (err) {
-      // Use dummy data as fallback
-      setData(DUMMY_ANALYTICS);
-      setStudentNames(DUMMY_NAMES);
+      setError(err.response?.data?.message || 'Failed to load analytics');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
-
-  const userRole = (() => {
-    try { return JSON.parse(localStorage.getItem('user') || '{}').role || 'student'; } catch { return 'student'; }
-  })();
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center">
-        <FaSpinner className="text-4xl text-purple-400 animate-spin" />
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <FaSpinner className="animate-spin text-4xl text-indigo-500" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center p-6">
-        <div className="glass-panel border border-red-500/20 rounded-2xl p-10 text-center max-w-md">
-          <FaSchool className="text-5xl text-red-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-2">Access Restricted</h2>
-          <p className="text-gray-400">{error}</p>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <p className="text-red-400 text-lg mb-4">{error}</p>
+        <button onClick={fetchAll} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Retry</button>
       </div>
     );
   }
 
-  const performances = data?.performances || [];
-  const totalStudents = data?.totalStudents || 0;
-  const totalAttempts = data?.totalInstitutionAttempts || 0;
-  const avgAccuracy = performances.length > 0
-    ? Math.round(performances.reduce((acc, p) => acc + (p.solved > 0 ? (p.correct / p.solved) * 100 : 0), 0) / performances.length)
-    : 0;
-  const topPerformers = [...performances].sort((a, b) => (b.correct / (b.solved || 1)) - (a.correct / (a.solved || 1))).slice(0, 3);
-  const atRisk = performances.filter(p => p.solved > 0 && (p.correct / p.solved) < 0.4);
+  if (!schoolData) return null;
 
-  const filteredPerformances = search
-    ? performances.filter(p => (studentNames[p._id] || p._id).toLowerCase().includes(search.toLowerCase()))
-    : performances;
+  const filteredStudents = schoolData.students.filter(s =>
+    s.name.toLowerCase().includes(search.toLowerCase()) ||
+    s.email.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const topPerformers = [...schoolData.students]
+    .sort((a, b) => b.accuracy - a.accuracy)
+    .slice(0, 5);
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white p-6 relative overflow-hidden font-sans pt-20">
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[10%] left-[10%] w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[120px] mix-blend-screen animate-pulse" />
-        <div className="absolute bottom-[10%] right-[10%] w-[600px] h-[600px] bg-cyan-600/15 rounded-full blur-[150px] mix-blend-screen" />
+    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      {/* Header */}
+      <motion.div initial="hidden" animate="visible" variants={fadeIn}>
+        <div className="flex items-center gap-3 mb-1">
+          <FaSchool className="text-indigo-400 text-2xl" />
+          <h1 className="text-2xl font-bold text-white">{schoolData.institute.name} — Analytics</h1>
+        </div>
+        <p className="text-gray-500 text-sm">Deep analytics for your institution's performance</p>
+      </motion.div>
+
+      {/* Tab Switcher */}
+      <div className="flex gap-2 bg-gray-900/80 rounded-xl p-1.5 w-fit border border-gray-700/50">
+        {['overview', 'students', 'trends'].map(tab => (
+          <button key={tab} onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition capitalize ${
+              activeTab === tab ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800/60'
+            }`}>
+            {tab}
+          </button>
+        ))}
       </div>
 
-      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-7xl mx-auto relative z-10 space-y-8">
-        {/* Hero */}
-        <motion.div variants={itemVariants} className="glass-panel border-white/5 rounded-[2rem] p-8 md:p-12 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-full h-[1px] bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
-          <div className="flex flex-col md:flex-row items-center gap-8">
-            <div className="p-6 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-3xl shadow-[0_0_30px_rgba(99,102,241,0.4)]">
-              <FaSchool className="text-6xl text-white" />
-            </div>
-            <div className="text-center md:text-left flex-1">
-              <h1 className="text-4xl md:text-5xl font-black text-glow mb-3">School Analytics</h1>
-              <p className="text-xl text-gray-400 leading-relaxed max-w-2xl">
-                {userRole === 'hod' ? 'Department-wide performance insights' : 'Monitor your students\' progress and identify areas for improvement'}
-              </p>
-            </div>
+      {/* ═══════════ OVERVIEW TAB ═══════════ */}
+      {activeTab === 'overview' && (
+        <motion.div initial="hidden" animate="visible" variants={stagger} className="space-y-6">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { icon: <FaUserGraduate />, label: 'Students', value: schoolData.totalStudents, color: 'indigo' },
+              { icon: <FaBrain />, label: 'Avg Accuracy', value: `${schoolData.aggregateStats.avgAccuracy}%`, color: 'emerald' },
+              { icon: <FaChartLine />, label: 'Total Attempts', value: schoolData.aggregateStats.totalAttempts.toLocaleString(), color: 'amber' },
+              { icon: <FaFire />, label: 'Active This Week', value: schoolData.aggregateStats.activeThisWeek, color: 'rose' },
+            ].map((card, i) => (
+              <motion.div key={i} variants={fadeIn}
+                className="bg-gray-900/80 border border-gray-700/30 rounded-xl p-5 hover:border-gray-600/50 transition">
+                <div className={`text-${card.color}-400 text-xl mb-3`}>{card.icon}</div>
+                <p className="text-3xl font-bold text-white">{card.value}</p>
+                <p className="text-gray-500 text-xs mt-1">{card.label}</p>
+              </motion.div>
+            ))}
           </div>
-        </motion.div>
 
-        {/* Stats Row */}
-        <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: 'Total Students', value: totalStudents, icon: FaUsers, color: 'text-blue-400', bg: 'from-blue-500/20 to-cyan-500/20' },
-            { label: 'Total Attempts', value: totalAttempts.toLocaleString(), icon: FaChartPie, color: 'text-purple-400', bg: 'from-purple-500/20 to-pink-500/20' },
-            { label: 'Avg Accuracy', value: `${avgAccuracy}%`, icon: FaCheckCircle, color: 'text-emerald-400', bg: 'from-emerald-500/20 to-teal-500/20' },
-            { label: 'At Risk', value: atRisk.length, icon: FaTimesCircle, color: 'text-red-400', bg: 'from-red-500/20 to-orange-500/20' },
-          ].map((s, i) => (
-            <motion.div key={i} whileHover={{ y: -3 }} className="glass-panel p-5 border border-white/5 flex items-center justify-between">
-              <div>
-                <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">{s.label}</p>
-                <p className="text-2xl font-bold text-white">{s.value}</p>
-              </div>
-              <div className={`p-3 rounded-2xl bg-gradient-to-br ${s.bg} border border-white/5`}>
-                <s.icon className={`text-xl ${s.color}`} />
+          {/* Staff Counts */}
+          {schoolData.staffCounts && Object.keys(schoolData.staffCounts).length > 0 && (
+            <motion.div variants={fadeIn} className="bg-gray-900/80 border border-gray-700/30 rounded-xl p-5">
+              <h3 className="text-white font-semibold mb-3 flex items-center gap-2"><FaChalkboardTeacher className="text-indigo-400" /> Staff Overview</h3>
+              <div className="flex gap-4">
+                {Object.entries(schoolData.staffCounts).map(([role, count]) => (
+                  <div key={role} className="bg-gray-800/60 rounded-lg px-4 py-3 text-center">
+                    <p className="text-xl font-bold text-white">{count}</p>
+                    <p className="text-gray-500 text-xs capitalize">{role.replace('_', ' ')}s</p>
+                  </div>
+                ))}
               </div>
             </motion.div>
-          ))}
-        </motion.div>
+          )}
 
-        {/* Top Performers */}
-        {topPerformers.length > 0 && (
-          <motion.div variants={itemVariants} className="glass-panel border border-white/10 rounded-2xl p-6">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><FaBrain className="text-yellow-400" /> Top Performers</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {topPerformers.map((p, i) => {
-                const accuracy = p.solved > 0 ? Math.round((p.correct / p.solved) * 100) : 0;
-                const medals = ['🥇', '🥈', '🥉'];
-                return (
-                  <div key={p._id} className="bg-white/[0.03] rounded-xl p-4 border border-white/5 flex items-center gap-4">
-                    <span className="text-2xl">{medals[i]}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-bold text-sm truncate">{studentNames[p._id] || `Student ${p._id.slice(-4)}`}</p>
-                      <p className="text-gray-400 text-xs">{p.correct}/{p.solved} correct</p>
+          {/* Division Breakdown */}
+          {schoolData.divisionBreakdown.length > 0 && (
+            <motion.div variants={fadeIn} className="bg-gray-900/80 border border-gray-700/30 rounded-xl p-5">
+              <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><FaChartPie className="text-indigo-400" /> Division Performance</h3>
+              <div className="space-y-3">
+                {schoolData.divisionBreakdown.map((d, i) => {
+                  const maxAcc = Math.max(...schoolData.divisionBreakdown.map(x => x.avgAccuracy), 1);
+                  const barWidth = (d.avgAccuracy / maxAcc) * 100;
+                  return (
+                    <div key={i} className="flex items-center gap-4">
+                      <span className="text-indigo-400 font-mono font-bold w-20 text-right">{d.division}</span>
+                      <div className="flex-1 bg-gray-800/60 rounded-full h-8 overflow-hidden relative">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${barWidth}%` }}
+                          transition={{ delay: i * 0.1, duration: 0.6 }}
+                          className={`h-full rounded-full ${
+                            d.avgAccuracy >= 70 ? 'bg-gradient-to-r from-emerald-600 to-emerald-500' :
+                            d.avgAccuracy >= 40 ? 'bg-gradient-to-r from-amber-600 to-amber-500' :
+                            'bg-gradient-to-r from-red-600 to-red-500'
+                          }`}
+                        />
+                        <span className="absolute inset-0 flex items-center text-xs text-white font-medium pl-3">
+                          {d.avgAccuracy}% accuracy • {d.studentCount} students • {d.totalAttempts} attempts
+                        </span>
+                      </div>
                     </div>
-                    <span className={`text-lg font-bold ${accuracy >= 80 ? 'text-emerald-400' : accuracy >= 60 ? 'text-yellow-400' : 'text-red-400'}`}>{accuracy}%</span>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
 
-        {/* Student Performance Table */}
-        <motion.div variants={itemVariants} className="glass-panel border border-white/10 rounded-2xl overflow-hidden">
-          <div className="p-4 border-b border-white/5 bg-white/[0.02] flex flex-wrap items-center justify-between gap-3">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2"><FaUserGraduate className="text-blue-400" /> Student Performance</h3>
-            <div className="relative">
-              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-xs" />
-              <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Search students..." className="pl-8 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-white outline-none focus:ring-1 focus:ring-blue-500/50 w-48" />
-            </div>
+          {/* Top Performers */}
+          {topPerformers.length > 0 && (
+            <motion.div variants={fadeIn} className="bg-gray-900/80 border border-gray-700/30 rounded-xl p-5">
+              <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><FaTrophy className="text-amber-400" /> Top Performers</h3>
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                {topPerformers.map((s, i) => (
+                  <div key={s._id} className={`rounded-xl p-4 text-center border ${
+                    i === 0 ? 'bg-gradient-to-br from-amber-900/30 to-amber-800/10 border-amber-500/30' :
+                    i === 1 ? 'bg-gradient-to-br from-gray-700/30 to-gray-600/10 border-gray-400/30' :
+                    i === 2 ? 'bg-gradient-to-br from-orange-900/30 to-orange-800/10 border-orange-500/30' :
+                    'bg-gray-800/40 border-gray-700/30'
+                  }`}>
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-bold text-white mx-auto mb-2">
+                      {s.profileImage ? <img src={s.profileImage} alt="" className="w-full h-full rounded-full object-cover" /> : s.name[0]}
+                    </div>
+                    <p className="text-white font-medium text-sm truncate">{s.name}</p>
+                    <p className="text-emerald-400 font-bold text-lg">{s.accuracy}%</p>
+                    <p className="text-gray-500 text-xs">{s.totalAttempts} attempts</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </motion.div>
+      )}
+
+      {/* ═══════════ STUDENTS TAB ═══════════ */}
+      {activeTab === 'students' && (
+        <motion.div initial="hidden" animate="visible" variants={fadeIn} className="space-y-4">
+          <div className="relative">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <input type="text" placeholder="Search students by name or email..."
+              value={search} onChange={e => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-gray-900/80 border border-gray-700/50 rounded-xl text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none" />
           </div>
 
-          {filteredPerformances.length > 0 ? (
-            <div className="divide-y divide-white/5 max-h-[500px] overflow-y-auto">
-              {filteredPerformances.map((p, i) => {
-                const accuracy = p.solved > 0 ? Math.round((p.correct / p.solved) * 100) : 0;
-                return (
-                  <div key={p._id} className="flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <span className="text-gray-300 text-xs font-mono w-6">{i + 1}</span>
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                        {(studentNames[p._id] || 'S')[0].toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-white text-sm font-medium truncate">{studentNames[p._id] || `Student ${p._id.slice(-6)}`}</p>
-                        <p className="text-gray-300 text-xs">{p.solved} attempts • {p.correct} correct</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      {/* Accuracy bar */}
-                      <div className="hidden sm:block w-24">
-                        <div className="w-full bg-white/5 rounded-full h-2 border border-white/5 overflow-hidden">
-                          <motion.div initial={{ width: 0 }} animate={{ width: `${accuracy}%` }} transition={{ duration: 1, delay: i * 0.05 }}
-                            className={`h-full rounded-full ${accuracy >= 70 ? 'bg-emerald-500' : accuracy >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`} />
+          <div className="bg-gray-900/80 border border-gray-700/50 rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-800/80 text-gray-400 text-xs uppercase">
+                    <th className="px-4 py-3 text-left">#</th>
+                    <th className="px-4 py-3 text-left">Student</th>
+                    <th className="px-3 py-3 text-center">Division</th>
+                    <th className="px-3 py-3 text-center">Batch</th>
+                    <th className="px-3 py-3 text-center">Accuracy</th>
+                    <th className="px-3 py-3 text-center">Attempts</th>
+                    <th className="px-3 py-3 text-center">XP</th>
+                    <th className="px-3 py-3 text-center">Streak</th>
+                    <th className="px-3 py-3 text-center">Rank</th>
+                    <th className="px-3 py-3 text-center">Topics</th>
+                    <th className="px-3 py-3 text-center">Last Active</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredStudents.map((s, i) => (
+                    <tr key={s._id} className="border-t border-gray-800/50 hover:bg-gray-800/30 transition">
+                      <td className="px-4 py-3 text-gray-500 text-xs">{i + 1}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                            {s.profileImage ? <img src={s.profileImage} alt="" className="w-full h-full rounded-full object-cover" /> : s.name[0]}
+                          </div>
+                          <div>
+                            <p className="text-white text-sm">{s.name}</p>
+                            <p className="text-gray-600 text-xs">{s.email}</p>
+                          </div>
                         </div>
-                      </div>
-                      <span className={`text-sm font-bold w-12 text-right ${accuracy >= 70 ? 'text-emerald-400' : accuracy >= 40 ? 'text-yellow-400' : 'text-red-400'}`}>
-                        {accuracy}%
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+                      </td>
+                      <td className="px-3 py-3 text-center text-indigo-400 font-mono text-xs">{s.division}</td>
+                      <td className="px-3 py-3 text-center text-gray-400 text-xs">{s.batchYear}</td>
+                      <td className="px-3 py-3 text-center">
+                        <span className={`font-semibold ${s.accuracy >= 70 ? 'text-emerald-400' : s.accuracy >= 40 ? 'text-amber-400' : 'text-red-400'}`}>
+                          {s.accuracy}%
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-center text-gray-300">{s.totalAttempts}</td>
+                      <td className="px-3 py-3 text-center text-amber-400">{s.points.toLocaleString()}</td>
+                      <td className="px-3 py-3 text-center">
+                        {s.streak > 0 ? <span className="text-orange-400 flex items-center justify-center gap-1"><FaFire className="text-xs" />{s.streak}</span> : <span className="text-gray-600">0</span>}
+                      </td>
+                      <td className="px-3 py-3 text-center text-gray-300">#{s.globalRank || '—'}</td>
+                      <td className="px-3 py-3 text-center text-cyan-400">{s.topicsCompleted}</td>
+                      <td className="px-3 py-3 text-center text-gray-500 text-xs">
+                        {s.lastActive ? new Date(s.lastActive).toLocaleDateString() : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {filteredStudents.length === 0 && (
+                <div className="text-center py-12 text-gray-500">
+                  <FaUsers className="mx-auto text-4xl mb-3 opacity-30" />
+                  <p>No students found{search ? ' matching your search' : ''}.</p>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="text-center py-16 text-gray-500">
-              <FaUserGraduate className="text-4xl mx-auto mb-3 opacity-30" />
-              <p className="font-medium">No student data available</p>
-              <p className="text-xs mt-1">Students will appear here once they start solving problems</p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ═══════════ TRENDS TAB ═══════════ */}
+      {activeTab === 'trends' && trends && (
+        <motion.div initial="hidden" animate="visible" variants={stagger} className="space-y-6">
+          {/* Weekly Trends */}
+          {trends.weeklyTrends.length > 0 && (
+            <motion.div variants={fadeIn} className="bg-gray-900/80 border border-gray-700/30 rounded-xl p-5">
+              <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                <FaChartLine className="text-indigo-400" />
+                Weekly Attempt Trends (Last 8 Weeks)
+              </h3>
+              <div className="flex gap-3 items-end h-40">
+                {trends.weeklyTrends.map((w, i) => {
+                  const maxVal = Math.max(...trends.weeklyTrends.map(x => x.totalAttempts), 1);
+                  const height = (w.totalAttempts / maxVal) * 100;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                      <span className="text-xs text-gray-400">{w.totalAttempts}</span>
+                      <div className="w-full flex flex-col-reverse rounded-t overflow-hidden" style={{ height: `${Math.max(height, 4)}%` }}>
+                        <div className="bg-indigo-600/80 hover:bg-indigo-500 transition" style={{ height: `${w.accuracy}%` }} />
+                        <div className="bg-red-500/40" style={{ height: `${100 - w.accuracy}%` }} />
+                      </div>
+                      <span className="text-[10px] text-gray-500">{w.week}</span>
+                      <span className="text-[10px] text-emerald-400">{w.accuracy}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex gap-4 mt-3 text-xs text-gray-500">
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-indigo-600/80" /> Correct</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-500/40" /> Incorrect</span>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Active Students */}
+          {trends.weeklyTrends.length > 0 && (
+            <motion.div variants={fadeIn} className="bg-gray-900/80 border border-gray-700/30 rounded-xl p-5">
+              <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                <FaUsers className="text-indigo-400" /> Active Students Per Week
+              </h3>
+              <div className="flex gap-3 items-end h-24">
+                {trends.weeklyTrends.map((w, i) => {
+                  const maxActive = Math.max(...trends.weeklyTrends.map(x => x.activeStudents), 1);
+                  const height = (w.activeStudents / maxActive) * 100;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                      <span className="text-xs text-gray-400">{w.activeStudents}</span>
+                      <div className="w-full rounded-t bg-cyan-500/60 hover:bg-cyan-500 transition" style={{ height: `${Math.max(height, 4)}%` }} />
+                      <span className="text-[10px] text-gray-500">{w.week}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Top Active This Week */}
+          {trends.topActiveThisWeek.length > 0 && (
+            <motion.div variants={fadeIn} className="bg-gray-900/80 border border-gray-700/30 rounded-xl p-5">
+              <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                <FaTrophy className="text-amber-400" /> Top Active This Week
+              </h3>
+              <div className="space-y-2">
+                {trends.topActiveThisWeek.map((s, i) => (
+                  <div key={i} className="flex items-center gap-4 bg-gray-800/40 rounded-lg p-3">
+                    <span className={`text-lg font-bold ${i === 0 ? 'text-amber-400' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-orange-400' : 'text-gray-600'}`}>
+                      #{i + 1}
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                      {s.profileImage ? <img src={s.profileImage} alt="" className="w-full h-full rounded-full object-cover" /> : s.name[0]}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-white font-medium text-sm">{s.name}</p>
+                      <p className="text-gray-500 text-xs">{s.attempts} attempts this week</p>
+                    </div>
+                    <span className={`font-bold text-lg ${s.accuracy >= 70 ? 'text-emerald-400' : s.accuracy >= 40 ? 'text-amber-400' : 'text-red-400'}`}>
+                      {s.accuracy}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* New Signups */}
+          {trends.newStudentsPerWeek.length > 0 && (
+            <motion.div variants={fadeIn} className="bg-gray-900/80 border border-gray-700/30 rounded-xl p-5">
+              <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                <FaUserGraduate className="text-indigo-400" /> New Student Signups
+              </h3>
+              <div className="flex gap-3 items-end h-20">
+                {trends.newStudentsPerWeek.map((w, i) => {
+                  const maxNew = Math.max(...trends.newStudentsPerWeek.map(x => x.count), 1);
+                  const height = (w.count / maxNew) * 100;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                      <span className="text-xs text-emerald-400">{w.count}</span>
+                      <div className="w-full rounded-t bg-emerald-500/60 hover:bg-emerald-500 transition" style={{ height: `${Math.max(height, 8)}%` }} />
+                      <span className="text-[10px] text-gray-500">{w.week}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Empty state if no trends */}
+          {trends.weeklyTrends.length === 0 && trends.topActiveThisWeek.length === 0 && (
+            <div className="text-center py-12 text-gray-500">
+              <FaChartLine className="mx-auto text-4xl mb-3 opacity-30" />
+              <p>No activity data yet. Trends will appear once students start solving questions.</p>
             </div>
           )}
         </motion.div>
-
-        {/* Action: Schedule Revision */}
-        {atRisk.length > 0 && (
-          <motion.div variants={itemVariants} className="glass-panel border border-red-500/20 rounded-2xl p-8 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-red-900/10 to-transparent" />
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-              <div>
-                <h3 className="text-2xl font-bold text-white mb-2">⚠️ {atRisk.length} Students Need Attention</h3>
-                <p className="text-gray-400">These students have accuracy below 40%. Consider scheduling a revision session.</p>
-              </div>
-              <button onClick={() => CustomToast.success('📅 Revision scheduling coming soon! Your HOD has been notified.')}
-                className="px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white rounded-xl font-bold shadow-lg transition-all hover:scale-[1.02] shrink-0">
-                Schedule Revision Class
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </motion.div>
+      )}
     </div>
   );
-};
-
-export default SchoolAnalytics;
+}
