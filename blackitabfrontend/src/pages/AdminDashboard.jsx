@@ -46,6 +46,12 @@ const AdminDashboard = () => {
   const [questionPreview, setQuestionPreview] = useState(null);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'student', instituteCode: '' });
+  const [editUserModal, setEditUserModal] = useState(null);
+  const [showCreateContest, setShowCreateContest] = useState(false);
+  const [newContest, setNewContest] = useState({ title: '', description: '', startTime: '', endTime: '', difficultyLevel: 'Intermediate' });
+  const [editContestModal, setEditContestModal] = useState(null);
+  const [showCreateQuestion, setShowCreateQuestion] = useState(false);
+  const [newQuestion, setNewQuestion] = useState({ exam: 'jee', subject: '', question: '', options: ['', '', '', ''], correctAnswer: 0, difficulty: 'Medium', explanation: '' });
 
   useEffect(() => {
     const adminData = localStorage.getItem('admin');
@@ -214,6 +220,54 @@ const AdminDashboard = () => {
       fetchStats(getToken());
       CustomToast.success('Post deleted');
     } catch { CustomToast.error('Failed'); }
+  };
+
+  const handleEditUser = async () => {
+    if (!editUserModal) return;
+    try {
+      const res = await axios.put(`${API_URL}/api/admin/users/${editUserModal._id}`, editUserModal, { headers: headers() });
+      CustomToast.success(res.data.message || 'User updated');
+      fetchUsers(null, userPage, userSearch);
+      fetchStats(getToken());
+    } catch (err) { CustomToast.error(err.response?.data?.message || 'Failed'); }
+    setEditUserModal(null);
+  };
+
+  const handleCreateQuestion = async () => {
+    if (!newQuestion.subject || !newQuestion.question || newQuestion.options.some(o => !o)) {
+      CustomToast.error('All fields required'); return;
+    }
+    try {
+      await axios.post(`${API_URL}/api/admin/questions`, newQuestion, { headers: headers() });
+      CustomToast.success('Question created and auto-approved');
+      fetchQuestions(questionFilter, questionPage);
+      fetchStats(getToken());
+    } catch (err) { CustomToast.error(err.response?.data?.message || 'Failed'); }
+    setShowCreateQuestion(false);
+    setNewQuestion({ exam: 'jee', subject: '', question: '', options: ['', '', '', ''], correctAnswer: 0, difficulty: 'Medium', explanation: '' });
+  };
+
+  const handleCreateContest = async () => {
+    if (!newContest.title || !newContest.startTime || !newContest.endTime) {
+      CustomToast.error('Title, start time, and end time are required'); return;
+    }
+    try {
+      await axios.post(`${API_URL}/api/admin/contests`, newContest, { headers: headers() });
+      CustomToast.success('Contest created');
+      fetchContests();
+    } catch (err) { CustomToast.error(err.response?.data?.message || 'Failed'); }
+    setShowCreateContest(false);
+    setNewContest({ title: '', description: '', startTime: '', endTime: '', difficultyLevel: 'Intermediate' });
+  };
+
+  const handleEditContest = async () => {
+    if (!editContestModal) return;
+    try {
+      await axios.put(`${API_URL}/api/admin/contests/${editContestModal._id}`, editContestModal, { headers: headers() });
+      CustomToast.success('Contest updated');
+      fetchContests();
+    } catch (err) { CustomToast.error(err.response?.data?.message || 'Failed'); }
+    setEditContestModal(null);
   };
 
   const handleDeleteContest = async (id) => {
@@ -476,6 +530,10 @@ const AdminDashboard = () => {
                             className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${u.isBanned ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' : 'bg-red-500/10 text-red-400 hover:bg-red-500/20'}`}>
                             {u.isBanned ? 'Unban' : 'Ban'}
                           </button>
+                          <button onClick={() => setEditUserModal({ _id: u._id, name: u.name, email: u.email, bio: u.bio || '', points: u.points || 0, xp: u.xp || 0, streak: u.streak || 0, instituteCode: u.instituteId?.instituteCode || '' })}
+                            className="px-3 py-1 rounded-lg text-xs font-bold bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors">
+                            Edit
+                          </button>
                           <button onClick={() => handleDeleteUser(u._id)}
                             className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors" title="Delete user">
                             <FaTrash className="text-xs" />
@@ -565,9 +623,14 @@ const AdminDashboard = () => {
         {/* ── QUESTIONS TAB (NEW) ── */}
         {activeTab === 'questions' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
               <h2 className="text-xl font-bold text-white">Question Approval</h2>
-              <div className="flex gap-1 bg-white/5 p-1 rounded-xl">
+              <div className="flex items-center gap-3">
+                <button onClick={() => setShowCreateQuestion(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold hover:bg-emerald-500/20 transition-colors">
+                  <FaPlus /> Create Question
+                </button>
+                <div className="flex gap-1 bg-white/5 p-1 rounded-xl">
                 {['pending', 'approved', 'rejected'].map(s => (
                   <button key={s} onClick={() => setQuestionFilter(s)}
                     className={`px-4 py-2 rounded-lg text-xs font-bold capitalize transition-all ${
@@ -577,7 +640,50 @@ const AdminDashboard = () => {
                   </button>
                 ))}
               </div>
+              </div>
             </div>
+
+            {/* Create Question Form */}
+            {showCreateQuestion && (
+              <div className="glass-panel p-6 border border-emerald-500/20 rounded-2xl mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-white">Create Question (Auto-Approved)</h3>
+                  <button onClick={() => setShowCreateQuestion(false)} className="text-gray-500 hover:text-white"><FaTimes /></button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <select value={newQuestion.exam} onChange={e => setNewQuestion({ ...newQuestion, exam: e.target.value })}
+                    className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none">
+                    {['jee', 'neet', 'gate', 'cat', 'upsc', 'other'].map(e => <option key={e} value={e} className="bg-gray-900 uppercase">{e.toUpperCase()}</option>)}
+                  </select>
+                  <input value={newQuestion.subject} onChange={e => setNewQuestion({ ...newQuestion, subject: e.target.value })}
+                    placeholder="Subject (e.g. Physics)" className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none" />
+                  <select value={newQuestion.difficulty} onChange={e => setNewQuestion({ ...newQuestion, difficulty: e.target.value })}
+                    className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none">
+                    {['Easy', 'Medium', 'Hard'].map(d => <option key={d} value={d} className="bg-gray-900">{d}</option>)}
+                  </select>
+                </div>
+                <textarea value={newQuestion.question} onChange={e => setNewQuestion({ ...newQuestion, question: e.target.value })}
+                  placeholder="Question text..." rows={2} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none resize-none mb-4" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                  {newQuestion.options.map((opt, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <button onClick={() => setNewQuestion({ ...newQuestion, correctAnswer: i })}
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+                          newQuestion.correctAnswer === i ? 'bg-emerald-500 text-white' : 'bg-white/5 border border-white/10 text-gray-500'
+                        }`}>{String.fromCharCode(65 + i)}</button>
+                      <input value={opt} onChange={e => { const opts = [...newQuestion.options]; opts[i] = e.target.value; setNewQuestion({ ...newQuestion, options: opts }); }}
+                        placeholder={`Option ${String.fromCharCode(65 + i)}`} className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none" />
+                    </div>
+                  ))}
+                </div>
+                <input value={newQuestion.explanation} onChange={e => setNewQuestion({ ...newQuestion, explanation: e.target.value })}
+                  placeholder="Explanation (optional)" className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none mb-4" />
+                <button onClick={handleCreateQuestion}
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm transition-colors">
+                  Create Question
+                </button>
+              </div>
+            )}
 
             {/* Info Box */}
             <div className="glass-panel p-4 border border-blue-500/20 rounded-xl mb-6 flex items-start gap-3">
@@ -697,14 +803,55 @@ const AdminDashboard = () => {
         {/* ── CONTESTS TAB (NEW) ── */}
         {activeTab === 'contests' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <h2 className="text-xl font-bold text-white mb-6">Contest Management ({contests.length})</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Contest Management ({contests.length})</h2>
+              <button onClick={() => setShowCreateContest(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm font-bold hover:bg-yellow-500/20 transition-colors">
+                <FaPlus /> Create Contest
+              </button>
+            </div>
+
+            {/* Create Contest Form */}
+            {showCreateContest && (
+              <div className="glass-panel p-6 border border-yellow-500/20 rounded-2xl mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-white">New Contest</h3>
+                  <button onClick={() => setShowCreateContest(false)} className="text-gray-500 hover:text-white"><FaTimes /></button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                  <input value={newContest.title} onChange={e => setNewContest({ ...newContest, title: e.target.value })}
+                    placeholder="Contest Title" className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none" />
+                  <input value={newContest.startTime} onChange={e => setNewContest({ ...newContest, startTime: e.target.value })}
+                    type="datetime-local" className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none" />
+                  <input value={newContest.endTime} onChange={e => setNewContest({ ...newContest, endTime: e.target.value })}
+                    type="datetime-local" className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none" />
+                  <select value={newContest.difficultyLevel} onChange={e => setNewContest({ ...newContest, difficultyLevel: e.target.value })}
+                    className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none">
+                    {['Beginner', 'Intermediate', 'Advanced'].map(d => <option key={d} value={d} className="bg-gray-900">{d}</option>)}
+                  </select>
+                  <input value={newContest.description} onChange={e => setNewContest({ ...newContest, description: e.target.value })}
+                    placeholder="Description (optional)" className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none col-span-2" />
+                </div>
+                <button onClick={handleCreateContest}
+                  className="px-6 py-2.5 bg-yellow-600 hover:bg-yellow-500 text-white rounded-xl font-bold text-sm transition-colors">
+                  Create Contest
+                </button>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {contests.map(c => (
                 <motion.div key={c._id} whileHover={{ y: -3 }} className="glass-panel p-6 border border-white/10 rounded-2xl group relative">
-                  <button onClick={() => handleDeleteContest(c._id)}
-                    className="absolute top-3 right-3 p-1.5 rounded-lg bg-red-500/10 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20">
-                    <FaTrash className="text-xs" />
-                  </button>
+                  <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => setEditContestModal({ _id: c._id, title: c.title, description: c.description || '', startTime: c.startTime?.slice(0,16) || '', endTime: c.endTime?.slice(0,16) || '', difficultyLevel: c.difficultyLevel || 'Intermediate', isActive: c.isActive || false })}
+                      className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20">
+                      <FaEye className="text-xs" />
+                    </button>
+                    <button onClick={() => handleDeleteContest(c._id)}
+                      className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20">
+                      <FaTrash className="text-xs" />
+                    </button>
+                  </div>
                   <div className="flex items-center gap-2 mb-2">
                     <FaTrophy className="text-yellow-400" />
                     <h3 className="text-white font-bold pr-8">{c.title || c.name || 'Contest'}</h3>
@@ -810,6 +957,117 @@ const AdminDashboard = () => {
                 <p>Created by: {questionPreview.createdBy?.name || 'Unknown'} ({questionPreview.createdBy?.role || '—'})</p>
                 {questionPreview.instituteId && <p>Institute: {questionPreview.instituteId.name}</p>}
                 <p>Created: {new Date(questionPreview.createdAt).toLocaleString()}</p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── EDIT USER MODAL ── */}
+      <AnimatePresence>
+        {editUserModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+            onClick={() => setEditUserModal(null)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="glass-panel p-6 border border-white/10 rounded-2xl w-full max-w-lg"
+              onClick={e => e.stopPropagation()}>
+              <h3 className="text-white font-bold text-lg mb-4">Edit User</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Name</label>
+                  <input value={editUserModal.name} onChange={e => setEditUserModal({ ...editUserModal, name: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Email</label>
+                  <input value={editUserModal.email} onChange={e => setEditUserModal({ ...editUserModal, email: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Points</label>
+                  <input type="number" value={editUserModal.points} onChange={e => setEditUserModal({ ...editUserModal, points: parseInt(e.target.value) || 0 })}
+                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">XP</label>
+                  <input type="number" value={editUserModal.xp} onChange={e => setEditUserModal({ ...editUserModal, xp: parseInt(e.target.value) || 0 })}
+                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Streak</label>
+                  <input type="number" value={editUserModal.streak} onChange={e => setEditUserModal({ ...editUserModal, streak: parseInt(e.target.value) || 0 })}
+                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Institute Code</label>
+                  <input value={editUserModal.instituteCode} onChange={e => setEditUserModal({ ...editUserModal, instituteCode: e.target.value.toUpperCase() })}
+                    placeholder="Leave empty to unlink" className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none uppercase" />
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="text-xs text-gray-500 mb-1 block">Bio</label>
+                <textarea value={editUserModal.bio} onChange={e => setEditUserModal({ ...editUserModal, bio: e.target.value })}
+                  rows={2} className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white outline-none resize-none" />
+              </div>
+              <div className="flex items-center justify-end gap-3">
+                <button onClick={() => setEditUserModal(null)} className="px-4 py-2 text-sm font-bold text-gray-400 hover:text-white">Cancel</button>
+                <button onClick={handleEditUser} className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-colors">Save Changes</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── EDIT CONTEST MODAL ── */}
+      <AnimatePresence>
+        {editContestModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+            onClick={() => setEditContestModal(null)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="glass-panel p-6 border border-white/10 rounded-2xl w-full max-w-lg"
+              onClick={e => e.stopPropagation()}>
+              <h3 className="text-white font-bold text-lg mb-4">Edit Contest</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="col-span-2">
+                  <label className="text-xs text-gray-500 mb-1 block">Title</label>
+                  <input value={editContestModal.title} onChange={e => setEditContestModal({ ...editContestModal, title: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Start Time</label>
+                  <input type="datetime-local" value={editContestModal.startTime} onChange={e => setEditContestModal({ ...editContestModal, startTime: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">End Time</label>
+                  <input type="datetime-local" value={editContestModal.endTime} onChange={e => setEditContestModal({ ...editContestModal, endTime: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Difficulty</label>
+                  <select value={editContestModal.difficultyLevel} onChange={e => setEditContestModal({ ...editContestModal, difficultyLevel: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none">
+                    {['Beginner', 'Intermediate', 'Advanced'].map(d => <option key={d} value={d} className="bg-gray-900">{d}</option>)}
+                  </select>
+                </div>
+                <div className="flex items-center gap-3">
+                  <label className="text-xs text-gray-500">Active</label>
+                  <button onClick={() => setEditContestModal({ ...editContestModal, isActive: !editContestModal.isActive })}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold ${editContestModal.isActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                    {editContestModal.isActive ? 'Active' : 'Inactive'}
+                  </button>
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs text-gray-500 mb-1 block">Description</label>
+                  <textarea value={editContestModal.description} onChange={e => setEditContestModal({ ...editContestModal, description: e.target.value })}
+                    rows={2} className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white outline-none resize-none" />
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-3">
+                <button onClick={() => setEditContestModal(null)} className="px-4 py-2 text-sm font-bold text-gray-400 hover:text-white">Cancel</button>
+                <button onClick={handleEditContest} className="px-5 py-2.5 rounded-xl bg-yellow-600 hover:bg-yellow-500 text-white text-sm font-bold transition-colors">Save Changes</button>
               </div>
             </motion.div>
           </motion.div>
