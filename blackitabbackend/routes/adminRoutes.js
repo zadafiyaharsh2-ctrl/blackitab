@@ -16,6 +16,7 @@ router.get('/stats', adminController.getPlatformStats);
 router.get('/users', adminController.listUsers);
 router.post('/users', adminController.createUser);
 router.get('/users/:id', adminController.getUserById);
+router.put('/users/:id', adminController.editUser);
 router.put('/users/:id/role', adminController.changeUserRole);
 router.put('/users/:id/ban', adminController.toggleBanUser);
 router.delete('/users/:id', adminController.deleteUser);
@@ -28,6 +29,7 @@ router.delete('/institutes/:id', adminController.deleteInstitute);
 // ── Question Approval Management ──
 router.get('/questions', adminController.listQuestions);
 router.get('/questions/pending', adminController.listPendingQuestions);
+router.post('/questions', adminController.createQuestion);
 router.put('/questions/:id/approve', adminController.approveQuestion);
 router.put('/questions/:id/reject', adminController.rejectQuestion);
 router.delete('/questions/:id', adminController.deleteQuestion);
@@ -38,6 +40,8 @@ router.delete('/posts/:id', adminController.deletePost);
 
 // ── Contest Management ──
 router.get('/contests', adminController.listContests);
+router.post('/contests', adminController.createContest);
+router.put('/contests/:id', adminController.editContest);
 router.delete('/contests/:id', adminController.deleteContest);
 
 module.exports = router;
