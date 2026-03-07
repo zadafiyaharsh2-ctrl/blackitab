@@ -342,7 +342,7 @@ const Dashboard = () => {
             <p className="text-[10px] text-gray-600 mt-1">Longest: {stats.longestStreak || stats.streak}</p>
           </motion.div>
 
-          {/* Points Card */}
+          {/* XP Card */}
           <motion.div whileHover={{ y: -4 }} className="glass-panel stat-card-glow p-5 flex flex-col items-center text-center border border-yellow-200 dark:border-yellow-500/10 hover:border-yellow-500/30 relative overflow-hidden group">
             <div className="p-3 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 mb-3 group-hover:scale-110 transition-transform">
               <FaBolt className="text-yellow-400 text-2xl" />

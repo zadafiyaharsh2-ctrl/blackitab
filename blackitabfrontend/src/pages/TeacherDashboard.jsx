@@ -1,269 +1,417 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { motion } from 'framer-motion';
-import { FaPlusCircle, FaListAlt, FaChartBar, FaUsers, FaCheckCircle, FaArrowRight, FaUserGraduate, FaChalkboardTeacher, FaEye } from 'react-icons/fa';
-import API_URL from '../config';
-import usePageTitle from '../hooks/usePageTitle';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  FaUserGraduate, FaChartLine, FaFire, FaTrophy,
+  FaSearch, FaChevronDown, FaChevronUp, FaSpinner,
+  FaArrowUp, FaArrowDown, FaFilter, FaSortAmountDown,
+  FaClock, FaBrain, FaBookOpen, FaTimes
+} from 'react-icons/fa';
 
-// ── Dummy Data ─────────────────────────────────────────────────────────────
-const DUMMY_QUESTIONS = [
-  { _id: 'q1', question: 'What is normalization in DBMS? Explain with examples.', subject: 'DBMS', difficulty: 'Medium', createdAt: '2026-02-28' },
-  { _id: 'q2', question: 'Write a SQL query to find the second highest salary.', subject: 'SQL', difficulty: 'Easy', createdAt: '2026-02-27' },
-  { _id: 'q3', question: 'Explain ACID properties with real-world analogies.', subject: 'DBMS', difficulty: 'Hard', createdAt: '2026-02-25' },
-  { _id: 'q4', question: 'What is the difference between DELETE and TRUNCATE?', subject: 'SQL', difficulty: 'Easy', createdAt: '2026-02-24' },
-  { _id: 'q5', question: 'Explain cloud deployment models — IaaS, PaaS, SaaS.', subject: 'CCBDI', difficulty: 'Medium', createdAt: '2026-02-22' },
-];
+import API from '../config';
 
-const DUMMY_STUDENTS = [
-  { name: 'Aarav Sharma', accuracy: 87, attempts: 45, division: 'A' },
-  { name: 'Sneha Kulkarni', accuracy: 72, attempts: 38, division: 'B' },
-  { name: 'Vikram Joshi', accuracy: 94, attempts: 62, division: 'A' },
-  { name: 'Diya Nair', accuracy: 55, attempts: 28, division: 'B' },
-  { name: 'Karan Mehta', accuracy: 41, attempts: 20, division: 'A' },
-];
+// ─── Animation Variants ───
+const fadeIn = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } };
+const stagger = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } };
 
-const DUMMY_TEACHERS = [
-  { name: 'Priya Deshmukh', questionsCreated: 28, subject: 'DBMS' },
-  { name: 'Ananya Iyer', questionsCreated: 15, subject: 'SQL' },
-  { name: 'Rahul Verma', questionsCreated: 22, subject: 'CCBDI' },
-];
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
-};
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
-};
-
-const TeacherDashboard = () => {
-  usePageTitle('Teacher Dashboard');
-  const [user, setUser] = useState(null);
-  const [stats, setStats] = useState({ questionsCreated: 14, studentsCount: 86, avgAccuracy: 72 });
-  const [recentQuestions, setRecentQuestions] = useState(DUMMY_QUESTIONS);
+export default function TeacherDashboard() {
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [filterDivision, setFilterDivision] = useState('All');
+  const [filterBatch, setFilterBatch] = useState('All');
+  const [sortBy, setSortBy] = useState('points');
+  const [sortDir, setSortDir] = useState('desc');
+  const [expandedStudent, setExpandedStudent] = useState(null);
+  const [studentDetail, setStudentDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
-  const userRole = (() => {
-    try { return JSON.parse(localStorage.getItem('user') || '{}').role || 'teacher'; } catch { return 'teacher'; }
-  })();
-  const isHOD = userRole === 'hod';
+  const token = localStorage.getItem('token');
+  const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const userData = localStorage.getItem('user');
-        if (userData) setUser(JSON.parse(userData));
-
-        const token = localStorage.getItem('token');
-        if (!token) { setLoading(false); return; }
-
-        const qRes = await axios.get(`${API_URL}/api/exams/questions/my`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (qRes.data.success && qRes.data.data.length > 0) {
-          setRecentQuestions(qRes.data.data.slice(0, 5));
-          setStats(prev => ({ ...prev, questionsCreated: qRes.data.data.length }));
-        }
-
-        const aRes = await axios.get(`${API_URL}/api/analytics/school`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (aRes.data.success) {
-          setStats(prev => ({
-            ...prev,
-            studentsCount: aRes.data.data.totalStudents || prev.studentsCount,
-          }));
-        }
-      } catch (err) {
-        console.log('Using fallback teacher data');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
-  const quickActions = [
-    { title: 'Create Question', desc: 'Add a new exam question', icon: FaPlusCircle, link: '/create-question', color: 'from-emerald-500 to-teal-500' },
-    { title: 'My Questions', desc: 'View & manage questions', icon: FaListAlt, link: '/my-questions', color: 'from-blue-500 to-indigo-500' },
-    { title: 'School Analytics', desc: 'Student performance data', icon: FaChartBar, link: '/school-analytics', color: 'from-purple-500 to-pink-500' },
-    { title: 'Student List', desc: 'View your students', icon: FaUsers, link: '/school-analytics', color: 'from-orange-500 to-red-500' },
-  ];
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API}/api/analytics/school`, { headers });
+      setData(res.data.data);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load analytics');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const statCards = [
-    { title: 'Questions Created', value: stats.questionsCreated, icon: FaListAlt, color: 'text-blue-400', bg: 'from-blue-500/20 to-indigo-500/20' },
-    { title: 'Students', value: stats.studentsCount, icon: FaUsers, color: 'text-emerald-400', bg: 'from-emerald-500/20 to-teal-500/20' },
-    { title: 'Avg. Accuracy', value: `${stats.avgAccuracy}%`, icon: FaCheckCircle, color: 'text-yellow-400', bg: 'from-yellow-500/20 to-orange-500/20' },
-  ];
+  const fetchStudentDetail = async (studentId) => {
+    if (expandedStudent === studentId) {
+      setExpandedStudent(null);
+      setStudentDetail(null);
+      return;
+    }
+    try {
+      setDetailLoading(true);
+      setExpandedStudent(studentId);
+      const res = await axios.get(`${API}/api/analytics/school/student/${studentId}`, { headers });
+      setStudentDetail(res.data.data);
+    } catch (err) {
+      console.error('Failed to load student detail:', err);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
 
-  return (
-    <div className="min-h-screen relative p-4 md:p-8 lg:p-10 font-sans text-gray-100 overflow-x-hidden pt-20">
-      {/* Ambient BG */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <motion.div animate={{ x: [-20, 20, -20], y: [-20, 20, -20], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[120px] mix-blend-screen" />
-        <motion.div animate={{ x: [15, -15, 15], y: [15, -20, 15] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute bottom-[-5%] right-[-10%] w-[500px] h-[500px] bg-emerald-600/15 rounded-full blur-[120px] mix-blend-screen" />
+  // ─── Filter + Sort logic ───
+  const getFilteredStudents = () => {
+    if (!data?.students) return [];
+    let list = [...data.students];
+
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(s => s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q));
+    }
+    if (filterDivision !== 'All') list = list.filter(s => s.division === filterDivision);
+    if (filterBatch !== 'All') list = list.filter(s => s.batchYear === filterBatch);
+
+    list.sort((a, b) => {
+      const aVal = a[sortBy] || 0;
+      const bVal = b[sortBy] || 0;
+      return sortDir === 'desc' ? bVal - aVal : aVal - bVal;
+    });
+
+    return list;
+  };
+
+  const toggleSort = (field) => {
+    if (sortBy === field) {
+      setSortDir(d => d === 'desc' ? 'asc' : 'desc');
+    } else {
+      setSortBy(field);
+      setSortDir('desc');
+    }
+  };
+
+  const divisions = data ? [...new Set(data.students.map(s => s.division))].sort() : [];
+  const batches = data ? [...new Set(data.students.map(s => s.batchYear))].sort() : [];
+
+  // ─── Loading / Error States ───
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <FaSpinner className="animate-spin text-4xl text-indigo-500" />
       </div>
+    );
+  }
 
-      <motion.div className="relative z-10 max-w-7xl mx-auto" variants={containerVariants} initial="hidden" animate="visible">
-        {/* Header */}
-        <motion.div variants={itemVariants} className="mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-3">
-            <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">{isHOD ? 'HOD ' : 'Teacher '}</span>
-            <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Dashboard</span>
-          </h1>
-          <p className="text-gray-400 text-lg">
-            Welcome back, {user?.name || 'Teacher'}.
-            {isHOD ? ' Oversee your department and teachers.' : ' Manage your classes and content.'}
-          </p>
-          {isHOD && (
-            <span className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 bg-purple-500/10 border border-purple-500/20 text-purple-400 rounded-full text-xs font-bold">
-              <FaEye /> Department Head
-            </span>
-          )}
-        </motion.div>
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+        <p className="text-red-400 text-lg mb-4">{error}</p>
+        <button onClick={fetchData} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+          Retry
+        </button>
+      </div>
+    );
+  }
 
-        {/* Stats */}
-        <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-10">
-          {statCards.map((stat, i) => (
-            <motion.div key={i} whileHover={{ y: -5, scale: 1.02 }}
-              className="glass-panel p-6 flex items-center justify-between group border border-white/5">
-              <div>
-                <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">{stat.title}</p>
-                <h3 className="text-3xl font-bold text-white">{loading ? '...' : stat.value}</h3>
+  if (!data) return null;
+
+  const students = getFilteredStudents();
+
+  // ─── UI ───
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      {/* ─── Header ─── */}
+      <motion.div initial="hidden" animate="visible" variants={fadeIn} className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white">{data.institute.name}</h1>
+          <p className="text-gray-400 text-sm">Institute Code: <span className="font-mono text-indigo-400">{data.institute.code}</span></p>
+        </div>
+        <div className="flex gap-3">
+          <Link to="/school-analytics"
+            className="px-4 py-2 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-lg hover:bg-indigo-600/30 transition text-sm flex items-center gap-2">
+            <FaChartLine /> Detailed Analytics
+          </Link>
+          <Link to="/question-paper"
+            className="px-4 py-2 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-lg hover:bg-emerald-600/30 transition text-sm flex items-center gap-2">
+            <FaBookOpen /> Question Paper
+          </Link>
+        </div>
+      </motion.div>
+
+      {/* ─── Summary Cards ─── */}
+      <motion.div initial="hidden" animate="visible" variants={stagger} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Students', value: data.totalStudents, icon: <FaUserGraduate />, color: 'indigo' },
+          { label: 'Avg Accuracy', value: `${data.aggregateStats.avgAccuracy}%`, icon: <FaBrain />, color: 'emerald' },
+          { label: 'Total Attempts', value: data.aggregateStats.totalAttempts.toLocaleString(), icon: <FaChartLine />, color: 'amber' },
+          { label: 'Active This Week', value: data.aggregateStats.activeThisWeek, icon: <FaFire />, color: 'rose' },
+        ].map((card, i) => (
+          <motion.div key={i} variants={fadeIn}
+            className={`bg-gray-900/80 border border-${card.color}-500/20 rounded-xl p-4 hover:border-${card.color}-500/40 transition`}>
+            <div className={`text-${card.color}-400 text-xl mb-2`}>{card.icon}</div>
+            <p className="text-2xl font-bold text-white">{card.value}</p>
+            <p className="text-gray-500 text-xs mt-1">{card.label}</p>
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* ─── Division Breakdown ─── */}
+      {data.divisionBreakdown.length > 0 && (
+        <motion.div initial="hidden" animate="visible" variants={fadeIn}
+          className="bg-gray-900/80 border border-gray-700/50 rounded-xl p-5">
+          <h2 className="text-lg font-semibold text-white mb-4">Division Breakdown</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {data.divisionBreakdown.map((d, i) => (
+              <div key={i} className="bg-gray-800/60 rounded-lg p-3 border border-gray-700/30">
+                <p className="text-indigo-400 font-mono font-bold text-lg">{d.division}</p>
+                <div className="mt-2 space-y-1 text-sm">
+                  <div className="flex justify-between"><span className="text-gray-500">Students</span><span className="text-white">{d.studentCount}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Avg Accuracy</span><span className="text-emerald-400">{d.avgAccuracy}%</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Attempts</span><span className="text-amber-400">{d.totalAttempts}</span></div>
+                </div>
               </div>
-              <div className={`p-4 rounded-2xl bg-gradient-to-br ${stat.bg} border border-white/5`}>
-                <stat.icon className={`text-2xl ${stat.color}`} />
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Quick Actions */}
-        <motion.div variants={itemVariants} className="mb-10">
-          <h2 className="text-2xl font-bold text-white mb-6 tracking-tight">Quick Actions</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {quickActions.map((action, i) => (
-              <motion.div key={i} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Link to={action.link}
-                  className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.06] hover:border-white/20 transition-all group text-center">
-                  <div className={`p-4 rounded-xl bg-gradient-to-br ${action.color} shadow-lg`}>
-                    <action.icon className="text-2xl text-white" />
-                  </div>
-                  <span className="font-bold text-gray-200 group-hover:text-white">{action.title}</span>
-                  <span className="text-xs text-gray-500">{action.desc}</span>
-                </Link>
-              </motion.div>
             ))}
           </div>
         </motion.div>
+      )}
 
-        {/* HOD-Only: Teacher Overview & At-Risk Students */}
-        {isHOD && (
-          <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-            {/* Department Teachers */}
-            <div className="glass-panel p-6 border border-white/10">
-              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <FaChalkboardTeacher className="text-emerald-400" /> Department Teachers
-              </h2>
-              <div className="space-y-3">
-                {DUMMY_TEACHERS.map((t, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500/30 to-teal-500/30 border border-white/10 flex items-center justify-center text-white text-sm font-bold">
-                        {t.name[0]}
-                      </div>
-                      <div>
-                        <p className="text-white text-sm font-medium">{t.name}</p>
-                        <p className="text-gray-500 text-xs">{t.subject}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-white text-sm font-bold">{t.questionsCreated}</p>
-                      <p className="text-gray-500 text-[10px]">questions</p>
-                    </div>
-                  </div>
+      {/* ─── Filters + Search ─── */}
+      <motion.div initial="hidden" animate="visible" variants={fadeIn}
+        className="flex flex-wrap items-center gap-3 bg-gray-900/80 border border-gray-700/50 rounded-xl p-4">
+        <div className="relative flex-1 min-w-[200px]">
+          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+          <input
+            type="text" placeholder="Search students..."
+            value={search} onChange={e => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-gray-800/60 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none transition"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <FaFilter className="text-gray-500" />
+          <select value={filterDivision} onChange={e => setFilterDivision(e.target.value)}
+            className="bg-gray-800/60 border border-gray-700/50 rounded-lg text-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none">
+            <option value="All">All Divisions</option>
+            {divisions.map(d => <option key={d} value={d}>{d}</option>)}
+          </select>
+          <select value={filterBatch} onChange={e => setFilterBatch(e.target.value)}
+            className="bg-gray-800/60 border border-gray-700/50 rounded-lg text-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none">
+            <option value="All">All Batches</option>
+            {batches.map(b => <option key={b} value={b}>{b}</option>)}
+          </select>
+        </div>
+        <span className="text-gray-500 text-sm ml-auto">{students.length} students</span>
+      </motion.div>
+
+      {/* ─── Student Table ─── */}
+      <motion.div initial="hidden" animate="visible" variants={fadeIn}
+        className="bg-gray-900/80 border border-gray-700/50 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-800/80 text-gray-400 text-xs uppercase">
+                <th className="px-4 py-3 text-left">Student</th>
+                {[
+                  { key: 'division', label: 'Div' },
+                  { key: 'accuracy', label: 'Accuracy' },
+                  { key: 'totalAttempts', label: 'Attempts' },
+                  { key: 'streak', label: 'Streak' },
+                  { key: 'points', label: 'XP' },
+                  { key: 'globalRank', label: 'Rank' },
+                  { key: 'topicsCompleted', label: 'Topics' },
+                ].map(col => (
+                  <th key={col.key}
+                    className="px-3 py-3 text-center cursor-pointer hover:text-indigo-400 transition select-none"
+                    onClick={() => toggleSort(col.key)}>
+                    <span className="flex items-center justify-center gap-1">
+                      {col.label}
+                      {sortBy === col.key && (sortDir === 'desc' ? <FaArrowDown className="text-[10px]" /> : <FaArrowUp className="text-[10px]" />)}
+                    </span>
+                  </th>
                 ))}
-              </div>
-            </div>
-
-            {/* At-Risk Students */}
-            <div className="glass-panel p-6 border border-white/10">
-              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <FaUserGraduate className="text-red-400" /> Student Spotlight
-              </h2>
-              <div className="space-y-3">
-                {DUMMY_STUDENTS.map((s, i) => {
-                  const isAtRisk = s.accuracy < 50;
-                  return (
-                    <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className={`w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white text-sm font-bold ${isAtRisk ? 'bg-red-500/20' : 'bg-blue-500/20'}`}>
-                          {s.name[0]}
+                <th className="px-3 py-3 text-center">Detail</th>
+              </tr>
+            </thead>
+            <tbody>
+              {students.map((student, i) => (
+                <React.Fragment key={student._id}>
+                  <tr className={`border-t border-gray-800/50 hover:bg-gray-800/40 transition ${expandedStudent === student._id ? 'bg-gray-800/50' : ''}`}>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                          {student.profileImage ? <img src={student.profileImage} alt="" className="w-full h-full rounded-full object-cover" /> : student.name[0]}
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-white text-sm font-medium truncate">{s.name}</p>
-                          <p className="text-gray-500 text-xs">Div {s.division} • {s.attempts} attempts</p>
+                        <div>
+                          <p className="text-white font-medium text-sm">{student.name}</p>
+                          <p className="text-gray-500 text-xs">{student.batchYear}</p>
                         </div>
                       </div>
-                      <span className={`text-sm font-bold ${s.accuracy >= 70 ? 'text-emerald-400' : s.accuracy >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
-                        {s.accuracy}%
+                    </td>
+                    <td className="px-3 py-3 text-center"><span className="text-indigo-400 font-mono text-xs">{student.division}</span></td>
+                    <td className="px-3 py-3 text-center">
+                      <span className={`font-semibold ${student.accuracy >= 70 ? 'text-emerald-400' : student.accuracy >= 40 ? 'text-amber-400' : 'text-red-400'}`}>
+                        {student.accuracy}%
                       </span>
-                    </div>
-                  );
-                })}
-              </div>
-              <Link to="/school-analytics" className="mt-4 block text-center text-sm text-blue-400 hover:text-blue-300">
-                View Full Analytics →
-              </Link>
-            </div>
-          </motion.div>
-        )}
+                    </td>
+                    <td className="px-3 py-3 text-center text-gray-300">{student.totalAttempts}</td>
+                    <td className="px-3 py-3 text-center">
+                      {student.streak > 0 ? <span className="text-orange-400 flex items-center justify-center gap-1"><FaFire className="text-xs" />{student.streak}</span> : <span className="text-gray-600">0</span>}
+                    </td>
+                    <td className="px-3 py-3 text-center text-amber-400 font-semibold">{student.points.toLocaleString()}</td>
+                    <td className="px-3 py-3 text-center text-gray-300">#{student.globalRank || '—'}</td>
+                    <td className="px-3 py-3 text-center text-cyan-400">{student.topicsCompleted}</td>
+                    <td className="px-3 py-3 text-center">
+                      <button onClick={() => fetchStudentDetail(student._id)}
+                        className="p-1.5 rounded-lg bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600/40 transition">
+                        {expandedStudent === student._id ? <FaChevronUp className="text-xs" /> : <FaChevronDown className="text-xs" />}
+                      </button>
+                    </td>
+                  </tr>
 
-        {/* Recent Questions */}
-        <motion.div variants={itemVariants} className="glass-panel p-6 border border-white/10">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white tracking-tight">Recent Questions</h2>
-            <Link to="/my-questions" className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1">
-              View All <FaArrowRight className="text-xs" />
-            </Link>
-          </div>
-          {recentQuestions.length > 0 ? (
-            <div className="space-y-3">
-              {recentQuestions.map((q, i) => (
-                <div key={q._id || i} className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white font-medium truncate">{q.question}</p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                      <span>{q.subject}</span>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        q.difficulty === 'Easy' ? 'bg-green-500/10 text-green-400' :
-                        q.difficulty === 'Hard' ? 'bg-red-500/10 text-red-400' :
-                        'bg-yellow-500/10 text-yellow-400'
-                      }`}>{q.difficulty}</span>
-                    </div>
-                  </div>
-                </div>
+                  {/* ─── Expanded Student Detail ─── */}
+                  <AnimatePresence>
+                    {expandedStudent === student._id && (
+                      <tr>
+                        <td colSpan={9} className="p-0">
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="overflow-hidden"
+                          >
+                            {detailLoading ? (
+                              <div className="flex items-center justify-center py-8">
+                                <FaSpinner className="animate-spin text-2xl text-indigo-500" />
+                              </div>
+                            ) : studentDetail ? (
+                              <div className="bg-gray-800/40 border-t border-indigo-500/20 p-5 space-y-4">
+                                {/* Quick stats row */}
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                  {[
+                                    { label: 'Total Attempts', value: studentDetail.overallStats.totalAttempts },
+                                    { label: 'Correct', value: studentDetail.overallStats.correctAttempts },
+                                    { label: 'Accuracy', value: `${studentDetail.overallStats.accuracy}%` },
+                                    { label: 'Avg Speed', value: `${studentDetail.overallStats.avgSpeed}s` },
+                                    { label: 'Topics Done', value: studentDetail.overallStats.topicsCompleted },
+                                  ].map((s, i) => (
+                                    <div key={i} className="bg-gray-900/60 rounded-lg p-3 text-center">
+                                      <p className="text-xl font-bold text-white">{s.value}</p>
+                                      <p className="text-gray-500 text-xs">{s.label}</p>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Subject breakdown */}
+                                {studentDetail.subjectBreakdown.length > 0 && (
+                                  <div>
+                                    <h4 className="text-sm font-semibold text-gray-400 mb-2">Subject-Wise Performance</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                      {studentDetail.subjectBreakdown.map((s, i) => (
+                                        <div key={i} className="bg-gray-900/40 rounded-lg p-3 flex items-center justify-between">
+                                          <div>
+                                            <p className="text-white text-sm font-medium">{s.subject}</p>
+                                            <p className="text-gray-500 text-xs">{s.totalAttempts} attempts</p>
+                                          </div>
+                                          <span className={`text-lg font-bold ${s.accuracy >= 70 ? 'text-emerald-400' : s.accuracy >= 40 ? 'text-amber-400' : 'text-red-400'}`}>
+                                            {s.accuracy}%
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Difficulty breakdown */}
+                                {studentDetail.difficultyBreakdown.length > 0 && (
+                                  <div>
+                                    <h4 className="text-sm font-semibold text-gray-400 mb-2">Difficulty Breakdown</h4>
+                                    <div className="flex gap-3">
+                                      {studentDetail.difficultyBreakdown.map((d, i) => (
+                                        <div key={i} className={`flex-1 rounded-lg p-3 text-center border ${
+                                          d.difficulty === 'Easy' ? 'border-emerald-500/20 bg-emerald-900/10' :
+                                          d.difficulty === 'Medium' ? 'border-amber-500/20 bg-amber-900/10' :
+                                          'border-red-500/20 bg-red-900/10'
+                                        }`}>
+                                          <p className="text-xs text-gray-400">{d.difficulty}</p>
+                                          <p className="text-lg font-bold text-white">{d.accuracy}%</p>
+                                          <p className="text-xs text-gray-500">{d.totalAttempts} tries</p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Weekly activity */}
+                                {studentDetail.weeklyActivity.length > 0 && (
+                                  <div>
+                                    <h4 className="text-sm font-semibold text-gray-400 mb-2">Weekly Activity (Last 8 Weeks)</h4>
+                                    <div className="flex gap-2 items-end h-20">
+                                      {studentDetail.weeklyActivity.map((w, i) => {
+                                        const maxAttempts = Math.max(...studentDetail.weeklyActivity.map(x => x.attempts), 1);
+                                        const height = (w.attempts / maxAttempts) * 100;
+                                        return (
+                                          <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                                            <span className="text-[10px] text-gray-500">{w.attempts}</span>
+                                            <div className="w-full rounded-t bg-indigo-500/60 hover:bg-indigo-500 transition"
+                                              style={{ height: `${Math.max(height, 4)}%` }} title={`${w.week}: ${w.attempts} attempts, ${w.accuracy}% accuracy`} />
+                                            <span className="text-[10px] text-gray-600">{w.week}</span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Recent attempts */}
+                                {studentDetail.recentAttempts.length > 0 && (
+                                  <div>
+                                    <h4 className="text-sm font-semibold text-gray-400 mb-2">Recent Activity</h4>
+                                    <div className="space-y-1 max-h-40 overflow-y-auto pr-2">
+                                      {studentDetail.recentAttempts.slice(0, 10).map((a, i) => (
+                                        <div key={i} className="flex items-center justify-between bg-gray-900/40 rounded-lg px-3 py-2 text-xs">
+                                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${a.isCorrect ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                                            <span className="text-gray-300 truncate">{a.question}</span>
+                                          </div>
+                                          <div className="flex items-center gap-3 flex-shrink-0 ml-2">
+                                            <span className="text-gray-500">{a.subject}</span>
+                                            <span className={`px-1.5 py-0.5 rounded text-[10px] ${
+                                              a.difficulty === 'Easy' ? 'bg-emerald-900/30 text-emerald-400' :
+                                              a.difficulty === 'Medium' ? 'bg-amber-900/30 text-amber-400' :
+                                              'bg-red-900/30 text-red-400'
+                                            }`}>{a.difficulty}</span>
+                                            {a.timeTaken && <span className="text-gray-500"><FaClock className="inline mr-1" />{a.timeTaken}s</span>}
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ) : null}
+                          </motion.div>
+                        </td>
+                      </tr>
+                    )}
+                  </AnimatePresence>
+                </React.Fragment>
               ))}
-            </div>
-          ) : (
+            </tbody>
+          </table>
+
+          {students.length === 0 && (
             <div className="text-center py-12 text-gray-500">
-              <FaListAlt className="text-4xl mx-auto mb-3 opacity-30" />
-              <p className="font-medium">No questions created yet</p>
-              <Link to="/create-question" className="text-blue-400 text-sm mt-2 inline-block hover:text-blue-300">
-                Create your first question →
-              </Link>
+              <FaUserGraduate className="mx-auto text-4xl mb-3 opacity-30" />
+              <p>No students found{search || filterDivision !== 'All' || filterBatch !== 'All' ? ' matching your filters' : ' in your institute'}.</p>
             </div>
           )}
-        </motion.div>
+        </div>
       </motion.div>
     </div>
   );
-};
-
-export default TeacherDashboard;
+}

@@ -23,7 +23,6 @@ const AskAI = () => {
   usePageTitle('Ask AI');
   const { isDark } = useTheme();
 
-  // Use the shared hook — full page loads history
   const {
     messages,
     input,
@@ -31,15 +30,17 @@ const AskAI = () => {
     isLoading,
     error,
     setError,
-    history,
+    chatList,
+    currentChatId,
     showHistory,
     setShowHistory,
     loadingHistory,
     chatEndRef,
     inputRef,
     handleSendMessage,
-    loadFromHistory,
-    deleteHistoryItem,
+    loadChat,
+    createNewChat,
+    deleteChatSession,
     clearAllHistory,
   } = useAskAIChat({ loadHistory: true });
 
@@ -106,18 +107,31 @@ const AskAI = () => {
             </div>
           </div>
 
-          <button
-            onClick={() => setShowHistory(!showHistory)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${showHistory
-              ? 'bg-purple-600 text-gray-900 dark:text-white'
-              : isDark
-                ? 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-          >
-            <FaHistory />
-            <span className="hidden sm:inline">History</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {currentChatId && (
+                <button
+                onClick={createNewChat}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${isDark
+                    ? 'bg-blue-600/20 text-blue-400 hover:bg-blue-600/30'
+                    : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                }`}
+                >
+                <span className="hidden sm:inline">New Chat</span>
+                </button>
+            )}
+            <button
+                onClick={() => setShowHistory(!showHistory)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${showHistory
+                ? 'bg-purple-600 text-gray-900 dark:text-white'
+                : isDark
+                    ? 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+            >
+                <FaHistory />
+                <span className="hidden sm:inline">Chats</span>
+            </button>
+          </div>
         </div>
 
         {/* Main Content Area */}
@@ -267,7 +281,7 @@ const AskAI = () => {
             <div className={`w-full md:w-80 flex flex-col border-l ${isDark ? 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900' : 'border-gray-200 bg-white'}`}>
               <div className={`p-4 border-b ${isDark ? 'border-gray-200 dark:border-gray-800' : 'border-gray-200'} flex items-center justify-between`}>
                 <h3 className={`font-semibold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'}`}>
-                  Chat History
+                  Your Chats
                 </h3>
                 <div className="flex items-center gap-2">
                   {history.length > 0 && (
@@ -287,41 +301,53 @@ const AskAI = () => {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              <div className="p-3 border-b border-gray-200 dark:border-gray-800">
+                <button
+                    onClick={createNewChat}
+                    className={`w-full flex justify-center items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${isDark
+                    ? 'bg-gray-800 hover:bg-gray-700 text-white border border-gray-700'
+                    : 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 shadow-sm'
+                    }`}
+                >
+                    + New Chat
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
                 {loadingHistory ? (
                   <div className="flex items-center justify-center py-8">
                     <FaSpinner className={`animate-spin text-2xl ${isDark ? 'text-gray-600' : 'text-gray-600 dark:text-gray-400'}`} />
                   </div>
-                ) : history.length === 0 ? (
+                ) : chatList.length === 0 ? (
                   <div className={`text-center py-8 ${isDark ? 'text-gray-500' : 'text-gray-600 dark:text-gray-400'}`}>
                     <FaComment className="text-3xl mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No history yet</p>
-                    <p className="text-xs">Your Q&A will appear here</p>
+                    <p className="text-sm">No chats yet</p>
+                    <p className="text-xs">Start asking questions!</p>
                   </div>
                 ) : (
-                  history.map((item) => (
+                  chatList.map((chat) => (
                     <div
-                      key={item._id}
-                      onClick={() => loadFromHistory(item)}
-                      className={`p-3 rounded-lg cursor-pointer group transition-all ${isDark
-                        ? 'bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700'
-                        : 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
-                        }`}
+                      key={chat._id}
+                      onClick={() => loadChat(chat._id)}
+                      className={`p-3 rounded-lg cursor-pointer group transition-all ${currentChatId === chat._id
+                        ? (isDark ? 'bg-gray-800 border-gray-600' : 'bg-gray-200 border-gray-300')
+                        : (isDark ? 'bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-50 dark:bg-gray-800 border-gray-800' : 'bg-gray-50 hover:bg-gray-100 border-transparent')
+                        } border`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <p className={`text-sm font-medium line-clamp-2 ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'}`}>
-                          {item.question}
+                        <p className={`text-sm font-medium line-clamp-1 flex-1 ${currentChatId === chat._id ? 'text-blue-600 dark:text-blue-400' : (isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900')}`}>
+                          {chat.title}
                         </p>
                         <button
-                          onClick={(e) => deleteHistoryItem(item._id, e)}
-                          className={`opacity-0 group-hover:opacity-100 p-1 rounded transition-all ${isDark ? 'hover:bg-red-900/30 text-red-400' : 'hover:bg-red-50 text-red-500'
+                          onClick={(e) => deleteChatSession(chat._id, e)}
+                          className={`opacity-0 group-hover:opacity-100 p-1 flex-shrink-0 rounded transition-all ${isDark ? 'hover:bg-red-900/30 text-red-400' : 'hover:bg-red-50 text-red-500'
                             }`}
                         >
                           <FaTrash className="text-xs" />
                         </button>
                       </div>
                       <p className={`text-xs mt-1 line-clamp-1 ${isDark ? 'text-gray-500' : 'text-gray-600 dark:text-gray-400'}`}>
-                        {new Date(item.createdAt).toLocaleDateString()}
+                        {new Date(chat.updatedAt).toLocaleDateString()}
                       </p>
                     </div>
                   ))

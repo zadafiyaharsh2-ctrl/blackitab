@@ -52,10 +52,10 @@ exports.sendMessage = async (req, res) => {
         // Privacy check — can't message private accounts unless following
         const recipientUser = await User.findById(recipientId);
         if (recipientUser && recipientUser.isPrivate) {
-            const isFollowing = await require('../models/FollowerList').exists({
-                userId: recipientId,
-                followerId: senderId,
-                status: 'accepted'
+            const isFollowing = await require('../models/Connection').exists({
+                sourceUserId: senderId,
+                targetUserId: recipientId,
+                connectionType: 'follow'
             });
 
             if (!isFollowing && senderId.toString() !== recipientId.toString()) {

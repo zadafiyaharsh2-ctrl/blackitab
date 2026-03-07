@@ -112,6 +112,7 @@ const updateUserStreakAndPoints = async (userId, pointsToAdd) => {
     }
 
     user.points = (user.points || 0) + pointsToAdd;
+    user.xp = (user.xp || 0) + 10;
     await user.save();
 };
 

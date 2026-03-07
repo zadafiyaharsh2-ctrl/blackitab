@@ -87,13 +87,13 @@ exports.linkManager = async (req, res) => {
  */
 exports.getLeaderboard = async (req, res) => {
     try {
-        // Fetch top 50 non-banned users with points > 0
+        // Fetch top 50 non-banned users with xp > 0
         const users = await User.find({ 
             isBanned: { $ne: true },
-            points: { $gt: 0 }
+            xp: { $gt: 0 }
         })
-        .select('name email points streak followerCount profileImage role')
-        .sort({ points: -1, streak: -1 })
+        .select('name email xp points streak followerCount profileImage role')
+        .sort({ xp: -1, streak: -1 })
         .limit(50)
         .lean();
 
@@ -102,7 +102,7 @@ exports.getLeaderboard = async (req, res) => {
         let prevScore = -1;
 
         const ranked = users.map((user, index) => {
-            const score = (user.points || 0) + ((user.streak || 0) * 10);
+            const score = user.xp || 0;
             if (score !== prevScore) {
                 currentRank = index + 1;
                 prevScore = score;
