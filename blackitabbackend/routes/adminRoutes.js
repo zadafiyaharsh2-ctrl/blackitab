@@ -9,28 +9,35 @@ router.post('/login', adminController.login);
 // All routes below require system admin authentication
 router.use(requireAdmin);
 
-// GET /api/admin/stats — platform-wide statistics
+// ── Platform Stats ──
 router.get('/stats', adminController.getPlatformStats);
 
-// GET /api/admin/users — list all users (paginated, filterable)
+// ── User Management ──
 router.get('/users', adminController.listUsers);
-
-// GET /api/admin/users/:id — get single user details
+router.post('/users', adminController.createUser);
 router.get('/users/:id', adminController.getUserById);
-
-// PUT /api/admin/users/:id/role — change a user's role
 router.put('/users/:id/role', adminController.changeUserRole);
-
-// PUT /api/admin/users/:id/ban — ban/unban a user
 router.put('/users/:id/ban', adminController.toggleBanUser);
+router.delete('/users/:id', adminController.deleteUser);
 
-// GET /api/admin/institutes — list all institutes
+// ── Institute Management ──
 router.get('/institutes', adminController.listInstitutes);
-
-// POST /api/admin/institutes — create a new institute
 router.post('/institutes', adminController.createInstitute);
-
-// DELETE /api/admin/institutes/:id — delete institute
 router.delete('/institutes/:id', adminController.deleteInstitute);
+
+// ── Question Approval Management ──
+router.get('/questions', adminController.listQuestions);
+router.get('/questions/pending', adminController.listPendingQuestions);
+router.put('/questions/:id/approve', adminController.approveQuestion);
+router.put('/questions/:id/reject', adminController.rejectQuestion);
+router.delete('/questions/:id', adminController.deleteQuestion);
+
+// ── Post Moderation ──
+router.get('/posts', adminController.listPosts);
+router.delete('/posts/:id', adminController.deletePost);
+
+// ── Contest Management ──
+router.get('/contests', adminController.listContests);
+router.delete('/contests/:id', adminController.deleteContest);
 
 module.exports = router;
