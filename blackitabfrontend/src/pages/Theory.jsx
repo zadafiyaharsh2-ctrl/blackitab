@@ -32,8 +32,9 @@ import { BookOpen, ChevronRight, Menu, CheckCircle, ArrowRight } from "lucide-re
 import TopicDropdown from "../components/TopicDropdown";
 // Import the AskAI sidebar component for the right panel
 import AskAISidebar from "../components/AskAISidebar";
+import { motion, AnimatePresence } from "framer-motion";
 import API_URL from "../config";
-import { mockSubjects, getMockTopics, getMockTopicContent } from "../data/mockTheoryData";
+
 
 const Theory = () => {
   // ============================================================================
@@ -96,12 +97,10 @@ const Theory = () => {
         if (res.data.success && res.data.data && res.data.data.length > 0) {
           setSubjects(res.data.data);
         } else {
-          console.log("Empty subjects array from backend, applying intelligent fallback data.");
-          setSubjects(mockSubjects);
+          setSubjects([]);
         }
       } catch (err) {
-        console.error("Error fetching subjects, falling back to mock data:", err);
-        setSubjects(mockSubjects);
+        setSubjects([]);
       } finally {
         // Always set loading to false, whether request succeeds or fails
         // This hides the loading spinner
@@ -188,16 +187,12 @@ const Theory = () => {
           setTopics(res.data.data);
           setSelectedTopic(res.data.data[0]);
         } else {
-          console.log("Empty topics from backend, applying intelligent fallback data.");
-          const dummyTopics = getMockTopics(selectedSubject._id);
-          setTopics(dummyTopics);
-          setSelectedTopic(dummyTopics[0]);
+          setTopics([]);
+          setSelectedTopic(null);
         }
       } catch (err) {
-        console.error("Error fetching topics, falling back:", err);
-        const dummyTopics = getMockTopics(selectedSubject._id);
-        setTopics(dummyTopics);
-        setSelectedTopic(dummyTopics[0]);
+        setTopics([]);
+        setSelectedTopic(null);
       }
     };
 
@@ -221,15 +216,18 @@ const Theory = () => {
           `${API_URL}/api/topics/${selectedTopic._id}/full`
         );
 
-        if (res.data.success && res.data.data && res.data.data.content && res.data.data.content.length > 0) {
+        const token = localStorage.getItem('token');
+        if (res.data.success && res.data.data) {
           setTopicContent(res.data.data);
+          // Auto-mark topic as completed when loaded
+          if (token && selectedTopic) {
+            markTopicAsComplete(selectedTopic._id);
+          }
         } else {
-          console.log("Empty content from backend, applying intelligent fallback data.");
-          setTopicContent(getMockTopicContent(selectedTopic));
+          setTopicContent(null);
         }
       } catch (err) {
-        console.error("Error fetching topic content, falling back:", err);
-        setTopicContent(getMockTopicContent(selectedTopic));
+        setTopicContent(null);
       }
     };
 
