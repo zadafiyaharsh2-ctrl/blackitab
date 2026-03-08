@@ -52,7 +52,7 @@ exports.submitAttempt = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Submit attempt error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -135,7 +135,7 @@ exports.getDashboardAnalytics = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Analytics fetch error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
