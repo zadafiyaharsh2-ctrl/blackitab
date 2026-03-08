@@ -131,8 +131,7 @@ exports.getDashboardAnalytics = async (req, res) => {
                 ],
                 strengths: strengths.length > 0 ? strengths : ['Getting Started'],
                 weaknesses: weaknesses.length > 0 ? weaknesses : ['Practice needed'],
-                recentActivity,
-            }
+                recentActivity}
         });
     } catch (error) {
         
