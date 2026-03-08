@@ -371,8 +371,6 @@ function App() {
               }
             />
 
-           
-
             {/* User Profile */}
             <Route
               path="/profile"
