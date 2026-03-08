@@ -42,7 +42,7 @@ exports.searchUsers = async (req, res) => {
 
         res.json({ success: true, data: results });
     } catch (error) {
-        console.error('Search error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -65,7 +65,7 @@ exports.getNotifications = async (req, res) => {
 
         res.json({ success: true, data: notificationsWithStatus });
     } catch (error) {
-        console.error('Get notifications error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -76,7 +76,7 @@ exports.getUnreadNotificationCount = async (req, res) => {
         const count = await Notification.countDocuments({ recipient: req.user._id, read: false });
         res.json({ success: true, count });
     } catch (error) {
-        console.error('Get unread count error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -124,7 +124,7 @@ exports.followUser = async (req, res) => {
             return res.json({ success: true, message: 'Follow request sent', status: 'pending' });
         }
     } catch (error) {
-        console.error('Follow user error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -150,7 +150,7 @@ exports.acceptFollowRequest = async (req, res) => {
 
         res.json({ success: true, message: 'Follow request accepted' });
     } catch (error) {
-        console.error('Accept follow error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -165,7 +165,7 @@ exports.rejectFollowRequest = async (req, res) => {
 
         res.json({ success: true, message: 'Follow request rejected' });
     } catch (error) {
-        console.error('Reject follow error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -190,7 +190,7 @@ exports.unfollowUser = async (req, res) => {
 
         res.json({ success: true, message: 'User unfollowed successfully' });
     } catch (error) {
-        console.error('Unfollow user error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -214,7 +214,7 @@ exports.subscribeUser = async (req, res) => {
 
         res.json({ success: true, message: 'Subscribed successfully' });
     } catch (error) {
-        console.error('Subscribe user error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -230,7 +230,7 @@ exports.unsubscribeUser = async (req, res) => {
         await User.findByIdAndUpdate(targetUserId, { $inc: { subscriberCount: -1 } });
         res.json({ success: true, message: 'Unsubscribed successfully' });
     } catch (error) {
-        console.error('Unsubscribe user error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -257,7 +257,7 @@ exports.getFollowers = async (req, res) => {
 
         res.json({ success: true, users, data: users });
     } catch (error) {
-        console.error('Get followers error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -283,7 +283,7 @@ exports.getFollowing = async (req, res) => {
 
         res.json({ success: true, users, data: users });
     } catch (error) {
-        console.error('Get following error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -305,7 +305,7 @@ exports.getUserProfile = async (req, res) => {
             user: { ...user, isFollowing: !!isFollowing, isRequested: !!isRequested, isFollower: !!isFollower }
         });
     } catch (error) {
-        console.error('Get user profile error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
