@@ -52,35 +52,9 @@ const io = new Server(server, {
   }
 });
 
-const userSocketMap = {}; // { userId: [socketId1, socketId2] }
-
-io.on('connection', (socket) => {
-  const userId = socket.handshake.query.userId;
-  console.log(`Socket: Connected ${socket.id} (user: ${userId})`);
-
-  if (userId && userId !== "undefined") {
-    if (!userSocketMap[userId]) {
-      userSocketMap[userId] = [];
-    }
-    userSocketMap[userId].push(socket.id);
-  }
-
-  io.emit("getOnlineUsers", Object.keys(userSocketMap));
-
-  socket.on('disconnect', () => {
-    console.log(`Socket: Disconnected ${socket.id}`);
-    if (userId && userSocketMap[userId]) {
-      userSocketMap[userId] = userSocketMap[userId].filter(id => id !== socket.id);
-      if (userSocketMap[userId].length === 0) {
-        delete userSocketMap[userId];
-      }
-    }
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
-  });
-});
-
-const getReceiverSocketId = (receiverId) => userSocketMap[receiverId] || [];
-app.set('getReceiverSocketId', getReceiverSocketId);
+const socketService = require('./services/socketService');
+socketService.initSocketService(io);
+app.set('socketService', socketService);
 
 // --- Middleware ---
 

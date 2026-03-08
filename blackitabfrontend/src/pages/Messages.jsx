@@ -34,17 +34,14 @@ const Messages = () => {
 
         const handleNewMessage = (data) => {
             const msg = data.message;
-            const myId = String(JSON.parse(localStorage.getItem('user'))?._id || JSON.parse(localStorage.getItem('user'))?.id);
-
+            
             if (currentChatUser) {
                  const senderIdStr = String(msg.sender._id || msg.sender);
                  const recipientIdStr = String(msg.recipient._id || msg.recipient);
                  const currentChatIdStr = String(currentChatUser._id);
+                 const myId = String(JSON.parse(localStorage.getItem('user'))?._id || JSON.parse(localStorage.getItem('user'))?.id);
 
-                 // Check if the message belongs to the currently open chat:
-                 // Case 1: The current chat user sent it to me
                  const isFromTarget = senderIdStr === currentChatIdStr;
-                 // Case 2: I sent it to the current chat user (for syncing across sender's multiple tabs)
                  const isFromMeToTarget = senderIdStr === myId && recipientIdStr === currentChatIdStr;
 
                  if (isFromTarget || isFromMeToTarget) {
@@ -54,6 +51,8 @@ const Messages = () => {
                      });
                      scrollToBottom();
                  }
+            } else {
+                 // For notifications: We could dispatch a toast here if we wanted
             }
         };
 

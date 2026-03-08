@@ -214,9 +214,12 @@ exports.addComment = async (req, res) => {
         await post.save();
         await post.populate('comments.user', 'name profileImage');
 
-        // Real-time comment event
-        if (req.io) {
-            req.io.emit('new_comment', { postId: post._id, comment: post.comments[0] });
+        // Real-time comment event - broadcast to anyone viewing the post (could be enhanced with room per post)
+        const socketService = req.app.get('socketService');
+        // Currently there is no "post room", so emitting globally or we can skip this until rooms per post are added
+        // Alternatively, if we just want to notify post owner:
+        if (socketService) {
+            socketService.emitToUser(post.user.toString(), 'new_comment', { postId: post._id, comment: post.comments[0] });
         }
 
         res.json({ success: true, comments: post.comments });
