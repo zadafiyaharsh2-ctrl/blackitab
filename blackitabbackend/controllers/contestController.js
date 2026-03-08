@@ -30,7 +30,7 @@ exports.listContests = async (req, res) => {
             pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) }
         });
     } catch (error) {
-        console.error('List contests error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -44,7 +44,7 @@ exports.getUpcomingContests = async (req, res) => {
             .limit(5);
         res.json({ success: true, data: contests });
     } catch (error) {
-        console.error('Upcoming contests error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -56,7 +56,7 @@ exports.getContestById = async (req, res) => {
         if (!contest) return res.status(404).json({ success: false, message: 'Contest not found' });
         res.json({ success: true, data: contest });
     } catch (error) {
-        console.error('Get contest error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -70,7 +70,7 @@ exports.getLeaderboard = async (req, res) => {
             .limit(100);
         res.json({ success: true, data: leaderboard });
     } catch (error) {
-        console.error('Get leaderboard error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -97,7 +97,7 @@ exports.createContest = async (req, res) => {
 
         res.status(201).json({ success: true, data: contest });
     } catch (error) {
-        console.error('Create contest error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -109,7 +109,7 @@ exports.updateContest = async (req, res) => {
         if (!contest) return res.status(404).json({ success: false, message: 'Contest not found' });
         res.json({ success: true, data: contest });
     } catch (error) {
-        console.error('Update contest error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -121,7 +121,7 @@ exports.deleteContest = async (req, res) => {
         if (!contest) return res.status(404).json({ success: false, message: 'Contest not found' });
         res.json({ success: true, message: 'Contest deleted' });
     } catch (error) {
-        console.error('Delete contest error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
