@@ -222,71 +222,117 @@ const Analytics = () => {
           </motion.div>
         </section>
 
-        <motion.section variants={itemVariants} className="glass-panel p-6 border border-slate-200 dark:border-slate-700">
-          <div className="flex items-center gap-2 mb-4">
-            <BookOpen className="h-5 w-5 text-blue-700 dark:text-blue-300" />
-            <h2 className="text-lg font-semibold">Subject Performance</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {subjectProgress.map((subject, idx) => {
-              const masteryClass = masteryStyles[subject.mastery] || masteryStyles.Beginner;
-              const barClass = progressBarPalette[idx % progressBarPalette.length];
-              return (
-                <div key={`${subject.name}-${idx}`} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 p-4">
-                  <div className="flex items-center justify-between mb-3 gap-2">
-                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate">{subject.name}</h3>
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${masteryClass}`}>{subject.mastery}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-slate-600 dark:text-slate-300">Progress</span>
-                    <span className="font-semibold text-slate-900 dark:text-slate-100">{subject.progress}%</span>
-                  </div>
-                  <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${barClass}`} style={{ width: `${subject.progress}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </motion.section>
-
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <motion.div variants={itemVariants} className="glass-panel p-6 border border-slate-200 dark:border-slate-700">
-            <div className="flex items-center gap-2 mb-4">
-              <Award className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
-              <h2 className="text-lg font-semibold">Your Strengths</h2>
+          <motion.section variants={itemVariants} className="glass-panel p-6 border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-2 mb-6">
+              <BookOpen className="h-5 w-5 text-blue-700 dark:text-blue-300" />
+              <h2 className="text-lg font-semibold">Domain Mastery</h2>
             </div>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {subjectProgress && subjectProgress.length > 0 ? subjectProgress.map((subject, idx) => {
+                const masteryClass = masteryStyles[subject.mastery] || masteryStyles.Beginner;
+                // Generate a pseudo-random dash array based on progress
+                const radius = 38;
+                const circumference = 2 * Math.PI * radius;
+                const dashoffset = circumference - (subject.progress / 100) * circumference;
+                
+                return (
+                  <div key={`${subject.name}-${idx}`} className="relative p-5 rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white/50 dark:bg-slate-800/40 overflow-hidden group hover:shadow-lg transition-all duration-300">
+                    <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-blue-400 to-indigo-600 opacity-80" />
+                    
+                    <div className="flex items-center justify-between pl-4">
+                      <div>
+                        <h3 className="font-bold text-slate-900 dark:text-slate-100 text-lg mb-1">{subject.name}</h3>
+                        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${masteryClass}`}>
+                          {subject.mastery}
+                        </span>
+                      </div>
+                      
+                      {/* Radial Progress */}
+                      <div className="relative w-20 h-20 flex items-center justify-center">
+                        <svg className="-rotate-90 w-20 h-20">
+                          <circle cx="40" cy="40" r={radius} stroke="currentColor" strokeWidth="6" fill="transparent" className="text-slate-200 dark:text-slate-700/50" />
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r={radius}
+                            stroke="currentColor"
+                            strokeWidth="6"
+                            fill="transparent"
+                            strokeDasharray={circumference}
+                            strokeDashoffset={dashoffset}
+                            strokeLinecap="round"
+                            className="text-blue-600 dark:text-blue-500 drop-shadow-md transition-all duration-1000"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center flex-col">
+                          <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{subject.progress}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }) : (
+                <div className="col-span-full py-10 flex flex-col items-center justify-center text-center">
+                  <div className="p-4 rounded-full bg-slate-100 dark:bg-slate-800/50 mb-3">
+                    <BookOpen className="h-8 w-8 text-slate-400 dark:text-slate-500" />
+                  </div>
+                  <h3 className="text-slate-900 dark:text-slate-100 font-medium mb-1">No Data Available</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm">Complete practice problems to map your proficiency across specific subjects.</p>
+                </div>
+              )}
+            </div>
+          </motion.section>
+
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <motion.div variants={itemVariants} className="relative overflow-hidden rounded-2xl border border-emerald-200/50 dark:border-emerald-500/20 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 p-6 shadow-sm">
+            {/* Background Glow */}
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-400/20 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="flex items-center gap-3 mb-6 relative z-10">
+              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-500/20">
+                <Award className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
+              </div>
+              <h2 className="text-xl font-bold text-emerald-950 dark:text-emerald-100">Core Strengths</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
               {strengths && strengths.length > 0 ? strengths.map((strength, idx) => (
-                <div key={`${strength}-${idx}`} className="p-3 rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
-                  <span className="text-sm text-slate-700 dark:text-slate-200">{strength}</span>
+                <div key={`${strength}-${idx}`} className="flex items-center gap-3 p-3 rounded-xl bg-white/60 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-800/50 shadow-sm backdrop-blur-sm group">
+                  <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <span className="text-sm font-medium text-emerald-900 dark:text-emerald-100 line-clamp-2">{strength}</span>
                 </div>
               )) : (
-                <div className="text-center py-4">
-                  <p className="text-sm text-slate-500">Solve problems to identify your strengths!</p>
+                <div className="col-span-full py-8 text-center bg-white/40 dark:bg-slate-900/40 rounded-xl border border-dashed border-emerald-200 dark:border-emerald-800/50">
+                  <p className="text-sm text-emerald-700/70 dark:text-emerald-400/70">Solve problems above 75% accuracy to reveal strengths.</p>
                 </div>
               )}
             </div>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="glass-panel p-6 border border-slate-200 dark:border-slate-700">
-            <div className="flex items-center gap-2 mb-4">
-              <Brain className="h-5 w-5 text-rose-600 dark:text-rose-300" />
-              <h2 className="text-lg font-semibold">Areas to Improve</h2>
+          <motion.div variants={itemVariants} className="relative overflow-hidden rounded-2xl border border-rose-200/50 dark:border-rose-500/20 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20 p-6 shadow-sm">
+            {/* Background Glow */}
+            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-rose-400/20 dark:bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="flex items-center gap-3 mb-6 relative z-10">
+              <div className="p-2 rounded-lg bg-rose-100 dark:bg-rose-500/20">
+                <Brain className="h-5 w-5 text-rose-700 dark:text-rose-400" />
+              </div>
+              <h2 className="text-xl font-bold text-rose-950 dark:text-rose-100">Focus Areas</h2>
             </div>
-            <div className="space-y-3">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
               {weaknesses && weaknesses.length > 0 ? weaknesses.map((weakness, idx) => (
-                <div key={`${weakness}-${idx}`} className="p-3 rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <XCircle className="h-4 w-4 text-rose-600 dark:text-rose-300" />
-                    <span className="text-sm text-slate-700 dark:text-slate-200">{weakness}</span>
+                <div key={`${weakness}-${idx}`} className="flex items-center gap-3 p-3 rounded-xl bg-white/60 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-800/50 shadow-sm backdrop-blur-sm group">
+                  <div className="h-8 w-8 rounded-full bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    <Zap className="h-4 w-4 text-rose-600 dark:text-rose-400" />
                   </div>
-                  <Zap className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                  <span className="text-sm font-medium text-rose-900 dark:text-rose-100 line-clamp-2">{weakness}</span>
                 </div>
               )) : (
-                <div className="text-center py-4">
-                  <p className="text-sm text-slate-500">Challenge yourself to discover areas to improve.</p>
+                <div className="col-span-full py-8 text-center bg-white/40 dark:bg-slate-900/40 rounded-xl border border-dashed border-rose-200 dark:border-rose-800/50">
+                  <p className="text-sm text-rose-700/70 dark:text-rose-400/70">Metrics clear. Attempt harder problems to find weak points.</p>
                 </div>
               )}
             </div>
@@ -294,32 +340,53 @@ const Analytics = () => {
         </section>
 
         <motion.section variants={itemVariants} className="glass-panel p-6 border border-slate-200 dark:border-slate-700">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-6">
             <Code className="h-5 w-5 text-blue-700 dark:text-blue-300" />
             <h2 className="text-lg font-semibold">Recent Activity</h2>
           </div>
           {loading ? (
             <div className="text-sm text-slate-600 dark:text-slate-300">Loading activity...</div>
           ) : recentActivity && recentActivity.length > 0 ? (
-            <div className="space-y-3">
+            <div className="relative pl-4 space-y-6 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 dark:before:via-slate-700 before:to-transparent">
               {recentActivity.map((activity, idx) => {
                 const diffStyle = difficultyStyles[activity.difficulty] || difficultyStyles.Medium;
+                const isCompleted = activity.type === 'completed';
+                
                 return (
-                  <div key={`${activity.title}-${idx}`} className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="font-semibold text-slate-900 dark:text-slate-100">{activity.title}</h3>
-                      <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">{activity.time}</p>
+                  <div key={`${activity.title}-${idx}`} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                    {/* Icon Node */}
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full border-4 border-slate-50 dark:border-slate-950 bg-white dark:bg-slate-900 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 transition-transform duration-300 group-hover:scale-125">
+                      {isCompleted ? (
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                      ) : (
+                        <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
+                      )}
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${diffStyle.badge}`}>
-                      {activity.difficulty || 'Medium'}
-                    </span>
+                    
+                    {/* Card Content */}
+                    <div className="w-[calc(100%-2.5rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white/50 dark:bg-slate-800/40 backdrop-blur-sm shadow-sm group-hover:shadow-md transition-all duration-300">
+                      <div className="flex items-start justify-between gap-3 mb-1">
+                        <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-[15px] leading-tight flex-1">{activity.title}</h3>
+                        <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold whitespace-nowrap ${diffStyle.badge}`}>
+                          {activity.difficulty || 'Medium'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{activity.time}</span>
+                        <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                        <span className={`text-xs font-medium ${isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                          {isCompleted ? '+XP Awarded' : 'Attempt Failed'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="text-center py-6">
-              <p className="text-sm text-slate-500">No recent activity logged yet.</p>
+            <div className="text-center py-10 bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+              <Activity className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+              <p className="text-sm text-slate-500 dark:text-slate-400">Your recent timeline is empty. Start solving!</p>
             </div>
           )}
         </motion.section>
@@ -383,17 +450,16 @@ const Analytics = () => {
               <Trophy className="h-5 w-5 text-blue-700 dark:text-blue-300" />
               <h2 className="text-lg font-semibold">Global Rankings Snapshot</h2>
             </div>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 p-3">
-                <p className="text-xs text-slate-600 dark:text-slate-300">Overall Rank</p>
-                <p className="text-xl font-bold text-slate-900 dark:text-slate-100">#1,234</p>
-              </div>
-              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 p-3">
-                <p className="text-xs text-slate-600 dark:text-slate-300">Top Percentile</p>
-                <p className="text-xl font-bold text-slate-900 dark:text-slate-100">8%</p>
-              </div>
+            <div className="space-y-3">
+              {hasExtendedData ? (
+                 <div className="text-center py-4 text-sm text-slate-500">Rankings coming soon.</div>
+              ) : (
+                <div className="text-center py-8">
+                  <Trophy className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Participate in contests to unlock global rankings.</p>
+                </div>
+              )}
             </div>
-            <p className="text-sm text-slate-600 dark:text-slate-300">You are ahead of 14,523 users based on the current performance window.</p>
           </motion.div>
 
           <motion.div variants={itemVariants} className="glass-panel p-6 border border-slate-200 dark:border-slate-700">
@@ -401,32 +467,15 @@ const Analytics = () => {
               <Gauge className="h-5 w-5 text-blue-700 dark:text-blue-300" />
               <h2 className="text-lg font-semibold">Consistency Score</h2>
             </div>
-            <div className="flex items-center justify-center mb-4">
-              <div className="relative w-36 h-36">
-                <svg className="-rotate-90 w-36 h-36">
-                  <circle cx="72" cy="72" r="62" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-300 dark:text-slate-700" />
-                  <circle
-                    cx="72"
-                    cy="72"
-                    r="62"
-                    stroke="currentColor"
-                    strokeWidth="8"
-                    fill="transparent"
-                    strokeDasharray={`${2 * Math.PI * 62}`}
-                    strokeDashoffset={`${2 * Math.PI * 62 * (1 - 0.82)}`}
-                    className="text-blue-600"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl font-bold text-slate-900 dark:text-slate-100">82</span>
-                  <span className="text-xs text-slate-600 dark:text-slate-300">out of 100</span>
+            <div className="space-y-3">
+              {hasExtendedData ? (
+                 <div className="text-center py-4 text-sm text-slate-500">Consistency metrics coming soon.</div>
+              ) : (
+                <div className="text-center py-8">
+                  <Gauge className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Solve daily to build your consistency score.</p>
                 </div>
-              </div>
-            </div>
-            <div className="space-y-2 text-sm">
-              <p className="text-slate-700 dark:text-slate-200"><span className="font-semibold">Daily Activity:</span> 90%</p>
-              <p className="text-slate-700 dark:text-slate-200"><span className="font-semibold">Weekly Goals:</span> 75%</p>
-              <p className="text-slate-700 dark:text-slate-200"><span className="font-semibold">Study Routine:</span> 85%</p>
+              )}
             </div>
           </motion.div>
         </section>
@@ -465,26 +514,15 @@ const Analytics = () => {
             <Users className="h-5 w-5 text-blue-700 dark:text-blue-300" />
             <h2 className="text-lg font-semibold">Peer Comparison</h2>
           </div>
-          <div className="rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 p-4 mb-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-700 dark:text-slate-200">vs Average User</span>
-              <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">+47%</span>
-            </div>
-            <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">You solve 47% more problems than the average user.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-            <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 bg-slate-50 dark:bg-slate-800/70">
-              <p className="text-slate-600 dark:text-slate-300">Your Accuracy</p>
-              <p className="font-semibold text-slate-900 dark:text-slate-100">87.5%</p>
-            </div>
-            <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 bg-slate-50 dark:bg-slate-800/70">
-              <p className="text-slate-600 dark:text-slate-300">Peer Average</p>
-              <p className="font-semibold text-slate-900 dark:text-slate-100">73.2%</p>
-            </div>
-            <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 bg-slate-50 dark:bg-slate-800/70">
-              <p className="text-slate-600 dark:text-slate-300">Top 10% Threshold</p>
-              <p className="font-semibold text-slate-900 dark:text-slate-100">92.0%</p>
-            </div>
+          <div className="space-y-3">
+             {hasExtendedData ? (
+                <div className="text-center py-4 text-sm text-slate-500">Peer metrics coming soon.</div>
+             ) : (
+              <div className="text-center py-8">
+                <Users className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                <p className="text-sm text-slate-500 dark:text-slate-400">Join an institute to compare your stats with peers.</p>
+              </div>
+             )}
           </div>
         </motion.section>
       </motion.div>
