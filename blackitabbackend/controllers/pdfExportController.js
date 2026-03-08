@@ -27,8 +27,7 @@ exports.exportQuestionPaper = async (req, res) => {
             difficulty = '',
             limit = 20,
             includeAnswers = 'true',
-            title = '',
-        } = req.query;
+            title = ''} = req.query;
 
         // Build query filter
         const filter = {};
@@ -72,8 +71,7 @@ exports.exportQuestionPaper = async (req, res) => {
                 Title: paperTitle,
                 Author: 'Blackitab',
                 Subject: subject || 'Mixed',
-                Creator: 'Blackitab Platform',
-            }
+                Creator: 'Blackitab Platform'}
         });
 
         // Set response headers for PDF download
@@ -218,11 +216,10 @@ exports.exportQuestionPaper = async (req, res) => {
         doc.end();
 
     } catch (error) {
-        console.error('PDF Export error:', error);
+        
         res.status(500).json({
             success: false,
-            message: 'Error generating PDF',
-            error: error.message
+            message: 'Error generating PDF'
         });
     }
 };
@@ -234,8 +231,7 @@ exports.previewQuestions = async (req, res) => {
             exam = '',
             subject = '',
             difficulty = '',
-            limit = 20,
-        } = req.query;
+            limit = 20} = req.query;
 
         const filter = {};
         if (exam) filter.exam = exam.toLowerCase();
@@ -267,11 +263,10 @@ exports.previewQuestions = async (req, res) => {
                 questions,
                 total: questions.length,
                 availableExams: exams,
-                availableSubjects: subjects,
-            }
+                availableSubjects: subjects}
         });
     } catch (error) {
-        console.error('Preview questions error:', error);
+        
         res.status(500).json({ success: false, message: 'Error fetching questions' });
     }
 };
