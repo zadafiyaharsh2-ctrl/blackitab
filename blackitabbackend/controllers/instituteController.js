@@ -23,7 +23,7 @@ exports.verifyCode = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Verify Institute error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -40,7 +40,7 @@ exports.getMyInstitute = async (req, res) => {
         }
         res.json({ success: true, data: institute });
     } catch (error) {
-        console.error('Get my institute error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -76,7 +76,7 @@ exports.getInstituteStats = async (req, res) => {
             data: { members, questions, pendingQuestions, posts, attempts, roleCounts: roles }
         });
     } catch (error) {
-        console.error('Institute stats error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -96,7 +96,7 @@ exports.getMembers = async (req, res) => {
             .sort({ role: 1, name: 1 });
         res.json({ success: true, data: members });
     } catch (error) {
-        console.error('Get members error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -139,7 +139,7 @@ exports.addMember = async (req, res) => {
 
         res.status(201).json({ success: true, message: `User "${name}" created as ${assignedRole} in your institute` });
     } catch (error) {
-        console.error('Add member error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -164,7 +164,7 @@ exports.changeMemberRole = async (req, res) => {
 
         res.json({ success: true, message: `Role updated to ${role}` });
     } catch (error) {
-        console.error('Change member role error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -181,7 +181,7 @@ exports.toggleBanMember = async (req, res) => {
         await target.save();
         res.json({ success: true, message: target.isBanned ? 'Member banned' : 'Member unbanned', data: { isBanned: target.isBanned } });
     } catch (error) {
-        console.error('Toggle ban member error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -200,7 +200,7 @@ exports.removeMember = async (req, res) => {
         await target.save();
         res.json({ success: true, message: `Member "${target.name}" removed from institute` });
     } catch (error) {
-        console.error('Remove member error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -221,7 +221,7 @@ exports.listInstituteQuestions = async (req, res) => {
             .limit(100);
         res.json({ success: true, data: questions });
     } catch (error) {
-        console.error('List institute questions error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -237,7 +237,7 @@ exports.deleteInstituteQuestion = async (req, res) => {
         await ExamQuestion.findByIdAndDelete(req.params.id);
         res.json({ success: true, message: 'Question deleted' });
     } catch (error) {
-        console.error('Delete institute question error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -259,7 +259,7 @@ exports.listInstitutePosts = async (req, res) => {
             .limit(100);
         res.json({ success: true, data: posts });
     } catch (error) {
-        console.error('List institute posts error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -276,7 +276,7 @@ exports.deleteInstitutePost = async (req, res) => {
         await Post.findByIdAndDelete(req.params.id);
         res.json({ success: true, message: 'Post deleted' });
     } catch (error) {
-        console.error('Delete institute post error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -345,7 +345,120 @@ exports.getInstituteAnalytics = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Institute analytics error:', error);
+        
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
+// TEACHER FEEDBACK & MONITORING
+// ══════════════════════════════════════════════════════════════
+
+// GET /api/institute/teachers — List teachers with avg ratings
+exports.listTeachersWithRatings = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+
+        const teachers = await User.find({ instituteId: instId, role: { $in: ['teacher', 'hod'] } })
+            .select('name email role');
+
+        const TeacherFeedback = require('../models/TeacherFeedback');
+
+        // Aggregate ratings
+        const ratings = await TeacherFeedback.aggregate([
+            { $match: { instituteId: instId } },
+            { $group: {
+                _id: '$teacherId',
+                avgRating: { $avg: '$rating' },
+                feedbackCount: { $sum: 1 }
+            }}
+        ]);
+
+        const ratingsMap = {};
+        ratings.forEach(r => { ratingsMap[r._id.toString()] = r });
+
+        const data = teachers.map(t => {
+            const r = ratingsMap[t._id.toString()] || { avgRating: 0, feedbackCount: 0 };
+            return {
+                _id: t._id,
+                name: t.name,
+                email: t.email,
+                role: t.role,
+                avgRating: r.avgRating > 0 ? Number(r.avgRating.toFixed(1)) : 0,
+                feedbackCount: r.feedbackCount,
+                isFlagged: r.feedbackCount > 3 && r.avgRating < 2.5 // Flag if consistently rated poorly
+            };
+        });
+
+        res.json({ success: true, data });
+    } catch (error) {
+        
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// GET /api/institute/teachers/:id/feedback — Detailed feedback for a teacher
+exports.getTeacherFeedback = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        const targetTeacher = await User.findOne({ _id: req.params.id, instituteId: instId });
+
+        if (!targetTeacher) {
+            return res.status(404).json({ success: false, message: 'Teacher not found in your institute' });
+        }
+
+        const TeacherFeedback = require('../models/TeacherFeedback');
+
+        const feedback = await TeacherFeedback.find({ teacherId: targetTeacher._id })
+            .populate('studentId', 'name')
+            .populate('questionId', 'subject question')
+            .sort({ createdAt: -1 })
+            .limit(50);
+
+        res.json({ success: true, data: feedback });
+    } catch (error) {
+        
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// POST /api/institute/feedback — Submit feedback on a teacher question
+exports.submitFeedback = async (req, res) => {
+    try {
+        const { teacherId, questionId, rating, comment, feedbackType } = req.body;
+        const studentId = req.user._id;
+        const instId = req.user.instituteId;
+
+        if (!teacherId || !rating || rating < 1 || rating > 5) {
+            return res.status(400).json({ success: false, message: 'Invalid rating data' });
+        }
+
+        const TeacherFeedback = require('../models/TeacherFeedback');
+
+        // Check if feedback already provided for this combo
+        const query = { studentId, teacherId };
+        if (questionId) query.questionId = questionId;
+
+        const existing = await TeacherFeedback.findOne(query);
+        if (existing) {
+            return res.status(400).json({ success: false, message: 'Feedback already submitted for this item' });
+        }
+
+        const feedback = new TeacherFeedback({
+            teacherId,
+            studentId,
+            questionId: questionId || null,
+            instituteId: instId,
+            rating,
+            comment: comment || '',
+            feedbackType: feedbackType || 'quiz_end'
+        });
+
+        await feedback.save();
+        res.status(201).json({ success: true, message: 'Feedback submitted successfully' });
+    } catch (error) {
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
