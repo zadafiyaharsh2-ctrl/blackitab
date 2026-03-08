@@ -68,19 +68,19 @@ const ActivityHeatmap = () => {
   // ☀️ LIGHT MODE (reverse shades)
   const getColor = (count) => {
     if (isDark) {
-      if (count === 0) return "bg-white dark:bg-gray-900";
-      if (count < 2) return "bg-green-900";
-      if (count < 5) return "bg-green-700";
-      if (count < 10) return "bg-green-500";
-      if (count < 15) return "bg-green-300";
-      return "bg-green-200";
+      if (count === 0) return "bg-slate-800";
+      if (count < 2) return "bg-emerald-800/60";
+      if (count < 5) return "bg-emerald-700";
+      if (count < 10) return "bg-emerald-500";
+      if (count < 15) return "bg-emerald-400";
+      return "bg-emerald-300";
     } else {
-      if (count === 0) return "bg-gray-200";
-      if (count < 2) return "bg-green-200";
-      if (count < 5) return "bg-green-400";
-      if (count < 10) return "bg-green-600";
-      if (count < 15) return "bg-green-800";
-      return "bg-green-800";
+      if (count === 0) return "bg-slate-200";
+      if (count < 2) return "bg-emerald-200";
+      if (count < 5) return "bg-emerald-400";
+      if (count < 10) return "bg-emerald-600";
+      if (count < 15) return "bg-emerald-700";
+      return "bg-emerald-800";
     }
   };
 
