@@ -165,7 +165,7 @@ const generateQuestions = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Generate Questions Global Error:', error);
+        
         res.status(500).json({ success: false, message: 'Failed to generate questions', error: error.message });
     }
 };
