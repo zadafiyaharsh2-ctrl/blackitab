@@ -98,11 +98,16 @@ exports.getDashboardAnalytics = async (req, res) => {
         const correctAttempts = allAttempts.filter(a => a.isCorrect);
         
         // Calculate unique problems solved
-        const uniqueSolvedIds = new Set(correctAttempts.map(a => a.questionId?._id?.toString()));
+        const uniqueSolvedIds = new Set(
+            allAttempts
+                .filter(a => a.isCorrect && a.questionId)
+                .map(a => a.questionId._id.toString())
+        );
         const problemsSolved = uniqueSolvedIds.size;
         
         const accuracy = totalAttempts > 0 ? (correctAttempts.length / totalAttempts) * 100 : 0;
-        const studyHours = allAttempts.reduce((acc, curr) => acc + (curr.timeTakenSeconds || 0), 0) / 3600;
+        const studySeconds = allAttempts.reduce((acc, curr) => acc + (curr.timeTakenSeconds || 0), 0);
+        const studyHours = studySeconds > 0 ? (studySeconds / 3600) : 0;
 
         const stats = {
             problemsSolved,
