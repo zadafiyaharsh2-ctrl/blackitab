@@ -51,7 +51,7 @@ exports.login = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Admin login error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -94,7 +94,7 @@ exports.getPlatformStats = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Get platform stats error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -140,7 +140,7 @@ exports.listUsers = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('List users error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -156,7 +156,7 @@ exports.getUserById = async (req, res) => {
         }
         res.json({ success: true, data: user });
     } catch (error) {
-        console.error('Get user error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -182,7 +182,7 @@ exports.changeUserRole = async (req, res) => {
 
         res.json({ success: true, message: `Role updated to ${role}`, data: user });
     } catch (error) {
-        console.error('Change role error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -202,7 +202,7 @@ exports.toggleBanUser = async (req, res) => {
             data: { isBanned: user.isBanned }
         });
     } catch (error) {
-        console.error('Toggle ban error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -258,7 +258,7 @@ exports.createUser = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Admin create user error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -278,7 +278,7 @@ exports.deleteUser = async (req, res) => {
         ]);
         res.json({ success: true, message: 'User deleted and related data cleaned up' });
     } catch (error) {
-        console.error('Delete user error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -300,7 +300,7 @@ exports.listInstitutes = async (req, res) => {
 
         res.json({ success: true, data: enriched });
     } catch (error) {
-        console.error('List institutes error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -327,7 +327,7 @@ exports.createInstitute = async (req, res) => {
 
         res.status(201).json({ success: true, data: institute });
     } catch (error) {
-        console.error('Create institute error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -345,7 +345,7 @@ exports.deleteInstitute = async (req, res) => {
 
         res.json({ success: true, message: 'Institute deleted and users unlinked' });
     } catch (error) {
-        console.error('Delete institute error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -388,7 +388,7 @@ exports.listQuestions = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('List questions error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -403,7 +403,7 @@ exports.listPendingQuestions = async (req, res) => {
 
         res.json({ success: true, data: questions, total: questions.length });
     } catch (error) {
-        console.error('List pending questions error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -423,7 +423,7 @@ exports.approveQuestion = async (req, res) => {
 
         res.json({ success: true, message: 'Question approved for global visibility', data: question });
     } catch (error) {
-        console.error('Approve question error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -444,7 +444,7 @@ exports.rejectQuestion = async (req, res) => {
 
         res.json({ success: true, message: 'Question rejected', data: question });
     } catch (error) {
-        console.error('Reject question error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -458,7 +458,7 @@ exports.deleteQuestion = async (req, res) => {
         }
         res.json({ success: true, message: 'Question deleted' });
     } catch (error) {
-        console.error('Delete question error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -493,7 +493,7 @@ exports.listPosts = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('List posts error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -507,7 +507,7 @@ exports.deletePost = async (req, res) => {
         }
         res.json({ success: true, message: 'Post deleted' });
     } catch (error) {
-        console.error('Delete post error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -522,7 +522,7 @@ exports.listContests = async (req, res) => {
         const contests = await Contest.find().sort({ createdAt: -1 });
         res.json({ success: true, data: contests });
     } catch (error) {
-        console.error('List contests error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -536,7 +536,7 @@ exports.deleteContest = async (req, res) => {
         }
         res.json({ success: true, message: 'Contest deleted' });
     } catch (error) {
-        console.error('Delete contest error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -586,7 +586,7 @@ exports.editUser = async (req, res) => {
 
         res.json({ success: true, message: 'User updated', data: user });
     } catch (error) {
-        console.error('Edit user error:', error);
+        
         res.status(500).json({ success: false, message: error.message || 'Server error' });
     }
 };
@@ -622,7 +622,7 @@ exports.createQuestion = async (req, res) => {
 
         res.status(201).json({ success: true, message: 'Question created and auto-approved', data: newQuestion });
     } catch (error) {
-        console.error('Admin create question error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -648,7 +648,7 @@ exports.createContest = async (req, res) => {
 
         res.status(201).json({ success: true, message: 'Contest created', data: contest });
     } catch (error) {
-        console.error('Create contest error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -686,7 +686,122 @@ exports.editContest = async (req, res) => {
 
         res.json({ success: true, message: 'Contest updated', data: contest });
     } catch (error) {
-        console.error('Edit contest error:', error);
+        
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
+// PHASE E: GLOBAL PARITY (INSTITUTES & ANALYTICS)
+// ══════════════════════════════════════════════════════════════
+
+// GET /api/admin/institutes
+exports.getAllInstitutes = async (req, res) => {
+    try {
+        const institutes = await Institute.find().sort({ createdAt: -1 });
+        // Get member counts for each
+        const memberCounts = await User.aggregate([
+            { $match: { instituteId: { $ne: null } } },
+            { $group: { _id: '$instituteId', count: { $sum: 1 } } }
+        ]);
+        const countsMap = {};
+        memberCounts.forEach(c => countsMap[c._id.toString()] = c.count);
+
+        const data = institutes.map(inst => ({
+            ...inst.toObject(),
+            memberCount: countsMap[inst._id.toString()] || 0
+        }));
+
+        res.json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// PUT /api/admin/institutes/:id
+exports.editInstitute = async (req, res) => {
+    try {
+        const allowedFields = ['name', 'instituteCode', 'subscriptionPlan', 'adminEmails'];
+        const updates = {};
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) updates[field] = req.body[field];
+        }
+
+        const institute = await Institute.findByIdAndUpdate(
+            req.params.id,
+            { $set: updates },
+            { new: true, runValidators: true }
+        );
+
+        if (!institute) return res.status(404).json({ success: false, message: 'Institute not found' });
+        res.json({ success: true, message: 'Institute updated', data: institute });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message || 'Server error' });
+    }
+};
+
+// GET /api/admin/teachers
+exports.getAllTeachersRatings = async (req, res) => {
+    try {
+        const teachers = await User.find({ role: { $in: ['teacher', 'hod'] } })
+            .select('name email role instituteId')
+            .populate('instituteId', 'name');
+
+        const TeacherFeedback = require('../models/TeacherFeedback');
+        const ratings = await TeacherFeedback.aggregate([
+            { $group: {
+                _id: '$teacherId',
+                avgRating: { $avg: '$rating' },
+                feedbackCount: { $sum: 1 }
+            }}
+        ]);
+
+        const ratingsMap = {};
+        ratings.forEach(r => ratingsMap[r._id.toString()] = r);
+
+        const data = teachers.map(t => {
+            const r = ratingsMap[t._id.toString()] || { avgRating: 0, feedbackCount: 0 };
+            return {
+                _id: t._id,
+                name: t.name,
+                email: t.email,
+                role: t.role,
+                instituteName: t.instituteId ? t.instituteId.name : 'Independent',
+                avgRating: r.avgRating > 0 ? Number(r.avgRating.toFixed(1)) : 0,
+                feedbackCount: r.feedbackCount,
+                isFlagged: r.feedbackCount > 3 && r.avgRating < 2.5
+            };
+        });
+
+        res.json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// GET /api/admin/analytics
+exports.getGlobalAnalytics = async (req, res) => {
+    try {
+        const Attempt = require('../models/Attempt');
+        const Post = require('../models/Post');
+        
+        const [totalAttempts, totalPosts, totalInstitutes, totalUsers] = await Promise.all([
+            Attempt.countDocuments(),
+            Post.countDocuments(),
+            Institute.countDocuments(),
+            User.countDocuments()
+        ]);
+
+        const recentSignups = await User.find().sort({ createdAt: -1 }).limit(5).select('name email role');
+
+        res.json({
+            success: true,
+            data: {
+                overview: { totalAttempts, totalPosts, totalInstitutes, totalUsers },
+                recentSignups
+            }
+        });
+    } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
