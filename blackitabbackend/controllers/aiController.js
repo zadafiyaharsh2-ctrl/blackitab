@@ -6,39 +6,39 @@ const ChatHistory = require("../models/ChatHistory");
 const DEBUG = true; // Set to false to disable all debug logging
 const debugLog = (label, data) => {
   if (!DEBUG) return;
-  console.log("\n========================================");
-  console.log(`🔍 DEBUG [${new Date().toISOString()}] - ${label}`);
-  console.log("----------------------------------------");
+
+
+
   if (typeof data === "object") {
-    console.log(JSON.stringify(data, null, 2));
+
   } else {
-    console.log(data);
+
   }
-  console.log("========================================\n");
+
 };
 
 const debugError = (label, error) => {
   if (!DEBUG) return;
-  console.log("\n❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌");
-  console.log(`🚨 ERROR [${new Date().toISOString()}] - ${label}`);
-  console.log("----------------------------------------");
-  console.log("Message:", error.message);
-  console.log("Name:", error.name);
-  console.log("Stack:", error.stack);
+
+
+
+
+
+
   if (error.response) {
-    console.log("Response Status:", error.response.status);
-    console.log("Response Data:", JSON.stringify(error.response.data, null, 2));
+
+
     console.log(
       "Response Headers:",
       JSON.stringify(error.response.headers, null, 2),
     );
   }
   if (error.request) {
-    console.log("Request URL:", error.config?.url);
-    console.log("Request Method:", error.config?.method);
-    console.log("Request Data:", JSON.stringify(error.config?.data, null, 2));
+
+
+
   }
-  console.log("❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌\n");
+
 };
 // ===============================================================
 
@@ -49,8 +49,7 @@ const LANGCHAIN_API_URL =
 debugLog("AI Controller Initialized", {
   LANGCHAIN_API_URL,
   ENV_LANGCHAIN_URL: process.env.LANGCHAIN_API_URL || "NOT SET (using default)",
-  NODE_ENV: process.env.NODE_ENV || "NOT SET",
-});
+  NODE_ENV: process.env.NODE_ENV || "NOT SET"});
 
 // POST /api/ai/chats — Create new chat or append to existing
 const queryAI = async (req, res) => {
@@ -58,12 +57,10 @@ const queryAI = async (req, res) => {
     body: req.body,
     headers: {
       "content-type": req.headers["content-type"],
-      authorization: req.headers.authorization ? "Bearer ***" : "NOT PROVIDED",
-    },
+      authorization: req.headers.authorization ? "Bearer ***" : "NOT PROVIDED"},
     user: req.user
       ? { _id: req.user._id, email: req.user.email }
-      : "NOT AUTHENTICATED",
-  });
+      : "NOT AUTHENTICATED"});
 
   const { query, chatId } = req.body;
   const userId = req.user._id;
@@ -76,8 +73,7 @@ const queryAI = async (req, res) => {
   debugLog("queryAI - Processing", {
     query: query.trim(),
     chatId: chatId || "NEW",
-    userId: userId.toString(),
-  });
+    userId: userId.toString()});
 
   try {
     let chatHistory = null;
@@ -87,8 +83,7 @@ const queryAI = async (req, res) => {
       chatHistory = await ChatHistory.findOne({ _id: chatId, userId });
       debugLog("queryAI - Chat History Lookup", {
         found: !!chatHistory,
-        existingMessagesCount: chatHistory?.messages?.length || 0,
-      });
+        existingMessagesCount: chatHistory?.messages?.length || 0});
     }
 
     if (!chatHistory) {
@@ -112,16 +107,14 @@ const queryAI = async (req, res) => {
       debugLog("queryAI - Calling LangChain API", {
         url: LANGCHAIN_API_URL,
         payload: { query: query.trim(), top_k: 3 },
-        timeout: 60000,
-      });
+        timeout: 60000});
 
       const startTime = Date.now();
       const response = await axios.post(
         LANGCHAIN_API_URL,
         {
           query: query.trim(),
-          top_k: 3,
-        },
+          top_k: 3},
         { timeout: 60000 },
       );
       const responseTime = Date.now() - startTime;
@@ -131,8 +124,7 @@ const queryAI = async (req, res) => {
         responseTime: `${responseTime}ms`,
         dataKeys: Object.keys(response.data || {}),
         hasAnswer: !!response.data?.answer,
-        hasResponse: !!response.data?.response,
-      });
+        hasResponse: !!response.data?.response});
 
       aiResponseContent =
         response.data.answer ||
@@ -150,8 +142,7 @@ const queryAI = async (req, res) => {
     debugLog("queryAI - Saving Chat History", {
       totalMessages: chatHistory.messages.length,
       lastUserMessage: userMessage.content.substring(0, 50) + "...",
-      lastAIResponse: aiResponseContent.substring(0, 50) + "...",
-    });
+      lastAIResponse: aiResponseContent.substring(0, 50) + "..."});
 
     await chatHistory.save();
 
@@ -160,8 +151,7 @@ const queryAI = async (req, res) => {
       chatId: chatHistory._id,
       title: chatHistory.title,
       isNewChat,
-      aiResponse: aiMessage,
-    };
+      aiResponse: aiMessage};
 
     debugLog("queryAI - Sending Response", responsePayload);
 
@@ -177,8 +167,7 @@ const getChatHistory = async (req, res) => {
   debugLog("getChatHistory - Request Received", {
     user: req.user
       ? { _id: req.user._id, email: req.user.email }
-      : "NOT AUTHENTICATED",
-  });
+      : "NOT AUTHENTICATED"});
 
   try {
     const chats = await ChatHistory.find({ userId: req.user._id })
@@ -186,8 +175,7 @@ const getChatHistory = async (req, res) => {
       .sort({ updatedAt: -1 });
 
     debugLog("getChatHistory - Result", {
-      chatsCount: chats.length,
-    });
+      chatsCount: chats.length});
 
     res.json({ ok: true, chats });
   } catch (err) {
@@ -202,8 +190,7 @@ const getChatHistory = async (req, res) => {
 const getSingleChat = async (req, res) => {
   debugLog("getSingleChat - Request Received", {
     chatId: req.params.id,
-    user: req.user ? { _id: req.user._id } : "NOT AUTHENTICATED",
-  });
+    user: req.user ? { _id: req.user._id } : "NOT AUTHENTICATED"});
 
   try {
     const chat = await ChatHistory.findOne({ _id: req.params.id, userId: req.user._id });
@@ -225,12 +212,10 @@ const askQuestion = async (req, res) => {
     body: req.body,
     headers: {
       "content-type": req.headers["content-type"],
-      authorization: req.headers.authorization ? "Bearer ***" : "NOT PROVIDED",
-    },
+      authorization: req.headers.authorization ? "Bearer ***" : "NOT PROVIDED"},
     user: req.user
       ? { _id: req.user._id, email: req.user.email }
-      : "NOT AUTHENTICATED",
-  });
+      : "NOT AUTHENTICATED"});
 
   try {
     const { query, top_k = 3, sessionId } = req.body;
@@ -239,8 +224,7 @@ const askQuestion = async (req, res) => {
     if (!query || !query.trim()) {
       debugLog("askQuestion - Validation Failed", {
         reason: "Empty query",
-        query,
-      });
+        query});
       return res
         .status(400)
         .json({ success: false, message: "Query is required" });
@@ -250,16 +234,14 @@ const askQuestion = async (req, res) => {
       query: query.trim(),
       top_k,
       sessionId,
-      userId: userId.toString(),
-    });
+      userId: userId.toString()});
 
     let aiResponse;
     try {
       debugLog("askQuestion - Calling LangChain API", {
         url: LANGCHAIN_API_URL,
         payload: { query: query.trim(), top_k },
-        timeout: 60000,
-      });
+        timeout: 60000});
 
       const startTime = Date.now();
       const response = await axios.post(
@@ -273,8 +255,7 @@ const askQuestion = async (req, res) => {
         status: response.status,
         responseTime: `${responseTime}ms`,
         dataKeys: Object.keys(response.data || {}),
-        rawData: response.data,
-      });
+        rawData: response.data});
 
       aiResponse = response.data;
     } catch (apiError) {
@@ -284,8 +265,7 @@ const askQuestion = async (req, res) => {
         .json({
           success: false,
           message:
-            "AI service is currently unavailable. Please try again later.",
-          error: apiError.message,
+            "AI service is currently unavailable. Please try again later."
         });
     }
 
@@ -296,8 +276,7 @@ const askQuestion = async (req, res) => {
         aiResponse.answer || aiResponse.response || "No response received",
       topK: top_k,
       sources: aiResponse.sources || [],
-      sessionId: sessionId || null,
-    };
+      sessionId: sessionId || null};
 
     debugLog("askQuestion - Saving Question", questionData);
 
@@ -305,8 +284,7 @@ const askQuestion = async (req, res) => {
 
     debugLog("askQuestion - Question Saved", {
       id: savedQuestion._id,
-      createdAt: savedQuestion.createdAt,
-    });
+      createdAt: savedQuestion.createdAt});
 
     res.json({
       success: true,
@@ -315,18 +293,14 @@ const askQuestion = async (req, res) => {
         question: savedQuestion.question,
         answer: savedQuestion.answer,
         sources: savedQuestion.sources,
-        createdAt: savedQuestion.createdAt,
-      },
-    });
+        createdAt: savedQuestion.createdAt}});
   } catch (error) {
     debugError("askQuestion - Internal Error", error);
     res
       .status(500)
       .json({
         success: false,
-        message: "Failed to process your question",
-        error: error.message,
-      });
+        message: "Failed to process your question"});
   }
 };
 
@@ -336,8 +310,7 @@ const getHistory = async (req, res) => {
     query: req.query,
     user: req.user
       ? { _id: req.user._id, email: req.user.email }
-      : "NOT AUTHENTICATED",
-  });
+      : "NOT AUTHENTICATED"});
 
   try {
     const userId = req.user._id;
@@ -349,8 +322,7 @@ const getHistory = async (req, res) => {
       page,
       limit,
       skip,
-      userId: userId.toString(),
-    });
+      userId: userId.toString()});
 
     const [questions, total] = await Promise.all([
       AIQuestion.find({ userId })
@@ -369,25 +341,20 @@ const getHistory = async (req, res) => {
       firstQuestion: questions[0]
         ? {
             id: questions[0]._id,
-            question: questions[0].question.substring(0, 50) + "...",
-          }
-        : null,
-    });
+            question: questions[0].question.substring(0, 50) + "..."}
+        : null});
 
     res.json({
       success: true,
       data: questions,
-      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
-    });
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) }});
   } catch (error) {
     debugError("getHistory - Error", error);
     res
       .status(500)
       .json({
         success: false,
-        message: "Failed to fetch history",
-        error: error.message,
-      });
+        message: "Failed to fetch history"});
   }
 };
 
@@ -395,15 +362,13 @@ const getHistory = async (req, res) => {
 const deleteChat = async (req, res) => {
   debugLog("deleteChat - Request Received", {
     chatId: req.params.id,
-    user: req.user ? { _id: req.user._id } : "NOT AUTHENTICATED",
-  });
+    user: req.user ? { _id: req.user._id } : "NOT AUTHENTICATED"});
 
   try {
     // Try deleting from ChatHistory first
     const chat = await ChatHistory.findOneAndDelete({
       _id: req.params.id,
-      userId: req.user._id,
-    });
+      userId: req.user._id});
 
     if (chat) {
       debugLog("deleteChat - Deleted ChatHistory", { id: chat._id });
@@ -413,8 +378,7 @@ const deleteChat = async (req, res) => {
     // Try APIQuestion as fallback (legacy)
     const question = await AIQuestion.findOneAndDelete({
       _id: req.params.id,
-      userId: req.user._id,
-    });
+      userId: req.user._id});
     
     if (question) {
       debugLog("deleteChat - Deleted AIQuestion", { id: question._id });
@@ -433,22 +397,18 @@ const clearHistory = async (req, res) => {
   debugLog("clearHistory - Request Received", {
     user: req.user
       ? { _id: req.user._id, email: req.user.email }
-      : "NOT AUTHENTICATED",
-  });
+      : "NOT AUTHENTICATED"});
 
   try {
     const aiQuestionsResult = await AIQuestion.deleteMany({
-      userId: req.user._id,
-    });
+      userId: req.user._id});
     const chatHistoryResult = await ChatHistory.deleteMany({
-      userId: req.user._id,
-    });
+      userId: req.user._id});
 
     debugLog("clearHistory - Result", {
       aiQuestionsDeleted: aiQuestionsResult.deletedCount,
       chatHistoryDeleted: chatHistoryResult.deletedCount,
-      userId: req.user._id.toString(),
-    });
+      userId: req.user._id.toString()});
 
     res.json({ success: true, message: "History cleared successfully" });
   } catch (error) {
@@ -457,9 +417,7 @@ const clearHistory = async (req, res) => {
       .status(500)
       .json({
         success: false,
-        message: "Failed to clear history",
-        error: error.message,
-      });
+        message: "Failed to clear history"});
   }
 };
 
@@ -470,5 +428,4 @@ module.exports = {
   clearHistory,
   queryAI,
   getChatHistory,
-  getSingleChat,
-};
+  getSingleChat};
