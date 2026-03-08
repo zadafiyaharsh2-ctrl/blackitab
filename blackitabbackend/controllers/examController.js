@@ -21,12 +21,11 @@ exports.createQuestion = async (req, res) => {
             isPublic: isPublic !== false,
             approvalStatus: 'pending',
             createdBy: req.user._id,
-            instituteId: req.user.instituteId || null,
-        });
+            instituteId: req.user.instituteId || null});
 
         res.status(201).json({ success: true, data: newQuestion });
     } catch (error) {
-        console.error('Create question error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -38,7 +37,7 @@ exports.getMyQuestions = async (req, res) => {
             .sort({ createdAt: -1 });
         res.json({ success: true, data: questions });
     } catch (error) {
-        console.error('Get my questions error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -54,7 +53,7 @@ exports.getInstituteQuestions = async (req, res) => {
             .sort({ createdAt: -1 });
         res.json({ success: true, data: questions });
     } catch (error) {
-        console.error('Get institute questions error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -82,7 +81,7 @@ exports.updateQuestion = async (req, res) => {
         const updated = await ExamQuestion.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
         res.json({ success: true, data: updated });
     } catch (error) {
-        console.error('Update question error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -106,7 +105,7 @@ exports.deleteQuestion = async (req, res) => {
         await ExamQuestion.findByIdAndDelete(req.params.id);
         res.json({ success: true, message: 'Question deleted' });
     } catch (error) {
-        console.error('Delete question error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
