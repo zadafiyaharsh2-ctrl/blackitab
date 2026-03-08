@@ -103,7 +103,17 @@ exports.sendMessage = async (req, res) => {
         const populatedMessage = await newMessage.populate('sender', 'name profileImage');
 
         if (req.io) {
-            req.io.emit('new_message', { message: populatedMessage });
+            // Emit to recipient's active tabs
+            const receiverSocketIds = req.app.get('getReceiverSocketId')(recipientId) || [];
+            receiverSocketIds.forEach(socketId => {
+                req.io.to(socketId).emit('new_message', { message: populatedMessage });
+            });
+
+            // Emit to sender's OTHER active tabs (so sending from one tab syncs to the other tab)
+            const senderSocketIds = req.app.get('getReceiverSocketId')(senderId) || [];
+            senderSocketIds.forEach(socketId => {
+                req.io.to(socketId).emit('new_message', { message: populatedMessage });
+            });
         }
 
         res.status(201).json({ success: true, message: populatedMessage });

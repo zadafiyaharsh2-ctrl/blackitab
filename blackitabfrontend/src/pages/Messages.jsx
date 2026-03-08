@@ -32,25 +32,35 @@ const Messages = () => {
     useEffect(() => {
         if (!socket) return;
 
-        socket.on('new_message', (data) => {
+        const handleNewMessage = (data) => {
             const msg = data.message;
-            const myId = JSON.parse(localStorage.getItem('user'))?._id || JSON.parse(localStorage.getItem('user'))?.id;
+            const myId = String(JSON.parse(localStorage.getItem('user'))?._id || JSON.parse(localStorage.getItem('user'))?.id);
 
             if (currentChatUser) {
-                 // Prevent duplicates: Only accept messages from the OTHER user.
-                 // We locally append our own messages.
-                 if (msg.sender._id === currentChatUser._id) {
+                 const senderIdStr = String(msg.sender._id || msg.sender);
+                 const recipientIdStr = String(msg.recipient._id || msg.recipient);
+                 const currentChatIdStr = String(currentChatUser._id);
+
+                 // Check if the message belongs to the currently open chat:
+                 // Case 1: The current chat user sent it to me
+                 const isFromTarget = senderIdStr === currentChatIdStr;
+                 // Case 2: I sent it to the current chat user (for syncing across sender's multiple tabs)
+                 const isFromMeToTarget = senderIdStr === myId && recipientIdStr === currentChatIdStr;
+
+                 if (isFromTarget || isFromMeToTarget) {
                      setMessages(prev => {
-                         if (prev.some(m => m._id === msg._id)) return prev;
+                         if (prev.some(m => String(m._id) === String(msg._id))) return prev;
                          return [...prev, msg];
                      });
                      scrollToBottom();
                  }
             }
-        });
+        };
+
+        socket.on('new_message', handleNewMessage);
 
         return () => {
-            socket.off("new_message");
+            socket.off("new_message", handleNewMessage);
         };
     }, [socket, currentChatUser?._id]);
 
@@ -145,7 +155,10 @@ const Messages = () => {
             });
 
             if (response.data.success) {
-                setMessages(prev => [...prev, response.data.message]);
+                setMessages(prev => {
+                    if (prev.some(m => String(m._id) === String(response.data.message._id))) return prev;
+                    return [...prev, response.data.message];
+                });
                 setNewMessage('');
                 scrollToBottom();
             }
@@ -262,7 +275,7 @@ const Messages = () => {
                         <input 
                             type="text" 
                             placeholder="Search..." 
-                            className="w-full bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl py-2 pl-10 pr-3 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all placeholder-gray-500"
+                            className="w-full bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl py-2 pl-10 pr-3 text-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all placeholder-gray-500"
                         />
                     </div>
                 </div>
@@ -290,13 +303,13 @@ const Messages = () => {
                                         alt={conv.name} 
                                         className="w-12 h-12 rounded-full object-cover ring-2 ring-white/10"
                                     />
-                                    {(onlineUsers.includes(conv._id) || onlineUsers.includes(conv.id)) && (
+                                    {(onlineUsers.includes(String(conv._id)) || onlineUsers.includes(String(conv.id))) && (
                                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black"></div>
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-baseline mb-1">
-                                        <h3 className={`font-semibold truncate ${currentChatUser?._id === conv._id ? 'text-gray-900 dark:text-white' : 'text-gray-200'}`}>{conv.name}</h3>
+                                        <h3 className={`font-semibold truncate ${currentChatUser?._id === conv._id ? 'text-gray-900 dark:text-white' : 'text-gray-800 dark:text-gray-200'}`}>{conv.name}</h3>
                                         <span className="text-[10px] text-gray-500">12:30 PM</span> 
                                     </div>
                                     <p className={`text-sm truncate ${currentChatUser?._id === conv._id ? 'text-blue-200' : 'text-gray-600 dark:text-gray-400'}`}>Click to verify message history...</p>
@@ -323,7 +336,7 @@ const Messages = () => {
                                         alt={currentChatUser.name} 
                                         className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover ring-2 ring-white/10 bg-gray-50 dark:bg-gray-800"
                                     />
-                                    {(onlineUsers.includes(currentChatUser._id) || onlineUsers.includes(currentChatUser.id)) && (
+                                    {(onlineUsers.includes(String(currentChatUser._id)) || onlineUsers.includes(String(currentChatUser.id))) && (
                                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black animate-pulse"></div>
                                     )}
 
@@ -331,7 +344,7 @@ const Messages = () => {
                                 <div>
                                     <h3 className="font-bold text-gray-900 dark:text-white text-lg">{currentChatUser.name}</h3>
                                     {(() => {
-                                        const isOnline = onlineUsers.includes(currentChatUser._id) || onlineUsers.includes(currentChatUser.id);
+                                        const isOnline = onlineUsers.includes(String(currentChatUser._id)) || onlineUsers.includes(String(currentChatUser.id));
 
                                         return isOnline ? (
                                             <span className="text-xs text-green-400 font-medium flex items-center gap-1.5"><FaCircle size={6} /> Online Now</span>
@@ -371,9 +384,9 @@ const Messages = () => {
                                         >
                                             <div className={`max-w-[85%] md:max-w-[70%] flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                                                 <div className={`px-4 py-2 rounded-2xl shadow-md backdrop-blur-sm relative border ${
-                                                    isMe 
-                                                        ? 'bg-blue-600 text-gray-900 dark:text-white rounded-br-none border-blue-500 shadow-blue-900/20 ' 
-                                                        : 'bg-white/10 text-gray-100 rounded-bl-none border-gray-200 dark:border-white/5 shadow-black/10'
+                                                        isMe 
+                                                            ? 'bg-blue-600 text-white rounded-br-none border-blue-500 shadow-blue-900/20 ' 
+                                                            : 'bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-gray-100 rounded-bl-none border-gray-200 dark:border-white/5 shadow-black/10'
                                                 }`}>
                                                     {renderMessageContent(msg)}
                                                 </div>

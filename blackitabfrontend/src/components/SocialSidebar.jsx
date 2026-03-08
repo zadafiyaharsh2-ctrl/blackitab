@@ -13,7 +13,7 @@ const SocialSidebar = ({ onLogout, isOpen, setIsOpen, user, leftOffset = 0 }) =>
     { path: '/dashboard', label: 'Switch to Learning', icon: <FaBook className="text-blue-500" /> },
     { path: `/network/${userId}/followers`, label: 'Followers', icon: <FaUserFriends /> },
     { path: `/network/${userId}/following`, label: 'Following', icon: <FaUserPlus /> },
-    { path: `/network/${userId}/subscribers`, label: 'Subscription', icon: <FaStar /> },
+
     { path: '/notifications', label: 'Notifications', icon: <FaBell /> },
     { path: '/messages', label: 'Message', icon: <FaEnvelope /> },
     { path: '/create-post', label: 'Add Post', icon: <FaPlusSquare /> },
