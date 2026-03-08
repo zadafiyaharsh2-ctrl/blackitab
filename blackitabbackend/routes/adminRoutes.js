@@ -44,4 +44,14 @@ router.post('/contests', adminController.createContest);
 router.put('/contests/:id', adminController.editContest);
 router.delete('/contests/:id', adminController.deleteContest);
 
+// ── Institute Management ──
+router.get('/institutes', adminController.getAllInstitutes);
+router.put('/institutes/:id', adminController.editInstitute);
+
+// ── Teacher Analytics ──
+router.get('/teachers', adminController.getAllTeachersRatings);
+
+// ── Global Analytics ──
+router.get('/analytics', adminController.getGlobalAnalytics);
+
 module.exports = router;
