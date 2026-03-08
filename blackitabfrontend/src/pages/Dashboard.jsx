@@ -90,13 +90,8 @@ const CircularProgress = ({ value, max, size = 100, strokeWidth = 8, color = '#3
   );
 };
 
-// ── Fallback Data ────────────────────────────────────────────────────────────
-const FALLBACK_SUBJECTS = [
-  { _id: 's1', name: 'DBMS', topicCount: 24 },
-  { _id: 's2', name: 'SQL', topicCount: 18 },
-  { _id: 's3', name: 'CCBDI', topicCount: 15 },
-];
-
+// ── Empty State Fallbacks ────────────────────────────────────────────────────────────
+const FALLBACK_SUBJECTS = [];
 const FALLBACK_PROGRESS = {
   totalCompleted: 0,
   bySubject: [],
@@ -108,13 +103,7 @@ const FALLBACK_PROGRESS = {
   rankTier: 'Bronze',
   recentActivity: [],
 };
-
-const FALLBACK_PLAYLISTS = [
-  { _id: 'fp1', title: 'SQL Mastery', description: 'Master SQL from basics to advanced joins', totalItems: 12, thumbnail: null },
-  { _id: 'fp2', title: 'DBMS Essentials', description: 'Normalization, transactions, indexing', totalItems: 8, thumbnail: null },
-  { _id: 'fp3', title: 'Cloud Computing', description: 'IaaS, PaaS, SaaS and deployment models', totalItems: 10, thumbnail: null },
-  { _id: 'fp4', title: 'Data Structures', description: 'Arrays, trees, graphs and algorithms', totalItems: 15, thumbnail: null },
-];
+const FALLBACK_PLAYLISTS = [];
 
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
