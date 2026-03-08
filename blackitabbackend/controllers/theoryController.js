@@ -14,7 +14,7 @@ exports.getSubjects = async (req, res) => {
 
         res.json({ success: true, data: subjectsWithCounts });
     } catch (error) {
-        console.error('Error fetching subjects:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -26,7 +26,7 @@ exports.getTopicsBySubject = async (req, res) => {
         const topics = await Topic.find({ subjectId }).sort({ createdAt: 1 });
         res.json({ success: true, data: topics });
     } catch (error) {
-        console.error('Error fetching topics:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -43,7 +43,7 @@ exports.getTopicFullContent = async (req, res) => {
 
         res.json({ success: true, data: topicData });
     } catch (error) {
-        console.error('Error fetching topic content:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
