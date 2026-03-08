@@ -35,14 +35,42 @@ exports.submitAttempt = async (req, res) => {
         });
 
         // 5. Update User Gamification — Difficulty-weighted Points & 10 XP per correct question
-        //    Easy=5, Medium=15, Hard=30 (industry-standard weighted scoring)
+        const user = await User.findById(userId);
+        let newStreak = user.streak || 0;
+        let newLongestStreak = user.longestStreak || 0;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (user.lastActiveDate) {
+            const lastActive = new Date(user.lastActiveDate);
+            lastActive.setHours(0, 0, 0, 0);
+            const diffDays = Math.round((today - lastActive) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 1) {
+                newStreak += 1;
+            } else if (diffDays > 1) {
+                newStreak = 1;
+            } else if (diffDays === 0 && newStreak === 0) {
+                newStreak = 1;
+            }
+        } else {
+            newStreak = 1;
+        }
+        newLongestStreak = Math.max(newStreak, newLongestStreak);
+
+        const updateData = {
+            streak: newStreak,
+            longestStreak: newLongestStreak,
+            lastActiveDate: new Date()
+        };
+
         if (isCorrect) {
             const XP_BY_DIFFICULTY = { 'Easy': 5, 'Medium': 15, 'Hard': 30 };
             const pointsGain = XP_BY_DIFFICULTY[question.difficulty] || 10;
-            await User.findByIdAndUpdate(userId, {
-                $inc: { points: pointsGain, xp: 10 }
-            });
+            updateData.$inc = { points: pointsGain, xp: 10 };
         }
+
+        await User.findByIdAndUpdate(userId, updateData);
 
         res.json({
             success: true,
@@ -122,16 +150,38 @@ exports.getDashboardAnalytics = async (req, res) => {
             difficulty: a.questionId?.difficulty || 'Medium'
         }));
 
+        // Weekly Activity (trailing 7 days)
+        const weeklyActivity = [];
+        const todayAtMidnight = new Date();
+        todayAtMidnight.setHours(0, 0, 0, 0);
+        
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(todayAtMidnight);
+            d.setDate(d.getDate() - i);
+            const nextDay = new Date(d);
+            nextDay.setDate(d.getDate() + 1);
+
+            const dayAttempts = allAttempts.filter(a => {
+                const attemptTime = new Date(a.attemptedAt);
+                return attemptTime >= d && attemptTime < nextDay;
+            });
+            
+            weeklyActivity.push({
+                day: d.toLocaleDateString('en-US', { weekday: 'short' }),
+                count: dayAttempts.length
+            });
+        }
+
         res.json({
             success: true,
             data: {
                 stats,
-                subjectProgress: subjectProgress.length > 0 ? subjectProgress : [
-                   { name: 'Onboarding', progress: 10, color: 'from-blue-500 to-cyan-600', mastery: 'Beginner' }
-                ],
-                strengths: strengths.length > 0 ? strengths : ['Getting Started'],
-                weaknesses: weaknesses.length > 0 ? weaknesses : ['Practice needed'],
-                recentActivity}
+                subjectProgress,
+                strengths,
+                weaknesses,
+                recentActivity,
+                weeklyActivity
+            }
         });
     } catch (error) {
         
