@@ -53,7 +53,7 @@ const optionalProtect = async (req, res, next) => {
             // Find user and attach to request object
             req.user = await User.findById(decoded.userId).select('-password');
         } catch (error) {
-            console.error('Optional auth error:', error);
+
             // We ignore errors here because authentication is optional
         }
     }
@@ -92,7 +92,7 @@ router.get('/daily', async (req, res) => {
     const question = await ExamQuestion.findOne().skip(skipIndex).select('question subject difficulty exam options');
     res.json({ success: true, data: question });
   } catch (error) {
-    console.error('Daily problem error:', error);
+
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
