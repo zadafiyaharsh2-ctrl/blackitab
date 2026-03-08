@@ -157,11 +157,10 @@ exports.markTopicComplete = async (req, res) => {
             message: `Topic marked as complete (+${xpGain} XP)`,
             data: progress,
             xpGain,
-            currentStreak,
-        });
+            currentStreak});
     } catch (error) {
-        console.error('Error marking topic complete:', error);
-        res.status(500).json({ success: false, message: 'Error marking topic as complete', error: error.message });
+        
+        res.status(500).json({ success: false, message: 'Error marking topic as complete' });
     }
 };
 
@@ -185,8 +184,8 @@ exports.getUserProgress = async (req, res) => {
 
         res.status(200).json({ success: true, data: formattedProgress });
     } catch (error) {
-        console.error('Error fetching user progress:', error);
-        res.status(500).json({ success: false, message: 'Error fetching progress', error: error.message });
+        
+        res.status(500).json({ success: false, message: 'Error fetching progress' });
     }
 };
 
@@ -209,7 +208,7 @@ exports.getSubjectProgress = async (req, res) => {
 
         res.status(200).json({ success: true, data: formattedProgress });
     } catch (error) {
-        console.error('Error fetching subject progress:', error);
+        
         res.status(500).json({ success: false, message: 'Error fetching subject progress' });
     }
 };
@@ -292,12 +291,11 @@ exports.getProgressStats = async (req, res) => {
                 rankPosition: rank,
                 totalUsers,
                 percentile,
-                rankTier,
-            }
+                rankTier}
         });
     } catch (error) {
-        console.error('Error fetching progress stats:', error);
-        res.status(500).json({ success: false, message: 'Error fetching statistics', error: error.message });
+        
+        res.status(500).json({ success: false, message: 'Error fetching statistics' });
     }
 };
 
@@ -319,16 +317,23 @@ exports.getActivityHeatmap = async (req, res) => {
             { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$completedAt" } }, count: { $sum: 1 } } }
         ]);
 
-        // Merge topic + problem activity by date
+        const Attempt = require('../models/Attempt');
+        const examActivity = await Attempt.aggregate([
+            { $match: { userId, attemptedAt: { $exists: true } } },
+            { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$attemptedAt" } }, count: { $sum: 1 } } }
+        ]);
+
+        // Merge topic + problem + exam activity by date
         const activityMap = {};
         topicActivity.forEach(item => { activityMap[item._id] = (activityMap[item._id] || 0) + item.count; });
         problemActivity.forEach(item => { activityMap[item._id] = (activityMap[item._id] || 0) + item.count; });
+        examActivity.forEach(item => { activityMap[item._id] = (activityMap[item._id] || 0) + item.count; });
 
         const heatmapData = Object.keys(activityMap).map(date => ({ date, count: activityMap[date] }));
 
         res.status(200).json({ success: true, data: heatmapData });
     } catch (error) {
-        console.error('Error fetching activity heatmap:', error);
-        res.status(500).json({ success: false, message: 'Error fetching activity heatmap', error: error.message });
+        
+        res.status(500).json({ success: false, message: 'Error fetching activity heatmap' });
     }
 };

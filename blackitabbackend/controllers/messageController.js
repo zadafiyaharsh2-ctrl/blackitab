@@ -31,10 +31,8 @@ const storage = new CloudinaryStorage({
             resource_type,
             format,
             use_filename: true,
-            unique_filename: true,
-        };
-    },
-});
+            unique_filename: true};
+    }});
 
 const upload = multer({ storage: storage });
 exports.uploadMiddleware = upload.single('media');
@@ -105,12 +103,22 @@ exports.sendMessage = async (req, res) => {
         const populatedMessage = await newMessage.populate('sender', 'name profileImage');
 
         if (req.io) {
-            req.io.emit('new_message', { message: populatedMessage });
+            // Emit to recipient's active tabs
+            const receiverSocketIds = req.app.get('getReceiverSocketId')(recipientId) || [];
+            receiverSocketIds.forEach(socketId => {
+                req.io.to(socketId).emit('new_message', { message: populatedMessage });
+            });
+
+            // Emit to sender's OTHER active tabs (so sending from one tab syncs to the other tab)
+            const senderSocketIds = req.app.get('getReceiverSocketId')(senderId) || [];
+            senderSocketIds.forEach(socketId => {
+                req.io.to(socketId).emit('new_message', { message: populatedMessage });
+            });
         }
 
         res.status(201).json({ success: true, message: populatedMessage });
     } catch (error) {
-        console.error('Send message error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -134,7 +142,7 @@ exports.getMessages = async (req, res) => {
 
         res.json({ success: true, messages });
     } catch (error) {
-        console.error('Get messages error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -154,7 +162,7 @@ exports.getConversations = async (req, res) => {
 
         res.json({ success: true, conversations: users });
     } catch (error) {
-        console.error('Get conversations error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -187,7 +195,7 @@ exports.downloadMessageMedia = async (req, res) => {
 
         response.data.pipe(res);
     } catch (error) {
-        console.error('Download media error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

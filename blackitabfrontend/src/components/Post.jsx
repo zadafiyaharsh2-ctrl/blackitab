@@ -47,7 +47,7 @@ const Post = ({ post, onPostDeleted }) => {
           </div>
           <div>
             <h3 className="text-gray-900 dark:text-white font-semibold text-sm">{post.user?.name}</h3>
-            <span className="text-gray-500 text-xs">
+            <span className="text-gray-500 dark:text-gray-400 text-xs">
               {new Date(post.createdAt).toLocaleDateString()}
             </span>
           </div>
@@ -58,7 +58,7 @@ const Post = ({ post, onPostDeleted }) => {
             <div className="relative">
                 <button 
                     onClick={() => setShowMenu(!showMenu)}
-                    className="text-gray-500 hover:text-gray-900 dark:text-white p-2 rounded-full hover:bg-gray-100 dark:bg-white/5 transition-colors"
+                    className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                     <FaEllipsisH />
                 </button>

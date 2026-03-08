@@ -43,7 +43,7 @@ exports.updateProfile = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Update profile error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -69,7 +69,7 @@ exports.linkManager = async (req, res) => {
 
         res.json({ success: true, message: 'Supervisor linked successfully' });
     } catch (error) {
-        console.error('Link manager error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -111,13 +111,12 @@ exports.getLeaderboard = async (req, res) => {
                 ...user,
                 _id: user._id,
                 rank: currentRank,
-                score,
-            };
+                score};
         });
 
         res.json({ success: true, data: ranked });
     } catch (error) {
-        console.error('Leaderboard error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

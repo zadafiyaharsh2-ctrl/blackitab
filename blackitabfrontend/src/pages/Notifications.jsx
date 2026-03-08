@@ -4,6 +4,7 @@ import API_URL from '../config';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaBell, FaUserPlus, FaCheck, FaBan, FaReply, FaSpinner, FaArrowLeft } from 'react-icons/fa';
 import usePageTitle from '../hooks/usePageTitle';
+import { useSocketContext } from '../context/SocketContext';
 
 const Notifications = () => {
     usePageTitle('Notifications');
@@ -13,6 +14,18 @@ const Notifications = () => {
     useEffect(() => {
         fetchNotifications();
     }, []);
+
+    const { socket } = useSocketContext();
+
+    useEffect(() => {
+        if (!socket) return;
+        socket.on('new_notification', (newNotification) => {
+            setNotifications(prev => [newNotification, ...prev]);
+        });
+        return () => {
+            socket.off('new_notification');
+        };
+    }, [socket]);
 
     const fetchNotifications = async () => {
         try {

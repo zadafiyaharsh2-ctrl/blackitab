@@ -52,7 +52,7 @@ exports.submitAttempt = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Submit attempt error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -131,11 +131,10 @@ exports.getDashboardAnalytics = async (req, res) => {
                 ],
                 strengths: strengths.length > 0 ? strengths : ['Getting Started'],
                 weaknesses: weaknesses.length > 0 ? weaknesses : ['Practice needed'],
-                recentActivity,
-            }
+                recentActivity}
         });
     } catch (error) {
-        console.error('Analytics fetch error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

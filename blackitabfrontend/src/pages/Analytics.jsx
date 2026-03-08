@@ -85,48 +85,9 @@ const speedCardStyles = {
   Hard: 'bg-rose-50 border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/30',
 };
 
-const weeklyActivity = [
-  { day: 'Mon', problems: 8 },
-  { day: 'Tue', problems: 12 },
-  { day: 'Wed', problems: 6 },
-  { day: 'Thu', problems: 15 },
-  { day: 'Fri', problems: 10 },
-  { day: 'Sat', problems: 18 },
-  { day: 'Sun', problems: 14 },
-];
-
-const peakHours = [
-  { time: '6 AM - 9 AM', problems: 45, percentage: 80 },
-  { time: '2 PM - 5 PM', problems: 32, percentage: 60 },
-  { time: '8 PM - 11 PM', problems: 58, percentage: 100 },
-  { time: 'Late Night', problems: 12, percentage: 25 },
-];
-
-const difficultyDistribution = [
-  { difficulty: 'Easy', count: 58, percentage: 45 },
-  { difficulty: 'Medium', count: 49, percentage: 39 },
-  { difficulty: 'Hard', count: 20, percentage: 16 },
-];
-
-const speedMetrics = [
-  { difficulty: 'Easy', avgTime: '8 min', best: '3 min' },
-  { difficulty: 'Medium', avgTime: '22 min', best: '12 min' },
-  { difficulty: 'Hard', avgTime: '45 min', best: '28 min' },
-];
-
-const quickWins = [
-  { title: 'Complete 3 more Easy problems', reward: '+50 points', progress: 67, icon: Target, tone: 'blue' },
-  { title: 'Maintain 7-day streak', reward: 'Streak Master Badge', progress: 86, icon: Flame, tone: 'emerald' },
-  { title: 'Solve 1 Hard problem today', reward: '+100 points', progress: 0, icon: Trophy, tone: 'amber' },
-  { title: 'Review 5 past solutions', reward: '+25 points', progress: 40, icon: BookOpen, tone: 'slate' },
-];
-
-const topicPerformance = [
-  { topic: 'Arrays & Strings', solved: 45, total: 50, accuracy: 94 },
-  { topic: 'Dynamic Programming', solved: 28, total: 35, accuracy: 89 },
-  { topic: 'Trees & Graphs', solved: 32, total: 40, accuracy: 85 },
-  { topic: 'Hash Tables', solved: 22, total: 25, accuracy: 92 },
-];
+// ── REMOVED HARDCODED ARRAYS. DATA MUST COME FROM API ENDPOINT. ──
+// Data like weeklyActivity, peakHours, difficultyDistribution, speedMetrics, quickWins, 
+// and topicPerformance are now dynamically driven or hidden if data is missing.
 
 const StatCard = ({ icon: Icon, title, value, change, suffix = '' }) => {
   const trend = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
@@ -196,7 +157,10 @@ const Analytics = () => {
   }, []);
 
   const { stats, subjectProgress, strengths, weaknesses, recentActivity } = data;
-  const maxActivity = Math.max(...weeklyActivity.map((item) => item.problems));
+  
+  // These extended analytics aren't fully supported by backend yet,
+  // we will map what we can or show empty states.
+  const hasExtendedData = false; 
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-6">
@@ -231,19 +195,15 @@ const Analytics = () => {
               <h2 className="text-lg font-semibold">Weekly Activity</h2>
             </div>
             <div className="space-y-3">
-              {weeklyActivity.map((item) => (
-                <div key={item.day} className="flex items-center gap-3">
-                  <span className="text-sm w-8 text-slate-600 dark:text-slate-300">{item.day}</span>
-                  <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-6 overflow-hidden">
-                    <div
-                      className="h-full bg-blue-600 text-white text-xs flex items-center justify-end pr-2"
-                      style={{ width: `${(item.problems / maxActivity) * 100}%` }}
-                    >
-                      {item.problems > 0 ? item.problems : ''}
-                    </div>
-                  </div>
+              {hasExtendedData ? (
+                // This would map real weekly activity from backend when implemented
+                <div className="text-center py-4 text-sm text-slate-500">Weekly activity data available soon.</div>
+              ) : (
+                <div className="text-center py-8">
+                  <Activity className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Solve problems to track weekly activity.</p>
                 </div>
-              ))}
+              )}
             </div>
           </motion.div>
         </section>
@@ -345,20 +305,14 @@ const Analytics = () => {
               <h2 className="text-lg font-semibold">Peak Study Hours</h2>
             </div>
             <div className="space-y-3">
-              {peakHours.map((slot) => (
-                <div key={slot.time}>
-                  <div className="flex items-center justify-between text-sm mb-1">
-                    <span className="text-slate-600 dark:text-slate-300">{slot.time}</span>
-                    <span className="font-semibold text-slate-900 dark:text-slate-100">{slot.problems} problems</span>
-                  </div>
-                  <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-600 rounded-full" style={{ width: `${slot.percentage}%` }} />
-                  </div>
+              {hasExtendedData ? (
+                 <div className="text-center py-4 text-sm text-slate-500">Peak hour tracking coming soon.</div>
+              ) : (
+                <div className="text-center py-8">
+                  <CalendarDays className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Not enough data to calculate peak hours.</p>
                 </div>
-              ))}
-            </div>
-            <div className="mt-4 text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg p-3">
-              Most productive window: 8 PM - 11 PM.
+              )}
             </div>
           </motion.div>
 
@@ -368,23 +322,14 @@ const Analytics = () => {
               <h2 className="text-lg font-semibold">Difficulty Distribution</h2>
             </div>
             <div className="space-y-4">
-              {difficultyDistribution.map((item) => {
-                const style = difficultyStyles[item.difficulty];
-                return (
-                  <div key={item.difficulty}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className={`w-3 h-3 rounded-full ${style.dot}`} />
-                        <span className="text-sm text-slate-700 dark:text-slate-200">{item.difficulty}</span>
-                      </div>
-                      <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{item.count} ({item.percentage}%)</span>
-                    </div>
-                    <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full ${style.bar}`} style={{ width: `${item.percentage}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
+               {hasExtendedData ? (
+                   <div className="text-center py-4 text-sm text-slate-500">Distribution coming soon.</div>
+               ) : (
+                <div className="text-center py-8">
+                  <PieChart className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Not enough data to map difficulty.</p>
+                </div>
+               )}
             </div>
           </motion.div>
         </section>
@@ -396,15 +341,14 @@ const Analytics = () => {
               <h2 className="text-lg font-semibold">Solving Speed Metrics</h2>
             </div>
             <div className="space-y-3">
-              {speedMetrics.map((item) => (
-                <div key={item.difficulty} className={`rounded-xl border p-4 ${speedCardStyles[item.difficulty]}`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold text-slate-900 dark:text-slate-100">{item.difficulty} Problems</span>
-                    <span className="text-sm text-slate-600 dark:text-slate-300">Best: {item.best}</span>
-                  </div>
-                  <p className="text-sm text-slate-700 dark:text-slate-200">Average Time: {item.avgTime}</p>
+               {hasExtendedData ? (
+                  <div className="text-center py-4 text-sm text-slate-500">Speed metrics coming soon.</div>
+               ) : (
+                <div className="text-center py-8">
+                  <Timer className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Track and report solve speed by solving problems.</p>
                 </div>
-              ))}
+               )}
             </div>
           </motion.div>
 
@@ -414,28 +358,14 @@ const Analytics = () => {
               <h2 className="text-lg font-semibold">Quick Win Suggestions</h2>
             </div>
             <div className="space-y-3">
-              {quickWins.map((suggestion) => {
-                const Icon = suggestion.icon;
-                const style = quickWinStyles[suggestion.tone];
-                return (
-                  <div key={suggestion.title} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 p-4">
-                    <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-lg ${style.iconBg}`}>
-                        <Icon className={`h-4 w-4 ${style.iconText}`} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{suggestion.title}</p>
-                          <span className="text-xs px-2 py-1 rounded-full bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200 whitespace-nowrap">{suggestion.reward}</span>
-                        </div>
-                        <div className="h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full ${style.bar}`} style={{ width: `${suggestion.progress}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+               {hasExtendedData ? (
+                   <div className="text-center py-4 text-sm text-slate-500">Wins generated based on data.</div>
+               ) : (
+                <div className="text-center py-8">
+                  <Gift className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Unlock quick wins by generating some initial activity.</p>
+                </div>
+               )}
             </div>
           </motion.div>
         </section>
@@ -500,22 +430,26 @@ const Analytics = () => {
             <h2 className="text-lg font-semibold">Top Performing Topics</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {topicPerformance.map((topic, idx) => (
-              <div key={`${topic.topic}-${idx}`} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 p-4">
+            {subjectProgress && subjectProgress.length > 0 ? subjectProgress.map((topic, idx) => (
+              <div key={`${topic.name}-${idx}`} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 p-4">
                 <div className="flex items-center justify-between mb-2 gap-2">
-                  <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{topic.topic}</span>
+                  <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{topic.name}</span>
                   <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
-                    {topic.accuracy}% accuracy
+                    {topic.mastery}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                    <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(topic.solved / topic.total) * 100}%` }} />
+                    <div className="h-full bg-blue-600 rounded-full" style={{ width: `${topic.progress}%` }} />
                   </div>
-                  <span className="text-xs text-slate-600 dark:text-slate-300">{topic.solved}/{topic.total}</span>
+                  <span className="text-xs text-slate-600 dark:text-slate-300">{topic.progress}%</span>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="col-span-full text-center py-6">
+                <p className="text-sm text-slate-500">Solve more problems across different topics to track your best domains.</p>
+              </div>
+            )}
           </div>
         </motion.section>
 

@@ -11,7 +11,7 @@ exports.getProblemSubjects = async (req, res) => {
         const subjects = await ProblemSubject.find().sort({ createdAt: 1 });
         res.status(200).json({ success: true, count: subjects.length, data: subjects });
     } catch (err) {
-        console.error('Error fetching problem subjects:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -22,7 +22,7 @@ exports.createProblemSubject = async (req, res) => {
         const subject = await ProblemSubject.create(req.body);
         res.status(201).json({ success: true, data: subject });
     } catch (err) {
-        console.error('Error creating problem subject:', err);
+        
         if (err.code === 11000) {
             return res.status(400).json({ success: false, message: 'Subject already exists' });
         }
@@ -36,7 +36,7 @@ exports.getChaptersBySubject = async (req, res) => {
         const chapters = await ProblemChapter.find({ subjectId: req.params.subjectId }).sort({ createdAt: 1 });
         res.status(200).json({ success: true, count: chapters.length, data: chapters });
     } catch (err) {
-        console.error('Error fetching problem chapters:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -64,7 +64,7 @@ exports.getProblemsByChapter = async (req, res) => {
 
         res.status(200).json({ success: true, count: problemsWithStatus.length, data: problemsWithStatus });
     } catch (err) {
-        console.error('Error fetching problems:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -78,7 +78,7 @@ exports.getProblemById = async (req, res) => {
         }
         res.status(200).json({ success: true, data: problem });
     } catch (err) {
-        console.error('Error fetching problem:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -153,7 +153,7 @@ exports.updateProblemStatus = async (req, res) => {
 
         res.status(200).json({ success: true, data: progress });
     } catch (err) {
-        console.error('Error updating problem status:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -173,7 +173,7 @@ exports.getExamQuestions = async (req, res) => {
 
         res.json({ success: true, data: questions });
     } catch (err) {
-        console.error('Error fetching exam Questions: ', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
 
     }
@@ -194,7 +194,7 @@ exports.checkExamAnswer = async (req, res) => {
             data: isCorrect ? { correct: true, correctAnswer: question.correctAnswer } : { correct: false }
         });
     } catch (err) {
-        console.error('Error checking answer:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -228,7 +228,7 @@ exports.generateExamQuestions = async (req, res) => {
         res.json({ success: true, data: safeQuestions });
 
     } catch (err) {
-        console.error('Error generateing questions: ', err);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -322,14 +322,14 @@ exports.startAiTutor = async (req, res) => {
 
         // --- API CALL & ROBUST PARSING ---
         try {
-            console.log('AI Tutor: Sending request to AI...', { step, subject: question.subject });
+
             const aiRes = await axios.post(LANGCHAIN_API_URL, {
                 query: prompt,
                 top_k: 3
             }, { timeout: 120000 }); // 2 min timeout for complex generation
-            console.log(aiRes)
+
             let aiText = aiRes.data.answer || aiRes.data.response || '';
-            console.log(aiText)
+
             if (!aiText) throw new Error('Empty response from AI');
 
             // Robust JSON Extraction
@@ -337,7 +337,7 @@ exports.startAiTutor = async (req, res) => {
             const jsonEndIndex = aiText.lastIndexOf('}');
 
             if (jsonStartIndex === -1 || jsonEndIndex === -1) {
-                console.error('AI Tutor: Failed to find JSON in response:', aiText);
+
                 throw new Error('Invalid JSON format from AI');
             }
 
@@ -347,8 +347,8 @@ exports.startAiTutor = async (req, res) => {
             try {
                 aiData = JSON.parse(jsonString);
             } catch (pErr) {
-                console.error('AI Tutor: JSON Parse Error:', pErr);
-                console.error('Failed JSON string:', jsonString);
+
+
                 throw new Error('JSON Parse Failed');
             }
 
@@ -361,7 +361,6 @@ exports.startAiTutor = async (req, res) => {
             });
 
         } catch (aiErr) {
-            console.error('AI Tutor Service Error:', aiErr.message);
 
             // Generate a basic fallback response to keep the UI functional
             res.json({
@@ -385,7 +384,7 @@ exports.startAiTutor = async (req, res) => {
         }
 
     } catch (err) {
-        console.error('Error in AI tutor:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -421,7 +420,7 @@ exports.generateTheory = async (req, res) => {
         const prompt = `${systemContext}\n\n${userTask}\n\n${outputFormat}\n\nIMPORTANT: Return ONLY the raw JSON string. No markdown formatting.`;
 
         try {
-            console.log('AI Tutor: Generating Theory for failed questions...');
+
             const aiRes = await axios.post(LANGCHAIN_API_URL, { query: prompt, top_k: 3 }, { timeout: 120000 });
             let aiText = aiRes.data.answer || aiRes.data.response || '';
             const jsonStartIndex = aiText.indexOf('{');
@@ -431,14 +430,14 @@ exports.generateTheory = async (req, res) => {
 
             res.json({ success: true, theory: aiData.theory });
         } catch (aiErr) {
-            console.error('Theory Generation Error:', aiErr.message);
+
             res.json({
                 success: true,
                 theory: `### Self Study Recommendation\\n\\nPlease review the core concepts for topics: ${subjects}.`
             });
         }
     } catch (err) {
-        console.error('Error generating theory:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -486,7 +485,7 @@ exports.generateAdaptiveQuestion = async (req, res) => {
         const prompt = `${systemContext}\n\n${userTask}\n\n${outputFormat}\n\nIMPORTANT: Return ONLY the raw JSON string. No markdown formatting.`;
 
         try {
-            console.log('Generating Adaptive Question...', { examId, targetDifficulty });
+
             const aiRes = await axios.post(LANGCHAIN_API_URL, { query: prompt, top_k: 3 }, { timeout: 60000 });
             let aiText = aiRes.data.answer || aiRes.data.response || '';
             const jsonStartIndex = aiText.indexOf('{');
@@ -516,12 +515,12 @@ exports.generateAdaptiveQuestion = async (req, res) => {
                 }
             });
         } catch (aiErr) {
-            console.error('Adaptive Gen Error:', aiErr.message);
+
             res.status(500).json({ success: false, message: 'Failed to generate adaptive question' });
         }
 
     } catch (err) {
-        console.error('Error generating adaptive question:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };

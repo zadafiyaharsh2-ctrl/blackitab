@@ -85,7 +85,7 @@ exports.createPost = async (req, res) => {
 
         res.status(201).json({ success: true, post: newPost });
     } catch (error) {
-        console.error('Create post error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -133,7 +133,7 @@ exports.getUserPosts = async (req, res) => {
 
         res.json({ success: true, data: posts });
     } catch (err) {
-        console.error('Error fetching user posts:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -157,7 +157,7 @@ exports.deletePost = async (req, res) => {
         await post.deleteOne();
         res.json({ success: true, message: 'Post removed' });
     } catch (err) {
-        console.error('Error deleting post:', err);
+        
         if (err.kind === 'ObjectId') return res.status(404).json({ success: false, message: 'Post not found' });
         res.status(500).json({ success: false, message: 'Server Error' });
     }
@@ -177,7 +177,7 @@ exports.likePost = async (req, res) => {
         await post.save();
         res.json({ success: true, likes: post.likes });
     } catch (err) {
-        console.error('Like error:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -196,7 +196,7 @@ exports.unlikePost = async (req, res) => {
         await post.save();
         res.json({ success: true, likes: post.likes });
     } catch (err) {
-        console.error('Unlike error:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -221,7 +221,7 @@ exports.addComment = async (req, res) => {
 
         res.json({ success: true, comments: post.comments });
     } catch (err) {
-        console.error('Add comment error:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -243,7 +243,7 @@ exports.deleteComment = async (req, res) => {
         await post.save();
         res.json({ success: true, comments: post.comments });
     } catch (err) {
-        console.error('Delete comment error:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -258,7 +258,7 @@ exports.getStudyContent = async (req, res) => {
 
         res.json({ success: true, data: studyContent });
     } catch (err) {
-        console.error('Get study content error:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -273,7 +273,7 @@ exports.getPaidContent = async (req, res) => {
 
         res.json({ success: true, data: posts });
     } catch (error) {
-        console.error('Fetch paid content error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -299,7 +299,7 @@ exports.getContentById = async (req, res) => {
 
         res.json({ success: true, data: { ...content.toObject(), isFollowing } });
     } catch (err) {
-        console.error('Get content by ID error:', err);
+        
         if (err.kind === 'ObjectId') return res.status(404).json({ success: false, message: 'Content not found' });
         res.status(500).json({ success: false, message: 'Server Error' });
     }
@@ -318,7 +318,7 @@ exports.getRecentVideos = async (req, res) => {
 
         res.json({ success: true, data: videos });
     } catch (error) {
-        console.error('Fetch recent videos error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -345,7 +345,7 @@ exports.likeComment = async (req, res) => {
         await post.save();
         res.json({ success: true, liked: !alreadyLiked, likeCount: comment.likes.length });
     } catch (err) {
-        console.error('Like comment error:', err);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

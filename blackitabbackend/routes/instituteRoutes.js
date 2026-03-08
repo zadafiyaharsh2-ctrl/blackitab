@@ -13,10 +13,30 @@ router.use(protect);
 // GET /api/institute/my — get current user's institute details
 router.get('/my', instituteController.getMyInstitute);
 
-// GET /api/institute/members — list all members in user's institute
-router.get('/members', requireRole('hod', 'institute_admin', 'teacher'), instituteController.getMembers);
+// ── Stats ──
+router.get('/stats', requireRole('institute_admin', 'hod'), instituteController.getInstituteStats);
 
-// PUT /api/institute/members/:id/role — change a member's role within institute
+// ── Member Management ──
+router.get('/members', requireRole('hod', 'institute_admin', 'teacher'), instituteController.getMembers);
+router.post('/members', requireRole('institute_admin'), instituteController.addMember);
 router.put('/members/:id/role', requireRole('hod', 'institute_admin'), instituteController.changeMemberRole);
+router.put('/members/:id/ban', requireRole('institute_admin'), instituteController.toggleBanMember);
+router.delete('/members/:id', requireRole('institute_admin'), instituteController.removeMember);
+
+// ── Question Management (institute-scoped) ──
+router.get('/questions', requireRole('institute_admin', 'hod', 'teacher'), instituteController.listInstituteQuestions);
+router.delete('/questions/:id', requireRole('institute_admin'), instituteController.deleteInstituteQuestion);
+
+// ── Post Moderation (institute-scoped) ──
+router.get('/posts', requireRole('institute_admin', 'hod'), instituteController.listInstitutePosts);
+router.delete('/posts/:id', requireRole('institute_admin'), instituteController.deleteInstitutePost);
+
+// ── Analytics ──
+router.get('/analytics', requireRole('institute_admin', 'hod', 'teacher'), instituteController.getInstituteAnalytics);
+
+// ── Teacher Feedback & Monitoring ──
+router.get('/teachers', requireRole('institute_admin', 'hod'), instituteController.listTeachersWithRatings);
+router.get('/teachers/:id/feedback', requireRole('institute_admin', 'hod'), instituteController.getTeacherFeedback);
+router.post('/feedback', requireRole('student'), instituteController.submitFeedback);
 
 module.exports = router;

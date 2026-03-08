@@ -91,6 +91,22 @@ const examQuestionSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    // ── Approval Workflow ──
+    approvalStatus: {
+        type: String,
+        enum: ['pending', 'approved', 'rejected'],
+        default: 'pending',
+        index: true
+    },
+    approvalNote: {
+        type: String,
+        default: ''
+    },
+    approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'SystemAdmin',
+        default: null
+    },
     createdAt: {
         type: Date,
         default: Date.now
