@@ -70,7 +70,7 @@ exports.getUserAnalytics = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Get User Analytics Error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -250,7 +250,7 @@ exports.getSchoolAnalytics = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Get School Analytics Error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -426,7 +426,7 @@ exports.getStudentDetail = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Get Student Detail Error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -540,7 +540,7 @@ exports.getInstituteTrends = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Get Institute Trends Error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
