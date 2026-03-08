@@ -194,12 +194,26 @@ const Analytics = () => {
               <Activity className="h-5 w-5 text-blue-700 dark:text-blue-300" />
               <h2 className="text-lg font-semibold">Weekly Activity</h2>
             </div>
-            <div className="space-y-3">
-              {hasExtendedData ? (
-                // This would map real weekly activity from backend when implemented
-                <div className="text-center py-4 text-sm text-slate-500">Weekly activity data available soon.</div>
-              ) : (
-                <div className="text-center py-8">
+            <div className="flex items-end justify-between h-[155px] pt-4 space-x-2">
+              {data.weeklyActivity && data.weeklyActivity.length > 0 ? data.weeklyActivity.map((day, idx) => {
+                const maxCount = Math.max(...data.weeklyActivity.map(d => d.count), 1);
+                const heightPct = (day.count / maxCount) * 100;
+                return (
+                  <div key={idx} className="flex flex-col items-center flex-1 h-full">
+                    <div className="w-full flex-1 flex items-end justify-center pb-2 relative group">
+                      <div 
+                        className="w-full max-w-[24px] bg-blue-500 dark:bg-blue-600 rounded-t-sm transition-all duration-300 group-hover:bg-blue-400" 
+                        style={{ height: `${heightPct}%`, minHeight: '4px' }}
+                      />
+                      <div className="opacity-0 group-hover:opacity-100 absolute -top-8 bg-slate-800 text-white text-xs px-2 py-1 rounded transition-opacity">
+                        {day.count}
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500">{day.day}</span>
+                  </div>
+                );
+              }) : (
+                <div className="w-full text-center flex flex-col items-center justify-center -mt-6">
                   <Activity className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
                   <p className="text-sm text-slate-500 dark:text-slate-400">Solve problems to track weekly activity.</p>
                 </div>
@@ -243,12 +257,16 @@ const Analytics = () => {
               <h2 className="text-lg font-semibold">Your Strengths</h2>
             </div>
             <div className="space-y-3">
-              {strengths.map((strength, idx) => (
+              {strengths && strengths.length > 0 ? strengths.map((strength, idx) => (
                 <div key={`${strength}-${idx}`} className="p-3 rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
                   <span className="text-sm text-slate-700 dark:text-slate-200">{strength}</span>
                 </div>
-              ))}
+              )) : (
+                <div className="text-center py-4">
+                  <p className="text-sm text-slate-500">Solve problems to identify your strengths!</p>
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -258,7 +276,7 @@ const Analytics = () => {
               <h2 className="text-lg font-semibold">Areas to Improve</h2>
             </div>
             <div className="space-y-3">
-              {weaknesses.map((weakness, idx) => (
+              {weaknesses && weaknesses.length > 0 ? weaknesses.map((weakness, idx) => (
                 <div key={`${weakness}-${idx}`} className="p-3 rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <XCircle className="h-4 w-4 text-rose-600 dark:text-rose-300" />
@@ -266,7 +284,11 @@ const Analytics = () => {
                   </div>
                   <Zap className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                 </div>
-              ))}
+              )) : (
+                <div className="text-center py-4">
+                  <p className="text-sm text-slate-500">Challenge yourself to discover areas to improve.</p>
+                </div>
+              )}
             </div>
           </motion.div>
         </section>
@@ -278,7 +300,7 @@ const Analytics = () => {
           </div>
           {loading ? (
             <div className="text-sm text-slate-600 dark:text-slate-300">Loading activity...</div>
-          ) : (
+          ) : recentActivity && recentActivity.length > 0 ? (
             <div className="space-y-3">
               {recentActivity.map((activity, idx) => {
                 const diffStyle = difficultyStyles[activity.difficulty] || difficultyStyles.Medium;
@@ -295,31 +317,18 @@ const Analytics = () => {
                 );
               })}
             </div>
+          ) : (
+            <div className="text-center py-6">
+              <p className="text-sm text-slate-500">No recent activity logged yet.</p>
+            </div>
           )}
         </motion.section>
 
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <motion.div variants={itemVariants} className="glass-panel p-6 border border-slate-200 dark:border-slate-700">
-            <div className="flex items-center gap-2 mb-4">
-              <CalendarDays className="h-5 w-5 text-blue-700 dark:text-blue-300" />
-              <h2 className="text-lg font-semibold">Peak Study Hours</h2>
-            </div>
-            <div className="space-y-3">
-              {hasExtendedData ? (
-                 <div className="text-center py-4 text-sm text-slate-500">Peak hour tracking coming soon.</div>
-              ) : (
-                <div className="text-center py-8">
-                  <CalendarDays className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Not enough data to calculate peak hours.</p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <motion.div variants={itemVariants} className="glass-panel p-6 border border-slate-200 dark:border-slate-700">
             <div className="flex items-center gap-2 mb-4">
               <PieChart className="h-5 w-5 text-blue-700 dark:text-blue-300" />
-              <h2 className="text-lg font-semibold">Difficulty Distribution</h2>
+              <h2 className="text-lg font-semibold">Difficulty Dist.</h2>
             </div>
             <div className="space-y-4">
                {hasExtendedData ? (
@@ -332,13 +341,11 @@ const Analytics = () => {
                )}
             </div>
           </motion.div>
-        </section>
 
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <motion.div variants={itemVariants} className="glass-panel p-6 border border-slate-200 dark:border-slate-700">
             <div className="flex items-center gap-2 mb-4">
               <Timer className="h-5 w-5 text-blue-700 dark:text-blue-300" />
-              <h2 className="text-lg font-semibold">Solving Speed Metrics</h2>
+              <h2 className="text-lg font-semibold">Speed Metrics</h2>
             </div>
             <div className="space-y-3">
                {hasExtendedData ? (
@@ -355,7 +362,7 @@ const Analytics = () => {
           <motion.div variants={itemVariants} className="glass-panel p-6 border border-slate-200 dark:border-slate-700">
             <div className="flex items-center gap-2 mb-4">
               <Gift className="h-5 w-5 text-blue-700 dark:text-blue-300" />
-              <h2 className="text-lg font-semibold">Quick Win Suggestions</h2>
+              <h2 className="text-lg font-semibold">Quick Wins</h2>
             </div>
             <div className="space-y-3">
                {hasExtendedData ? (
