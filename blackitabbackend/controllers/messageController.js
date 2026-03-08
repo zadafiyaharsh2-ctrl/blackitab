@@ -31,10 +31,8 @@ const storage = new CloudinaryStorage({
             resource_type,
             format,
             use_filename: true,
-            unique_filename: true,
-        };
-    },
-});
+            unique_filename: true};
+    }});
 
 const upload = multer({ storage: storage });
 exports.uploadMiddleware = upload.single('media');
@@ -110,7 +108,7 @@ exports.sendMessage = async (req, res) => {
 
         res.status(201).json({ success: true, message: populatedMessage });
     } catch (error) {
-        console.error('Send message error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -134,7 +132,7 @@ exports.getMessages = async (req, res) => {
 
         res.json({ success: true, messages });
     } catch (error) {
-        console.error('Get messages error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -154,7 +152,7 @@ exports.getConversations = async (req, res) => {
 
         res.json({ success: true, conversations: users });
     } catch (error) {
-        console.error('Get conversations error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -187,7 +185,7 @@ exports.downloadMessageMedia = async (req, res) => {
 
         response.data.pipe(res);
     } catch (error) {
-        console.error('Download media error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
