@@ -28,6 +28,7 @@ const InstituteDashboard = () => {
   const [posts, setPosts] = useState([]);
   const [stats, setStats] = useState(null);
   const [analytics, setAnalytics] = useState(null);
+  const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [search, setSearch] = useState('');
@@ -80,8 +81,12 @@ const InstituteDashboard = () => {
 
   const fetchAnalytics = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/institute/analytics`, { headers: headers() });
-      if (res.data.success) setAnalytics(res.data.data);
+      const [resAnalytic, resTeacher] = await Promise.all([
+        axios.get(`${API_URL}/api/institute/analytics`, { headers: headers() }),
+        axios.get(`${API_URL}/api/institute/teachers`, { headers: headers() })
+      ]);
+      if (resAnalytic.data.success) setAnalytics(resAnalytic.data.data);
+      if (resTeacher.data.success) setTeachers(resTeacher.data.data);
     } catch { }
   }, []);
 
@@ -546,38 +551,78 @@ const InstituteDashboard = () => {
                   </div>
                 )}
 
-                {/* Leaderboard */}
-                <div className="glass-panel border border-white/10 rounded-2xl overflow-hidden">
-                  <div className="p-4 border-b border-white/5 bg-white/[0.02]">
-                    <h3 className="font-bold text-white flex items-center gap-2"><FaTrophy className="text-yellow-400" /> Institute Leaderboard</h3>
-                  </div>
-                  {analytics.leaderboard?.length > 0 ? (
-                    <div className="divide-y divide-white/5">
-                      {analytics.leaderboard.map((student, i) => (
-                        <div key={student._id} className="flex items-center gap-4 px-4 py-3 hover:bg-white/[0.02]">
-                          <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                            i === 0 ? 'bg-yellow-500/20 text-yellow-400' :
-                            i === 1 ? 'bg-gray-400/20 text-gray-300' :
-                            i === 2 ? 'bg-orange-500/20 text-orange-400' :
-                            'bg-white/5 text-gray-500'
-                          }`}>#{i + 1}</span>
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-white text-xs font-bold">
-                            {student.name?.[0]?.toUpperCase()}
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-white text-sm font-medium">{student.name}</p>
-                            <p className="text-gray-500 text-xs">{student.email}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-white font-bold text-sm">{student.points || 0} pts</p>
-                            <p className="text-gray-500 text-xs">{student.xp || 0} XP · {student.streak || 0} streak</p>
-                          </div>
-                        </div>
-                      ))}
+                {/* Leaderboard & Teacher Ratings Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+                  {/* Student Leaderboard */}
+                  <div className="glass-panel border border-white/10 rounded-2xl overflow-hidden self-start">
+                    <div className="p-4 border-b border-white/5 bg-white/[0.02]">
+                      <h3 className="font-bold text-white flex items-center gap-2"><FaTrophy className="text-yellow-400" /> Institute Leaderboard</h3>
                     </div>
-                  ) : (
-                    <div className="text-center py-16 text-gray-500">No student data yet</div>
-                  )}
+                    {analytics.leaderboard?.length > 0 ? (
+                      <div className="divide-y divide-white/5">
+                        {analytics.leaderboard.map((student, i) => (
+                          <div key={student._id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02]">
+                            <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                              i === 0 ? 'bg-yellow-500/20 text-yellow-400' :
+                              i === 1 ? 'bg-gray-400/20 text-gray-300' :
+                              i === 2 ? 'bg-orange-500/20 text-orange-400' :
+                              'bg-white/5 text-gray-500'
+                            }`}>#{i + 1}</span>
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                              {student.name?.[0]?.toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white text-sm font-medium truncate">{student.name}</p>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-white font-bold text-sm">{student.points || 0} <span className="text-[10px] text-gray-500 font-normal">pts</span></p>
+                              <p className="text-gray-500 text-[10px]">{student.streak || 0} streak</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 text-gray-500 text-sm">No student data yet</div>
+                    )}
+                  </div>
+
+                  {/* Teacher Ratings */}
+                  <div className="glass-panel border border-white/10 rounded-2xl overflow-hidden self-start">
+                    <div className="p-4 border-b border-white/5 bg-white/[0.02]">
+                      <h3 className="font-bold text-white flex items-center gap-2"><FaChalkboardTeacher className="text-emerald-400" /> Teacher Ratings</h3>
+                    </div>
+                    {teachers.length > 0 ? (
+                      <div className="divide-y divide-white/5">
+                        {teachers.map(teacher => (
+                          <div key={teacher._id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02]">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ${
+                              teacher.isFlagged ? 'bg-gradient-to-br from-red-500/80 to-pink-600/80 animate-pulse border border-red-500/50' : 'bg-gradient-to-br from-emerald-500/30 to-teal-500/30'
+                            }`}>
+                              {teacher.name?.[0]?.toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="text-white text-sm font-medium truncate">{teacher.name}</p>
+                                {teacher.isFlagged && <span className="px-1.5 py-[1px] bg-red-500/20 text-red-500 rounded text-[9px] font-bold uppercase border border-red-500/30">Action Needed</span>}
+                              </div>
+                              <p className="text-gray-500 text-[10px] uppercase tracking-wider">{teacher.role}</p>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <div className="flex items-center gap-1 justify-end">
+                                <span className="text-yellow-400 text-xs">★</span>
+                                <span className={`font-bold text-sm ${teacher.avgRating < 2.5 && teacher.feedbackCount > 0 ? 'text-red-400' : 'text-white'}`}>
+                                  {teacher.avgRating > 0 ? teacher.avgRating.toFixed(1) : '—'}
+                                </span>
+                              </div>
+                              <p className="text-gray-500 text-[10px]">{teacher.feedbackCount} reviews</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 text-gray-500 text-sm">No teachers found</div>
+                    )}
+                  </div>
                 </div>
               </>
             )}
