@@ -32,25 +32,35 @@ const Messages = () => {
     useEffect(() => {
         if (!socket) return;
 
-        socket.on('new_message', (data) => {
+        const handleNewMessage = (data) => {
             const msg = data.message;
-            const myId = JSON.parse(localStorage.getItem('user'))?._id || JSON.parse(localStorage.getItem('user'))?.id;
+            const myId = String(JSON.parse(localStorage.getItem('user'))?._id || JSON.parse(localStorage.getItem('user'))?.id);
 
             if (currentChatUser) {
-                 // Prevent duplicates: Only accept messages from the OTHER user.
-                 // We locally append our own messages.
-                 if (msg.sender._id === currentChatUser._id) {
+                 const senderIdStr = String(msg.sender._id || msg.sender);
+                 const recipientIdStr = String(msg.recipient._id || msg.recipient);
+                 const currentChatIdStr = String(currentChatUser._id);
+
+                 // Check if the message belongs to the currently open chat:
+                 // Case 1: The current chat user sent it to me
+                 const isFromTarget = senderIdStr === currentChatIdStr;
+                 // Case 2: I sent it to the current chat user (for syncing across sender's multiple tabs)
+                 const isFromMeToTarget = senderIdStr === myId && recipientIdStr === currentChatIdStr;
+
+                 if (isFromTarget || isFromMeToTarget) {
                      setMessages(prev => {
-                         if (prev.some(m => m._id === msg._id)) return prev;
+                         if (prev.some(m => String(m._id) === String(msg._id))) return prev;
                          return [...prev, msg];
                      });
                      scrollToBottom();
                  }
             }
-        });
+        };
+
+        socket.on('new_message', handleNewMessage);
 
         return () => {
-            socket.off("new_message");
+            socket.off("new_message", handleNewMessage);
         };
     }, [socket, currentChatUser?._id]);
 
@@ -145,7 +155,10 @@ const Messages = () => {
             });
 
             if (response.data.success) {
-                setMessages(prev => [...prev, response.data.message]);
+                setMessages(prev => {
+                    if (prev.some(m => String(m._id) === String(response.data.message._id))) return prev;
+                    return [...prev, response.data.message];
+                });
                 setNewMessage('');
                 scrollToBottom();
             }
@@ -290,7 +303,7 @@ const Messages = () => {
                                         alt={conv.name} 
                                         className="w-12 h-12 rounded-full object-cover ring-2 ring-white/10"
                                     />
-                                    {(onlineUsers.includes(conv._id) || onlineUsers.includes(conv.id)) && (
+                                    {(onlineUsers.includes(String(conv._id)) || onlineUsers.includes(String(conv.id))) && (
                                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black"></div>
                                     )}
                                 </div>
@@ -323,7 +336,7 @@ const Messages = () => {
                                         alt={currentChatUser.name} 
                                         className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover ring-2 ring-white/10 bg-gray-50 dark:bg-gray-800"
                                     />
-                                    {(onlineUsers.includes(currentChatUser._id) || onlineUsers.includes(currentChatUser.id)) && (
+                                    {(onlineUsers.includes(String(currentChatUser._id)) || onlineUsers.includes(String(currentChatUser.id))) && (
                                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black animate-pulse"></div>
                                     )}
 
@@ -331,7 +344,7 @@ const Messages = () => {
                                 <div>
                                     <h3 className="font-bold text-gray-900 dark:text-white text-lg">{currentChatUser.name}</h3>
                                     {(() => {
-                                        const isOnline = onlineUsers.includes(currentChatUser._id) || onlineUsers.includes(currentChatUser.id);
+                                        const isOnline = onlineUsers.includes(String(currentChatUser._id)) || onlineUsers.includes(String(currentChatUser.id));
 
                                         return isOnline ? (
                                             <span className="text-xs text-green-400 font-medium flex items-center gap-1.5"><FaCircle size={6} /> Online Now</span>
