@@ -102,6 +102,19 @@ exports.sendMessage = async (req, res) => {
         const newMessage = await Message.create(messageData);
         const populatedMessage = await newMessage.populate('sender', 'name profileImage');
 
+        // Upsert a notification to prevent spamming the user with 100 ping notifications
+        const Notification = require('../models/Notification');
+        await Notification.findOneAndUpdate(
+            { recipient: recipientId, sender: senderId, type: 'new_message' },
+            { 
+               read: false, 
+               message: `New message from ${populatedMessage.sender.name}`,
+               createdAt: Date.now(),
+               relatedId: newMessage._id
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+
         const socketService = req.app.get('socketService');
         if (socketService) {
             // Emit to recipient's active tabs

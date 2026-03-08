@@ -13,8 +13,15 @@ const notificationSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['follow_request', 'follow_accepted', 'new_follower', 'new_message', 'post_like', 'post_comment'],
+        enum: ['follow_request', 'follow_accepted', 'new_follower', 'new_message', 'post_like', 'post_comment', 'system_alert', 'basic'],
         required: true
+    },
+    message: {
+        type: String, // Optional string for basic alerts or message excerpts
+        trim: true
+    },
+    relatedId: {
+        type: mongoose.Schema.Types.ObjectId, // A generic reference (could be a postId or messageId)
     },
     read: {
         type: Boolean,

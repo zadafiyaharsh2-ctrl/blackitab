@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import API_URL from '../config';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaBell, FaUserPlus, FaCheck, FaBan, FaReply, FaSpinner, FaArrowLeft } from 'react-icons/fa';
+import { FaBell, FaUserPlus, FaCheck, FaBan, FaReply, FaSpinner, FaArrowLeft, FaEnvelope, FaHeart, FaComment, FaExclamationCircle, FaCircle, FaTrash } from 'react-icons/fa';
 import usePageTitle from '../hooks/usePageTitle';
 import { useSocketContext } from '../context/SocketContext';
 
@@ -34,12 +34,50 @@ const Notifications = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (response.data.success) {
-                setNotifications(response.data.data);
+                // Optionally filter out read ones, or we can show them with different opacity
+                const unreadOrAll = response.data.data.filter(n => !n.read);
+                setNotifications(unreadOrAll);
             }
         } catch (error) {
             console.error('Error fetching notifications', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleMarkAsRead = async (notificationId) => {
+        try {
+            const token = localStorage.getItem('token');
+            await axios.put(`${API_URL}/api/social/notifications/${notificationId}/read`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setNotifications(prev => prev.filter(n => n._id !== notificationId));
+        } catch (error) {
+            console.error('Error marking as read', error);
+        }
+    };
+
+    const handleDelete = async (notificationId) => {
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(`${API_URL}/api/social/notifications/${notificationId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setNotifications(prev => prev.filter(n => n._id !== notificationId));
+        } catch (error) {
+            console.error('Error deleting notification', error);
+        }
+    };
+
+    const handleClearAll = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(`${API_URL}/api/social/notifications`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setNotifications([]);
+        } catch (error) {
+            console.error('Error clearing notifications', error);
         }
     };
 
@@ -104,6 +142,17 @@ const Notifications = () => {
                     </div>
                 </div>
 
+                {notifications.length > 0 && !loading && (
+                    <div className="flex justify-end mb-4">
+                        <button 
+                            onClick={handleClearAll}
+                            className="text-xs text-red-500 hover:text-red-600 flex items-center gap-1 transition-colors bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-lg border border-red-500/20"
+                        >
+                            <FaTrash size={10} /> Clear All
+                        </button>
+                    </div>
+                )}
+
                 {loading ? (
                     <div className="flex justify-center items-center py-20">
                         <FaSpinner className="animate-spin text-blue-500 text-2xl" />
@@ -129,29 +178,53 @@ const Notifications = () => {
                                     className="bg-gray-100 dark:bg-white/5 hover:bg-white/10 border border-gray-200 dark:border-white/5 hover:border-gray-300 dark:border-white/10 rounded-2xl p-4 transition-all backdrop-blur-md shadow-lg"
                                 >
                                     <div className="flex gap-4">
-                                        <div className={`mt-1 w-10 h-10 rounded-full flex items-center justify-center shadow-lg shrink-0 ${note.type === 'follow_request' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'}`}>
-                                            {note.type === 'follow_request' ? <FaUserPlus size={16} /> : <FaCheck size={16} />}
-                                        </div>
+                                        {(() => {
+                                            let icon = <FaBell size={16} />;
+                                            let bgClass = "bg-gray-500/20 text-gray-400";
+                                            if (note.type === 'follow_request') { icon = <FaUserPlus size={16} />; bgClass = "bg-blue-500/20 text-blue-400"; }
+                                            else if (note.type === 'follow_accepted' || note.type === 'new_follower') { icon = <FaCheck size={16} />; bgClass = "bg-green-500/20 text-green-400"; }
+                                            else if (note.type === 'new_message') { icon = <FaEnvelope size={16} />; bgClass = "bg-purple-500/20 text-purple-400"; }
+                                            else if (note.type === 'post_like') { icon = <FaHeart size={16} />; bgClass = "bg-red-500/20 text-red-400"; }
+                                            else if (note.type === 'post_comment') { icon = <FaComment size={16} />; bgClass = "bg-yellow-500/20 text-yellow-500"; }
+                                            else if (note.type === 'system_alert') { icon = <FaExclamationCircle size={16} />; bgClass = "bg-orange-500/20 text-orange-400"; }
+                                            return (
+                                                <div className={`mt-1 w-10 h-10 rounded-full flex items-center justify-center shadow-lg shrink-0 ${bgClass}`}>
+                                                    {icon}
+                                                </div>
+                                            );
+                                        })()}
 
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-gray-200 text-sm leading-relaxed mb-1">
-                                                <span className="font-bold text-gray-900 dark:text-white cursor-pointer hover:text-blue-400 transition-colors">
-                                                    {note.sender?.name || 'Unknown User'}
-                                                </span>
-                                                <span className="text-gray-600 dark:text-gray-400 px-1">
-                                                    {note.type === 'follow_request'
-                                                        ? 'requested to follow you'
-                                                        : 'accepted your follow request'}
-                                                </span>
-                                            </p>
+                                            <div className="flex justify-between items-start">
+                                                <p className="text-gray-200 text-sm leading-relaxed mb-1 pr-4">
+                                                    {note.sender && (
+                                                        <span className="font-bold text-gray-900 dark:text-white cursor-pointer hover:text-blue-400 transition-colors">
+                                                            {note.sender.name}
+                                                        </span>
+                                                    )}
+                                                    <span className={`text-gray-600 dark:text-gray-400 ${note.sender ? 'px-1' : ''}`}>
+                                                        {note.message ? note.message : (
+                                                            note.type === 'follow_request' ? 'requested to follow you' : 
+                                                            note.type === 'follow_accepted' ? 'accepted your follow request' :
+                                                            note.type === 'new_follower' ? 'started following you' :
+                                                            note.type === 'post_like' ? 'liked your post' : 
+                                                            note.type === 'post_comment' ? 'commented on your post' :
+                                                            'sent you a notification'
+                                                        )}
+                                                    </span>
+                                                </p>
+                                                {!note.read && (
+                                                    <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0"></div>
+                                                )}
+                                            </div>
                                             <span className="text-xs text-gray-600 font-medium block mb-3">
                                                 {new Date(note.createdAt).toLocaleDateString()} at {new Date(note.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </span>
 
                                             {/* ACTION BUTTONS */}
-                                            {note.type === 'follow_request' && note.sender && (
-                                                <div className="flex flex-wrap gap-2 mt-2">
-                                                    {!note.isAccepted ? (
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                {note.type === 'follow_request' && note.sender ? (
+                                                    !note.isAccepted ? (
                                                         <>
                                                             <button
                                                                 onClick={() => handleAccept(note.sender._id, note._id)}
@@ -163,7 +236,7 @@ const Notifications = () => {
                                                                 onClick={() => handleReject(note.sender._id, note._id)}
                                                                 className="px-4 py-1.5 bg-gray-100 dark:bg-white/5 hover:bg-white/10 border border-gray-300 dark:border-white/10 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2"
                                                             >
-                                                                <FaBan size={10} /> Delete
+                                                                <FaBan size={10} /> Delete Request
                                                             </button>
                                                         </>
                                                     ) : (
@@ -179,9 +252,26 @@ const Notifications = () => {
                                                                 <FaCheck size={10} /> Friends
                                                             </div>
                                                         )
-                                                    )}
-                                                </div>
-                                            )}
+                                                    )
+                                                ) : (
+                                                    // Basic Dismiss / Mark Read for other notification types
+                                                    <>
+                                                        <button
+                                                            onClick={() => handleMarkAsRead(note._id)}
+                                                            className="px-4 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2"
+                                                        >
+                                                            <FaCheck size={10} /> Mark as Read
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(note._id)}
+                                                            className="px-3 py-1.5 bg-gray-100 dark:bg-white/5 hover:bg-white/10 border border-gray-300 dark:border-white/10 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center p-2"
+                                                            title="Delete Notification"
+                                                        >
+                                                            <FaTrash size={10} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </motion.div>

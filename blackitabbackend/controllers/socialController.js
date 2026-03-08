@@ -76,7 +76,42 @@ exports.getUnreadNotificationCount = async (req, res) => {
         const count = await Notification.countDocuments({ recipient: req.user._id, read: false });
         res.json({ success: true, count });
     } catch (error) {
-        
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// PUT /api/social/notifications/:id/read
+exports.markNotificationAsRead = async (req, res) => {
+    try {
+        const notification = await Notification.findOneAndUpdate(
+            { _id: req.params.id, recipient: req.user._id },
+            { read: true },
+            { new: true }
+        );
+        if (!notification) return res.status(404).json({ success: false, message: 'Notification not found' });
+        res.json({ success: true, notification });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// DELETE /api/social/notifications/:id
+exports.deleteNotification = async (req, res) => {
+    try {
+        const result = await Notification.findOneAndDelete({ _id: req.params.id, recipient: req.user._id });
+        if (!result) return res.status(404).json({ success: false, message: 'Notification not found' });
+        res.json({ success: true, message: 'Notification deleted' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// DELETE /api/social/notifications
+exports.clearAllNotifications = async (req, res) => {
+    try {
+        await Notification.deleteMany({ recipient: req.user._id });
+        res.json({ success: true, message: 'All notifications cleared' });
+    } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
