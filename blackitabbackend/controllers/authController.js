@@ -80,6 +80,67 @@ exports.register = async (req, res) => {
     }
 };
 
+// POST /api/register-institute — create institute and admin account
+exports.registerInstitute = async (req, res) => {
+    try {
+        const { instituteName, instituteCode, adminEmail, adminName, adminPassword } = req.body;
+
+        if (!instituteName || !instituteCode || !adminEmail || !adminName || !adminPassword) {
+            return res.status(400).json({ success: false, message: 'All fields are required' });
+        }
+
+        const existingUser = await User.findOne({ email: adminEmail.toLowerCase() });
+        if (existingUser) {
+            return res.status(400).json({ success: false, message: 'Admin email already exists' });
+        }
+
+        const Institute = require('../models/Institute');
+        const existingInstitute = await Institute.findOne({ instituteCode: instituteCode.toUpperCase() });
+        if (existingInstitute) {
+            return res.status(400).json({ success: false, message: 'Institute code already exists. Please choose a unique code.' });
+        }
+
+        const newInstitute = new Institute({
+            name: instituteName,
+            instituteCode: instituteCode.toUpperCase(),
+            adminEmails: [adminEmail.toLowerCase()]
+        });
+        await newInstitute.save();
+
+        const newUser = new User({
+            name: adminName,
+            email: adminEmail.toLowerCase(),
+            password: adminPassword,
+            role: 'institute_admin',
+            instituteId: newInstitute._id
+        });
+
+        await newUser.save();
+
+        const token = jwt.sign(
+            { userId: newUser._id, email: newUser.email },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.status(201).json({
+            success: true,
+            message: 'Institute and admin account created successfully',
+            token,
+            user: { 
+                _id: newUser._id, 
+                email: newUser.email, 
+                name: newUser.name,
+                role: newUser.role,
+                instituteId: newUser.instituteId
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
 // POST /api/login — authenticate and return token
 exports.login = async (req, res) => {
     try {

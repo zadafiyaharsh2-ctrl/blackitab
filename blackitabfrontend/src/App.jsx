@@ -58,7 +58,17 @@ import TeacherDashboard from './pages/TeacherDashboard';
 import CreateExamQuestion from './pages/CreateExamQuestion';
 import MyQuestions from './pages/MyQuestions';
 import QuestionPaper from './pages/QuestionPaper';
-import InstituteDashboard from './pages/InstituteDashboard';
+
+// Imported Institute Pages and Layout
+import InstituteLayout from './layouts/InstituteLayout';
+import InstituteDashboard from './pages/institute/InstituteDashboard';
+import InstituteProfile from './pages/institute/InstituteProfile';
+import TeacherPanel from './pages/institute/TeacherPanel';
+import StudentPanel from './pages/institute/StudentPanel';
+import TheoryChecking from './pages/institute/TheoryChecking';
+import QuestionChecker from './pages/institute/QuestionChecker';
+import InstituteNotifications from './pages/institute/InstituteNotifications';
+
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 // ============================================================================
@@ -534,17 +544,17 @@ function App() {
               }
             />
 
-            {/* Institute Admin Dashboard */}
-            <Route
-              path="/institute-dashboard"
-              element={
-                <ProtectedRoute requiredRoles={['institute_admin']}>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <InstituteDashboard />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
+            {/* Institute Nested Routes using InstituteLayout */}
+            <Route path="/institute" element={<InstituteLayout />}>
+              <Route index element={<Navigate to="/institute/dashboard" replace />} />
+              <Route path="dashboard" element={<InstituteDashboard />} />
+              <Route path="profile" element={<InstituteProfile />} />
+              <Route path="teachers" element={<TeacherPanel />} />
+              <Route path="students" element={<StudentPanel />} />
+              <Route path="theory" element={<TheoryChecking />} />
+              <Route path="questions" element={<QuestionChecker />} />
+              <Route path="notifications" element={<InstituteNotifications />} />
+            </Route>
 
             {/* System Admin — separate layout (no sidebar) */}
             <Route path="/admin/login" element={<AdminLogin />} />
@@ -597,7 +607,7 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
         '/leaderboard': 'Leaderboard', '/profile': 'Profile', '/messages': 'Messages',
         '/teacher-dashboard': 'Teacher Panel', '/question-paper': 'Question Paper',
         '/create-question': 'Create Question', '/my-questions': 'My Questions',
-        '/institute-dashboard': 'Institute Panel', '/school-analytics': 'School Analytics',
+        '/institute': 'Institute Panel', '/school-analytics': 'School Analytics',
         '/ai-questions': 'AI Questions', '/notifications': 'Notifications'
       };
       const label = Object.entries(pageNames).find(([k]) => location.pathname.startsWith(k));

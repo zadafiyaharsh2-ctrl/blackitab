@@ -18,6 +18,26 @@ const instituteSchema = new mongoose.Schema({
     enum: ['free', 'basic', 'premium', 'enterprise'],
     default: 'free'
   },
+  bannerImage: {
+    type: String,
+    default: ''
+  },
+  description: {
+    type: String,
+    default: ''
+  },
+  contactPhone: {
+    type: String,
+    default: ''
+  },
+  address: {
+    type: String,
+    default: ''
+  },
+  departments: [{
+    type: String,
+    trim: true
+  }],
   adminEmails: [{
     type: String,
     lowercase: true,

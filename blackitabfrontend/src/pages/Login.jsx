@@ -13,7 +13,7 @@ const ROLE_REDIRECT = {
   student: '/dashboard',
   teacher: '/teacher-dashboard',
   hod: '/teacher-dashboard',
-  institute_admin: '/institute-dashboard',
+  institute_admin: '/institute/dashboard',
 };
 
 /**

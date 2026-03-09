@@ -45,6 +45,32 @@ exports.getMyInstitute = async (req, res) => {
     }
 };
 
+// PUT /api/institute/profile
+exports.updateInstituteProfile = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+
+        const { name, description, contactPhone, address, bannerImage, departments } = req.body;
+        
+        const institute = await Institute.findById(instId);
+        if (!institute) return res.status(404).json({ success: false, message: 'Institute not found' });
+
+        if (name) institute.name = name;
+        if (description !== undefined) institute.description = description;
+        if (contactPhone !== undefined) institute.contactPhone = contactPhone;
+        if (address !== undefined) institute.address = address;
+        if (bannerImage !== undefined) institute.bannerImage = bannerImage;
+        if (departments && Array.isArray(departments)) institute.departments = departments;
+
+        await institute.save();
+        res.json({ success: true, data: institute, message: 'Profile updated successfully' });
+    } catch (error) {
+        
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
 // ══════════════════════════════════════════════════════════════
 // INSTITUTE STATS
 // ══════════════════════════════════════════════════════════════
@@ -62,6 +88,9 @@ exports.getInstituteStats = async (req, res) => {
             Attempt.countDocuments({ userId: { $in: await User.find({ instituteId: instId }).distinct('_id') } })
         ]);
 
+        const institute = await Institute.findById(instId);
+        const departmentsCount = institute?.departments?.length || 0;
+
         const roleCounts = await User.aggregate([
             { $match: { instituteId: instId } },
             { $group: { _id: '$role', count: { $sum: 1 } } }
@@ -73,7 +102,7 @@ exports.getInstituteStats = async (req, res) => {
 
         res.json({
             success: true,
-            data: { members, questions, pendingQuestions, posts, attempts, roleCounts: roles }
+            data: { members, questions, pendingQuestions, posts, attempts, departmentsCount, roleCounts: roles }
         });
     } catch (error) {
         
@@ -101,16 +130,16 @@ exports.getMembers = async (req, res) => {
     }
 };
 
-// POST /api/institute/members — Add/create member to institute
-exports.addMember = async (req, res) => {
-    try {
-        const instId = req.user.instituteId;
-        if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+    // POST /api/institute/members — Add/create member to institute
+    exports.addMember = async (req, res) => {
+        try {
+            const instId = req.user.instituteId;
+            if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
 
-        const { name, email, password, role } = req.body;
-        if (!name || !email || !password) {
-            return res.status(400).json({ success: false, message: 'Name, email, and password are required' });
-        }
+            const { name, email, password, role, batchYear, departments } = req.body;
+            if (!name || !email || !password) {
+                return res.status(400).json({ success: false, message: 'Name, email, and password are required' });
+            }
 
         // Check existing user
         const existing = await User.findOne({ email: email.toLowerCase() });
@@ -133,7 +162,9 @@ exports.addMember = async (req, res) => {
             email: email.toLowerCase(),
             password,
             role: assignedRole,
-            instituteId: instId
+            instituteId: instId,
+            batchYear: batchYear || '',
+            departments: Array.isArray(departments) ? departments : []
         });
         await newUser.save();
 
@@ -147,7 +178,7 @@ exports.addMember = async (req, res) => {
 // PUT /api/institute/members/:id/role
 exports.changeMemberRole = async (req, res) => {
     try {
-        const { role } = req.body;
+        const { role, batchYear } = req.body;
         const validRoles = ['student', 'teacher', 'hod'];
         if (!validRoles.includes(role)) {
             return res.status(400).json({ success: false, message: `Invalid role. Must be: ${validRoles.join(', ')}` });
@@ -159,10 +190,25 @@ exports.changeMemberRole = async (req, res) => {
             return res.status(400).json({ success: false, message: 'User not in your institute' });
         }
 
-        targetUser.role = role;
+        const updates = {};
+        if (role) {
+            targetUser.role = role;
+            updates.role = role;
+        }
+
+        if (req.body.departments && Array.isArray(req.body.departments)) {
+            targetUser.departments = req.body.departments;
+            updates.departments = req.body.departments;
+        }
+
+        if (batchYear !== undefined) {
+            targetUser.batchYear = batchYear;
+            updates.batchYear = batchYear;
+        }
+
         await targetUser.save();
 
-        res.json({ success: true, message: `Role updated to ${role}` });
+        res.json({ success: true, message: `Member updated`, data: updates });
     } catch (error) {
         
         res.status(500).json({ success: false, message: 'Server error' });
@@ -216,12 +262,35 @@ exports.listInstituteQuestions = async (req, res) => {
         if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
 
         const questions = await ExamQuestion.find({ instituteId: instId })
-            .populate('createdBy', 'name email role')
+            .populate('createdBy', 'name email role departments')
             .sort({ createdAt: -1 })
             .limit(100);
         res.json({ success: true, data: questions });
     } catch (error) {
         
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// PUT /api/institute/questions/:id
+exports.updateInstituteQuestion = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        const question = await ExamQuestion.findById(req.params.id);
+        if (!question || !question.instituteId || question.instituteId.toString() !== instId.toString()) {
+            return res.status(404).json({ success: false, message: 'Question not found in your institute' });
+        }
+        
+        const allowedUpdates = ['question', 'options', 'correctAnswer', 'explanation', 'subject', 'difficulty', 'approvalStatus', 'topicId'];
+        allowedUpdates.forEach(field => {
+            if (req.body[field] !== undefined) {
+                question[field] = req.body[field];
+            }
+        });
+        
+        await question.save();
+        res.json({ success: true, message: 'Question updated successfully', data: question });
+    } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -238,6 +307,92 @@ exports.deleteInstituteQuestion = async (req, res) => {
         res.json({ success: true, message: 'Question deleted' });
     } catch (error) {
         
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
+// THEORY MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+const Theory = require('../models/Theory');
+
+exports.listInstituteTheory = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+
+        const theories = await Theory.find({ instituteId: instId })
+            .populate('uploadedBy', 'name email role')
+            .sort({ createdAt: -1 });
+
+        res.json({ success: true, data: theories });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+exports.addTheory = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+
+        const { title, content, fileUrl, subject, department } = req.body;
+        if (!title || !subject) {
+            return res.status(400).json({ success: false, message: 'Title and Subject are required' });
+        }
+
+        const newTheory = new Theory({
+            title,
+            content: content || '',
+            fileUrl: fileUrl || '',
+            subject,
+            department: department || '',
+            uploadedBy: req.user._id,
+            instituteId: instId
+        });
+
+        await newTheory.save();
+        res.status(201).json({ success: true, data: newTheory, message: 'Theory uploaded successfully' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+exports.updateTheory = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        const theory = await Theory.findById(req.params.id);
+        
+        if (!theory || !theory.instituteId || theory.instituteId.toString() !== instId.toString()) {
+            return res.status(404).json({ success: false, message: 'Theory not found in your institute' });
+        }
+
+        const { title, content, fileUrl, subject, department } = req.body;
+        if (title) theory.title = title;
+        if (content !== undefined) theory.content = content;
+        if (fileUrl !== undefined) theory.fileUrl = fileUrl;
+        if (subject) theory.subject = subject;
+        if (department !== undefined) theory.department = department;
+
+        await theory.save();
+        res.json({ success: true, message: 'Theory updated', data: theory });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+exports.deleteTheory = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        const theory = await Theory.findById(req.params.id);
+        
+        if (!theory || !theory.instituteId || theory.instituteId.toString() !== instId.toString()) {
+            return res.status(404).json({ success: false, message: 'Theory not found in your institute' });
+        }
+
+        await Theory.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: 'Theory deleted successfully' });
+    } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

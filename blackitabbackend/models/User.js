@@ -72,6 +72,10 @@ const userSchema = new mongoose.Schema({
     ref: 'User',
     default: null
   },
+  departments: [{
+    type: String,
+    trim: true
+  }],
 
   // --- MASSIVE SCALE METRICS ---
   globalRank: { type: Number, default: 0 },

@@ -16,6 +16,9 @@ router.get('/my', instituteController.getMyInstitute);
 // ── Stats ──
 router.get('/stats', requireRole('institute_admin', 'hod'), instituteController.getInstituteStats);
 
+// ── Profile ──
+router.put('/profile', requireRole('institute_admin'), instituteController.updateInstituteProfile);
+
 // ── Member Management ──
 router.get('/members', requireRole('hod', 'institute_admin', 'teacher'), instituteController.getMembers);
 router.post('/members', requireRole('institute_admin'), instituteController.addMember);
@@ -23,9 +26,16 @@ router.put('/members/:id/role', requireRole('hod', 'institute_admin'), institute
 router.put('/members/:id/ban', requireRole('institute_admin'), instituteController.toggleBanMember);
 router.delete('/members/:id', requireRole('institute_admin'), instituteController.removeMember);
 
+// ── Theory Management ──
+router.get('/theory', requireRole('institute_admin', 'hod', 'teacher', 'student'), instituteController.listInstituteTheory);
+router.post('/theory', requireRole('institute_admin', 'hod', 'teacher'), instituteController.addTheory);
+router.put('/theory/:id', requireRole('institute_admin', 'hod', 'teacher'), instituteController.updateTheory);
+router.delete('/theory/:id', requireRole('institute_admin', 'hod', 'teacher'), instituteController.deleteTheory);
+
 // ── Question Management (institute-scoped) ──
 router.get('/questions', requireRole('institute_admin', 'hod', 'teacher'), instituteController.listInstituteQuestions);
-router.delete('/questions/:id', requireRole('institute_admin'), instituteController.deleteInstituteQuestion);
+router.put('/questions/:id', requireRole('institute_admin', 'hod'), instituteController.updateInstituteQuestion);
+router.delete('/questions/:id', requireRole('institute_admin', 'hod'), instituteController.deleteInstituteQuestion);
 
 // ── Post Moderation (institute-scoped) ──
 router.get('/posts', requireRole('institute_admin', 'hod'), instituteController.listInstitutePosts);
