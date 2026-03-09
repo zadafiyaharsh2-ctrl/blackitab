@@ -10,7 +10,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import {
@@ -110,6 +110,22 @@ const FALLBACK_PLAYLISTS = [];
 // ═════════════════════════════════════════════════════════════════════════════
 const Dashboard = () => {
   usePageTitle('Dashboard');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const u = JSON.parse(userData);
+        if (u.role === 'teacher' || u.role === 'hod') {
+          navigate('/teacher-dashboard', { replace: true });
+        } else if (u.role === 'institute_admin') {
+          navigate('/institute-dashboard', { replace: true });
+        }
+      }
+    } catch (e) { }
+  }, [navigate]);
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [subjects, setSubjects] = useState([]);
