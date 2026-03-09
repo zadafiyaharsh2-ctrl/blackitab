@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CustomToast } from '../utils/CustomToast';
-import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Building, GraduationCap } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Building, GraduationCap, BookOpen } from 'lucide-react';
 import API_URL from '../config';
 import axios from 'axios';
 
@@ -10,7 +10,7 @@ const Signup = ({ onSignupSuccess }) => {
   const navigate = useNavigate();
   const formRef = useRef(null);
 
-  const [accountType, setAccountType] = useState('student'); // 'student' or 'institute'
+  const [accountType, setAccountType] = useState('student'); // 'student', 'teacher', or 'institute'
   const [step, setStep] = useState(1); // 1 = personal, 2 = institute (optional) for student
   
   const [formData, setFormData] = useState({
@@ -83,12 +83,12 @@ const Signup = ({ onSignupSuccess }) => {
       let endpoint = `${API_URL}/api/register`;
       let payload = {};
 
-      if (accountType === 'student') {
+      if (accountType === 'student' || accountType === 'teacher') {
         payload = {
           name: formData.name,
           email: formData.email,
           password: formData.password,
-          role: 'student',
+          role: accountType,
           instituteCode: formData.instituteCode || undefined,
           batchYear: formData.batchYear || undefined,
           division: formData.division || undefined,
@@ -136,8 +136,8 @@ const Signup = ({ onSignupSuccess }) => {
   const passwordStrength = formData.password.length >= 6;
   const passwordsMatch = formData.password && (formData.password === formData.confirmPassword);
   
-  const toggleAccountType = () => {
-    setAccountType(prev => prev === 'student' ? 'institute' : 'student');
+  const toggleAccountType = (type) => {
+    setAccountType(type);
     setStep(1); // Reset step
     setFormData({
       name: '', email: '', password: '', confirmPassword: '',
@@ -161,26 +161,37 @@ const Signup = ({ onSignupSuccess }) => {
         {/* Account Type Toggle */}
         <div className="flex bg-gray-100 dark:bg-white/5 rounded-xl p-1 mb-6 mt-2 relative">
            <div 
-             className={`absolute inset-y-1 ${accountType === 'student' ? 'left-1 w-[calc(50%-0.25rem)]' : 'left-[50%] w-[calc(50%-0.25rem)]'} bg-white dark:bg-gray-800 rounded-lg shadow-sm transition-all duration-300 ease-in-out`}
+             className={`absolute inset-y-1 ${
+               accountType === 'student' ? 'left-1 w-[calc(33.333%-0.3rem)]' : 
+               accountType === 'teacher' ? 'left-[calc(33.333%+0.15rem)] w-[calc(33.333%-0.3rem)]' : 
+               'left-[calc(66.666%+0.15rem)] w-[calc(33.333%-0.4rem)]'
+             } bg-white dark:bg-gray-800 rounded-lg shadow-sm transition-all duration-300 ease-in-out`}
            />
            <button 
              type="button"
-             onClick={() => accountType !== 'student' && toggleAccountType()}
-             className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold relative z-10 transition-colors ${accountType === 'student' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`}
+             onClick={() => toggleAccountType('student')}
+             className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold relative z-10 transition-colors ${accountType === 'student' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
            >
              <GraduationCap className="w-4 h-4" /> Student
            </button>
            <button 
              type="button"
-             onClick={() => accountType !== 'institute' && toggleAccountType()}
-             className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold relative z-10 transition-colors ${accountType === 'institute' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400'}`}
+             onClick={() => toggleAccountType('teacher')}
+             className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold relative z-10 transition-colors ${accountType === 'teacher' ? 'text-cyan-600 dark:text-cyan-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
+           >
+             <BookOpen className="w-4 h-4" /> Teacher
+           </button>
+           <button 
+             type="button"
+             onClick={() => toggleAccountType('institute')}
+             className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold relative z-10 transition-colors ${accountType === 'institute' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
            >
              <Building className="w-4 h-4" /> Institute
            </button>
         </div>
 
-        {/* Step indicator (Only for student) */}
-        {accountType === 'student' && (
+        {/* Step indicator (Only for student/teacher) */}
+        {(accountType === 'student' || accountType === 'teacher') && (
           <div className="flex gap-2 mb-6 justify-center">
             <div className={`h-1.5 rounded-full transition-all duration-300 ${step === 1 ? 'w-10 bg-emerald-500' : 'w-6 bg-emerald-500/40'}`} />
             <div className={`h-1.5 rounded-full transition-all duration-300 ${step === 2 ? 'w-10 bg-emerald-500' : 'w-6 bg-gray-200 dark:bg-white/10'}`} />
@@ -190,20 +201,29 @@ const Signup = ({ onSignupSuccess }) => {
         {/* Header */}
         <div className="text-center mb-8">
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-            className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br border flex items-center justify-center shadow-inner ${accountType === 'student' ? 'from-emerald-500/10 to-blue-500/10 border-emerald-500/20' : 'from-purple-500/10 to-pink-500/10 border-purple-500/20'} dark:from-white/5 dark:to-white/10 dark:border-white/10`}>
+            className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br border flex items-center justify-center shadow-inner relative overflow-hidden ${
+              accountType === 'student' ? 'from-emerald-500/10 to-emerald-500/5 border-emerald-500/20' : 
+              accountType === 'teacher' ? 'from-cyan-500/10 to-cyan-500/5 border-cyan-500/20' :
+              'from-purple-500/10 to-pink-500/10 border-purple-500/20'
+            } dark:from-white/5 dark:to-white/10 dark:border-white/10`}>
+            
+            {/* The icon */}
             {accountType === 'student' && step === 1 ? <User className="w-8 h-8 text-emerald-500 dark:text-emerald-400" /> : 
-             accountType === 'student' && step === 2 ? <GraduationCap className="w-8 h-8 text-blue-500 dark:text-blue-400" /> :
+             accountType === 'student' && step === 2 ? <GraduationCap className="w-8 h-8 text-emerald-500 dark:text-emerald-400" /> :
+             accountType === 'teacher' && step === 1 ? <User className="w-8 h-8 text-cyan-500 dark:text-cyan-400" /> :
+             accountType === 'teacher' && step === 2 ? <BookOpen className="w-8 h-8 text-cyan-500 dark:text-cyan-400" /> :
              <Building className="w-8 h-8 text-purple-500 dark:text-purple-400" />}
           </motion.div>
+          
           <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 tracking-tight">
-            {accountType === 'student' 
-               ? (step === 1 ? 'Create Account' : 'Join Your Institute') 
-               : 'Register Institute'}
+            {accountType === 'institute' 
+               ? 'Register Institute'
+               : (step === 1 ? 'Create Account' : 'Join Your Institute')} 
           </h2>
           <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">
-            {accountType === 'student' 
-               ? (step === 1 ? 'Join as a student on Blackitab.' : 'Link your institute (optional).')
-               : 'Setup a workspace for your institution.'}
+            {accountType === 'institute' 
+               ? 'Setup a workspace for your institution.'
+               : (step === 1 ? `Join as a ${accountType} on Blackitab.` : 'Link your institute (optional).')} 
           </p>
         </div>
 
@@ -249,10 +269,18 @@ const Signup = ({ onSignupSuccess }) => {
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <User className={`w-5 h-5 text-gray-400 dark:text-gray-500 transition-colors ${accountType === 'institute' ? 'group-focus-within:text-purple-500 dark:group-focus-within:text-purple-400' : 'group-focus-within:text-emerald-500 dark:group-focus-within:text-emerald-400'}`} />
+                      <User className={`w-5 h-5 text-gray-400 dark:text-gray-500 transition-colors ${
+                        accountType === 'institute' ? 'group-focus-within:text-purple-500 dark:group-focus-within:text-purple-400' : 
+                        accountType === 'teacher' ? 'group-focus-within:text-cyan-500 dark:group-focus-within:text-cyan-400' :
+                        'group-focus-within:text-emerald-500 dark:group-focus-within:text-emerald-400'
+                      }`} />
                     </div>
                     <input type="text" name="name" value={formData.name} onChange={handleChange} required placeholder="John Doe"
-                      className={`w-full pl-12 pr-4 py-3 bg-gray-100/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none transition-all shadow-inner ${accountType === 'institute' ? 'focus:ring-purple-500/50' : 'focus:ring-emerald-500/50'}`} />
+                      className={`w-full pl-12 pr-4 py-3 bg-gray-100/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none transition-all shadow-inner ${
+                        accountType === 'institute' ? 'focus:ring-purple-500/50' : 
+                        accountType === 'teacher' ? 'focus:ring-cyan-500/50' :
+                        'focus:ring-emerald-500/50'
+                      }`} />
                   </div>
                 </div>
 
@@ -261,10 +289,18 @@ const Signup = ({ onSignupSuccess }) => {
                   <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Email Address</label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Mail className={`w-5 h-5 text-gray-400 dark:text-gray-500 transition-colors ${accountType === 'institute' ? 'group-focus-within:text-purple-500 dark:group-focus-within:text-purple-400' : 'group-focus-within:text-emerald-500 dark:group-focus-within:text-emerald-400'}`} />
+                      <Mail className={`w-5 h-5 text-gray-400 dark:text-gray-500 transition-colors ${
+                        accountType === 'institute' ? 'group-focus-within:text-purple-500 dark:group-focus-within:text-purple-400' : 
+                        accountType === 'teacher' ? 'group-focus-within:text-cyan-500 dark:group-focus-within:text-cyan-400' :
+                        'group-focus-within:text-emerald-500 dark:group-focus-within:text-emerald-400'
+                      }`} />
                     </div>
                     <input type="email" name="email" value={formData.email} onChange={handleChange} required placeholder="you@domain.com"
-                      className={`w-full pl-12 pr-4 py-3 bg-gray-100/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none transition-all shadow-inner ${accountType === 'institute' ? 'focus:ring-purple-500/50' : 'focus:ring-emerald-500/50'}`} />
+                      className={`w-full pl-12 pr-4 py-3 bg-gray-100/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none transition-all shadow-inner ${
+                        accountType === 'institute' ? 'focus:ring-purple-500/50' : 
+                        accountType === 'teacher' ? 'focus:ring-cyan-500/50' :
+                        'focus:ring-emerald-500/50'
+                      }`} />
                   </div>
                 </div>
 
@@ -274,10 +310,22 @@ const Signup = ({ onSignupSuccess }) => {
                     <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Password</label>
                     <div className="relative group">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <Lock className={`w-5 h-5 transition-colors ${passwordStrength ? (accountType === 'institute' ? 'text-purple-500 dark:text-purple-400' : 'text-emerald-500 dark:text-emerald-400') : 'text-gray-400 dark:text-gray-500'}`} />
+                        <Lock className={`w-5 h-5 transition-colors ${
+                          passwordStrength ? (
+                            accountType === 'institute' ? 'text-purple-500 dark:text-purple-400' : 
+                            accountType === 'teacher' ? 'text-cyan-500 dark:text-cyan-400' :
+                            'text-emerald-500 dark:text-emerald-400'
+                          ) : 'text-gray-400 dark:text-gray-500'
+                        }`} />
                       </div>
                       <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange} required placeholder="Min 6 characters"
-                        className={`w-full pl-12 pr-12 py-3 bg-gray-100/50 dark:bg-white/5 border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none transition-all shadow-inner ${formData.password && !passwordStrength ? 'border-red-500/50' : `border-gray-200 dark:border-white/10 focus:ring-2 ${accountType === 'institute' ? 'focus:ring-purple-500/50' : 'focus:ring-emerald-500/50'}`}`} />
+                        className={`w-full pl-12 pr-12 py-3 bg-gray-100/50 dark:bg-white/5 border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none transition-all shadow-inner ${
+                          formData.password && !passwordStrength ? 'border-red-500/50' : `border-gray-200 dark:border-white/10 focus:ring-2 ${
+                            accountType === 'institute' ? 'focus:ring-purple-500/50' : 
+                            accountType === 'teacher' ? 'focus:ring-cyan-500/50' :
+                            'focus:ring-emerald-500/50'
+                          }`
+                        }`} />
                       <button type="button" onClick={() => setShowPassword(!showPassword)}
                         className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-white transition-colors" tabIndex="-1">
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -289,10 +337,22 @@ const Signup = ({ onSignupSuccess }) => {
                     <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Confirm Password</label>
                     <div className="relative group">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <Lock className={`w-5 h-5 transition-colors ${passwordsMatch ? (accountType === 'institute' ? 'text-purple-500 dark:text-purple-400' : 'text-emerald-500 dark:text-emerald-400') : 'text-gray-400 dark:text-gray-500'}`} />
+                        <Lock className={`w-5 h-5 transition-colors ${
+                          passwordsMatch ? (
+                            accountType === 'institute' ? 'text-purple-500 dark:text-purple-400' : 
+                            accountType === 'teacher' ? 'text-cyan-500 dark:text-cyan-400' :
+                            'text-emerald-500 dark:text-emerald-400'
+                          ) : 'text-gray-400 dark:text-gray-500'
+                        }`} />
                       </div>
                       <input type={showConfirmPassword ? 'text' : 'password'} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required placeholder="Re-enter password"
-                        className={`w-full pl-12 pr-12 py-3 bg-gray-100/50 dark:bg-white/5 border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none transition-all shadow-inner ${formData.confirmPassword && !passwordsMatch ? 'border-red-500/50' : `border-gray-200 dark:border-white/10 focus:ring-2 ${accountType === 'institute' ? 'focus:ring-purple-500/50' : 'focus:ring-emerald-500/50'}`}`} />
+                        className={`w-full pl-12 pr-12 py-3 bg-gray-100/50 dark:bg-white/5 border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none transition-all shadow-inner ${
+                          formData.confirmPassword && !passwordsMatch ? 'border-red-500/50' : `border-gray-200 dark:border-white/10 focus:ring-2 ${
+                            accountType === 'institute' ? 'focus:ring-purple-500/50' : 
+                            accountType === 'teacher' ? 'focus:ring-cyan-500/50' :
+                            'focus:ring-emerald-500/50'
+                          }`
+                        }`} />
                       <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-white transition-colors" tabIndex="-1">
                         {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -304,7 +364,11 @@ const Signup = ({ onSignupSuccess }) => {
                 <div className="pt-2">
                   <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     type="submit" disabled={loading}
-                    className={`group w-full rounded-xl text-white font-bold py-3.5 px-6 transition-all flex items-center justify-center gap-2 ${accountType === 'institute' ? 'bg-purple-600 hover:bg-purple-500 shadow-[0_0_20px_rgba(147,51,234,0.3)]' : 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-[0_0_20px_rgba(16,185,129,0.3)]'}`}>
+                    className={`group w-full rounded-xl text-white font-bold py-3.5 px-6 transition-all flex items-center justify-center gap-2 ${
+                      accountType === 'institute' ? 'bg-purple-600 hover:bg-purple-500 shadow-[0_0_20px_rgba(147,51,234,0.3)]' : 
+                      accountType === 'teacher' ? 'bg-cyan-600 hover:bg-cyan-500 shadow-[0_0_20px_rgba(8,145,178,0.3)]' :
+                      'bg-emerald-500 hover:bg-emerald-400 text-black shadow-[0_0_20px_rgba(16,185,129,0.3)]'
+                    }`}>
                     {loading && accountType === 'institute' ? (
                       <><div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /><span>Registering...</span></>
                     ) : (
@@ -319,17 +383,29 @@ const Signup = ({ onSignupSuccess }) => {
             </motion.div>
           )}
 
-          {/* STEP 2: Institute (Optional) FOR STUDENTS ONLY */}
-          {step === 2 && accountType === 'student' && (
+          {/* STEP 2: Institute (Optional) FOR STUDENTS/TEACHERS */}
+          {step === 2 && (accountType === 'student' || accountType === 'teacher') && (
             <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
 
-                {/* Role Indicator — Student */}
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
-                  <GraduationCap className="w-6 h-6 text-blue-500 dark:text-blue-400 shrink-0" />
+                {/* Role Indicator — Student / Teacher */}
+                <div className={`flex items-center gap-3 p-4 rounded-xl border ${
+                  accountType === 'student' ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20' :
+                  'bg-cyan-50 dark:bg-cyan-500/10 border-cyan-200 dark:border-cyan-500/20'
+                }`}>
+                  {accountType === 'student' ? (
+                    <GraduationCap className="w-6 h-6 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                  ) : (
+                    <BookOpen className="w-6 h-6 text-cyan-500 dark:text-cyan-400 shrink-0" />
+                  )}
                   <div>
-                    <p className="text-gray-900 dark:text-white font-bold text-sm">Joining as Student</p>
-                    <p className="text-gray-500 dark:text-gray-400 text-[10px]">Teachers, HODs & admins are promoted internally by their institute</p>
+                    <p className="text-gray-900 dark:text-white font-bold text-sm">
+                      Joining as {accountType === 'student' ? 'Student' : 'Teacher'}
+                    </p>
+                    <p className="text-gray-500 dark:text-gray-400 text-[10px]">
+                      {accountType === 'student' ? 'HODs & admins are promoted internally by their institute' :
+                       'You can link your institute now or later in settings'}
+                    </p>
                   </div>
                 </div>
 
@@ -338,12 +414,17 @@ const Signup = ({ onSignupSuccess }) => {
                   <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Institute Code (Optional)</label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Building className="w-5 h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-blue-500 dark:group-focus-within:text-blue-400 transition-colors" />
+                      <Building className={`w-5 h-5 text-gray-400 dark:text-gray-500 transition-colors ${
+                        accountType === 'teacher' ? 'group-focus-within:text-cyan-500 dark:group-focus-within:text-cyan-400' :
+                        'group-focus-within:text-emerald-500 dark:group-focus-within:text-emerald-400'
+                      }`} />
                     </div>
                     <input type="text" name="instituteCode" value={formData.instituteCode}
                       onChange={(e) => { handleChange(e); verifyInstituteCode(e.target.value); }}
                       placeholder="e.g. PICT2024 — leave empty if independent"
-                      className="w-full pl-12 pr-4 py-3 bg-gray-100/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-blue-500/50 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none transition-all shadow-inner uppercase" />
+                      className={`w-full pl-12 pr-4 py-3 bg-gray-100/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none transition-all shadow-inner uppercase ${
+                        accountType === 'teacher' ? 'focus:ring-cyan-500/50' : 'focus:ring-emerald-500/50'
+                      }`} />
                   </div>
                   {verifyingCode && <p className="text-xs text-gray-500 ml-1">Verifying...</p>}
                   {joinedInstituteName && <p className="text-xs text-emerald-400 ml-1 font-medium">✓ {joinedInstituteName}</p>}
@@ -357,13 +438,19 @@ const Signup = ({ onSignupSuccess }) => {
                       <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Batch Year</label>
                       <input type="text" name="batchYear" value={formData.batchYear} onChange={handleChange}
                         placeholder="e.g. 2025"
-                        className="w-full px-4 py-3 bg-gray-100/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-blue-500/50 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none shadow-inner" />
+                        className={`w-full px-4 py-3 bg-gray-100/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none shadow-inner ${
+                          accountType === 'teacher' ? 'focus:ring-cyan-500/50' : 'focus:ring-emerald-500/50'
+                        }`} />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Division</label>
+                      <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">
+                        {accountType === 'teacher' ? 'Department' : 'Division'}
+                      </label>
                       <input type="text" name="division" value={formData.division} onChange={handleChange}
-                        placeholder="e.g. A"
-                        className="w-full px-4 py-3 bg-gray-100/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-blue-500/50 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none shadow-inner" />
+                        placeholder={accountType === 'teacher' ? "e.g. Computer Science" : "e.g. A"}
+                        className={`w-full px-4 py-3 bg-gray-100/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none shadow-inner ${
+                          accountType === 'teacher' ? 'focus:ring-cyan-500/50' : 'focus:ring-emerald-500/50'
+                        }`} />
                     </div>
                   </motion.div>
                 )}
@@ -372,7 +459,10 @@ const Signup = ({ onSignupSuccess }) => {
                 <div className="pt-2 space-y-3">
                   <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     type="submit" disabled={loading}
-                    className="group w-full rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-3.5 px-6 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2">
+                    className={`group w-full rounded-xl text-white font-bold py-3.5 px-6 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2 ${
+                      accountType === 'teacher' ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-[0_0_20px_rgba(8,145,178,0.3)]' :
+                      'bg-emerald-500 hover:bg-emerald-400 text-black shadow-[0_0_20px_rgba(16,185,129,0.3)]'
+                    }`}>
                     {loading ? (
                       <><div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" /><span>Processing...</span></>
                     ) : (

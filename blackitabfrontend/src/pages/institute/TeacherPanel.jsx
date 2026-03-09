@@ -131,7 +131,7 @@ const TeacherPanel = () => {
           </h1>
           <p className="text-gray-500 text-sm">Manage institute teachers and HODs</p>
         </div>
-        {user?.role === 'institute_admin' && (
+        {user?.role === 'institute' && (
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors shadow-sm"
@@ -193,7 +193,7 @@ const TeacherPanel = () => {
                       </div>
                     </td>
                     <td className="p-4 text-right">
-                      {user?.role === 'institute_admin' && (
+                      {user?.role === 'institute' && (
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => {

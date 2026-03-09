@@ -79,7 +79,7 @@ exports.getUserAnalytics = async (req, res) => {
 // GET /api/analytics/school — Institute Student List + Stats
 // ─────────────────────────────────────────────────────────────────────────────
 // Returns every student in the caller's institute with their computed stats.
-// Accessible by: teacher, hod, institute_admin
+// Accessible by: teacher, hod, institute
 // ─────────────────────────────────────────────────────────────────────────────
 exports.getSchoolAnalytics = async (req, res) => {
     try {

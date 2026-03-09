@@ -19,7 +19,7 @@ import API_URL from '../config';
  *
  * • teacher+     → AI Questions, Teacher Panel, Create Question,
  *                  My Questions, School Analytics, Question Paper
- * • institute_admin → Institute Panel (+ everything teacher can see)
+ * • institute → Institute Panel (+ everything teacher can see)
  * • hod          → same as teacher (TeacherDashboard shows HOD sections)
  *
  * Removed (Coming Soon): Projects, Playlists, Store, Jobs
@@ -66,8 +66,8 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     try { return JSON.parse(localStorage.getItem('user') || '{}').role || 'student'; } catch { return 'student'; }
   })();
 
-  const canAccessTeacher = ['teacher', 'hod', 'institute_admin'].includes(userRole);
-  const canAccessInstitute = userRole === 'institute_admin';
+  const canAccessTeacher = ['teacher', 'hod', 'institute'].includes(userRole);
+  const canAccessInstitute = userRole === 'institute';
 
   // ── Build nav items based on role ──
   const navItems = [
@@ -151,12 +151,12 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
         {isOpen && userRole !== 'student' && (
           <div className="px-4 pb-2">
             <div className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
-              userRole === 'institute_admin' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20 shadow-[0_0_8px_rgba(249,115,22,0.1)]' :
+              userRole === 'institute' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20 shadow-[0_0_8px_rgba(249,115,22,0.1)]' :
               userRole === 'hod' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-[0_0_8px_rgba(168,85,247,0.1)]' :
               userRole === 'teacher' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.1)]' :
               'bg-white/5 text-gray-400 border border-white/10'
             }`}>
-              {userRole === 'institute_admin' ? '🏛 Institute Admin' :
+              {userRole === 'institute' ? '🏛 Institute Admin' :
                userRole === 'hod' ? '🎓 Head of Department' :
                userRole === 'teacher' ? '📚 Teacher' : userRole}
             </div>

@@ -57,7 +57,7 @@ const userSchema = new mongoose.Schema({
   // --- HIERARCHY & ROLES ---
   role: {
     type: String,
-    enum: ['student', 'teacher', 'hod', 'institute_admin'],
+    enum: ['student', 'teacher', 'hod', 'institute'],
     default: 'student'
   },
   instituteId: {

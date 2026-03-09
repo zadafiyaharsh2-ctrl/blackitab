@@ -68,7 +68,7 @@ exports.updateQuestion = async (req, res) => {
 
         // Allow update only if creator or same institute HOD/admin
         const isCreator = question.createdBy?.toString() === req.user._id.toString();
-        const isSameInstituteSupervisor = ['hod', 'institute_admin'].includes(req.user.role) &&
+        const isSameInstituteSupervisor = ['hod', 'institute'].includes(req.user.role) &&
             question.instituteId?.toString() === req.user.instituteId?.toString();
 
         if (!isCreator && !isSameInstituteSupervisor) {
@@ -95,7 +95,7 @@ exports.deleteQuestion = async (req, res) => {
         }
 
         const isCreator = question.createdBy?.toString() === req.user._id.toString();
-        const isSameInstituteSupervisor = ['hod', 'institute_admin'].includes(req.user.role) &&
+        const isSameInstituteSupervisor = ['hod', 'institute'].includes(req.user.role) &&
             question.instituteId?.toString() === req.user.instituteId?.toString();
 
         if (!isCreator && !isSameInstituteSupervisor) {

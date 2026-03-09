@@ -105,7 +105,7 @@ const TheoryChecking = () => {
   };
 
   const canEdit = (theoryOwnerId) => {
-    if (user.role === 'institute_admin') return true;
+    if (user.role === 'institute') return true;
     if (user._id === theoryOwnerId.toString()) return true;
     return false;
   };
@@ -124,7 +124,7 @@ const TheoryChecking = () => {
           <p className="text-gray-500 text-sm">Upload and manage study materials and notes for students</p>
         </div>
         
-        {['institute_admin', 'hod', 'teacher'].includes(user?.role) && (
+        {['institute', 'hod', 'teacher'].includes(user?.role) && (
           <button
             onClick={() => openModal()}
             className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors shadow-sm"
@@ -146,7 +146,7 @@ const TheoryChecking = () => {
             <div key={t._id} className="glass-panel border-gray-200 dark:border-white/10 rounded-2xl p-5 flex flex-col h-full hover:border-orange-500/50 transition-colors shadow-sm group">
               <div className="flex justify-between items-start mb-3 gap-2">
                 <h3 className="font-bold text-gray-900 dark:text-white text-lg leading-tight line-clamp-2" title={t.title}>{t.title}</h3>
-                {['institute_admin', 'hod', 'teacher'].includes(user?.role) && canEdit(t.uploadedBy?._id || t.uploadedBy) && (
+                {['institute', 'hod', 'teacher'].includes(user?.role) && canEdit(t.uploadedBy?._id || t.uploadedBy) && (
                   <div className="flex gap-1 shrink-0">
                     <button onClick={() => openModal(t)} className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition-colors">
                       <PencilIcon className="w-4 h-4" />

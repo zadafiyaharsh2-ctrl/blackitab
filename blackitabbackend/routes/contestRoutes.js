@@ -16,8 +16,8 @@ router.use(protect);
 router.get('/:id/leaderboard', contestController.getLeaderboard);
 
 // Teacher/HOD/Admin: create/manage contests
-router.post('/', requireRole('teacher', 'hod', 'institute_admin'), contestController.createContest);
-router.put('/:id', requireRole('teacher', 'hod', 'institute_admin'), contestController.updateContest);
-router.delete('/:id', requireRole('teacher', 'hod', 'institute_admin'), contestController.deleteContest);
+router.post('/', requireRole('teacher', 'hod', 'institute'), contestController.createContest);
+router.put('/:id', requireRole('teacher', 'hod', 'institute'), contestController.updateContest);
+router.delete('/:id', requireRole('teacher', 'hod', 'institute'), contestController.deleteContest);
 
 module.exports = router;

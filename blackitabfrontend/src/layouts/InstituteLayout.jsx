@@ -12,8 +12,8 @@ const InstituteLayout = () => {
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   
-  // Optionally strictly require 'institute_admin', 'hod', or 'teacher' roles for this layout
-  if (!['institute_admin', 'hod', 'teacher'].includes(user?.role)) {
+  // Optionally strictly require 'institute', 'hod', or 'teacher' roles for this layout
+  if (!['institute', 'hod', 'teacher'].includes(user?.role)) {
      return <Navigate to="/dashboard" replace />;
   }
 

@@ -165,7 +165,7 @@ exports.getUserById = async (req, res) => {
 exports.changeUserRole = async (req, res) => {
     try {
         const { role } = req.body;
-        const validRoles = ['student', 'teacher', 'hod', 'institute_admin'];
+        const validRoles = ['student', 'teacher', 'hod', 'institute'];
         if (!validRoles.includes(role)) {
             return res.status(400).json({ success: false, message: `Invalid role. Must be: ${validRoles.join(', ')}` });
         }
@@ -231,7 +231,7 @@ exports.createUser = async (req, res) => {
             instituteId = institute._id;
         }
 
-        const validRoles = ['student', 'teacher', 'hod', 'institute_admin'];
+        const validRoles = ['student', 'teacher', 'hod', 'institute'];
         const assignedRole = validRoles.includes(role) ? role : 'student';
 
         const newUser = new User({

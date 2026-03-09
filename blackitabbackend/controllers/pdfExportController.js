@@ -8,7 +8,7 @@
  * 
  * Endpoint: GET /api/exams/questions/export-pdf
  * Query params: exam, subject, difficulty, limit, includeAnswers
- * Access: teacher, hod, institute_admin only
+ * Access: teacher, hod, institute only
  */
 
 const PDFDocument = require('pdfkit');
@@ -37,7 +37,7 @@ exports.exportQuestionPaper = async (req, res) => {
 
         // Scope: if not admin, only show public questions + own institute's
         const user = req.user;
-        if (user.role !== 'institute_admin') {
+        if (user.role !== 'institute') {
             filter.$or = [
                 { isPublic: true },
                 ...(user.instituteId ? [{ instituteId: user.instituteId }] : []),
@@ -239,7 +239,7 @@ exports.previewQuestions = async (req, res) => {
         if (difficulty) filter.difficulty = difficulty;
 
         const user = req.user;
-        if (user.role !== 'institute_admin') {
+        if (user.role !== 'institute') {
             filter.$or = [
                 { isPublic: true },
                 ...(user.instituteId ? [{ instituteId: user.instituteId }] : []),

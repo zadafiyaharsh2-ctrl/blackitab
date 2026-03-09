@@ -251,11 +251,11 @@ function App() {
               }
             />
 
-            {/* School Analytics — teacher/hod/institute_admin only */}
+            {/* School Analytics — teacher/hod/institute only */}
             <Route
               path="/school-analytics"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <SchoolAnalytics />
                   </MainLayout>
@@ -500,7 +500,7 @@ function App() {
             <Route
               path="/teacher-dashboard"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherDashboard />
                   </MainLayout>
@@ -512,7 +512,7 @@ function App() {
             <Route
               path="/create-question"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <CreateExamQuestion />
                   </MainLayout>
@@ -524,7 +524,7 @@ function App() {
             <Route
               path="/my-questions"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <MyQuestions />
                   </MainLayout>
@@ -536,7 +536,7 @@ function App() {
             <Route
               path="/question-paper"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <QuestionPaper />
                   </MainLayout>

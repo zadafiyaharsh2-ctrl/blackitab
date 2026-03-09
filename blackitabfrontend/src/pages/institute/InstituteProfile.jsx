@@ -90,7 +90,7 @@ const InstituteProfile = () => {
     }
   };
 
-  const isEditable = user?.role === 'institute_admin';
+  const isEditable = user?.role === 'institute';
 
   if (loading) return <LoadingSpinner />;
 

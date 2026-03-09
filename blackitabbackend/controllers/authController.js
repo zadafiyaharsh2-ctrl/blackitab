@@ -29,11 +29,11 @@ exports.register = async (req, res) => {
         }
 
         // Validate role if provided, otherwise default to 'student'
-        const validRoles = ['student', 'teacher', 'hod', 'institute_admin'];
+        const validRoles = ['student', 'teacher', 'hod', 'institute'];
         const assignedRole = validRoles.includes(role) ? role : 'student';
 
         // Institute admin validation: email must be in institute's adminEmails
-        if (assignedRole === 'institute_admin') {
+        if (assignedRole === 'institute') {
             if (!instituteId) {
                 return res.status(400).json({ success: false, message: 'Institute admin must provide a valid institute code' });
             }
@@ -111,7 +111,7 @@ exports.registerInstitute = async (req, res) => {
             name: adminName,
             email: adminEmail.toLowerCase(),
             password: adminPassword,
-            role: 'institute_admin',
+            role: 'institute',
             instituteId: newInstitute._id
         });
 

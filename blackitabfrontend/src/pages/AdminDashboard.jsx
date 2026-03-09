@@ -417,7 +417,7 @@ const AdminDashboard = () => {
                 <h3 className="font-bold text-white mb-6 text-lg">Role Distribution</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {Object.entries(stats.roleCounts).map(([role, count]) => {
-                    const colors = { student: 'from-blue-500 to-cyan-500', teacher: 'from-emerald-500 to-teal-500', hod: 'from-purple-500 to-pink-500', institute_admin: 'from-orange-500 to-red-500' };
+                    const colors = { student: 'from-blue-500 to-cyan-500', teacher: 'from-emerald-500 to-teal-500', hod: 'from-purple-500 to-pink-500', institute: 'from-orange-500 to-red-500' };
                     const total = Object.values(stats.roleCounts).reduce((a, b) => a + b, 0);
                     const pct = total > 0 ? Math.round((count / total) * 100) : 0;
                     return (
@@ -441,7 +441,7 @@ const AdminDashboard = () => {
               <div className="flex flex-col items-center gap-3">
                 {[
                   { role: 'System Admin', desc: 'Full platform control — users, institutes, question approval, posts, contests', color: 'from-red-500 to-orange-500', count: 1 },
-                  { role: 'Institute Admin', desc: 'Manage institute members, assign roles', color: 'from-orange-500 to-yellow-500', count: stats?.roleCounts?.institute_admin || 0 },
+                  { role: 'Institute Admin', desc: 'Manage institute members, assign roles', color: 'from-orange-500 to-yellow-500', count: stats?.roleCounts?.institute || 0 },
                   { role: 'HOD', desc: 'Department oversight, teacher management', color: 'from-purple-500 to-pink-500', count: stats?.roleCounts?.hod || 0 },
                   { role: 'Teacher', desc: 'Create questions (require approval for global), view analytics', color: 'from-emerald-500 to-teal-500', count: stats?.roleCounts?.teacher || 0 },
                   { role: 'Student', desc: 'Learn, practice, compete', color: 'from-blue-500 to-cyan-500', count: stats?.roleCounts?.student || 0 },
@@ -498,7 +498,7 @@ const AdminDashboard = () => {
                     <option value="student" className="bg-gray-900">Student</option>
                     <option value="teacher" className="bg-gray-900">Teacher</option>
                     <option value="hod" className="bg-gray-900">HOD</option>
-                    <option value="institute_admin" className="bg-gray-900">Institute Admin</option>
+                    <option value="institute" className="bg-gray-900">Institute Admin</option>
                   </select>
                   <input value={newUser.instituteCode} onChange={e => setNewUser({ ...newUser, instituteCode: e.target.value.toUpperCase() })}
                     placeholder="Institute Code (optional)" className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none uppercase" />
@@ -537,7 +537,7 @@ const AdminDashboard = () => {
                       <td className="px-4 py-3">
                         <select value={u.role} onChange={e => handleRoleChange(u._id, e.target.value)}
                           className="px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-300 outline-none capitalize cursor-pointer">
-                          {['student', 'teacher', 'hod', 'institute_admin'].map(r => (
+                          {['student', 'teacher', 'hod', 'institute'].map(r => (
                             <option key={r} value={r} className="bg-gray-900 capitalize">{r.replace('_', ' ')}</option>
                           ))}
                         </select>

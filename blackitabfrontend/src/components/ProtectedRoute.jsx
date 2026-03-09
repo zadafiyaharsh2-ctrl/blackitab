@@ -40,6 +40,7 @@ const ProtectedRoute = ({ children, requiredRoles }) => {
           teacher: '/teacher-dashboard',
           hod: '/teacher-dashboard',
           institute_admin: '/institute/dashboard',
+          institute: '/institute/dashboard',
         };
         return <Navigate to={roleHome[user.role] || '/dashboard'} replace />;
       }

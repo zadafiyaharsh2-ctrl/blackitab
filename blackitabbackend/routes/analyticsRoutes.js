@@ -7,9 +7,9 @@ const { requireRole } = require('../middleware/roleMiddleware');
 // Student's own analytics
 router.get('/overview', protect, analyticsController.getUserAnalytics);
 
-// Institute-level analytics (teacher, hod, institute_admin only)
-router.get('/school', protect, requireRole('teacher', 'hod', 'institute_admin'), analyticsController.getSchoolAnalytics);
-router.get('/school/trends', protect, requireRole('teacher', 'hod', 'institute_admin'), analyticsController.getInstituteTrends);
-router.get('/school/student/:studentId', protect, requireRole('teacher', 'hod', 'institute_admin'), analyticsController.getStudentDetail);
+// Institute-level analytics (teacher, hod, institute only)
+router.get('/school', protect, requireRole('teacher', 'hod', 'institute'), analyticsController.getSchoolAnalytics);
+router.get('/school/trends', protect, requireRole('teacher', 'hod', 'institute'), analyticsController.getInstituteTrends);
+router.get('/school/student/:studentId', protect, requireRole('teacher', 'hod', 'institute'), analyticsController.getStudentDetail);
 
 module.exports = router;

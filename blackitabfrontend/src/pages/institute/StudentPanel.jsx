@@ -166,7 +166,7 @@ const StudentPanel = () => {
               className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
             />
           </div>
-          {user?.role === 'institute_admin' && (
+          {user?.role === 'institute' && (
             <button
               onClick={() => {
                 setFormData({ name: '', email: '', password: '', batchYear: '', departments: '' });
@@ -232,7 +232,7 @@ const StudentPanel = () => {
                       </div>
                     </td>
                     <td className="p-4 text-right">
-                      {(user?.role === 'institute_admin' || user?.role === 'hod') && (
+                      {(user?.role === 'institute' || user?.role === 'hod') && (
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => openEditModal(s)}
@@ -241,7 +241,7 @@ const StudentPanel = () => {
                           >
                             <PencilSquareIcon className="w-4 h-4" />
                           </button>
-                          {user?.role === 'institute_admin' && (
+                          {user?.role === 'institute' && (
                             <button
                               onClick={() => handleRemove(s._id)}
                               className="p-2 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-500 dark:text-red-400 rounded-lg transition-colors border border-red-200 dark:border-red-500/20"

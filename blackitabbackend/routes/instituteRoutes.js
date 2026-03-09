@@ -14,39 +14,39 @@ router.use(protect);
 router.get('/my', instituteController.getMyInstitute);
 
 // ── Stats ──
-router.get('/stats', requireRole('institute_admin', 'hod'), instituteController.getInstituteStats);
+router.get('/stats', requireRole('institute', 'hod'), instituteController.getInstituteStats);
 
 // ── Profile ──
-router.put('/profile', requireRole('institute_admin'), instituteController.updateInstituteProfile);
+router.put('/profile', requireRole('institute'), instituteController.updateInstituteProfile);
 
 // ── Member Management ──
-router.get('/members', requireRole('hod', 'institute_admin', 'teacher'), instituteController.getMembers);
-router.post('/members', requireRole('institute_admin'), instituteController.addMember);
-router.put('/members/:id/role', requireRole('hod', 'institute_admin'), instituteController.changeMemberRole);
-router.put('/members/:id/ban', requireRole('institute_admin'), instituteController.toggleBanMember);
-router.delete('/members/:id', requireRole('institute_admin'), instituteController.removeMember);
+router.get('/members', requireRole('hod', 'institute', 'teacher'), instituteController.getMembers);
+router.post('/members', requireRole('institute'), instituteController.addMember);
+router.put('/members/:id/role', requireRole('hod', 'institute'), instituteController.changeMemberRole);
+router.put('/members/:id/ban', requireRole('institute'), instituteController.toggleBanMember);
+router.delete('/members/:id', requireRole('institute'), instituteController.removeMember);
 
 // ── Theory Management ──
-router.get('/theory', requireRole('institute_admin', 'hod', 'teacher', 'student'), instituteController.listInstituteTheory);
-router.post('/theory', requireRole('institute_admin', 'hod', 'teacher'), instituteController.addTheory);
-router.put('/theory/:id', requireRole('institute_admin', 'hod', 'teacher'), instituteController.updateTheory);
-router.delete('/theory/:id', requireRole('institute_admin', 'hod', 'teacher'), instituteController.deleteTheory);
+router.get('/theory', requireRole('institute', 'hod', 'teacher', 'student'), instituteController.listInstituteTheory);
+router.post('/theory', requireRole('institute', 'hod', 'teacher'), instituteController.addTheory);
+router.put('/theory/:id', requireRole('institute', 'hod', 'teacher'), instituteController.updateTheory);
+router.delete('/theory/:id', requireRole('institute', 'hod', 'teacher'), instituteController.deleteTheory);
 
 // ── Question Management (institute-scoped) ──
-router.get('/questions', requireRole('institute_admin', 'hod', 'teacher'), instituteController.listInstituteQuestions);
-router.put('/questions/:id', requireRole('institute_admin', 'hod'), instituteController.updateInstituteQuestion);
-router.delete('/questions/:id', requireRole('institute_admin', 'hod'), instituteController.deleteInstituteQuestion);
+router.get('/questions', requireRole('institute', 'hod', 'teacher'), instituteController.listInstituteQuestions);
+router.put('/questions/:id', requireRole('institute', 'hod'), instituteController.updateInstituteQuestion);
+router.delete('/questions/:id', requireRole('institute', 'hod'), instituteController.deleteInstituteQuestion);
 
 // ── Post Moderation (institute-scoped) ──
-router.get('/posts', requireRole('institute_admin', 'hod'), instituteController.listInstitutePosts);
-router.delete('/posts/:id', requireRole('institute_admin'), instituteController.deleteInstitutePost);
+router.get('/posts', requireRole('institute', 'hod'), instituteController.listInstitutePosts);
+router.delete('/posts/:id', requireRole('institute'), instituteController.deleteInstitutePost);
 
 // ── Analytics ──
-router.get('/analytics', requireRole('institute_admin', 'hod', 'teacher'), instituteController.getInstituteAnalytics);
+router.get('/analytics', requireRole('institute', 'hod', 'teacher'), instituteController.getInstituteAnalytics);
 
 // ── Teacher Feedback & Monitoring ──
-router.get('/teachers', requireRole('institute_admin', 'hod'), instituteController.listTeachersWithRatings);
-router.get('/teachers/:id/feedback', requireRole('institute_admin', 'hod'), instituteController.getTeacherFeedback);
+router.get('/teachers', requireRole('institute', 'hod'), instituteController.listTeachersWithRatings);
+router.get('/teachers/:id/feedback', requireRole('institute', 'hod'), instituteController.getTeacherFeedback);
 router.post('/feedback', requireRole('student'), instituteController.submitFeedback);
 
 module.exports = router;
