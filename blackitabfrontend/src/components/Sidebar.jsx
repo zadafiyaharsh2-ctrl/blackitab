@@ -113,22 +113,22 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
         initial={false}
         animate={{ width: sidebarWidth }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed left-0 top-0 h-screen z-50 flex flex-col glass-panel border-r border-gray-200/20 dark:border-gray-800/50 shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_30px_-5px_rgba(168,85,247,0.1)]"
+        className="fixed left-0 top-0 h-screen z-50 flex flex-col glass-panel !rounded-none border-r border-gray-200 dark:border-white/10 shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_30px_-5px_rgba(255,255,255,0.02)] bg-white/95 dark:bg-[#000000]/80 backdrop-blur-xl"
       >
-        <div className="h-20 border-b border-gray-200/50 dark:border-gray-800/50 flex items-center justify-between px-4 relative overflow-hidden">
-           <div className="absolute top-0 left-0 w-full h-full bg-white/10 dark:bg-slate-900/20 pointer-events-none" />
+        <div className="h-20 border-b border-gray-200/50 dark:border-white/10 flex items-center justify-between px-4 relative overflow-hidden">
+           <div className="absolute top-0 left-0 w-full h-full bg-white/10 dark:bg-white/5 pointer-events-none" />
 
           <AnimatePresence>
             {isOpen && (
               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                 className="flex items-center gap-2">
-                <Logo showText={true} className="w-8 h-8" textSize="text-2xl font-bold text-slate-900 dark:text-slate-100" />
+                <Logo showText={true} className="w-8 h-8" textSize="text-2xl font-bold text-slate-900 dark:text-white drop-shadow-sm" />
               </motion.div>
             )}
           </AnimatePresence>
           <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
             onClick={() => setIsOpen(!isOpen)}
-            className="p-2.5 bg-gray-100 dark:bg-gray-800/80 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl transition-colors shadow-sm ring-1 ring-gray-200 dark:ring-gray-700/50 relative z-10">
+            className="p-2.5 bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 rounded-xl transition-colors shadow-sm ring-1 ring-gray-200 dark:ring-white/10 relative z-10">
             <FaBars />
           </motion.button>
         </div>
@@ -137,24 +137,24 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
         <div className="px-4 pt-6 pb-2">
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
             onClick={() => setSearchOpen(true)}
-            className={`w-full flex items-center ${isOpen ? 'justify-between px-4 py-3' : 'justify-center py-3'} bg-gray-100/80 dark:bg-gray-800/60 hover:bg-white dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-xl border border-gray-200/50 dark:border-gray-700/50 transition-all shadow-inner group`}
+            className={`w-full flex items-center ${isOpen ? 'justify-between px-4 py-3' : 'justify-center py-3'} bg-gray-100/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 text-gray-500 dark:text-white rounded-xl border border-gray-200/50 dark:border-white/10 transition-all shadow-inner group flex-shrink-0 relative overflow-hidden focus:outline-none`}
             title="Search (Ctrl+K)">
             <div className="flex items-center gap-3">
-              <FaSearch className="group-hover:text-blue-500 transition-colors" />
-              {isOpen && <span className="text-sm font-medium">Search...</span>}
+              <FaSearch className="group-hover:text-blue-500 transition-colors drop-shadow-sm" />
+              {isOpen && <span className="text-sm font-bold">Search...</span>}
             </div>
-            {isOpen && <kbd className="text-[10px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-2 py-1 rounded-md font-mono text-gray-400 shadow-sm">Ctrl+K</kbd>}
+            {isOpen && <kbd className="text-[10px] bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 px-2 py-1 rounded-md font-mono text-gray-400 dark:text-white/70 shadow-sm">Ctrl+K</kbd>}
           </motion.button>
         </div>
 
         {/* Role Badge */}
         {isOpen && userRole !== 'student' && (
           <div className="px-4 pb-2">
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
-              userRole === 'institute_admin' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
-              userRole === 'hod' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
-              userRole === 'teacher' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-              'bg-gray-500/10 text-gray-400 border border-gray-500/20'
+            <div className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
+              userRole === 'institute_admin' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20 shadow-[0_0_8px_rgba(249,115,22,0.1)]' :
+              userRole === 'hod' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-[0_0_8px_rgba(168,85,247,0.1)]' :
+              userRole === 'teacher' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.1)]' :
+              'bg-white/5 text-gray-400 border border-white/10'
             }`}>
               {userRole === 'institute_admin' ? '🏛 Institute Admin' :
                userRole === 'hod' ? '🎓 Head of Department' :
@@ -163,7 +163,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
           </div>
         )}
 
-        <nav className="flex-1 px-3 py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-800 hover:scrollbar-thumb-slate-500/50">
+        <nav className="flex-1 px-3 py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-white/20 hover:scrollbar-thumb-slate-500/50">
           <ul className="space-y-1.5">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path || (location.pathname.startsWith(item.path) && item.path !== '/');
@@ -175,8 +175,8 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
                       whileTap={{ scale: 0.98 }}
                       className={`relative flex items-center ${isOpen ? 'px-4 py-3' : 'px-0 py-3 justify-center'} rounded-xl text-sm font-semibold transition-all duration-300 overflow-hidden group ${
                         isActive
-                          ? 'text-white shadow-sm'
-                          : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
+                          ? 'text-white shadow-sm font-bold'
+                          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-white/10'
                       }`}>
                       {isActive && (
                         <motion.div layoutId="active-nav-bg"
@@ -200,17 +200,17 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
         </nav>
 
         {/* Bottom actions */}
-        <div className="p-4 border-t border-gray-200/50 dark:border-gray-800/50 space-y-2 bg-gray-50/50 dark:bg-black/20">
+        <div className="p-4 border-t border-gray-200/50 dark:border-white/10 space-y-2 bg-gray-50/50 dark:bg-[#000000]">
           <Link to="/notifications">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-              className={`w-full flex items-center ${isOpen ? 'px-4 py-3 justify-start gap-4' : 'px-0 py-3 justify-center'} text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-blue-500/10 hover:text-blue-500 rounded-xl transition-colors relative group`}>
-              <span className="relative flex-shrink-0 text-lg group-hover:text-blue-500">
+              className={`w-full flex items-center ${isOpen ? 'px-4 py-3 justify-start gap-4' : 'px-0 py-3 justify-center'} text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-blue-500/10 hover:text-blue-500 dark:hover:bg-white/10 dark:hover:text-blue-400 rounded-xl transition-colors relative group`}>
+              <span className="relative flex-shrink-0 text-lg group-hover:text-blue-500 transition-colors">
                 <FaBell />
-                {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-gray-900 rounded-full" />}
+                {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-black rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)]" />}
               </span>
-              {isOpen && <span>Notifications</span>}
+              {isOpen && <span className="group-hover:dark:text-blue-400 transition-colors">Notifications</span>}
               {isOpen && unreadCount > 0 && (
-                <span className="ml-auto text-[10px] bg-red-500 text-white rounded-full px-2 py-0.5 font-semibold shadow-sm">
+                <span className="ml-auto text-[10px] bg-red-500 text-white rounded-full px-2 py-0.5 font-bold shadow-sm">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
@@ -219,19 +219,19 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
 
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
             onClick={toggleTheme}
-            className={`w-full flex items-center ${isOpen ? 'px-4 py-3 justify-start gap-4' : 'px-0 py-3 justify-center'} text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-yellow-500/10 hover:text-yellow-500 rounded-xl transition-colors group`}
+            className={`w-full flex items-center ${isOpen ? 'px-4 py-3 justify-start gap-4' : 'px-0 py-3 justify-center'} text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-yellow-500/10 hover:text-yellow-600 dark:hover:bg-white/10 dark:hover:text-yellow-400 rounded-xl transition-colors group`}
             title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
-            <span className="text-lg group-hover:text-yellow-500 transition-colors">
+            <span className="text-lg group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors drop-shadow-sm">
                {isDark ? <FaSun /> : <FaMoon />}
             </span>
-            {isOpen && (isDark ? 'Light Mode' : 'Dark Mode')}
+            {isOpen && <span className="group-hover:dark:text-yellow-400 transition-colors">{isDark ? 'Light Mode' : 'Dark Mode'}</span>}
           </motion.button>
 
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
             onClick={onLogout}
-            className={`w-full flex items-center ${isOpen ? 'px-4 py-3 justify-start gap-4' : 'px-0 py-3 justify-center'} text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-colors group mt-2`}>
-            <span className="text-lg group-hover:text-red-500 transition-colors"><FaSignOutAlt /></span>
-            {isOpen && 'Logout'}
+            className={`w-full flex items-center ${isOpen ? 'px-4 py-3 justify-start gap-4' : 'px-0 py-3 justify-center'} text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-red-500/10 hover:text-red-500 dark:hover:bg-white/10 dark:hover:text-red-400 rounded-xl transition-colors group mt-2`}>
+            <span className="text-lg group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors drop-shadow-sm"><FaSignOutAlt /></span>
+            {isOpen && <span className="group-hover:dark:text-red-400 transition-colors">Logout</span>}
           </motion.button>
         </div>
       </motion.div>

@@ -50,64 +50,64 @@ html.dark::-webkit-scrollbar-thumb:hover {
 /* Base Styles */
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    --background: 0 0% 100%; /* Pure White */
+    --foreground: 0 0% 9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 0 0% 9%;
  
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 0 0% 9%;
  
     --primary: 217 91% 60%;
-    --primary-foreground: 210 40% 98%;
+    --primary-foreground: 0 0% 100%;
  
-    --secondary: 215 32% 91%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
  
-    --muted: 214 32% 91%;
-    --muted-foreground: 215 16% 35%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
  
-    --accent: 213 40% 91%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
  
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214 32% 86%;
-    --input: 214 32% 86%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
     --ring: 217 91% 60%;
  
     --radius: 0.5rem;
   }
  
   .dark {
-    --background: 222 47% 8%;
-    --foreground: 210 40% 96%;
+    --background: 0 0% 0%; /* Pure Black */
+    --foreground: 0 0% 98%;
  
-    --card: 222 43% 11%;
-    --card-foreground: 210 40% 96%;
+    --card: 0 0% 4%; /* Slightly elevated from pure black */
+    --card-foreground: 0 0% 98%;
  
-    --popover: 222 43% 11%;
-    --popover-foreground: 210 40% 96%;
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 98%;
  
     --primary: 213 94% 68%;
-    --primary-foreground: 222 47% 11%;
+    --primary-foreground: 0 0% 9%;
  
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 96%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 98%;
  
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 70%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 65%;
  
-    --accent: 218 30% 22%;
-    --accent-foreground: 210 40% 96%;
+    --accent: 0 0% 12%;
+    --accent-foreground: 0 0% 98%;
  
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
  
-    --border: 217 24% 25%;
-    --input: 217 24% 25%;
+    --border: 0 0% 15%; /* Visible bright border edge against black */
+    --input: 0 0% 15%;
     --ring: 213 94% 68%;
   }
 }
@@ -130,19 +130,19 @@ html.dark::-webkit-scrollbar-thumb:hover {
 /* Utility Classes */
 @layer utilities {
   .glass-panel {
-    @apply bg-white/95 dark:bg-gray-900/80 backdrop-blur-xl border border-gray-200/60 dark:border-gray-700/40 shadow-sm rounded-2xl;
+    @apply bg-white/95 dark:bg-[#080808]/80 backdrop-blur-xl border border-gray-200/80 dark:border-white/10 shadow-sm rounded-2xl;
   }
   .ui-surface {
-    @apply bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm;
+    @apply bg-white dark:bg-[#050505] border border-gray-200 dark:border-white/10 rounded-xl shadow-sm;
   }
   .ui-subtle {
-    @apply bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg;
+    @apply bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/5 rounded-lg;
   }
   .ui-title {
-    @apply text-gray-900 dark:text-gray-100 font-semibold;
+    @apply text-gray-900 dark:text-white font-bold;
   }
   .ui-caption {
-    @apply text-gray-600 dark:text-gray-300 text-sm;
+    @apply text-gray-500 dark:text-gray-400 text-sm;
   }
   .text-glow {
     text-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
@@ -167,20 +167,20 @@ html.dark::-webkit-scrollbar-thumb:hover {
   }
   /* Page bg for dark-first pages */
   .bg-\[\#050505\] {
-    background-color: rgb(249 250 251);
-    color: rgb(17 24 39);
+    background-color: rgb(255 255 255);
+    color: rgb(0 0 0);
   }
   .dark .bg-\[\#050505\] {
-    background-color: rgb(5 5 5);
-    color: rgb(243 244 246);
+    background-color: rgb(0 0 0);
+    color: rgb(255 255 255);
   }
   .bg-\[\#0a0a0a\] {
-    background-color: rgb(249 250 251);
-    color: rgb(17 24 39);
+    background-color: rgb(255 255 255);
+    color: rgb(0 0 0);
   }
   .dark .bg-\[\#0a0a0a\] {
     background-color: rgb(10 10 10);
-    color: rgb(243 244 246);
+    color: rgb(255 255 255);
   }
 
   /* ── Dashboard: Radial (Circular) Progress ──────────────── */
