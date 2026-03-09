@@ -96,7 +96,6 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
     { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy className="text-yellow-400" /> },
     { path: '/theory', label: 'Theory', icon: <FaBook /> },
-    { path: '/profile', label: 'Profile', icon: <FaUser /> },
   ];
 
   // NOTE: No /admin link here — System Admin has a completely separate
