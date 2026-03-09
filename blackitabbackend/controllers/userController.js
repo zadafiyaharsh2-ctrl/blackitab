@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Attempt = require('../models/Attempt');
 
 exports.updateProfile = async (req, res) => {
     try {
@@ -97,7 +98,43 @@ exports.getLeaderboard = async (req, res) => {
         .limit(50)
         .lean();
 
-        // Assign ranks with dense ranking (ties get same rank)
+        // Pluck IDs for aggregation
+        const userIds = users.map(u => u._id);
+
+        // Aggregate attempts for total study hours, problems solved, and accuracy
+        const statsAggregation = await Attempt.aggregate([
+            { $match: { userId: { $in: userIds } } },
+            { 
+                $group: { 
+                    _id: "$userId",
+                    totalAttempts: { $sum: 1 },
+                    correctAttempts: { $sum: { $cond: [{ $eq: ["$isCorrect", true] }, 1, 0] } },
+                    totalTimeSeconds: { $sum: { $ifNull: ["$timeTakenSeconds", 0] } },
+                    uniqueCorrectQuestions: { 
+                        $addToSet: { 
+                            $cond: [{ $eq: ["$isCorrect", true] }, "$questionId", null] 
+                        } 
+                    }
+                }
+            }
+        ]);
+
+        // Create a map for O(1) lookups
+        const statsMap = {};
+        statsAggregation.forEach(stat => {
+            // Remove null from set if present
+            const solvedCount = stat.uniqueCorrectQuestions.filter(id => id !== null).length;
+            const accuracy = stat.totalAttempts > 0 ? Math.round((stat.correctAttempts / stat.totalAttempts) * 1000) / 10 : 0;
+            const studyHours = stat.totalTimeSeconds > 0 ? Math.round((stat.totalTimeSeconds / 3600) * 10) / 10 : 0;
+            
+            statsMap[stat._id.toString()] = {
+                problemsSolved: solvedCount,
+                accuracy: accuracy,
+                studyHours: studyHours
+            };
+        });
+
+        // Assign ranks with dense ranking and merge stats
         let currentRank = 0;
         let prevScore = -1;
 
@@ -107,11 +144,15 @@ exports.getLeaderboard = async (req, res) => {
                 currentRank = index + 1;
                 prevScore = score;
             }
+            const userStats = statsMap[user._id.toString()] || { problemsSolved: 0, accuracy: 0, studyHours: 0 };
+
             return {
                 ...user,
                 _id: user._id,
                 rank: currentRank,
-                score};
+                score,
+                stats: userStats
+            };
         });
 
         res.json({ success: true, data: ranked });

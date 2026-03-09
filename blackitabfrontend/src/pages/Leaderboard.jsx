@@ -112,6 +112,13 @@ const Leaderboard = () => {
                                                 <span className="text-orange-400 text-xs">{user.streak}d</span>
                                             </div>
                                         )}
+                                        {/* New Academic Stats Badge */}
+                                        <div className="mt-2 flex flex-col items-center bg-gray-100 dark:bg-gray-800/80 rounded-lg p-1.5 border border-gray-200 dark:border-gray-700/50 min-w-[100px]">
+                                            <span className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-semibold">Problems</span>
+                                            <span className="text-sm font-bold text-gray-900 dark:text-white">{user.stats?.problemsSolved || 0}</span>
+                                            <div className="w-full h-px bg-gray-200 dark:bg-gray-700 my-0.5"></div>
+                                            <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">{user.stats?.accuracy || 0}% Acc</span>
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -143,17 +150,29 @@ const Leaderboard = () => {
                                             <p className={`font-semibold truncate ${isSelf ? 'text-blue-400' : 'text-gray-900 dark:text-white'}`}>
                                                 {user.name} {isSelf && <span className="text-xs ml-1">(you)</span>}
                                             </p>
-                                            <p className="text-xs text-gray-400">{user.followerCount || 0} followers</p>
+                                            <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
+                                                <span>{user.followerCount || 0} followers</span>
+                                                <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                                                <span className="text-blue-500 dark:text-blue-400 font-medium">{user.stats?.problemsSolved || 0} Solved</span>
+                                                <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                                                <span>{user.stats?.accuracy || 0}% Acc</span>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-3 text-sm">
+                                        <div className="flex items-center gap-4 text-sm">
                                             {user.streak > 0 && (
-                                                <span className="flex items-center gap-1 text-orange-400 font-medium">
-                                                    <FaFire className="text-xs" />{user.streak}d
-                                                </span>
+                                                <div className="hidden sm:flex flex-col items-center justify-center p-2 rounded-lg bg-orange-50 dark:bg-orange-500/10">
+                                                    <span className="flex items-center gap-1 text-orange-500 dark:text-orange-400 font-bold">
+                                                        <FaFire className="text-sm" />{user.streak}
+                                                    </span>
+                                                    <span className="text-[10px] text-orange-600/70 dark:text-orange-400/70 uppercase font-semibold">Days</span>
+                                                </div>
                                             )}
-                                            <span className="flex items-center gap-1 text-yellow-400 font-bold">
-                                                <FaStar className="text-xs" />{(user.xp ?? user.points)?.toLocaleString() || 0}
-                                            </span>
+                                            <div className="flex flex-col items-end justify-center p-2">
+                                                <span className="flex items-center gap-1.5 text-yellow-500 dark:text-yellow-400 font-bold text-lg">
+                                                    <FaStar className="text-sm" />{(user.xp ?? user.points)?.toLocaleString() || 0}
+                                                </span>
+                                                <span className="text-[10px] text-gray-400 uppercase font-semibold">Total XP</span>
+                                            </div>
                                         </div>
                                     </div>
                                 );
