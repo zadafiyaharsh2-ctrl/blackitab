@@ -96,19 +96,19 @@ const StatCard = ({ icon: Icon, title, value, change, suffix = '' }) => {
   return (
     <motion.div
       variants={itemVariants}
-      className="glass-panel p-6 border border-slate-200 dark:border-slate-700"
+      className="glass-panel p-6 border border-slate-200 dark:border-white/10 dark:hover:border-white/20 transition-all duration-300"
     >
       <div className="flex items-start justify-between mb-4">
-        <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-500/15">
-          <Icon className="h-5 w-5 text-blue-700 dark:text-blue-300" />
+        <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-500/20 border border-transparent dark:border-blue-500/30 dark:shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+          <Icon className="h-5 w-5 text-blue-700 dark:text-blue-400" />
         </div>
         <div className={`flex items-center gap-1 text-sm font-semibold ${trendStyles[trend]}`}>
           <TrendIcon className="h-4 w-4" />
           {Math.abs(change)}{suffix}
         </div>
       </div>
-      <h3 className="text-sm text-slate-600 dark:text-slate-300 mb-1">{title}</h3>
-      <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">{value}{suffix}</p>
+      <h3 className="text-sm text-slate-600 dark:text-slate-400 mb-1">{title}</h3>
+      <p className="text-3xl font-bold text-slate-900 dark:text-white drop-shadow-md">{value}{suffix}</p>
     </motion.div>
   );
 };
@@ -163,16 +163,16 @@ const Analytics = () => {
   const hasExtendedData = false; 
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#000000] text-slate-900 dark:text-white p-6 selection:bg-blue-500/30">
       <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-7xl mx-auto space-y-6">
-        <motion.section variants={itemVariants} className="glass-panel p-6 border border-slate-200 dark:border-slate-700">
+        <motion.section variants={itemVariants} className="glass-panel p-6 border border-slate-200 dark:border-white/10 dark:hover:border-white/20 transition-colors">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-500/15">
-              <BarChart3 className="h-7 w-7 text-blue-700 dark:text-blue-300" />
+            <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-500/20 border border-transparent dark:border-blue-500/30 dark:shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+              <BarChart3 className="h-7 w-7 text-blue-700 dark:text-blue-400" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Performance Analytics</h1>
-              <p className="text-slate-600 dark:text-slate-300">Track progress and focus on the next highest-impact improvements.</p>
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Performance Analytics</h1>
+              <p className="text-slate-600 dark:text-slate-400">Track progress and focus on the next highest-impact improvements.</p>
             </div>
           </div>
         </motion.section>
@@ -189,10 +189,10 @@ const Analytics = () => {
             <ActivityHeatmap />
           </motion.div>
 
-          <motion.div variants={itemVariants} className="glass-panel p-5 border border-slate-200 dark:border-slate-700">
+          <motion.div variants={itemVariants} className="glass-panel p-5 border border-slate-200 dark:border-white/10 dark:hover:border-white/20 transition-colors">
             <div className="flex items-center gap-2 mb-4">
-              <Activity className="h-5 w-5 text-blue-700 dark:text-blue-300" />
-              <h2 className="text-lg font-semibold">Weekly Activity</h2>
+              <Activity className="h-5 w-5 text-blue-700 dark:text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+              <h2 className="text-lg font-bold dark:text-white">Weekly Activity</h2>
             </div>
             <div className="flex items-end justify-between h-[155px] pt-4 space-x-2">
               {data.weeklyActivity && data.weeklyActivity.length > 0 ? data.weeklyActivity.map((day, idx) => {
@@ -202,19 +202,19 @@ const Analytics = () => {
                   <div key={idx} className="flex flex-col items-center flex-1 h-full">
                     <div className="w-full flex-1 flex items-end justify-center pb-2 relative group">
                       <div 
-                        className="w-full max-w-[24px] bg-blue-500 dark:bg-blue-600 rounded-t-sm transition-all duration-300 group-hover:bg-blue-400" 
+                        className="w-full max-w-[24px] bg-blue-500 dark:bg-blue-500 rounded-t-sm transition-all duration-300 group-hover:bg-blue-400 dark:group-hover:bg-blue-300 dark:shadow-[0_0_12px_rgba(59,130,246,0.8)]" 
                         style={{ height: `${heightPct}%`, minHeight: '4px' }}
                       />
-                      <div className="opacity-0 group-hover:opacity-100 absolute -top-8 bg-slate-800 text-white text-xs px-2 py-1 rounded transition-opacity">
+                      <div className="opacity-0 group-hover:opacity-100 absolute -top-8 bg-slate-900 border border-white/20 text-white text-xs px-2 py-1 rounded transition-opacity shadow-[0_0_15px_rgba(0,0,0,0.8)] backdrop-blur-md">
                         {day.count}
                       </div>
                     </div>
-                    <span className="text-xs text-slate-500">{day.day}</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{day.day}</span>
                   </div>
                 );
               }) : (
                 <div className="w-full text-center flex flex-col items-center justify-center -mt-6">
-                  <Activity className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                  <Activity className="h-8 w-8 text-slate-300 dark:text-white/20 mx-auto mb-2" />
                   <p className="text-sm text-slate-500 dark:text-slate-400">Solve problems to track weekly activity.</p>
                 </div>
               )}
@@ -222,10 +222,10 @@ const Analytics = () => {
           </motion.div>
         </section>
 
-          <motion.section variants={itemVariants} className="glass-panel p-6 border border-slate-200 dark:border-slate-700">
+          <motion.section variants={itemVariants} className="glass-panel p-6 border border-slate-200 dark:border-white/10">
             <div className="flex items-center gap-2 mb-6">
-              <BookOpen className="h-5 w-5 text-blue-700 dark:text-blue-300" />
-              <h2 className="text-lg font-semibold">Domain Mastery</h2>
+              <BookOpen className="h-5 w-5 text-blue-700 dark:text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+              <h2 className="text-lg font-bold dark:text-white">Domain Mastery</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {subjectProgress && subjectProgress.length > 0 ? subjectProgress.map((subject, idx) => {
@@ -236,13 +236,13 @@ const Analytics = () => {
                 const dashoffset = circumference - (subject.progress / 100) * circumference;
                 
                 return (
-                  <div key={`${subject.name}-${idx}`} className="relative p-5 rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white/50 dark:bg-slate-800/40 overflow-hidden group hover:shadow-lg transition-all duration-300">
-                    <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-blue-400 to-indigo-600 opacity-80" />
+                  <div key={`${subject.name}-${idx}`} className="relative p-5 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 overflow-hidden group hover:dark:border-white/20 transition-all duration-300 dark:shadow-[inset_0_0_20px_rgba(255,255,255,0.02)]">
+                    <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-blue-400 to-indigo-600 opacity-80 dark:shadow-[0_0_15px_rgba(59,130,246,0.6)]" />
                     
                     <div className="flex items-center justify-between pl-4">
                       <div>
-                        <h3 className="font-bold text-slate-900 dark:text-slate-100 text-lg mb-1">{subject.name}</h3>
-                        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${masteryClass}`}>
+                        <h3 className="font-bold text-slate-900 dark:text-white text-lg mb-1 drop-shadow-sm">{subject.name}</h3>
+                        <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border border-transparent dark:border-white/10 ${masteryClass} dark:shadow-[0_0_10px_currentColor]`}>
                           {subject.mastery}
                         </span>
                       </div>
@@ -250,7 +250,7 @@ const Analytics = () => {
                       {/* Radial Progress */}
                       <div className="relative w-20 h-20 flex items-center justify-center">
                         <svg className="-rotate-90 w-20 h-20">
-                          <circle cx="40" cy="40" r={radius} stroke="currentColor" strokeWidth="6" fill="transparent" className="text-slate-200 dark:text-slate-700/50" />
+                          <circle cx="40" cy="40" r={radius} stroke="currentColor" strokeWidth="6" fill="transparent" className="text-slate-200 dark:text-white/10" />
                           <circle
                             cx="40"
                             cy="40"
@@ -261,11 +261,11 @@ const Analytics = () => {
                             strokeDasharray={circumference}
                             strokeDashoffset={dashoffset}
                             strokeLinecap="round"
-                            className="text-blue-600 dark:text-blue-500 drop-shadow-md transition-all duration-1000"
+                            className="text-blue-600 dark:text-blue-400 transition-all duration-1000 dark:drop-shadow-[0_0_8px_rgba(96,165,250,0.8)]"
                           />
                         </svg>
                         <div className="absolute inset-0 flex items-center justify-center flex-col">
-                          <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{subject.progress}%</span>
+                          <span className="text-sm font-bold text-slate-900 dark:text-white">{subject.progress}%</span>
                         </div>
                       </div>
                     </div>
@@ -273,10 +273,10 @@ const Analytics = () => {
                 );
               }) : (
                 <div className="col-span-full py-10 flex flex-col items-center justify-center text-center">
-                  <div className="p-4 rounded-full bg-slate-100 dark:bg-slate-800/50 mb-3">
-                    <BookOpen className="h-8 w-8 text-slate-400 dark:text-slate-500" />
+                  <div className="p-4 rounded-full bg-slate-100 dark:bg-white/5 border dark:border-white/10 mb-3 dark:shadow-[0_0_15px_rgba(255,255,255,0.05)]">
+                    <BookOpen className="h-8 w-8 text-slate-400 dark:text-white/40" />
                   </div>
-                  <h3 className="text-slate-900 dark:text-slate-100 font-medium mb-1">No Data Available</h3>
+                  <h3 className="text-slate-900 dark:text-white font-bold mb-1">No Data Available</h3>
                   <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm">Complete practice problems to map your proficiency across specific subjects.</p>
                 </div>
               )}
@@ -284,55 +284,55 @@ const Analytics = () => {
           </motion.section>
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <motion.div variants={itemVariants} className="relative overflow-hidden rounded-2xl border border-emerald-200/50 dark:border-emerald-500/20 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 p-6 shadow-sm">
+          <motion.div variants={itemVariants} className="relative overflow-hidden rounded-2xl border border-emerald-200/50 dark:border-emerald-500/40 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/5 p-6 shadow-sm dark:shadow-[0_0_20px_rgba(16,185,129,0.1)]">
             {/* Background Glow */}
-            <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-400/20 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-400/20 dark:bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
             
             <div className="flex items-center gap-3 mb-6 relative z-10">
-              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-500/20">
+              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-500/20 border dark:border-emerald-500/50 dark:shadow-[0_0_15px_rgba(16,185,129,0.4)]">
                 <Award className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
               </div>
-              <h2 className="text-xl font-bold text-emerald-950 dark:text-emerald-100">Core Strengths</h2>
+              <h2 className="text-xl font-bold text-emerald-950 dark:text-white drop-shadow-sm">Core Strengths</h2>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
               {strengths && strengths.length > 0 ? strengths.map((strength, idx) => (
-                <div key={`${strength}-${idx}`} className="flex items-center gap-3 p-3 rounded-xl bg-white/60 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-800/50 shadow-sm backdrop-blur-sm group">
+                <div key={`${strength}-${idx}`} className="flex items-center gap-3 p-3 rounded-xl bg-white/60 dark:bg-black/50 border border-emerald-100 dark:border-emerald-500/30 shadow-sm backdrop-blur-md group hover:dark:border-emerald-400/70 transition-colors">
                   <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                    <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400 dark:drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                   </div>
-                  <span className="text-sm font-medium text-emerald-900 dark:text-emerald-100 line-clamp-2">{strength}</span>
+                  <span className="text-sm font-bold text-emerald-900 dark:text-emerald-100 line-clamp-2">{strength}</span>
                 </div>
               )) : (
-                <div className="col-span-full py-8 text-center bg-white/40 dark:bg-slate-900/40 rounded-xl border border-dashed border-emerald-200 dark:border-emerald-800/50">
-                  <p className="text-sm text-emerald-700/70 dark:text-emerald-400/70">Solve problems above 75% accuracy to reveal strengths.</p>
+                <div className="col-span-full py-8 text-center bg-white/40 dark:bg-black/40 backdrop-blur-md rounded-xl border border-dashed border-emerald-200 dark:border-emerald-500/30">
+                  <p className="text-sm font-semibold text-emerald-700/70 dark:text-emerald-400/70">Solve problems above 75% accuracy to reveal strengths.</p>
                 </div>
               )}
             </div>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="relative overflow-hidden rounded-2xl border border-rose-200/50 dark:border-rose-500/20 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20 p-6 shadow-sm">
+          <motion.div variants={itemVariants} className="relative overflow-hidden rounded-2xl border border-rose-200/50 dark:border-rose-500/40 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-500/10 dark:to-pink-500/5 p-6 shadow-sm dark:shadow-[0_0_20px_rgba(244,63,94,0.1)]">
             {/* Background Glow */}
-            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-rose-400/20 dark:bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-rose-400/20 dark:bg-rose-500/20 rounded-full blur-3xl pointer-events-none" />
 
             <div className="flex items-center gap-3 mb-6 relative z-10">
-              <div className="p-2 rounded-lg bg-rose-100 dark:bg-rose-500/20">
+              <div className="p-2 rounded-lg bg-rose-100 dark:bg-rose-500/20 border dark:border-rose-500/50 dark:shadow-[0_0_15px_rgba(244,63,94,0.4)]">
                 <Brain className="h-5 w-5 text-rose-700 dark:text-rose-400" />
               </div>
-              <h2 className="text-xl font-bold text-rose-950 dark:text-rose-100">Focus Areas</h2>
+              <h2 className="text-xl font-bold text-rose-950 dark:text-white drop-shadow-sm">Focus Areas</h2>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
               {weaknesses && weaknesses.length > 0 ? weaknesses.map((weakness, idx) => (
-                <div key={`${weakness}-${idx}`} className="flex items-center gap-3 p-3 rounded-xl bg-white/60 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-800/50 shadow-sm backdrop-blur-sm group">
+                <div key={`${weakness}-${idx}`} className="flex items-center gap-3 p-3 rounded-xl bg-white/60 dark:bg-black/50 border border-rose-100 dark:border-rose-500/30 shadow-sm backdrop-blur-md group hover:dark:border-rose-400/70 transition-colors">
                   <div className="h-8 w-8 rounded-full bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                    <Zap className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+                    <Zap className="h-4 w-4 text-rose-600 dark:text-rose-400 dark:drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
                   </div>
-                  <span className="text-sm font-medium text-rose-900 dark:text-rose-100 line-clamp-2">{weakness}</span>
+                  <span className="text-sm font-bold text-rose-900 dark:text-rose-100 line-clamp-2">{weakness}</span>
                 </div>
               )) : (
-                <div className="col-span-full py-8 text-center bg-white/40 dark:bg-slate-900/40 rounded-xl border border-dashed border-rose-200 dark:border-rose-800/50">
-                  <p className="text-sm text-rose-700/70 dark:text-rose-400/70">Metrics clear. Attempt harder problems to find weak points.</p>
+                <div className="col-span-full py-8 text-center bg-white/40 dark:bg-black/40 backdrop-blur-md rounded-xl border border-dashed border-rose-200 dark:border-rose-500/30">
+                  <p className="text-sm font-semibold text-rose-700/70 dark:text-rose-400/70">Metrics clear. Attempt harder problems to find weak points.</p>
                 </div>
               )}
             </div>
