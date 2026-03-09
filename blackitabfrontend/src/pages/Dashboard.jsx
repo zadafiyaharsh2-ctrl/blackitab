@@ -155,12 +155,8 @@ const Dashboard = () => {
           else setSubjects(FALLBACK_SUBJECTS);
         } catch { setSubjects(FALLBACK_SUBJECTS); }
 
-        // Playlists
-        try {
-          const playlistsRes = await axios.get(`${API_URL}/api/playlists/all`);
-          if (playlistsRes.data.success && playlistsRes.data.playlists?.length > 0) setPlaylists(playlistsRes.data.playlists);
-          else setPlaylists(FALLBACK_PLAYLISTS);
-        } catch { setPlaylists(FALLBACK_PLAYLISTS); }
+        // Playlists (Endpoint not built yet, returning empty to avoid 404)
+        setPlaylists(FALLBACK_PLAYLISTS);
 
         // Progress stats
         if (token) {
