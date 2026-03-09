@@ -53,7 +53,7 @@ const FloatingSocialButton = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-            className="fixed bottom-24 right-6 w-72 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl dark:shadow-[0_0_40px_rgba(0,0,0,0.5)] z-[999] overflow-hidden"
+            className="fixed bottom-20 sm:bottom-24 right-4 sm:right-6 w-[280px] sm:w-72 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl dark:shadow-[0_0_40px_rgba(0,0,0,0.5)] z-[999] overflow-hidden"
           >
             {/* Header */}
             <div className="px-5 py-4 border-b border-gray-200/50 dark:border-white/10 bg-gradient-to-r from-blue-600 to-indigo-600">
@@ -98,7 +98,7 @@ const FloatingSocialButton = () => {
         onClick={() => setOpen(!open)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        className={`fixed bottom-6 right-6 z-[999] w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ${
+        className={`fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-[999] w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ${
           open
             ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30'
             : isSocialPage
