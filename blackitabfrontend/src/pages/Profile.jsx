@@ -294,23 +294,8 @@ const Profile = () => {
   }, [user?._id, user?.id]);
 
   const fetchPlaylists = async () => {
-    try {
-      setLoadingPlaylists(true);
-      const token = localStorage.getItem('token');
-      const targetUserId = userId || user?._id || user?.id;
-
-      const response = await axios.get(`${API_URL}/api/playlists/user/${targetUserId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (response.data.success) {
-        setPlaylists(response.data.playlists);
-      }
-    } catch (error) {
-      console.error('Fetch playlists error:', error);
-    } finally {
-      setLoadingPlaylists(false);
-    }
+    // Playlist API not built yet, setting empty to avoid 404 error
+    setPlaylists([]);
   };
 
   const handleDeletePlaylist = (deletedId) => {
