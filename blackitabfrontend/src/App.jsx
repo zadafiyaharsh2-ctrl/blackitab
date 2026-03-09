@@ -581,11 +581,11 @@ function App() {
  * - onLogout: Function to handle logout action
  */
 
-import SocialSidebar from './components/SocialSidebar';
+import FloatingSocialButton from './components/FloatingSocialButton';
+import NotificationBell from './components/NotificationBell';
 
 function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
   const location = useLocation();
-  const isSocial = ['/social', '/profile', '/network', '/messages', '/create-post', '/notifications'].some(path => location.pathname.startsWith(path));
 
   // Track last visited page for "Resume Last Session" on Dashboard
   useEffect(() => {
@@ -607,35 +607,14 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
     }
   }, [location.pathname]);
 
-  // State for Social Sidebar (independent toggle if needed)
-  const [socialSidebarOpen, setSocialSidebarOpen] = useState(true);
-
-  // If user is not passed as prop, try to get from localStorage (fallback)
-  const currentUser = user || JSON.parse(localStorage.getItem('user') || '{}');
-
-  // Calculate Layout Dimensions based on which sidebar is active
-  const activeSidebarWidth = isSocial 
-    ? (socialSidebarOpen ? '16rem' : '4rem')
-    : (sidebarOpen ? '16rem' : '4rem');
+  const activeSidebarWidth = sidebarOpen ? '16rem' : '4rem';
 
   return (
     <div className="min-h-screen flex bg-gray-50 dark:bg-black text-gray-900 dark:text-white transition-colors duration-300">
-      {/* Contextual Sidebar: Show Social Sidebar if on social routes, otherwise Main Sidebar */}
-      {isSocial ? (
-         <div className="z-50">
-           <SocialSidebar
-             onLogout={onLogout}
-             isOpen={socialSidebarOpen}
-             setIsOpen={setSocialSidebarOpen}
-             user={currentUser}
-             leftOffset={0} // Fixed to the extreme left, replacing the main sidebar
-           />
-         </div>
-      ) : (
-         <div className="z-50">
-           <Sidebar onLogout={onLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-         </div>
-      )}
+      {/* Main Sidebar — Always present */}
+      <div className="z-50">
+        <Sidebar onLogout={onLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      </div>
 
       {/* Main Content Area */}
       <div
@@ -644,6 +623,12 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
       >
         {children}
       </div>
+
+      {/* Floating Social Button — Bottom Right */}
+      <FloatingSocialButton />
+
+      {/* Notification Bell — Top Right */}
+      <NotificationBell />
     </div>
   );
 }
