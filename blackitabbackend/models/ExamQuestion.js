@@ -91,6 +91,12 @@ const examQuestionSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    visibility: {
+        type: String,
+        enum: ['private', 'institute', 'public'],
+        default: 'public',
+        index: true
+    },
     // ── Approval Workflow ──
     approvalStatus: {
         type: String,
