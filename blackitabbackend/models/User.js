@@ -73,6 +73,26 @@ const userSchema = new mongoose.Schema({
     default: null
   },
 
+  // --- TEACHER-SPECIFIC FIELDS ---
+  departmentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Department',
+    default: null
+  },
+  specialization: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  teacherSince: {
+    type: Date,
+    default: null
+  },
+  teacherRating: {
+    score: { type: Number, default: 0 },
+    totalReviews: { type: Number, default: 0 }
+  },
+
   // --- MASSIVE SCALE METRICS ---
   globalRank: { type: Number, default: 0 },
   longestStreak: { type: Number, default: 0 },
