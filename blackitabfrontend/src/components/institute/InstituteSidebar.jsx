@@ -8,7 +8,8 @@ import {
   CheckBadgeIcon, 
   BellIcon, 
   BuildingOffice2Icon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  BookOpenIcon
 } from '@heroicons/react/24/outline';
 const InstituteSidebar = ({ isOpen, setIsOpen }) => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const InstituteSidebar = ({ isOpen, setIsOpen }) => {
     { name: 'Theory Checking', path: '/institute/theory', icon: DocumentTextIcon },
     { name: 'Question Checker', path: '/institute/questions', icon: CheckBadgeIcon },
     { name: 'Notifications', path: '/institute/notifications', icon: BellIcon },
+    { name: 'Departments', path: '/institute/departments', icon: BookOpenIcon },
     { name: 'Profile', path: '/institute/profile', icon: BuildingOffice2Icon },
   ];
 

@@ -335,9 +335,19 @@ exports.getUserProfile = async (req, res) => {
         const isRequested = await Connection.exists({ sourceUserId: currentUserId, targetUserId: userId, connectionType: 'follow', status: 'pending' });
         const isFollower = await Connection.exists({ sourceUserId: userId, targetUserId: currentUserId, connectionType: 'follow', status: 'accepted' });
 
+        // Populate institute info
+        let instituteInfo = null;
+        if (user.instituteId) {
+            const Institute = require('../models/Institute');
+            const inst = await Institute.findById(user.instituteId).select('name instituteCode description bannerImage');
+            if (inst) {
+                instituteInfo = { _id: inst._id, name: inst.name, instituteCode: inst.instituteCode, description: inst.description, bannerImage: inst.bannerImage };
+            }
+        }
+
         res.json({
             success: true,
-            user: { ...user, isFollowing: !!isFollowing, isRequested: !!isRequested, isFollower: !!isFollower }
+            user: { ...user, institute: instituteInfo, isFollowing: !!isFollowing, isRequested: !!isRequested, isFollower: !!isFollower }
         });
     } catch (error) {
         

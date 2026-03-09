@@ -110,6 +110,40 @@ exports.getInstituteStats = async (req, res) => {
     }
 };
 
+// GET /api/institute/departments/stats
+exports.getDepartmentStats = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+
+        const institute = await Institute.findById(instId);
+        if (!institute) return res.status(404).json({ success: false, message: 'Institute not found' });
+
+        const departments = institute.departments || [];
+
+        // Aggregate student counts per department
+        const stats = await User.aggregate([
+            { $match: { instituteId: instId, role: 'student' } },
+            { $unwind: '$departments' }, // Flatten the departments array
+            { $match: { departments: { $in: departments } } }, // Only count valid departments
+            { $group: { _id: '$departments', count: { $sum: 1 } } }
+        ]);
+
+        // Format into a map of { departmentName: count }
+        const countsMap = {};
+        departments.forEach(dept => { countsMap[dept] = 0; }); // Initialize all to 0
+        stats.forEach(stat => { countsMap[stat._id] = stat.count; });
+
+        res.json({
+            success: true,
+            data: countsMap
+        });
+    } catch (error) {
+        
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
 // ══════════════════════════════════════════════════════════════
 // MEMBER MANAGEMENT
 // ══════════════════════════════════════════════════════════════
@@ -141,12 +175,18 @@ exports.getMembers = async (req, res) => {
                 return res.status(400).json({ success: false, message: 'Name, email, and password are required' });
             }
 
+        // Fetch Institute to get the code
+        const Institute = require('../models/Institute');
+        const institute = await Institute.findById(instId);
+        if (!institute) return res.status(404).json({ success: false, message: 'Institute not found' });
+
         // Check existing user
         const existing = await User.findOne({ email: email.toLowerCase() });
         if (existing) {
             // If they exist but have no institute, link them
             if (!existing.instituteId) {
                 existing.instituteId = instId;
+                existing.instituteCode = institute.instituteCode;
                 if (role && ['student', 'teacher', 'hod'].includes(role)) existing.role = role;
                 await existing.save();
                 return res.json({ success: true, message: `Existing user "${existing.name}" linked to your institute` });
@@ -163,6 +203,7 @@ exports.getMembers = async (req, res) => {
             password,
             role: assignedRole,
             instituteId: instId,
+            instituteCode: institute.instituteCode,
             batchYear: batchYear || '',
             departments: Array.isArray(departments) ? departments : []
         });
@@ -612,6 +653,45 @@ exports.submitFeedback = async (req, res) => {
 
         await feedback.save();
         res.status(201).json({ success: true, message: 'Feedback submitted successfully' });
+    } catch (error) {
+        
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
+// JOIN INSTITUTE
+// ══════════════════════════════════════════════════════════════
+
+// POST /api/institute/join — Student joins an institute by code
+exports.joinInstitute = async (req, res) => {
+    try {
+        const { instituteCode } = req.body;
+        if (!instituteCode) {
+            return res.status(400).json({ success: false, message: 'Institute code is required' });
+        }
+
+        // Check if user already belongs to an institute
+        if (req.user.instituteId) {
+            return res.status(400).json({ success: false, message: 'You already belong to an institute. Leave your current institute first.' });
+        }
+
+        const institute = await Institute.findOne({ instituteCode: instituteCode.toUpperCase() });
+        if (!institute) {
+            return res.status(404).json({ success: false, message: 'Invalid institute code. No institute found.' });
+        }
+
+        // Link user to institute
+        const user = await User.findById(req.user._id);
+        user.instituteId = institute._id;
+        user.instituteCode = institute.instituteCode;
+        await user.save();
+
+        res.json({
+            success: true,
+            message: `Successfully joined "${institute.name}"!`,
+            institute: { _id: institute._id, name: institute.name, instituteCode: institute.instituteCode, description: institute.description, bannerImage: institute.bannerImage }
+        });
     } catch (error) {
         
         res.status(500).json({ success: false, message: 'Server error' });

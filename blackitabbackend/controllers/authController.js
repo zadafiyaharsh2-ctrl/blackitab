@@ -50,6 +50,7 @@ exports.register = async (req, res) => {
             password,
             role: assignedRole,
             instituteId,
+            instituteCode: instituteId ? instituteCode.toUpperCase() : '',
             batchYear,
             division
         });
@@ -112,7 +113,8 @@ exports.registerInstitute = async (req, res) => {
             email: adminEmail.toLowerCase(),
             password: adminPassword,
             role: 'institute',
-            instituteId: newInstitute._id
+            instituteId: newInstitute._id,
+            instituteCode: instituteCode.toUpperCase()
         });
 
         await newUser.save();

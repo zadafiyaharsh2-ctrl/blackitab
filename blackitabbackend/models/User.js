@@ -65,6 +65,12 @@ const userSchema = new mongoose.Schema({
     ref: 'Institute',
     default: null
   },
+  instituteCode: {
+    type: String,
+    default: '',
+    uppercase: true,
+    trim: true
+  },
   batchYear: { type: String },
   division: { type: String },
   reportsToUser: {

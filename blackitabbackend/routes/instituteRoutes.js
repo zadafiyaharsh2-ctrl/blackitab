@@ -15,6 +15,7 @@ router.get('/my', instituteController.getMyInstitute);
 
 // ── Stats ──
 router.get('/stats', requireRole('institute', 'hod'), instituteController.getInstituteStats);
+router.get('/departments/stats', requireRole('institute', 'hod', 'teacher'), instituteController.getDepartmentStats);
 
 // ── Profile ──
 router.put('/profile', requireRole('institute'), instituteController.updateInstituteProfile);
@@ -48,5 +49,8 @@ router.get('/analytics', requireRole('institute', 'hod', 'teacher'), instituteCo
 router.get('/teachers', requireRole('institute', 'hod'), instituteController.listTeachersWithRatings);
 router.get('/teachers/:id/feedback', requireRole('institute', 'hod'), instituteController.getTeacherFeedback);
 router.post('/feedback', requireRole('student'), instituteController.submitFeedback);
+
+// ── Join Institute (any authenticated user without an institute) ──
+router.post('/join', instituteController.joinInstitute);
 
 module.exports = router;

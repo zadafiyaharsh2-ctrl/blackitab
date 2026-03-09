@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { FaCog, FaTh, FaBookmark, FaUserTag, FaPlus, FaSearch, FaBell, FaEnvelope, FaPen, FaHeart, FaComment, FaPlay, FaLock, FaGraduationCap, FaRupeeSign, FaListUl, FaArrowLeft, FaShareAlt } from 'react-icons/fa';
+import { FaCog, FaTh, FaBookmark, FaUserTag, FaPlus, FaSearch, FaBell, FaEnvelope, FaPen, FaHeart, FaComment, FaPlay, FaLock, FaGraduationCap, FaRupeeSign, FaListUl, FaArrowLeft, FaShareAlt, FaBuilding, FaSignInAlt, FaTimes, FaExternalLinkAlt } from 'react-icons/fa';
 import API_URL from '../config';
 import usePageTitle from '../hooks/usePageTitle';
 import toast from 'react-hot-toast';
@@ -41,6 +41,9 @@ const Profile = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showJoinInstituteModal, setShowJoinInstituteModal] = useState(false);
+  const [joinInstituteCode, setJoinInstituteCode] = useState('');
+  const [joiningInstitute, setJoiningInstitute] = useState(false);
 
   // State for Notifications
   const [notifications, setNotifications] = useState([]);
@@ -559,6 +562,37 @@ const Profile = () => {
               {/* Bio Content */}
             </div>
 
+            {/* Institute Badge */}
+            <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 pt-4">
+              {user.institute ? (
+                <div
+                  onClick={() => {
+                    const isInstituteRole = ['institute_admin', 'institute', 'hod', 'teacher'].includes(user.role);
+                    navigate(isInstituteRole ? '/institute/profile' : '/institute-view');
+                  }}
+                  className="flex items-center gap-2.5 px-4 py-2.5 bg-gradient-to-r from-orange-500/10 to-amber-500/10 dark:from-orange-500/10 dark:to-amber-500/10 border border-orange-500/20 rounded-xl cursor-pointer hover:border-orange-500/40 hover:shadow-[0_0_15px_rgba(249,115,22,0.15)] transition-all group"
+                >
+                  <FaBuilding className="text-orange-500 text-sm" />
+                  <span className="text-sm font-semibold text-orange-600 dark:text-orange-400 group-hover:text-orange-500 dark:group-hover:text-orange-300 transition-colors">{user.institute.name}</span>
+                  <FaExternalLinkAlt className="text-orange-400/50 text-[10px] group-hover:text-orange-400 transition-colors" />
+                </div>
+              ) : isMyProfile ? (
+                <button
+                  onClick={() => setShowJoinInstituteModal(true)}
+                  className="flex items-center gap-2.5 px-4 py-2.5 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:border-blue-500/30 hover:bg-blue-500/5 transition-all group"
+                >
+                  <FaBuilding className="text-gray-400 group-hover:text-blue-400 transition-colors text-sm" />
+                  <span className="text-sm text-gray-500 dark:text-gray-400 group-hover:text-blue-400 dark:group-hover:text-blue-300 transition-colors">No institute joined</span>
+                  <span className="text-xs font-bold text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded-md">Join</span>
+                </button>
+              ) : user.instituteId ? (
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl">
+                  <FaBuilding className="text-gray-400 text-sm" />
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Member of an institute</span>
+                </div>
+              ) : null}
+            </div>
+
             {/* Stats Grid */}
             <div className="flex flex-wrap justify-center md:justify-start items-center gap-6 sm:gap-10 md:gap-14 pt-6 border-t border-gray-200 dark:border-white/5 mt-2">
               <div onClick={fetchFollowing} className="cursor-pointer group text-center md:text-left transition-all hover:-translate-y-1">
@@ -765,6 +799,77 @@ const Profile = () => {
             }
           }}
         />
+      )}
+
+      {/* Join Institute Modal */}
+      {showJoinInstituteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowJoinInstituteModal(false)}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl relative"
+            onClick={e => e.stopPropagation()}
+          >
+            <button onClick={() => setShowJoinInstituteModal(false)} className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors">
+              <FaTimes size={16} />
+            </button>
+
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-orange-500/10 to-amber-500/10 border border-orange-500/20 flex items-center justify-center">
+                <FaBuilding className="text-orange-500 text-xl" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Join an Institute</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Enter the institute code provided by your institute</p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1 mb-1 block">Institute Code</label>
+                <input
+                  type="text"
+                  value={joinInstituteCode}
+                  onChange={e => setJoinInstituteCode(e.target.value.toUpperCase())}
+                  placeholder="e.g. SURAT123"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all text-center text-lg font-bold tracking-widest uppercase"
+                  autoFocus
+                />
+              </div>
+
+              <button
+                onClick={async () => {
+                  if (!joinInstituteCode.trim()) return toast.error('Please enter an institute code');
+                  setJoiningInstitute(true);
+                  try {
+                    const token = localStorage.getItem('token');
+                    const res = await axios.post(`${API_URL}/api/institute/join`, { instituteCode: joinInstituteCode }, {
+                      headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (res.data.success) {
+                      toast.success(res.data.message);
+                      setUser(prev => ({ ...prev, institute: res.data.institute, instituteId: res.data.institute._id }));
+                      const stored = JSON.parse(localStorage.getItem('user') || '{}');
+                      localStorage.setItem('user', JSON.stringify({ ...stored, institute: res.data.institute, instituteId: res.data.institute._id }));
+                      setShowJoinInstituteModal(false);
+                      setJoinInstituteCode('');
+                    }
+                  } catch (err) {
+                    toast.error(err.response?.data?.message || 'Failed to join institute');
+                  } finally {
+                    setJoiningInstitute(false);
+                  }
+                }}
+                disabled={joiningInstitute || !joinInstituteCode.trim()}
+                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {joiningInstitute ? (
+                  <><div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /><span>Joining...</span></>
+                ) : (
+                  <><FaSignInAlt /><span>Join Institute</span></>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
       )}
     </div>
     </div>

@@ -63,6 +63,7 @@ import QuestionPaper from './pages/QuestionPaper';
 import InstituteLayout from './layouts/InstituteLayout';
 import InstituteDashboard from './pages/institute/InstituteDashboard';
 import InstituteProfile from './pages/institute/InstituteProfile';
+import InstituteDepartments from './pages/institute/InstituteDepartments';
 import TeacherPanel from './pages/institute/TeacherPanel';
 import StudentPanel from './pages/institute/StudentPanel';
 import TheoryChecking from './pages/institute/TheoryChecking';
@@ -544,11 +545,24 @@ function App() {
               }
             />
 
+            {/* Institute Profile — accessible to all authenticated users (students see read-only) */}
+            <Route
+              path="/institute-view"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <InstituteProfile />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
             {/* Institute Nested Routes using InstituteLayout */}
             <Route path="/institute" element={<InstituteLayout />}>
               <Route index element={<Navigate to="/institute/dashboard" replace />} />
               <Route path="dashboard" element={<InstituteDashboard />} />
               <Route path="profile" element={<InstituteProfile />} />
+              <Route path="departments" element={<InstituteDepartments />} />
               <Route path="teachers" element={<TeacherPanel />} />
               <Route path="students" element={<StudentPanel />} />
               <Route path="theory" element={<TheoryChecking />} />

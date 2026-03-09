@@ -126,6 +126,16 @@ app.get('/api/me', async (req, res) => {
       return res.status(401).json({ success: false, message: 'User not found' });
     }
 
+    // Populate institute info if user belongs to one
+    let instituteInfo = null;
+    if (user.instituteId) {
+      const Institute = require('./models/Institute');
+      const inst = await Institute.findById(user.instituteId).select('name instituteCode description bannerImage');
+      if (inst) {
+        instituteInfo = { _id: inst._id, name: inst.name, instituteCode: inst.instituteCode, description: inst.description, bannerImage: inst.bannerImage };
+      }
+    }
+
     res.json({
       success: true,
       user: {
@@ -134,6 +144,7 @@ app.get('/api/me', async (req, res) => {
         name: user.name,
         role: user.role,
         instituteId: user.instituteId,
+        institute: instituteInfo,
         bio: user.bio,
         profileImage: user.profileImage,
         followerCount: user.followerCount || 0,

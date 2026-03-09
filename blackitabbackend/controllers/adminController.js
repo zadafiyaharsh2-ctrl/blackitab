@@ -240,6 +240,7 @@ exports.createUser = async (req, res) => {
             password,
             role: assignedRole,
             instituteId,
+            instituteCode: instituteId ? instituteCode.toUpperCase() : '',
             batchYear: batchYear || undefined,
             division: division || undefined
         });
@@ -561,12 +562,14 @@ exports.editUser = async (req, res) => {
         if (req.body.instituteCode !== undefined) {
             if (req.body.instituteCode === '' || req.body.instituteCode === null) {
                 updates.instituteId = null;
+                updates.instituteCode = '';
             } else {
                 const institute = await Institute.findOne({ instituteCode: req.body.instituteCode.toUpperCase() });
                 if (!institute) {
                     return res.status(400).json({ success: false, message: `Invalid institute code: ${req.body.instituteCode}` });
                 }
                 updates.instituteId = institute._id;
+                updates.instituteCode = institute.instituteCode;
             }
         }
 
