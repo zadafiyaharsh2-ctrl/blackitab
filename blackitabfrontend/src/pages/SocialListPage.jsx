@@ -70,7 +70,7 @@ const SocialListPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white p-6 relative overflow-hidden font-sans">
+    <div className="relative overflow-hidden font-sans text-gray-900 dark:text-white min-h-[80vh]">
       {/* Background Orbs */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] mix-blend-screen" />
@@ -80,14 +80,14 @@ const SocialListPage = () => {
       <div className="max-w-3xl mx-auto relative z-10 pt-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => navigate(-1)} className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-colors group">
-            <FaArrowLeft size={20} className="text-gray-400 group-hover:text-white transition-colors" />
+          <button onClick={() => navigate(-1)} className="p-3 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 rounded-full transition-colors group">
+            <FaArrowLeft size={20} className="text-gray-500 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors" />
           </button>
-          <h1 className="text-3xl font-bold capitalize text-glow">{type}</h1>
+          <h1 className="text-3xl font-bold capitalize text-blue-600 dark:text-blue-400 text-glow">{type}</h1>
         </div>
 
         {/* Content */}
-        <div className="glass-panel border-white/5 rounded-[2rem] p-6 shadow-2xl">
+        <div className="glass-panel border-gray-200 dark:border-white/10 rounded-[2rem] p-6 shadow-xl bg-white/50 dark:bg-white/5 backdrop-blur-md">
           {loading ? (
              <div className="flex justify-center py-20">
                  <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
@@ -97,16 +97,16 @@ const SocialListPage = () => {
           ) : users.length === 0 ? (
              <div className="text-center text-gray-500 py-20 font-medium text-lg">No users found</div>
           ) : (
-             <div className="divide-y divide-white/5">
+             <div className="divide-y divide-gray-200 dark:divide-white/5">
                {users.map(u => (
-                 <div key={u._id} className="flex items-center justify-between py-5 hover:bg-white/5 px-4 -mx-4 rounded-xl transition-all cursor-pointer group" onClick={() => navigate(`/profile/${u._id}`)}>
+                 <div key={u._id} className="flex items-center justify-between py-5 hover:bg-gray-50 dark:hover:bg-white/5 px-4 -mx-4 rounded-xl transition-all cursor-pointer group" onClick={() => navigate(`/profile/${u._id}`)}>
                     <div className="flex items-center gap-4">
                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-xl font-bold text-white shadow-[0_0_15px_rgba(59,130,246,0.4)] group-hover:scale-105 transition-transform">
                           {u.name?.charAt(0).toUpperCase()}
                        </div>
                        <div>
-                          <div className="font-bold text-lg text-white group-hover:text-blue-400 transition-colors">{u.name}</div>
-                          <div className="text-sm text-gray-400 font-medium">{u.followerCount || 0} followers</div>
+                          <div className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">{u.name}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">{u.followerCount || 0} followers</div>
                        </div>
                     </div>
 
@@ -114,8 +114,8 @@ const SocialListPage = () => {
                     {(currentUser?._id || currentUser?.id) !== (u._id || u.id) && (
                       <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-3">
                          <button 
-                            onClick={() => navigate(`/messages/${u._id}`)}
-                            className="p-3 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors border border-white/10"
+                            onClick={(e) => { e.stopPropagation(); navigate(`/messages/${u._id}`); }}
+                            className="p-3 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors border border-gray-200 dark:border-white/10"
                             title="Message"
                          >
                             <FaEnvelope size={16} />
@@ -123,14 +123,14 @@ const SocialListPage = () => {
 
                          {u.isFollowing ? (
                             <button 
-                              onClick={() => handleUnfollow(u._id)}
-                              className="px-6 py-2.5 rounded-full border border-gray-600 hover:border-red-500 hover:text-red-500 hover:bg-red-500/10 text-sm font-bold transition-all text-gray-300"
+                              onClick={(e) => { e.stopPropagation(); handleUnfollow(u._id); }}
+                              className="px-6 py-2.5 rounded-full border border-gray-300 dark:border-gray-600 hover:border-red-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 text-sm font-bold transition-all text-gray-600 dark:text-gray-300"
                             >
                               Following
                             </button>
                          ) : (
                             <button 
-                              onClick={() => handleFollow(u._id)}
+                              onClick={(e) => { e.stopPropagation(); handleFollow(u._id); }}
                               className="px-6 py-2.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-bold transition-all shadow-[0_0_15px_rgba(37,99,235,0.4)] hover:shadow-[0_0_20px_rgba(37,99,235,0.6)] hover:scale-105"
                             >
                               Follow
