@@ -50,13 +50,11 @@ import Notifications from './pages/Notifications';
 import CreatePost from './pages/CreatePost';
 import StudyContent from './pages/StudyContent';
 import ContentDetail from './pages/ContentDetail';
-import AIQuestionGenerator from './pages/AIQuestionGenerator';
 import ExamQuestions from './pages/ExamQuestions';
 import Leaderboard from './pages/Leaderboard';
 import Onboarding from './pages/Onboarding';
 import TeacherDashboard from './pages/TeacherDashboard';
-import CreateExamQuestion from './pages/CreateExamQuestion';
-import MyQuestions from './pages/MyQuestions';
+import QuestionManagement from './pages/QuestionManagement';
 import QuestionPaper from './pages/QuestionPaper';
 import TeacherBatches from './pages/TeacherBatches';
 
@@ -313,13 +311,13 @@ function App() {
               }
             />
 
-            {/* AI Question Generator */}
+            {/* Question Management (Consolidated Page) */}
             <Route
-              path="/ai-questions"
+              path="/question-management"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <AIQuestionGenerator />
+                    <QuestionManagement />
                   </MainLayout>
                 </ProtectedRoute>
               }
@@ -548,29 +546,7 @@ function App() {
               }
             />
 
-            {/* Create Exam Question */}
-            <Route
-              path="/create-question"
-              element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <CreateExamQuestion />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* My Questions */}
-            <Route
-              path="/my-questions"
-              element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <MyQuestions />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
+            {/* (Old Routes Removed: CreateExamQuestion and MyQuestions) */}
 
             {/* Question Paper Generator */}
             <Route
@@ -660,9 +636,8 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
         '/analytics': 'Analytics', '/contest': 'Contest', '/ask-ai': 'AI Assistant',
         '/leaderboard': 'Leaderboard', '/profile': 'Profile', '/messages': 'Messages',
         '/teacher-dashboard': 'Teacher Panel', '/question-paper': 'Question Paper',
-        '/create-question': 'Create Question', '/my-questions': 'My Questions',
         '/institute': 'Institute Panel', '/school-analytics': 'School Analytics',
-        '/ai-questions': 'AI Questions', '/notifications': 'Notifications'
+        '/question-management': 'Question Bank', '/notifications': 'Notifications'
       };
       const label = Object.entries(pageNames).find(([k]) => location.pathname.startsWith(k));
       if (label) {

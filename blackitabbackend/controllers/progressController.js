@@ -90,21 +90,6 @@ async function computeStreakFromActivity(userId) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// HELPER: Percentile-based tier
-// ═════════════════════════════════════════════════════════════════════════════
-// Uses actual user distribution instead of hardcoded thresholds.
-// Tiers: Legendary (top 1%), Platinum (top 5%), Gold (top 20%),
-//        Silver (top 50%), Bronze (bottom 50%)
-// ═════════════════════════════════════════════════════════════════════════════
-function getTierFromPercentile(percentile) {
-    if (percentile >= 99) return 'Legendary';
-    if (percentile >= 95) return 'Platinum';
-    if (percentile >= 80) return 'Gold';
-    if (percentile >= 50) return 'Silver';
-    return 'Bronze';
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
 // XP configuration — difficulty-weighted scoring
 // ═════════════════════════════════════════════════════════════════════════════
 const XP_TABLE = {
@@ -264,11 +249,6 @@ exports.getProgressStats = async (req, res) => {
             ? Math.round(((totalUsers - rank) / (totalUsers - 1)) * 100)
             : 0;
 
-        // 7. Dynamic tier based on percentile
-        const rankTier = totalUsers <= 1
-            ? (currentPoints > 0 ? 'Silver' : 'Bronze')
-            : getTierFromPercentile(percentile);
-
         // Update rating on user doc
         if (user.rating !== percentile || user.globalRank !== rank) {
             user.rating = percentile;
@@ -290,8 +270,7 @@ exports.getProgressStats = async (req, res) => {
                 rank: `#${rank}`,
                 rankPosition: rank,
                 totalUsers,
-                percentile,
-                rankTier}
+                percentile}
         });
     } catch (error) {
         

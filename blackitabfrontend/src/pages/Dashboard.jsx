@@ -37,19 +37,6 @@ const itemVariants = {
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-const getTierInfo = (points, tier) => {
-  // If backend provides the tier (from percentile), use it directly
-  const tierName = tier || 'Bronze';
-  const tiers = {
-    'Legendary': { name: 'Legendary', class: 'tier-badge-legendary', icon: FaCrown, next: null, needed: 0 },
-    'Platinum':  { name: 'Platinum',  class: 'tier-badge-platinum',  icon: FaCrown, next: 'Legendary', needed: 0 },
-    'Gold':      { name: 'Gold',      class: 'tier-badge-gold',      icon: FaTrophy, next: 'Platinum', needed: 0 },
-    'Silver':    { name: 'Silver',    class: 'tier-badge-silver',    icon: FaMedal, next: 'Gold', needed: 0 },
-    'Bronze':    { name: 'Bronze',    class: 'tier-badge-bronze',    icon: FaStar, next: 'Silver', needed: 0 },
-  };
-  return tiers[tierName] || tiers['Bronze'];
-};
-
 const getMasteryLevel = (percentage) => {
   if (percentage >= 80) return { label: 'Expert',       class: 'mastery-expert' };
   if (percentage >= 50) return { label: 'Advanced',     class: 'mastery-advanced' };
@@ -100,7 +87,6 @@ const FALLBACK_PROGRESS = {
   totalPoints: 0,
   rank: 'Unranked',
   percentile: 0,
-  rankTier: 'Bronze',
   recentActivity: [],
 };
 const FALLBACK_PLAYLISTS = [];
@@ -131,7 +117,7 @@ const Dashboard = () => {
   const [subjects, setSubjects] = useState([]);
   const [playlists, setPlaylists] = useState([]);
   const [progressStats, setProgressStats] = useState({ totalCompleted: 0, bySubject: [] });
-  const [stats, setStats] = useState({ streak: 0, longestStreak: 0, totalPoints: 0, rank: 'Loading...', percentile: 0, rankTier: 'Bronze' });
+  const [stats, setStats] = useState({ streak: 0, longestStreak: 0, totalPoints: 0, rank: 'Loading...', percentile: 0 });
   const [recentActivity, setRecentActivity] = useState([]);
   const [nextContest, setNextContest] = useState({
     title: "Weekly Challenge #14", date: "Sat, Mar 8 · 3:00 PM", link: "/contest"
@@ -172,19 +158,18 @@ const Dashboard = () => {
                 longestStreak: d.longestStreak || 0,
                 totalPoints: d.totalPoints || 0,
                 rank: d.rank || 'Unranked',
-                percentile: d.percentile || 0,
-                rankTier: d.rankTier || 'Bronze'
+                percentile: d.percentile || 0
               });
               setRecentActivity(d.recentActivity || []);
             }
           } catch {
             setProgressStats(FALLBACK_PROGRESS);
-            setStats({ streak: 0, longestStreak: 0, totalPoints: 0, rank: 'Unranked', percentile: 0, rankTier: 'Bronze' });
+            setStats({ streak: 0, longestStreak: 0, totalPoints: 0, rank: 'Unranked', percentile: 0 });
             setRecentActivity([]);
           }
         } else {
           setProgressStats(FALLBACK_PROGRESS);
-          setStats({ streak: 0, longestStreak: 0, totalPoints: 0, rank: 'Unranked', percentile: 0, rankTier: 'Bronze' });
+          setStats({ streak: 0, longestStreak: 0, totalPoints: 0, rank: 'Unranked', percentile: 0 });
           setRecentActivity([]);
         }
 
@@ -222,7 +207,6 @@ const Dashboard = () => {
   }, []);
 
   // ── Derived Data ────────────────────────────────────────────────────────
-  const tier = getTierInfo(stats.totalPoints, stats.rankTier);
   const totalTopics = subjects.reduce((sum, s) => sum + (s.topicCount || 0), 0);
 
   const recentSubjects = subjects.map(subject => {
@@ -286,11 +270,6 @@ const Dashboard = () => {
                   <span className="inline-block animate-bounce ml-2 text-xl">👋</span>
                 </h1>
                 <div className="flex flex-wrap items-center gap-3 text-sm">
-                  {/* Tier Badge */}
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${tier.class}`}>
-                    <tier.icon className="text-[10px]" /> {tier.name}
-                  </span>
-                  <span className="text-gray-500">•</span>
                   <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1">
                     <FaFire className="text-orange-400" /> {stats.streak} day streak
                   </span>
@@ -368,9 +347,6 @@ const Dashboard = () => {
             </div>
             <h3 className="text-2xl font-black text-gray-900 dark:text-white">{stats.rank}</h3>
             <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">Global Rank</p>
-            <span className={`mt-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${tier.class}`}>
-              {tier.name}
-            </span>
           </motion.div>
         </motion.div>
 

@@ -78,12 +78,10 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
 
     // ─── Teacher / HOD / Institute Admin only ───
     ...(canAccessTeacher ? [
-      { path: '/ai-questions', label: 'AI Questions', icon: <FaGraduationCap className="text-emerald-400" /> },
       { path: '/teacher-dashboard', label: 'Teacher Panel', icon: <FaSchool className="text-indigo-400" /> },
       { path: '/teacher/batches', label: 'Classes & Batches', icon: <FaUsers className="text-blue-400" /> },
       { path: '/teacher/attendance', label: 'Attendance', icon: <FaCalendarDay className="text-purple-400" /> },
-      { path: '/create-question', label: 'Create Question', icon: <FaGraduationCap className="text-teal-400" /> },
-      { path: '/my-questions', label: 'My Questions', icon: <FaListUl className="text-cyan-400" /> },
+      { path: '/question-management', label: 'Question Bank', icon: <FaListUl className="text-cyan-400" /> },
       { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
       { path: '/question-paper', label: 'Question Paper', icon: <FaBook className="text-rose-400" /> },
     ] : []),

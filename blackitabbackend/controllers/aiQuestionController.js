@@ -143,7 +143,11 @@ const generateQuestions = async (req, res) => {
                 correctAnswer: q.correctAnswer,
                 difficulty: validDifficulty,
                 explanation: q.explanation,
-                isAiGenerated: true
+                isAiGenerated: true,
+                createdBy: req.user._id,
+                instituteId: req.user.instituteId || null,
+                visibility: 'public',
+                isPublic: true
             }))
         );
 
