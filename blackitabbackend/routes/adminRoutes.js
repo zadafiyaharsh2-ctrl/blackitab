@@ -21,6 +21,12 @@ router.put('/users/:id/role', adminController.changeUserRole);
 router.put('/users/:id/ban', adminController.toggleBanUser);
 router.delete('/users/:id', adminController.deleteUser);
 
+// ── Phase 11: Comprehensive Super Admin Edits ──
+router.get('/users/full/:id', adminController.getUserFullDetails);
+router.put('/users/full/:id', adminController.editUserFull);
+router.put('/institutes/full/:id', adminController.editInstituteFull);
+router.get('/institutes/:id/members', adminController.getInstituteMembers);
+
 // ── Institute Management ──
 router.get('/institutes', adminController.listInstitutes);
 router.post('/institutes', adminController.createInstitute);
