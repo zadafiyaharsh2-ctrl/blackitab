@@ -23,7 +23,9 @@ const StudentPanel = () => {
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [viewingStudent, setViewingStudent] = useState(null);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -230,7 +232,14 @@ const StudentPanel = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-white/10">
                     {groupedStudents[key].map(s => (
-                      <tr key={s._id} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group">
+                      <tr 
+                        key={s._id} 
+                        className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group cursor-pointer"
+                        onClick={() => {
+                          setViewingStudent(s);
+                          setIsViewModalOpen(true);
+                        }}
+                      >
                         <td className="p-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center font-bold text-gray-600 dark:text-gray-300">
@@ -264,7 +273,10 @@ const StudentPanel = () => {
                           {(user?.role === 'institute' || user?.role === 'hod') && (
                             <div className="flex justify-end gap-2">
                               <button
-                                onClick={() => openEditModal(s)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openEditModal(s);
+                                }}
                                 className="p-2 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-500 dark:text-blue-400 rounded-lg transition-colors border border-blue-200 dark:border-blue-500/20"
                                 title="Edit Student"
                               >
@@ -272,7 +284,10 @@ const StudentPanel = () => {
                               </button>
                               {user?.role === 'institute' && (
                                 <button
-                                  onClick={() => handleRemove(s._id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemove(s._id);
+                                  }}
                                   className="p-2 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-500 dark:text-red-400 rounded-lg transition-colors border border-red-200 dark:border-red-500/20"
                                   title="Remove from Institute"
                                 >
@@ -446,6 +461,70 @@ const StudentPanel = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Student Modal */}
+      {isViewModalOpen && viewingStudent && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity" onClick={() => setIsViewModalOpen(false)}>
+          <div 
+            className="glass-panel w-full max-w-md bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-3xl p-6 shadow-2xl relative transform transition-all"
+            onClick={e => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setIsViewModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors bg-gray-100 dark:bg-white/5 p-2 rounded-full"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+            <div className="flex flex-col items-center mb-6 mt-2">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-500 text-white flex items-center justify-center text-4xl font-bold mb-4 shadow-lg ring-4 ring-emerald-50 dark:ring-emerald-900/30">
+                {viewingStudent.name.charAt(0).toUpperCase()}
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white text-center">{viewingStudent.name}</h2>
+              <p className="text-emerald-600 dark:text-emerald-400 font-medium text-sm mt-1">{viewingStudent.email}</p>
+            </div>
+            
+            <div className="space-y-4 px-2 mb-2">
+              <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-5 grid grid-cols-2 gap-y-5 gap-x-4 border border-gray-100 dark:border-white/5">
+                <div>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Batch Year</p>
+                  <p className="font-semibold text-gray-900 dark:text-white text-lg">{viewingStudent.batchYear || <span className="text-gray-400 text-sm font-normal italic">Not specified</span>}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Total Points</p>
+                  <p className="font-semibold text-gray-900 dark:text-white text-lg flex items-center gap-1.5">
+                    <span className="text-amber-500">★</span>
+                    {viewingStudent.points || 0}
+                  </p>
+                </div>
+                <div className="col-span-2 pt-2 border-t border-gray-200 dark:border-white/10">
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2">Departments</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {viewingStudent.departments?.length > 0 ? (
+                      viewingStudent.departments.map(d => (
+                        <span key={d} className="px-3 py-1 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 shadow-sm rounded-lg text-xs font-medium text-gray-700 dark:text-gray-300">
+                          {d}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-sm text-gray-400 italic">No departments assigned</span>
+                    )}
+                  </div>
+                </div>
+                <div className="col-span-2 pt-2 border-t border-gray-200 dark:border-white/10">
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Joined Platform</p>
+                  <p className="font-medium text-gray-900 dark:text-white text-sm">
+                    {viewingStudent.createdAt ? new Date(viewingStudent.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    }) : 'Unknown'}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

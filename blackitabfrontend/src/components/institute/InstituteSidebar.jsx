@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   HomeIcon, 
@@ -14,6 +14,7 @@ import {
   MoonIcon
 } from '@heroicons/react/24/outline';
 import { useTheme } from '../../context/ThemeContext';
+import api from '../../utils/api';
 
 const InstituteSidebar = ({ isOpen, setIsOpen }) => {
   const navigate = useNavigate();
@@ -26,6 +27,28 @@ const InstituteSidebar = ({ isOpen, setIsOpen }) => {
     localStorage.removeItem('user');
     window.location.href = '/login'; // Force reload to clear states
   };
+
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+
+  useEffect(() => {
+    const fetchJoinRequests = async () => {
+      try {
+        const res = await api.get('/institute/join-requests');
+        if (res.data.success) {
+          setPendingRequestsCount(res.data.data.length);
+        }
+      } catch (error) {
+        console.error('Failed to fetch join requests count', error);
+      }
+    };
+
+    if (user && (user.role === 'institute' || user.role === 'hod')) {
+      fetchJoinRequests();
+      // Optional: Set up an interval to refresh the count periodically (e.g., every minute)
+      const intervalId = setInterval(fetchJoinRequests, 60000);
+      return () => clearInterval(intervalId);
+    }
+  }, [user?.role]);
 
   const navItems = [
     { name: 'Dashboard', path: '/institute/dashboard', icon: HomeIcon },
@@ -84,17 +107,28 @@ const InstituteSidebar = ({ isOpen, setIsOpen }) => {
                 end={item.path === '/institute'}
                 onClick={() => setIsOpen(false)}
                 className={`
-                  relative flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 overflow-hidden group
+                  relative flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 overflow-hidden group
                   ${isActive 
                     ? 'text-white shadow-sm font-bold bg-blue-600 dark:bg-blue-500' 
                     : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-white/10'
                   }
                 `}
               >
-                <item.icon className={`w-5 h-5 relative z-10 transition-colors ${
-                  isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-500 transition-colors'
-                }`} />
-                <span className="relative z-10">{item.name}</span>
+                <div className="flex items-center gap-3">
+                  <item.icon className={`w-5 h-5 relative z-10 transition-colors ${
+                    isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-500 transition-colors'
+                  }`} />
+                  <span className="relative z-10">{item.name}</span>
+                </div>
+                {item.name === 'Join Requests' && pendingRequestsCount > 0 && (
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold shadow-sm ${
+                    isActive 
+                      ? 'bg-white text-blue-600' 
+                      : 'bg-red-500 text-white'
+                  }`}>
+                    {pendingRequestsCount}
+                  </span>
+                )}
               </NavLink>
             );
           })}

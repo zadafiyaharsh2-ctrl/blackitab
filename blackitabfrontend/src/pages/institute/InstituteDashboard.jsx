@@ -64,7 +64,7 @@ const InstituteDashboard = () => {
       value: stats?.departmentsCount || 0, 
       icon: BuildingOfficeIcon, 
       color: 'purple', 
-      path: '/institute/profile' 
+      path: '/institute/departments' 
     },
     { 
       title: 'Pending Questions', 

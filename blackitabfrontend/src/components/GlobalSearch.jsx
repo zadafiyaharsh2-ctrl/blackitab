@@ -33,7 +33,7 @@ const GlobalSearch = ({ isOpen, onClose }) => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const res = await axios.get(`${API_URL}/api/social/search?query=${encodeURIComponent(q)}`, {
+            const res = await axios.get(`${API_URL}/api/problems/search?query=${encodeURIComponent(q)}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.data.success) setResults(res.data.data);
@@ -46,8 +46,12 @@ const GlobalSearch = ({ isOpen, onClose }) => {
         return () => clearTimeout(timer);
     }, [query, search]);
 
-    const handleSelect = (userId) => {
-        navigate(`/profile/${userId}`);
+    const handleSelect = (item) => {
+        if (item.type === 'subject') {
+            navigate(`/problems/subject/${item._id}`);
+        } else if (item.type === 'chapter') {
+            navigate(`/problems/chapter/${item._id}`);
+        }
         onClose();
     };
 
@@ -78,7 +82,7 @@ const GlobalSearch = ({ isOpen, onClose }) => {
                         type="text"
                         value={query}
                         onChange={e => setQuery(e.target.value)}
-                        placeholder="Search for people, topics…"
+                        placeholder="Search for subjects, chapters, or topics…"
                         className="flex-1 bg-transparent text-gray-900 dark:text-white placeholder-gray-400 outline-none text-base"
                     />
                     <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
@@ -89,24 +93,22 @@ const GlobalSearch = ({ isOpen, onClose }) => {
                 {/* Results */}
                 <div className="max-h-80 overflow-y-auto">
                     {results.length > 0 ? (
-                        results.map(user => (
+                        results.map(item => (
                             <button
-                                key={user._id}
-                                onClick={() => handleSelect(user._id)}
+                                key={item._id}
+                                onClick={() => handleSelect(item)}
                                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left"
                             >
-                                <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                    {user.profileImage ? (
-                                        <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <FaUser className="text-gray-500 dark:text-gray-400 text-sm" />
-                                    )}
+                                <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+                                    <FaBook className="text-sm" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{user.name}</p>
-                                    {user.bio && <p className="text-gray-400 text-xs truncate">{user.bio}</p>}
+                                    <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{item.name}</p>
+                                    <p className="text-gray-400 text-xs truncate">{item.description}</p>
                                 </div>
-                                <span className="text-xs text-gray-400">{user.followerCount || 0} followers</span>
+                                <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                                    {item.type}
+                                </span>
                             </button>
                         ))
                     ) : query.trim() && !loading ? (
@@ -116,7 +118,7 @@ const GlobalSearch = ({ isOpen, onClose }) => {
                     ) : !query.trim() ? (
                         <div className="py-8 text-center text-gray-400 text-sm">
                             <FaBook className="mx-auto mb-2 text-xl opacity-40" />
-                            Type to search for people
+                            Type to search for study materials
                         </div>
                     ) : null}
                 </div>

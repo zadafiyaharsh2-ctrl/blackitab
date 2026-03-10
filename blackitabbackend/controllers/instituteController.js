@@ -20,7 +20,8 @@ exports.verifyCode = async (req, res) => {
             data: {
                 id: institute._id,
                 name: institute.name,
-                code: institute.instituteCode
+                code: institute.instituteCode,
+                departments: institute.departments || []
             }
         });
     } catch (error) {

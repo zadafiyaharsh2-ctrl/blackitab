@@ -23,7 +23,8 @@ const {
     generateExamQuestions,
     startAiTutor,
     generateTheory,
-    generateAdaptiveQuestion
+    generateAdaptiveQuestion,
+    searchStudyContent
 } = require('../controllers/problemController');
 
 // Import Auth Middleware
@@ -96,6 +97,9 @@ router.get('/daily', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
+// Search Subjects/Chapters
+router.get('/search', searchStudyContent);
 
 // Single Problem: Get by ID
 router.route('/:id')

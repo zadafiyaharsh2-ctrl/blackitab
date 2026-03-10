@@ -158,6 +158,54 @@ exports.updateProblemStatus = async (req, res) => {
     }
 };
 
+// GET /api/problems/search — search for subjects or chapters
+exports.searchStudyContent = async (req, res) => {
+    try {
+        const { query } = req.query;
+        if (!query) {
+            return res.status(400).json({ success: false, message: 'Search query required' });
+        }
+
+        // Search subjects
+        const subjects = await ProblemSubject.find({
+            $or: [
+                { name: { $regex: query, $options: 'i' } },
+                { description: { $regex: query, $options: 'i' } }
+            ]
+        }).select('name description').lean();
+
+        // Search chapters (populate subject for context if needed, but not required if keeping simple)
+        const chapters = await ProblemChapter.find({
+            $or: [
+                { title: { $regex: query, $options: 'i' } },
+                { description: { $regex: query, $options: 'i' } }
+            ]
+        }).populate('subjectId', 'name').select('title description subjectId').lean();
+
+        // Normalize data for the frontend
+        const normalizedSubjects = subjects.map(s => ({
+            _id: s._id,
+            name: s.name,
+            type: 'subject',
+            description: s.description || 'Subject'
+        }));
+
+        const normalizedChapters = chapters.map(c => ({
+            _id: c._id,
+            name: c.title,
+            type: 'chapter',
+            description: `Chapter in ${c.subjectId?.name || 'Unknown Subject'}`,
+            subjectId: c.subjectId?._id
+        }));
+
+        const results = [...normalizedSubjects, ...normalizedChapters];
+
+        res.json({ success: true, data: results });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
 
 // GET /api/problems/exam/:examId/questions
 exports.getExamQuestions = async (req, res) => {

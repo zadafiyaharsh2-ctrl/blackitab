@@ -43,7 +43,16 @@ const Profile = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showJoinInstituteModal, setShowJoinInstituteModal] = useState(false);
   const [joinInstituteCode, setJoinInstituteCode] = useState('');
+  const [joinBatchYear, setJoinBatchYear] = useState('');
+  const [joinDepartments, setJoinDepartments] = useState('');
   const [joiningInstitute, setJoiningInstitute] = useState(false);
+  const [availableDepartments, setAvailableDepartments] = useState([]);
+  const [verifyingCode, setVerifyingCode] = useState(false);
+  const [codeVerified, setCodeVerified] = useState(false);
+  const [instituteName, setInstituteName] = useState('');
+
+  const currentYear = new Date().getFullYear();
+  const batchYears = Array.from({ length: 20 }, (_, i) => currentYear - i);
 
   // State for Notifications
   const [notifications, setNotifications] = useState([]);
@@ -196,6 +205,44 @@ const Profile = () => {
     }, 300); // 300ms debounce
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Verify Institute Code Logic
+  useEffect(() => {
+    if (!joinInstituteCode.trim() || joinInstituteCode.length < 3) {
+      setCodeVerified(false);
+      setAvailableDepartments([]);
+      setInstituteName('');
+      return;
+    }
+
+    const verifyTimer = setTimeout(async () => {
+      setVerifyingCode(true);
+      try {
+        const res = await axios.get(`${API_URL}/api/institute/verify/${joinInstituteCode}`);
+        if (res.data.success) {
+          setCodeVerified(true);
+          setInstituteName(res.data.data.name);
+          setAvailableDepartments(res.data.data.departments || []);
+          // Reset selections if they are not in the new list
+          if (res.data.data.departments && !res.data.data.departments.includes(joinDepartments)) {
+            setJoinDepartments('');
+          }
+        } else {
+          setCodeVerified(false);
+          setInstituteName('');
+          setAvailableDepartments([]);
+        }
+      } catch (err) {
+        setCodeVerified(false);
+        setInstituteName('');
+        setAvailableDepartments([]);
+      } finally {
+        setVerifyingCode(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(verifyTimer);
+  }, [joinInstituteCode]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -810,38 +857,72 @@ const Profile = () => {
             <div className="space-y-4">
               <div>
                 <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1 mb-1 block">Institute Code</label>
-                <input
-                  type="text"
-                  value={joinInstituteCode}
-                  onChange={e => setJoinInstituteCode(e.target.value.toUpperCase())}
-                  placeholder="e.g. SURAT123"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all text-center text-lg font-bold tracking-widest uppercase mb-4"
-                  autoFocus
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={joinInstituteCode}
+                    onChange={e => setJoinInstituteCode(e.target.value.toUpperCase())}
+                    placeholder="e.g. SURAT123"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all text-center text-lg font-bold tracking-widest uppercase mb-1"
+                    autoFocus
+                  />
+                  {verifyingCode && (
+                    <div className="absolute right-3 top-3.5">
+                      <div className="w-5 h-5 border-2 border-orange-500/20 border-t-orange-500 rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                </div>
+                <div className="h-5 mb-2">
+                  {codeVerified && instituteName && (
+                    <p className="text-green-500 text-xs text-center font-medium">✓ {instituteName}</p>
+                  )}
+                  {!codeVerified && joinInstituteCode.length >= 3 && !verifyingCode && (
+                    <p className="text-red-500 text-xs text-center font-medium">Institute not found</p>
+                  )}
+                </div>
               </div>
 
               <div className={`grid ${user?.role === 'student' ? 'grid-cols-2' : 'grid-cols-1'} gap-3 mb-2`}>
                 {user?.role === 'student' && (
                   <div>
                     <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1 mb-1 block">Batch Year</label>
-                    <input
-                      type="text"
-                      value={joinBatchYear}
-                      onChange={e => setJoinBatchYear(e.target.value)}
-                      placeholder="e.g. 2025"
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all text-center"
-                    />
+                    <div className="relative">
+                      <select
+                        value={joinBatchYear}
+                        onChange={e => setJoinBatchYear(e.target.value)}
+                        className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all text-center appearance-none cursor-pointer"
+                      >
+                        <option value="" disabled>Select Year</option>
+                        {batchYears.map(year => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                      </div>
+                    </div>
                   </div>
                 )}
                 <div>
                   <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1 mb-1 block">Department</label>
-                  <input
-                    type="text"
-                    value={joinDepartments}
-                    onChange={e => setJoinDepartments(e.target.value)}
-                    placeholder="e.g. CS"
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all text-center"
-                  />
+                  <div className="relative">
+                    <select
+                      value={joinDepartments}
+                      onChange={e => setJoinDepartments(e.target.value)}
+                      disabled={availableDepartments.length === 0 || !codeVerified}
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all text-center appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      <option value="" disabled>
+                        {codeVerified && availableDepartments.length === 0 ? 'No Departments Found' : 'Select Dept'}
+                      </option>
+                      {availableDepartments.map(dept => (
+                        <option key={dept} value={dept}>{dept}</option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                  </div>
                 </div>
               </div>
 

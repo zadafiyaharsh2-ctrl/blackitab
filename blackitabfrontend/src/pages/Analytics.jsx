@@ -200,9 +200,9 @@ const Analytics = () => {
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <motion.div variants={itemVariants} className="lg:col-span-2">
+          {/* <motion.div variants={itemVariants} className="lg:col-span-2">
             <ActivityHeatmap />
-          </motion.div>
+          </motion.div> */}
 
           <motion.div variants={itemVariants} className="glass-panel p-5 border border-slate-200 dark:border-white/10 dark:hover:border-white/20 transition-colors">
             <div className="flex items-center gap-2 mb-4">
