@@ -69,6 +69,7 @@ import TeacherPanel from './pages/institute/TeacherPanel';
 import StudentPanel from './pages/institute/StudentPanel';
 import TheoryChecking from './pages/institute/TheoryChecking';
 import QuestionChecker from './pages/institute/QuestionChecker';
+import JoinRequestsPanel from './pages/institute/JoinRequestsPanel';
 import InstituteNotifications from './pages/institute/InstituteNotifications';
 
 import AdminLogin from './pages/AdminLogin';
@@ -580,6 +581,7 @@ function App() {
               <Route path="students" element={<StudentPanel />} />
               <Route path="theory" element={<TheoryChecking />} />
               <Route path="questions" element={<QuestionChecker />} />
+              <Route path="join-requests" element={<JoinRequestsPanel />} />
               <Route path="notifications" element={<InstituteNotifications />} />
             </Route>
 

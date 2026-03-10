@@ -54,4 +54,9 @@ router.post('/feedback', requireRole('student'), instituteController.submitFeedb
 // ── Join Institute (any authenticated user without an institute) ──
 router.post('/join', instituteController.joinInstitute);
 
+// ── Join Requests (Institute Admin / HOD) ──
+router.get('/join-requests', requireRole('institute', 'hod'), instituteController.getJoinRequests);
+router.post('/join-requests/:id/approve', requireRole('institute', 'hod'), instituteController.approveJoinRequest);
+router.post('/join-requests/:id/reject', requireRole('institute', 'hod'), instituteController.rejectJoinRequest);
+
 module.exports = router;

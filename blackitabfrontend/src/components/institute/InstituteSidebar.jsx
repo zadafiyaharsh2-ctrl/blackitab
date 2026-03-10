@@ -28,6 +28,7 @@ const InstituteSidebar = ({ isOpen, setIsOpen }) => {
     { name: 'Student Panel', path: '/institute/students', icon: UsersIcon },
     { name: 'Theory Checking', path: '/institute/theory', icon: DocumentTextIcon },
     { name: 'Question Checker', path: '/institute/questions', icon: CheckBadgeIcon },
+    { name: 'Join Requests', path: '/institute/join-requests', icon: UsersIcon },
     { name: 'Notifications', path: '/institute/notifications', icon: BellIcon },
     { name: 'Departments', path: '/institute/departments', icon: BookOpenIcon },
     { name: 'Profile', path: '/institute/profile', icon: BuildingOffice2Icon },

@@ -3,6 +3,7 @@ const User = require('../models/User');
 const ExamQuestion = require('../models/ExamQuestion');
 const Post = require('../models/Post');
 const Attempt = require('../models/Attempt');
+const JoinRequest = require('../models/JoinRequest');
 
 // GET /api/institute/verify/:code
 exports.verifyCode = async (req, res) => {
@@ -685,7 +686,7 @@ exports.submitFeedback = async (req, res) => {
 // JOIN INSTITUTE
 // ══════════════════════════════════════════════════════════════
 
-// POST /api/institute/join — Student joins an institute by code
+// POST /api/institute/join — Student joins an institute by code (Creates a Request)
 exports.joinInstitute = async (req, res) => {
     try {
         const { instituteCode } = req.body;
@@ -703,19 +704,118 @@ exports.joinInstitute = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Invalid institute code. No institute found.' });
         }
 
-        // Link user to institute
-        const user = await User.findById(req.user._id);
-        user.instituteId = institute._id;
-        user.instituteCode = institute.instituteCode;
-        await user.save();
+        // Check for existing pending request
+        const existingRequest = await JoinRequest.findOne({
+            userId: req.user._id,
+            instituteId: institute._id,
+            status: 'pending'
+        });
+
+        if (existingRequest) {
+            return res.status(400).json({ success: false, message: 'You already have a pending join request for this institute.' });
+        }
+
+        // Create a new Join Request
+        const joinRequest = new JoinRequest({
+            userId: req.user._id,
+            instituteId: institute._id,
+            status: 'pending'
+        });
+
+        await joinRequest.save();
 
         res.json({
             success: true,
-            message: `Successfully joined "${institute.name}"!`,
-            institute: { _id: institute._id, name: institute.name, instituteCode: institute.instituteCode, description: institute.description, bannerImage: institute.bannerImage }
+            message: `Join request sent to "${institute.name}". Please wait for admin approval.`,
+            institute: { _id: institute._id, name: institute.name, instituteCode: institute.instituteCode }
         });
     } catch (error) {
+        // Handle unique constraint error if multiple rapid requests
+        if (error.code === 11000) {
+           return res.status(400).json({ success: false, message: 'You already have a pending join request.' });
+        }
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// GET /api/institute/join-requests — Get pending join requests for the institute
+exports.getJoinRequests = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+
+        const requests = await JoinRequest.find({ instituteId: instId, status: 'pending' })
+            .populate('userId', 'name email batchYear')
+            .sort({ createdAt: -1 });
+
+        res.json({ success: true, data: requests });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// POST /api/institute/join-requests/:id/approve — Approve a join request
+exports.approveJoinRequest = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        const requestId = req.params.id;
+
+        const joinRequest = await JoinRequest.findOne({ _id: requestId, instituteId: instId, status: 'pending' });
+        if (!joinRequest) {
+            return res.status(404).json({ success: false, message: 'Pending request not found' });
+        }
+
+        const user = await User.findById(joinRequest.userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // Check if user already joined another institute while pending
+        if (user.instituteId) {
+            joinRequest.status = 'rejected'; // Auto-reject since they joined somewhere else
+            await joinRequest.save();
+            return res.status(400).json({ success: false, message: 'User has already joined another institute.' });
+        }
+
+        const institute = await Institute.findById(instId);
+
+        // Update User
+        user.instituteId = institute._id;
+        user.instituteCode = institute.instituteCode;
+        if (user.role !== 'student' && user.role !== 'teacher' && user.role !== 'hod') {
+            user.role = 'student';
+        }
+        await user.save();
+
+        // Update Request Status
+        joinRequest.status = 'approved';
+        await joinRequest.save();
+
+        res.json({ success: true, message: `User "${user.name}" approved and added to institute.` });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// POST /api/institute/join-requests/:id/reject — Reject a join request
+exports.rejectJoinRequest = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        const requestId = req.params.id;
+
+        const joinRequest = await JoinRequest.findOne({ _id: requestId, instituteId: instId, status: 'pending' });
+        if (!joinRequest) {
+            return res.status(404).json({ success: false, message: 'Pending request not found' });
+        }
+
+        // Update Request Status
+        joinRequest.status = 'rejected';
+        await joinRequest.save();
+
+        const user = await User.findById(joinRequest.userId).select('name');
         
+        res.json({ success: true, message: `Join request for "${user ? user.name : 'Unknown User'}" rejected.` });
+    } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

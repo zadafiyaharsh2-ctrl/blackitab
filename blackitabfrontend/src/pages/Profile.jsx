@@ -831,9 +831,6 @@ const Profile = () => {
                     });
                     if (res.data.success) {
                       toast.success(res.data.message);
-                      setUser(prev => ({ ...prev, institute: res.data.institute, instituteId: res.data.institute._id }));
-                      const stored = JSON.parse(localStorage.getItem('user') || '{}');
-                      localStorage.setItem('user', JSON.stringify({ ...stored, institute: res.data.institute, instituteId: res.data.institute._id }));
                       setShowJoinInstituteModal(false);
                       setJoinInstituteCode('');
                     }
