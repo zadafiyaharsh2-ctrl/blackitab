@@ -234,9 +234,30 @@ const ExamQuestions = () => {
                 const url = activeSubject === 'All'
                     ? `${API_URL}/api/problems/exam/${examId}/questions`
                     : `${API_URL}/api/problems/exam/${examId}/questions?subject=${activeSubject}`;
-                const res = await axios.get(url);
+                
+                const token = localStorage.getItem('token');
+                const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+                
+                const res = await axios.get(url, config);
                 if (res.data.success) {
                     setQuestions(res.data.data);
+                    
+                    // Pre-fill past attempts
+                    const initialResults = {};
+                    const initialAnswers = {};
+                    
+                    res.data.data.forEach(q => {
+                        if (q.userAttempt) {
+                            initialAnswers[q._id] = q.userAttempt.selectedOption;
+                            initialResults[q._id] = {
+                                correct: q.userAttempt.isCorrect,
+                                ...(q.userAttempt.isCorrect && { correctAnswer: q.userAttempt.selectedOption })
+                            };
+                        }
+                    });
+                    
+                    setResults(initialResults);
+                    setSelectedAnswers(initialAnswers);
                     setCurrentIndex(0);
                 }
             } catch (err) {
