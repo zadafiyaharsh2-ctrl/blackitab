@@ -4,6 +4,7 @@ const Institute = require('../models/Institute');
 const Attempt = require('../models/Attempt');
 const Post = require('../models/Post');
 const ExamQuestion = require('../models/ExamQuestion');
+const QuestionGenerated = require('../models/QuestionGenerated');
 const Contest = require('../models/Contest');
 const jwt = require('jsonwebtoken');
 
@@ -68,8 +69,8 @@ exports.getPlatformStats = async (req, res) => {
             Institute.countDocuments(),
             Attempt.countDocuments(),
             Post.countDocuments(),
-            ExamQuestion.countDocuments(),
-            ExamQuestion.countDocuments({ approvalStatus: 'pending' })
+            QuestionGenerated.countDocuments(),
+            QuestionGenerated.countDocuments({ approvalStatus: 'pending' })
         ]);
 
         const roleCounts = await User.aggregate([
@@ -275,7 +276,8 @@ exports.deleteUser = async (req, res) => {
         await Promise.all([
             Post.deleteMany({ userId: req.params.id }),
             Attempt.deleteMany({ userId: req.params.id }),
-            ExamQuestion.updateMany({ createdBy: req.params.id }, { $set: { createdBy: null } })
+            ExamQuestion.updateMany({ createdBy: req.params.id }, { $set: { createdBy: null } }),
+            QuestionGenerated.updateMany({ createdBy: req.params.id }, { $set: { createdBy: null } })
         ]);
         res.json({ success: true, message: 'User deleted and related data cleaned up' });
     } catch (error) {
@@ -368,14 +370,13 @@ exports.listQuestions = async (req, res) => {
 
         const skip = (parseInt(page) - 1) * parseInt(limit);
         const [questions, total] = await Promise.all([
-            ExamQuestion.find(filter)
+            QuestionGenerated.find(filter)
                 .populate('createdBy', 'name email role')
                 .populate('instituteId', 'name instituteCode')
-                .populate('approvedBy', 'username')
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(parseInt(limit)),
-            ExamQuestion.countDocuments(filter)
+            QuestionGenerated.countDocuments(filter)
         ]);
 
         res.json({
@@ -397,7 +398,7 @@ exports.listQuestions = async (req, res) => {
 // GET /api/admin/questions/pending
 exports.listPendingQuestions = async (req, res) => {
     try {
-        const questions = await ExamQuestion.find({ approvalStatus: 'pending' })
+        const questions = await QuestionGenerated.find({ approvalStatus: 'pending' })
             .populate('createdBy', 'name email role')
             .populate('instituteId', 'name instituteCode')
             .sort({ createdAt: -1 });
@@ -412,7 +413,7 @@ exports.listPendingQuestions = async (req, res) => {
 // PUT /api/admin/questions/:id/approve
 exports.approveQuestion = async (req, res) => {
     try {
-        const question = await ExamQuestion.findById(req.params.id);
+        const question = await QuestionGenerated.findById(req.params.id);
         if (!question) {
             return res.status(404).json({ success: false, message: 'Question not found' });
         }
@@ -433,7 +434,7 @@ exports.approveQuestion = async (req, res) => {
 exports.rejectQuestion = async (req, res) => {
     try {
         const { note } = req.body;
-        const question = await ExamQuestion.findById(req.params.id);
+        const question = await QuestionGenerated.findById(req.params.id);
         if (!question) {
             return res.status(404).json({ success: false, message: 'Question not found' });
         }
@@ -453,10 +454,15 @@ exports.rejectQuestion = async (req, res) => {
 // DELETE /api/admin/questions/:id
 exports.deleteQuestion = async (req, res) => {
     try {
-        const question = await ExamQuestion.findByIdAndDelete(req.params.id);
+        const question = await QuestionGenerated.findById(req.params.id);
         if (!question) {
             return res.status(404).json({ success: false, message: 'Question not found' });
         }
+        // Also remove from ExamQuestion if it was in Problems
+        if (question.isProblem) {
+            await ExamQuestion.deleteOne({ sourceQuestionId: req.params.id });
+        }
+        await QuestionGenerated.findByIdAndDelete(req.params.id);
         res.json({ success: true, message: 'Question deleted' });
     } catch (error) {
         

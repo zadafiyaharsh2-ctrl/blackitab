@@ -212,7 +212,7 @@ exports.getExamQuestions = async (req, res) => {
     try {
         const { examId } = req.params;
         const { subject } = req.query;
-        const filter = { exam: examId };
+        const filter = { exam: examId, isProblem: true };
         if (subject) filter.subject = subject;
 
         const questions = await ExamQuestion.find(filter)

@@ -1,3 +1,4 @@
+const QuestionGenerated = require('../models/QuestionGenerated');
 const ExamQuestion = require('../models/ExamQuestion');
 
 // POST /api/exams/questions
@@ -9,7 +10,7 @@ exports.createQuestion = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Missing required fields: exam, subject, question, 4 options, correctAnswer' });
         }
 
-        const newQuestion = await ExamQuestion.create({
+        const newQuestion = await QuestionGenerated.create({
             exam,
             subject,
             question,
@@ -19,13 +20,14 @@ exports.createQuestion = async (req, res) => {
             explanation: explanation || 'No explanation available',
             tags: tags || [],
             isPublic: isPublic !== false,
+            visibility: isPublic === false ? 'private' : 'public',
             approvalStatus: 'pending',
             createdBy: req.user._id,
-            instituteId: req.user.instituteId || null});
+            instituteId: req.user.instituteId || null
+        });
 
         res.status(201).json({ success: true, data: newQuestion });
     } catch (error) {
-        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -33,11 +35,10 @@ exports.createQuestion = async (req, res) => {
 // GET /api/exams/questions/my
 exports.getMyQuestions = async (req, res) => {
     try {
-        const questions = await ExamQuestion.find({ createdBy: req.user._id })
+        const questions = await QuestionGenerated.find({ createdBy: req.user._id })
             .sort({ createdAt: -1 });
         res.json({ success: true, data: questions });
     } catch (error) {
-        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -48,12 +49,11 @@ exports.getInstituteQuestions = async (req, res) => {
         if (!req.user.instituteId) {
             return res.status(400).json({ success: false, message: 'Not linked to an institute' });
         }
-        const questions = await ExamQuestion.find({ instituteId: req.user.instituteId })
+        const questions = await QuestionGenerated.find({ instituteId: req.user.instituteId })
             .populate('createdBy', 'name email role')
             .sort({ createdAt: -1 });
         res.json({ success: true, data: questions });
     } catch (error) {
-        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -61,7 +61,7 @@ exports.getInstituteQuestions = async (req, res) => {
 // PUT /api/exams/questions/:id
 exports.updateQuestion = async (req, res) => {
     try {
-        const question = await ExamQuestion.findById(req.params.id);
+        const question = await QuestionGenerated.findById(req.params.id);
         if (!question) {
             return res.status(404).json({ success: false, message: 'Question not found' });
         }
@@ -78,10 +78,27 @@ exports.updateQuestion = async (req, res) => {
         const updates = req.body;
         if (updates.correctAnswer !== undefined) updates.correctAnswer = parseInt(updates.correctAnswer);
 
-        const updated = await ExamQuestion.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+        // Handle isProblem toggle — copy to / remove from ExamQuestion
+        const wasProblem = question.isProblem;
+        const willBeProblem = updates.isProblem !== undefined ? updates.isProblem : wasProblem;
+
+        const updated = await QuestionGenerated.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+
+        // If newly approved → copy to ExamQuestion
+        if (!wasProblem && willBeProblem) {
+            await _copyToExamQuestion(updated);
+        }
+        // If removed from Problems → delete the ExamQuestion copy
+        else if (wasProblem && !willBeProblem) {
+            await ExamQuestion.deleteOne({ sourceQuestionId: req.params.id });
+        }
+        // If still in Problems and content was edited → sync the ExamQuestion copy
+        else if (wasProblem && willBeProblem) {
+            await _syncExamQuestion(updated);
+        }
+
         res.json({ success: true, data: updated });
     } catch (error) {
-        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -89,7 +106,7 @@ exports.updateQuestion = async (req, res) => {
 // DELETE /api/exams/questions/:id
 exports.deleteQuestion = async (req, res) => {
     try {
-        const question = await ExamQuestion.findById(req.params.id);
+        const question = await QuestionGenerated.findById(req.params.id);
         if (!question) {
             return res.status(404).json({ success: false, message: 'Question not found' });
         }
@@ -102,10 +119,57 @@ exports.deleteQuestion = async (req, res) => {
             return res.status(403).json({ success: false, message: 'Not authorized to delete this question' });
         }
 
-        await ExamQuestion.findByIdAndDelete(req.params.id);
+        // Also delete from ExamQuestion if it was in Problems
+        if (question.isProblem) {
+            await ExamQuestion.deleteOne({ sourceQuestionId: req.params.id });
+        }
+
+        await QuestionGenerated.findByIdAndDelete(req.params.id);
         res.json({ success: true, message: 'Question deleted' });
     } catch (error) {
-        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+// ── Helper: Copy a QuestionGenerated doc to ExamQuestion ──
+async function _copyToExamQuestion(q) {
+    const existing = await ExamQuestion.findOne({ sourceQuestionId: q._id });
+    if (existing) return existing; // Already copied
+
+    return ExamQuestion.create({
+        exam: q.exam,
+        subject: q.subject,
+        question: q.question,
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        difficulty: q.difficulty,
+        explanation: q.explanation,
+        isAiGenerated: q.isAiGenerated,
+        topicId: q.topicId,
+        tags: q.tags,
+        createdBy: q.createdBy,
+        instituteId: q.instituteId,
+        isPublic: q.isPublic,
+        visibility: q.visibility,
+        approvalStatus: 'approved',
+        isProblem: true,
+        sourceQuestionId: q._id
+    });
+}
+
+// ── Helper: Sync content edits to the ExamQuestion copy ──
+async function _syncExamQuestion(q) {
+    await ExamQuestion.findOneAndUpdate(
+        { sourceQuestionId: q._id },
+        {
+            question: q.question,
+            options: q.options,
+            correctAnswer: q.correctAnswer,
+            explanation: q.explanation,
+            subject: q.subject,
+            difficulty: q.difficulty,
+            exam: q.exam,
+            tags: q.tags
+        }
+    );
+}

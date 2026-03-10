@@ -107,7 +107,7 @@ exports.getInstituteStats = async (req, res) => {
 
         const [members, questions, posts, attempts] = await Promise.all([
             User.countDocuments({ instituteId: instId }),
-            ExamQuestion.countDocuments({ instituteId: instId }),
+            QuestionGenerated.countDocuments({ instituteId: instId }),
             Post.countDocuments({ user: { $in: await User.find({ instituteId: instId }).distinct('_id') } }),
             Attempt.countDocuments({ userId: { $in: await User.find({ instituteId: instId }).distinct('_id') } })
         ]);
@@ -122,7 +122,7 @@ exports.getInstituteStats = async (req, res) => {
         const roles = {};
         roleCounts.forEach(r => { roles[r._id] = r.count; });
 
-        const pendingQuestions = await ExamQuestion.countDocuments({ instituteId: instId, approvalStatus: 'pending' });
+        const pendingQuestions = await QuestionGenerated.countDocuments({ instituteId: instId, approvalStatus: 'pending' });
         const pendingJoinRequests = await JoinRequest.countDocuments({ instituteId: instId, status: 'pending' });
 
         res.json({
@@ -320,6 +320,7 @@ exports.removeMember = async (req, res) => {
 // ══════════════════════════════════════════════════════════════
 // QUESTION MANAGEMENT
 // ══════════════════════════════════════════════════════════════
+const QuestionGenerated = require('../models/QuestionGenerated');
 
 // GET /api/institute/questions — List questions created by institute teachers
 exports.listInstituteQuestions = async (req, res) => {
@@ -327,7 +328,7 @@ exports.listInstituteQuestions = async (req, res) => {
         const instId = req.user.instituteId;
         if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
 
-        const questions = await ExamQuestion.find({ instituteId: instId })
+        const questions = await QuestionGenerated.find({ instituteId: instId })
             .populate('createdBy', 'name email role departments')
             .sort({ createdAt: -1 })
             .limit(100);
@@ -342,12 +343,14 @@ exports.listInstituteQuestions = async (req, res) => {
 exports.updateInstituteQuestion = async (req, res) => {
     try {
         const instId = req.user.instituteId;
-        const question = await ExamQuestion.findById(req.params.id);
+        const question = await QuestionGenerated.findById(req.params.id);
         if (!question || !question.instituteId || question.instituteId.toString() !== instId.toString()) {
             return res.status(404).json({ success: false, message: 'Question not found in your institute' });
         }
         
-        const allowedUpdates = ['question', 'options', 'correctAnswer', 'explanation', 'subject', 'difficulty', 'approvalStatus', 'topicId'];
+        const wasProblem = question.isProblem;
+
+        const allowedUpdates = ['question', 'options', 'correctAnswer', 'explanation', 'subject', 'difficulty', 'approvalStatus', 'topicId', 'isProblem'];
         allowedUpdates.forEach(field => {
             if (req.body[field] !== undefined) {
                 question[field] = req.body[field];
@@ -355,6 +358,53 @@ exports.updateInstituteQuestion = async (req, res) => {
         });
         
         await question.save();
+
+        const willBeProblem = question.isProblem;
+
+        // Copy-on-approve flow
+        if (!wasProblem && willBeProblem) {
+            // Copy to ExamQuestion (Problems page)
+            const existing = await ExamQuestion.findOne({ sourceQuestionId: question._id });
+            if (!existing) {
+                await ExamQuestion.create({
+                    exam: question.exam,
+                    subject: question.subject,
+                    question: question.question,
+                    options: question.options,
+                    correctAnswer: question.correctAnswer,
+                    difficulty: question.difficulty,
+                    explanation: question.explanation,
+                    isAiGenerated: question.isAiGenerated,
+                    topicId: question.topicId,
+                    tags: question.tags,
+                    createdBy: question.createdBy,
+                    instituteId: question.instituteId,
+                    isPublic: question.isPublic,
+                    visibility: question.visibility,
+                    approvalStatus: 'approved',
+                    isProblem: true,
+                    sourceQuestionId: question._id
+                });
+            }
+        } else if (wasProblem && !willBeProblem) {
+            // Remove from ExamQuestion
+            await ExamQuestion.deleteOne({ sourceQuestionId: question._id });
+        } else if (wasProblem && willBeProblem) {
+            // Sync edits to ExamQuestion copy
+            await ExamQuestion.findOneAndUpdate(
+                { sourceQuestionId: question._id },
+                {
+                    question: question.question,
+                    options: question.options,
+                    correctAnswer: question.correctAnswer,
+                    explanation: question.explanation,
+                    subject: question.subject,
+                    difficulty: question.difficulty,
+                    exam: question.exam
+                }
+            );
+        }
+
         res.json({ success: true, message: 'Question updated successfully', data: question });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
@@ -365,11 +415,15 @@ exports.updateInstituteQuestion = async (req, res) => {
 exports.deleteInstituteQuestion = async (req, res) => {
     try {
         const instId = req.user.instituteId;
-        const question = await ExamQuestion.findById(req.params.id);
+        const question = await QuestionGenerated.findById(req.params.id);
         if (!question || !question.instituteId || question.instituteId.toString() !== instId.toString()) {
             return res.status(404).json({ success: false, message: 'Question not found in your institute' });
         }
-        await ExamQuestion.findByIdAndDelete(req.params.id);
+        // Also remove from ExamQuestion if it was in Problems
+        if (question.isProblem) {
+            await ExamQuestion.deleteOne({ sourceQuestionId: req.params.id });
+        }
+        await QuestionGenerated.findByIdAndDelete(req.params.id);
         res.json({ success: true, message: 'Question deleted' });
     } catch (error) {
         
