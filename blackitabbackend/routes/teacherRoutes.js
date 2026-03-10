@@ -63,4 +63,10 @@ router.get('/department/teacher/:id/detail', requireMinRole('hod'), teacherContr
 router.get('/department/feedback', requireMinRole('hod'), teacherController.getDepartmentFeedback);
 router.get('/department/content', requireMinRole('hod'), teacherController.getDepartmentContent);
 
+// ── Phase 10: Student Attendance System ──
+router.post('/attendance', teacherController.submitAttendance);
+router.get('/attendance/:batchId', teacherController.getAttendanceHistory);
+router.put('/attendance/:id', teacherController.updateAttendanceRecord);
+router.delete('/attendance/:id', teacherController.deleteAttendanceRecord);
+
 module.exports = router;
