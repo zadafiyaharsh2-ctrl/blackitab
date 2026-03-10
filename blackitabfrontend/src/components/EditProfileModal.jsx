@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaCamera, FaSave, FaSpinner } from 'react-icons/fa';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import API_URL from '../config';
 
 const EditProfileModal = ({ isOpen, onClose, user, onUpdate }) => {
@@ -60,7 +61,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdate }) => {
             }
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.message || 'Failed to update profile');
+            toast.error(err.response?.data?.message || 'Failed to update profile');
         } finally {
             setLoading(false);
         }
