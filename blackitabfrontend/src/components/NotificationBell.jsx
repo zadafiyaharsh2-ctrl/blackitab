@@ -139,8 +139,8 @@ const NotificationBell = () => {
         )}
       </AnimatePresence>
 
-      {/* Bell Button — Fixed top-right (Hidden on mobile to live in hamburger) */}
-      <div className="hidden md:block fixed top-5 right-8 z-[998]">
+      {/* Bell Button — Fixed top-right */}
+      <div className="fixed top-4 right-4 md:top-5 md:right-8 z-[998]">
         <motion.button
           onClick={handleOpen}
           whileHover={{ scale: 1.05 }}
@@ -171,7 +171,7 @@ const NotificationBell = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              className="absolute top-full right-0 mt-3 w-[22rem] sm:w-[24rem] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl dark:shadow-[0_0_40px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col max-h-[85vh]"
+              className="absolute top-full right-0 mt-3 w-[18rem] sm:w-[24rem] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl dark:shadow-[0_0_40px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col max-h-[85vh]"
             >
               {/* Header */}
               <div className="px-5 py-3 border-b border-gray-200/50 dark:border-white/10 flex items-center justify-between">
