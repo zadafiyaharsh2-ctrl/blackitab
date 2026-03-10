@@ -233,13 +233,51 @@ exports.getProgressStats = async (req, res) => {
         // 2. Total completed count
         const totalCompleted = await UserProgress.countDocuments({ userId, completed: true });
 
-        // 3. Recent activity (last 5)
-        const recentActivity = await UserProgress.find({ userId: new require('mongoose').Types.ObjectId(userId), completed: true })
+        // 3. Recent activity (last 5 completions + last 5 attempts, merged and sorted by date)
+        const recentCompletions = await UserProgress.find({ userId: new require('mongoose').Types.ObjectId(userId), completed: true })
             .sort({ completedAt: -1 })
             .limit(5)
             .populate('subjectId', 'name')
             .populate('topicId', 'title')
             .lean();
+
+        const Attempt = require('../models/Attempt');
+        const ExamQuestion = require('../models/ExamQuestion');
+        
+        const recentAttempts = await Attempt.find({ userId: new require('mongoose').Types.ObjectId(userId) })
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .lean();
+
+        // Populate question details manually or via populate if ref is set in model
+        // Assume Attempt has questionId ref to ExamQuestion, but we can fetch manually
+        const attemptQIds = recentAttempts.map(a => a.questionId);
+        const questions = await ExamQuestion.find({ _id: { $in: attemptQIds } }).select('question subject difficulty').lean();
+        const qMap = {};
+        questions.forEach(q => qMap[q._id.toString()] = q);
+
+        const formattedAttempts = recentAttempts.map(act => {
+            const q = qMap[act.questionId.toString()];
+            return {
+                type: 'attempt',
+                completed: act.isCorrect,
+                title: q ? (q.question.length > 50 ? q.question.substring(0, 50) + '...' : q.question) : 'Question Attempt',
+                subjectId: { name: q ? q.subject : 'Mixed' },
+                completedAt: act.createdAt
+            };
+        });
+
+        const formattedCompletions = recentCompletions.map(act => ({
+            type: 'completed',
+            completed: true,
+            title: act.topicId ? act.topicId.title : 'Topic',
+            subjectId: act.subjectId,
+            completedAt: act.completedAt
+        }));
+
+        let recentActivity = [...formattedCompletions, ...formattedAttempts];
+        recentActivity.sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+        recentActivity = recentActivity.slice(0, 5);
 
         // 4. Compute TRUE streak from activity data (not from stored User.streak)
         const streakData = await computeStreakFromActivity(userId);
