@@ -38,7 +38,14 @@ exports.getMyInstitute = async (req, res) => {
         if (!institute) {
             return res.status(404).json({ success: false, message: 'Institute not found' });
         }
-        res.json({ success: true, data: institute });
+
+        const isPrivileged = ['institute', 'hod'].includes(req.user.role);
+        const data = institute.toObject();
+        if (!isPrivileged) {
+            delete data.instituteCode;
+        }
+
+        res.json({ success: true, data });
     } catch (error) {
         
         res.status(500).json({ success: false, message: 'Server error' });

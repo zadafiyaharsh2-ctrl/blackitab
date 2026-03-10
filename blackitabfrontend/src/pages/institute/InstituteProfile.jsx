@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
-import { CameraIcon, PlusIcon, XMarkIcon, MapPinIcon, PhoneIcon, BuildingOfficeIcon, UserGroupIcon, IdentificationIcon, BookOpenIcon, InformationCircleIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
+import { CameraIcon, PlusIcon, XMarkIcon, MapPinIcon, PhoneIcon, BuildingOfficeIcon, UserGroupIcon, IdentificationIcon, BookOpenIcon, InformationCircleIcon, PencilSquareIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { CustomToast } from '../../utils/CustomToast';
 
@@ -23,6 +23,7 @@ const InstituteProfile = () => {
         bannerImage: ''
     });
     const [bannerFile, setBannerFile] = useState(null);
+    const [showCode, setShowCode] = useState(false);
 
     useEffect(() => {
         fetchProfile();
@@ -149,9 +150,12 @@ const InstituteProfile = () => {
                                     {institute.name}
                                 </h2>
                                 <div className="flex flex-wrap items-center gap-3">
-                                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-lg border border-white/20 text-white text-sm font-semibold tracking-wide shadow-sm">
-                                        <IdentificationIcon className="w-4 h-4" /> Code: {institute.instituteCode}
-                                    </span>
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-lg border border-white/20 text-white text-sm font-semibold tracking-wide shadow-sm">
+                                        <IdentificationIcon className="w-4 h-4" /> Code: {showCode ? institute.instituteCode : '••••••••'}
+                                        <button onClick={() => setShowCode(!showCode)} className="ml-1 hover:text-orange-200 transition-colors" title={showCode ? "Hide Code" : "Show Code"}>
+                                            {showCode ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

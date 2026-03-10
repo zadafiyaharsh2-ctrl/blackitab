@@ -6,7 +6,9 @@ import {
   AcademicCapIcon, 
   BuildingOfficeIcon,
   DocumentTextIcon,
-  CheckBadgeIcon
+  CheckBadgeIcon,
+  EyeIcon,
+  EyeSlashIcon
 } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { CustomToast } from '../../utils/CustomToast';
@@ -15,6 +17,7 @@ const InstituteDashboard = () => {
   const [stats, setStats] = useState(null);
   const [institute, setInstitute] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showCode, setShowCode] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -92,9 +95,12 @@ const InstituteDashboard = () => {
         <div className="absolute bottom-6 left-6 right-6">
           <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2 drop-shadow-md">{institute?.name}</h1>
           <div className="flex items-center gap-4 text-sm text-gray-200">
-            <span className="flex items-center gap-1 font-mono text-orange-400 bg-orange-500/20 border border-orange-500/30 px-3 py-1 rounded-full text-xs font-bold tracking-wider">
-              CODE: {institute?.instituteCode}
-            </span>
+            <div className="flex items-center gap-1 font-mono text-orange-400 bg-orange-500/20 border border-orange-500/30 px-3 py-1 rounded-full text-xs font-bold tracking-wider">
+              <span>CODE: {showCode ? institute?.instituteCode : '••••••••'}</span>
+              <button onClick={() => setShowCode(!showCode)} className="ml-1 hover:text-orange-300 transition-colors" title={showCode ? "Hide Code" : "Show Code"}>
+                {showCode ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+              </button>
+            </div>
             {institute?.address && <span className="drop-shadow-sm font-medium">{institute.address}</span>}
           </div>
         </div>
