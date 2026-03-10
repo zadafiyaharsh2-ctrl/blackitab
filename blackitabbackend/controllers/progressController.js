@@ -221,12 +221,12 @@ exports.getSubjectProgress = async (req, res) => {
 // ═════════════════════════════════════════════════════════════════════════════
 exports.getProgressStats = async (req, res) => {
     try {
-        const userId = req.user._id;
+        const userId = req.query.userId || req.user._id;
         const User = require('../models/User');
 
         // 1. Per-subject completion stats
         const subjectStats = await UserProgress.aggregate([
-            { $match: { userId: userId, completed: true } },
+            { $match: { userId: new require('mongoose').Types.ObjectId(userId), completed: true } },
             { $group: { _id: '$subjectId', totalCompleted: { $sum: 1 }, lastCompleted: { $max: '$completedAt' } } }
         ]);
 
@@ -244,6 +244,8 @@ exports.getProgressStats = async (req, res) => {
 
         // 5. Get user's current points and xp
         const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        
         const currentPoints = user.points || 0;
         const currentXP = user.xp || 0;
 
@@ -304,22 +306,24 @@ exports.getProgressStats = async (req, res) => {
 // ═════════════════════════════════════════════════════════════════════════════
 exports.getActivityHeatmap = async (req, res) => {
     try {
-        const userId = req.user._id;
+        const userId = req.query.userId || req.user._id;
+        const mongoose = require('mongoose');
+        const userObjectId = new mongoose.Types.ObjectId(userId);
         const ProblemProgress = require('../models/ProblemProgress');
 
         const topicActivity = await UserProgress.aggregate([
-            { $match: { userId, completed: true, completedAt: { $exists: true } } },
+            { $match: { userId: userObjectId, completed: true, completedAt: { $exists: true } } },
             { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$completedAt" } }, count: { $sum: 1 } } }
         ]);
 
         const problemActivity = await ProblemProgress.aggregate([
-            { $match: { userId, status: 'completed', completedAt: { $exists: true } } },
+            { $match: { userId: userObjectId, status: 'completed', completedAt: { $exists: true } } },
             { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$completedAt" } }, count: { $sum: 1 } } }
         ]);
 
         const Attempt = require('../models/Attempt');
         const examActivity = await Attempt.aggregate([
-            { $match: { userId, attemptedAt: { $exists: true } } },
+            { $match: { userId: userObjectId, attemptedAt: { $exists: true } } },
             { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$attemptedAt" } }, count: { $sum: 1 } } }
         ]);
 
