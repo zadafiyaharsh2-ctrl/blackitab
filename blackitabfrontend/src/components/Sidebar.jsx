@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaHome, FaUsers, FaRobot, FaChartBar, FaUser, FaSignOutAlt, FaBars, FaBook, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaBell, FaSearch } from 'react-icons/fa';
+import { FaHome, FaUsers, FaRobot, FaChartBar, FaUser, FaSignOutAlt, FaBars, FaBook, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaBell, FaSearch, FaCalendarDay } from 'react-icons/fa';
 import { MdReportProblem } from 'react-icons/md';
 import { useTheme } from '../context/ThemeContext';
 import Logo from './Logo';
@@ -81,6 +81,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       { path: '/ai-questions', label: 'AI Questions', icon: <FaGraduationCap className="text-emerald-400" /> },
       { path: '/teacher-dashboard', label: 'Teacher Panel', icon: <FaSchool className="text-indigo-400" /> },
       { path: '/teacher/batches', label: 'Classes & Batches', icon: <FaUsers className="text-blue-400" /> },
+      { path: '/teacher/attendance', label: 'Attendance', icon: <FaCalendarDay className="text-purple-400" /> },
       { path: '/create-question', label: 'Create Question', icon: <FaGraduationCap className="text-teal-400" /> },
       { path: '/my-questions', label: 'My Questions', icon: <FaListUl className="text-cyan-400" /> },
       { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
