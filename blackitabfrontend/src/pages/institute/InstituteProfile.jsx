@@ -22,6 +22,7 @@ const InstituteProfile = () => {
         address: '',
         bannerImage: ''
     });
+    const [bannerFile, setBannerFile] = useState(null);
 
     useEffect(() => {
         fetchProfile();
@@ -53,11 +54,36 @@ const InstituteProfile = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleFileChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            setBannerFile(e.target.files[0]);
+            setFormData({ ...formData, bannerImage: URL.createObjectURL(e.target.files[0]) });
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             setSaving(true);
-            const res = await api.put('/institute/profile', formData);
+            
+            const submitData = new FormData();
+            submitData.append('name', formData.name);
+            submitData.append('description', formData.description);
+            submitData.append('contactPhone', formData.contactPhone);
+            submitData.append('address', formData.address);
+            
+            if (bannerFile) {
+                submitData.append('bannerImage', bannerFile);
+            } else if (formData.bannerImage) {
+                submitData.append('bannerImage', formData.bannerImage);
+            }
+
+            const res = await api.put('/institute/profile', submitData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            
             if (res.data.success) {
                 setInstitute(res.data.data);
                 CustomToast.success('Profile updated successfully');
@@ -246,14 +272,13 @@ const InstituteProfile = () => {
                                 </div>
 
                                 <div className="space-y-1.5 md:col-span-2">
-                                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider ml-1">Banner Image URL</label>
+                                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider ml-1">Banner Image</label>
                                     <input
-                                        type="url"
+                                        type="file"
                                         name="bannerImage"
-                                        value={formData.bannerImage}
-                                        onChange={handleChange}
-                                        placeholder="https://example.com/banner.jpg"
-                                        className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 dark:file:bg-orange-500/10 dark:file:text-orange-400 dark:hover:file:bg-orange-500/20"
                                     />
                                 </div>
 

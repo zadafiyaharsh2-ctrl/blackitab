@@ -51,7 +51,7 @@ exports.updateInstituteProfile = async (req, res) => {
         const instId = req.user.instituteId;
         if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
 
-        const { name, description, contactPhone, address, bannerImage, departments } = req.body;
+        const { name, description, contactPhone, address, departments } = req.body;
         
         const institute = await Institute.findById(instId);
         if (!institute) return res.status(404).json({ success: false, message: 'Institute not found' });
@@ -60,8 +60,23 @@ exports.updateInstituteProfile = async (req, res) => {
         if (description !== undefined) institute.description = description;
         if (contactPhone !== undefined) institute.contactPhone = contactPhone;
         if (address !== undefined) institute.address = address;
-        if (bannerImage !== undefined) institute.bannerImage = bannerImage;
-        if (departments && Array.isArray(departments)) institute.departments = departments;
+        
+        let parsedDepartments = departments;
+        if (typeof departments === 'string') {
+            try {
+                parsedDepartments = JSON.parse(departments);
+            } catch (e) {
+                // Ignore parse error
+            }
+        }
+        if (parsedDepartments && Array.isArray(parsedDepartments)) institute.departments = parsedDepartments;
+
+        if (req.file) {
+            const host = req.protocol + '://' + req.get('host');
+            institute.bannerImage = `${host}/uploads/banners/${req.file.filename}`;
+        } else if (req.body.bannerImage !== undefined) {
+            institute.bannerImage = req.body.bannerImage;
+        }
 
         await institute.save();
         res.json({ success: true, data: institute, message: 'Profile updated successfully' });
