@@ -284,7 +284,7 @@ exports.getFollowers = async (req, res) => {
 
         const users = connections
             .map(c => c.sourceUserId)
-            .filter(u => u && u._id.toString() !== currentUserId.toString())
+            .filter(u => u) // Keep only valid populated users
             .map(u => ({
                 ...(u.toObject ? u.toObject() : u),
                 isFollowing: myFollowingIds.has(u._id.toString())
@@ -310,7 +310,7 @@ exports.getFollowing = async (req, res) => {
 
         const users = connections
             .map(c => c.targetUserId)
-            .filter(u => u && u._id.toString() !== currentUserId.toString())
+            .filter(u => u) // Keep only valid populated users
             .map(u => ({ 
                 ...(u.toObject ? u.toObject() : u), 
                 isFollowing: myFollowingIds.has(u._id.toString()) 
