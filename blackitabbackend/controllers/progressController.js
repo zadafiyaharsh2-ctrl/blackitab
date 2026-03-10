@@ -234,9 +234,11 @@ exports.getProgressStats = async (req, res) => {
         const totalCompleted = await UserProgress.countDocuments({ userId, completed: true });
 
         // 3. Recent activity (last 5)
-        const recentActivity = await UserProgress.find({ userId, completed: true })
+        const recentActivity = await UserProgress.find({ userId: new require('mongoose').Types.ObjectId(userId), completed: true })
             .sort({ completedAt: -1 })
             .limit(5)
+            .populate('subjectId', 'name')
+            .populate('topicId', 'title')
             .lean();
 
         // 4. Compute TRUE streak from activity data (not from stored User.streak)
