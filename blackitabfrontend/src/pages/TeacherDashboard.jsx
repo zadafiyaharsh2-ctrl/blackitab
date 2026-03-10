@@ -6,7 +6,7 @@ import {
   FaChalkboardTeacher, FaUsers, FaClipboardList, FaCalendarAlt,
   FaStar, FaBookOpen, FaBullhorn, FaCommentDots,
   FaChartLine, FaSpinner, FaPlusCircle, FaFileAlt,
-  FaGraduationCap, FaAward, FaUserGraduate
+  FaGraduationCap, FaAward, FaUserGraduate, FaCalendarDay
 } from 'react-icons/fa';
 
 import API from '../config';
@@ -224,11 +224,12 @@ export default function TeacherDashboard() {
         <motion.div initial="hidden" animate="visible" variants={stagger} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             { label: 'Manage Batches', desc: 'Create and view student groups', icon: <FaUsers />, link: '/teacher/batches', color: 'blue' },
+            { label: 'Take Attendance', desc: 'Mark daily attendance grid', icon: <FaCalendarDay />, link: '/teacher/attendance', color: 'indigo' },
             { label: 'Generate AI Questions', desc: 'Auto-generate questions from a topic', icon: <FaGraduationCap />, link: '/ai-questions', color: 'emerald' },
-            { label: 'Create Manual Question', desc: 'Write a question by hand', icon: <FaPlusCircle />, link: '/create-question', color: 'indigo' },
+            { label: 'Create Manual Question', desc: 'Write a question by hand', icon: <FaPlusCircle />, link: '/create-question', color: 'purple' },
             { label: 'My Questions', desc: 'View and manage your questions', icon: <FaClipboardList />, link: '/my-questions', color: 'amber' },
             { label: 'Generate Question Paper', desc: 'Export questions as PDF', icon: <FaFileAlt />, link: '/question-paper', color: 'rose' },
-            { label: 'School Analytics', desc: 'Monitor student performance', icon: <FaChartLine />, link: '/school-analytics', color: 'purple' },
+            { label: 'School Analytics', desc: 'Monitor student performance', icon: <FaChartLine />, link: '/school-analytics', color: 'teal' },
           ].map((action, i) => (
             <Link key={i} to={action.link}>
               <motion.div variants={fadeIn} whileHover={{ y: -4 }}
