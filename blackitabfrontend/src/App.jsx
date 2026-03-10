@@ -58,6 +58,7 @@ import TeacherDashboard from './pages/TeacherDashboard';
 import CreateExamQuestion from './pages/CreateExamQuestion';
 import MyQuestions from './pages/MyQuestions';
 import QuestionPaper from './pages/QuestionPaper';
+import TeacherBatches from './pages/TeacherBatches';
 import InstituteDashboard from './pages/InstituteDashboard';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
@@ -444,6 +445,18 @@ function App() {
                 <ProtectedRoute>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <CreatePost />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Batches / Classrooms Route */}
+            <Route
+              path="/teacher/batches"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherBatches />
                   </MainLayout>
                 </ProtectedRoute>
               }
