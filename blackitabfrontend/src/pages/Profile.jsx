@@ -589,11 +589,6 @@ const Profile = () => {
                 <span className="block text-3xl font-black text-gray-900 dark:text-white group-hover:text-glow group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-all">{user.followerCount || 0}</span>
                 <span className="text-xs text-gray-500 font-bold uppercase tracking-wider group-hover:text-gray-700 dark:text-gray-300 transition-colors">Followers</span>
               </div>
-              <div className="w-px h-10 bg-white/10 hidden md:block"></div>
-              <div className="group text-center md:text-left transition-all hover:-translate-y-1">
-                <span className="block text-2xl font-bold text-gray-900 dark:text-white">{user.subscriberCount || 0}</span>
-                <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">Subscribers</span>
-              </div>
             </div>
 
           </div>
@@ -770,21 +765,19 @@ const Profile = () => {
 
       {showSearch && <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />}
       {showNotifications && <NotificationModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} />}
-      {showEditModal && (
-        <EditProfileModal 
-          isOpen={showEditModal} 
-          onClose={() => setShowEditModal(false)} 
-          user={user} 
-          onUpdate={(updatedUser) => {
-            setUser(prev => ({ ...prev, ...updatedUser }));
-            // Update local storage if it's me
-            if (isMyProfile) {
-              const stored = JSON.parse(localStorage.getItem('user') || '{}');
-              localStorage.setItem('user', JSON.stringify({ ...stored, ...updatedUser }));
-            }
-          }}
-        />
-      )}
+      <EditProfileModal 
+        isOpen={showEditModal} 
+        onClose={() => setShowEditModal(false)} 
+        user={user} 
+        onUpdate={(updatedUser) => {
+          setUser(prev => ({ ...prev, ...updatedUser }));
+          // Update local storage if it's me
+          if (isMyProfile) {
+            const stored = JSON.parse(localStorage.getItem('user') || '{}');
+            localStorage.setItem('user', JSON.stringify({ ...stored, ...updatedUser }));
+          }
+        }}
+      />
 
       {/* Join Institute Modal */}
       {showJoinInstituteModal && (
