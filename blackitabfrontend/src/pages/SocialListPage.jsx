@@ -111,7 +111,7 @@ const SocialListPage = () => {
                     </div>
 
                     {/* Action Button */}
-                    {currentUser._id !== u._id && (
+                    {(currentUser?._id || currentUser?.id) !== (u._id || u.id) && (
                       <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-3">
                          <button 
                             onClick={() => navigate(`/messages/${u._id}`)}
