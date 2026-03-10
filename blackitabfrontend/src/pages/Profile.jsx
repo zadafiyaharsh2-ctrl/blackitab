@@ -202,22 +202,29 @@ const Profile = () => {
     // Logic handled by effect, but keeping handler for form submit ref
   };
 
-  const handleFollowRequest = async (targetId) => {
+    const handleFollowRequest = async (targetId) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/api/social/follow/${targetId}`, {}, {
+      const res = await axios.post(`${API_URL}/api/social/follow/${targetId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      toast.success('Follow request sent!');
+      toast.success(res.data.message || 'Follow status updated!');
+
+      const isAccepted = res.data.status === 'accepted';
 
       // Update Lists
-      setSearchResults(prev => prev.map(u => u._id === targetId ? { ...u, isRequested: true } : u));
-      setUserList(prev => prev.map(u => u._id === targetId ? { ...u, isRequested: true } : u));
+      setSearchResults(prev => prev.map(u => u._id === targetId ? { ...u, isRequested: !isAccepted, isFollowing: isAccepted, followerCount: isAccepted ? (u.followerCount || 0) + 1 : u.followerCount } : u));
+      setUserList(prev => prev.map(u => u._id === targetId ? { ...u, isRequested: !isAccepted, isFollowing: isAccepted, followerCount: isAccepted ? (u.followerCount || 0) + 1 : u.followerCount } : u));
 
-      // Update Stats (Optimistic) - NO inc for pending request
-      if (user._id === targetId) {
-        setUser(prev => ({ ...prev, isRequested: true }));
+      // Update Stats (Optimistic)
+      if (user._id === targetId || user.id === targetId) {
+        setUser(prev => ({ 
+           ...prev, 
+           isRequested: !isAccepted,
+           isFollowing: isAccepted,
+           followerCount: isAccepted ? (prev.followerCount || 0) + 1 : prev.followerCount
+        }));
       }
     } catch (err) {
       console.error('Follow error:', err);
@@ -441,7 +448,7 @@ const Profile = () => {
             <>
               <button
                 onClick={() => navigate('/notifications')}
-                className="relative p-3 rounded-full bg-white dark:bg-white/5 backdrop-blur-md border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-white transition-colors group">
+                className="hidden md:block relative p-3 rounded-full bg-white dark:bg-white/5 backdrop-blur-md border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-white transition-colors group">
                 <FaBell size={18} className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors" />
                 {notifications.length > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>}
               </button>
@@ -610,12 +617,7 @@ const Profile = () => {
           >
             <FaGraduationCap size={12} /> Study Content
           </button>
-          <button
-            onClick={() => setActiveTab('paid-content')}
-            className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'paid-content' ? 'text-gray-900 border-gray-900 dark:text-white border-t dark:border-white -mt-[1px]' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
-          >
-            <FaRupeeSign size={12} /> Paid Content
-          </button>
+
           <button
             onClick={() => setActiveTab('playlists')}
             className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'playlists' ? 'text-gray-900 border-gray-900 dark:text-white border-t dark:border-white -mt-[1px]' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
@@ -671,7 +673,6 @@ const Profile = () => {
         ) : posts.filter(p => {
           if (activeTab === 'posts') return p.contentType === 'post' || !p.contentType;
           if (activeTab === 'study-content') return p.contentType === 'study-content';
-          if (activeTab === 'paid-content') return p.contentType === 'paid-content';
           return false;
         }).length > 0 ? (
           <div className={`grid gap-4 ${activeTab === 'posts' ? 'grid-cols-3 gap-1 md:gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}`}>
@@ -679,11 +680,10 @@ const Profile = () => {
               .filter(p => {
                 if (activeTab === 'posts') return p.contentType === 'post' || !p.contentType;
                 if (activeTab === 'study-content') return p.contentType === 'study-content';
-                if (activeTab === 'paid-content') return p.contentType === 'paid-content';
                 return false;
               })
               .map(post => (
-                activeTab === 'study-content' || activeTab === 'paid-content' ? (
+                activeTab === 'study-content' ? (
                   <StudyContentCard key={post._id} content={post} />
                 ) : (
                   <div
