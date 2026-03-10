@@ -73,7 +73,6 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
   const navItems = [
     // ─── Everyone sees these ───
     { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
-    { path: '/social', label: 'Social', icon: <FaUsers /> },
     { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
     { path: '/analytics', label: 'Analytics', icon: <FaChartBar /> },
 
@@ -81,6 +80,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     ...(canAccessTeacher ? [
       { path: '/ai-questions', label: 'AI Questions', icon: <FaGraduationCap className="text-emerald-400" /> },
       { path: '/teacher-dashboard', label: 'Teacher Panel', icon: <FaSchool className="text-indigo-400" /> },
+      { path: '/teacher/batches', label: 'Classes & Batches', icon: <FaUsers className="text-blue-400" /> },
       { path: '/create-question', label: 'Create Question', icon: <FaGraduationCap className="text-teal-400" /> },
       { path: '/my-questions', label: 'My Questions', icon: <FaListUl className="text-cyan-400" /> },
       { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
@@ -97,7 +97,6 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
     { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy className="text-yellow-400" /> },
     { path: '/theory', label: 'Theory', icon: <FaBook /> },
-    { path: '/profile', label: 'Profile', icon: <FaUser /> },
   ];
 
   // NOTE: No /admin link here — System Admin has a completely separate
@@ -201,22 +200,6 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
 
         {/* Bottom actions */}
         <div className="p-4 border-t border-gray-200/50 dark:border-white/10 space-y-2 bg-gray-50/50 dark:bg-[#000000]">
-          <Link to="/notifications">
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-              className={`w-full flex items-center ${isOpen ? 'px-4 py-3 justify-start gap-4' : 'px-0 py-3 justify-center'} text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-blue-500/10 hover:text-blue-500 dark:hover:bg-white/10 dark:hover:text-blue-400 rounded-xl transition-colors relative group`}>
-              <span className="relative flex-shrink-0 text-lg group-hover:text-blue-500 transition-colors">
-                <FaBell />
-                {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-black rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)]" />}
-              </span>
-              {isOpen && <span className="group-hover:dark:text-blue-400 transition-colors">Notifications</span>}
-              {isOpen && unreadCount > 0 && (
-                <span className="ml-auto text-[10px] bg-red-500 text-white rounded-full px-2 py-0.5 font-bold shadow-sm">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              )}
-            </motion.div>
-          </Link>
-
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
             onClick={toggleTheme}
             className={`w-full flex items-center ${isOpen ? 'px-4 py-3 justify-start gap-4' : 'px-0 py-3 justify-center'} text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-yellow-500/10 hover:text-yellow-600 dark:hover:bg-white/10 dark:hover:text-yellow-400 rounded-xl transition-colors group`}

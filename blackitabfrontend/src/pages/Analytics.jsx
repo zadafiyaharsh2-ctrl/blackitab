@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API_URL from '../config';
 import {
@@ -114,6 +115,20 @@ const StatCard = ({ icon: Icon, title, value, change, suffix = '' }) => {
 };
 
 const Analytics = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const u = JSON.parse(userData);
+        if (['teacher', 'hod', 'institute_admin'].includes(u.role)) {
+          navigate('/school-analytics', { replace: true });
+        }
+      }
+    } catch (e) { }
+  }, [navigate]);
+
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({
     stats: {

@@ -29,6 +29,9 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const examRoutes = require('./routes/examRoutes');
 const contestRoutes = require('./routes/contestRoutes');
+const questionRoutes = require('./routes/questionRoutes');
+const teacherRoutes = require('./routes/teacherRoutes');
+const adminChatRoutes = require('./routes/adminChatRoutes');
 
 // --- Server Setup ---
 
@@ -109,6 +112,9 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/exams', examRoutes);
 app.use('/api/contests', contestRoutes);
+app.use('/api/questions', questionRoutes);
+app.use('/api/teacher', teacherRoutes);
+app.use('/api/admin-chat', adminChatRoutes);
 
 // --- GET /api/me — Current User (protected) ---
 
