@@ -296,9 +296,7 @@ function App() {
               path="/leaderboard"
               element={
                 <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Leaderboard />
-                  </MainLayout>
+                  <Leaderboard />
                 </ProtectedRoute>
               }
             />
