@@ -1054,6 +1054,17 @@ const Profile = () => {
           </motion.div>
         </div>
       )}
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        user={user}
+        onUpdate={(updatedUser) => {
+          setUser(updatedUser);
+          localStorage.setItem('user', JSON.stringify({ ...JSON.parse(localStorage.getItem('user')), ...updatedUser }));
+        }}
+      />
     </div>
     </div>
   );
