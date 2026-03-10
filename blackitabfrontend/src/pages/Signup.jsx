@@ -84,6 +84,19 @@ const Signup = ({ onSignupSuccess }) => {
       let payload = {};
 
       if (accountType === 'student' || accountType === 'teacher') {
+        if (formData.instituteCode) {
+           if (accountType === 'student' && (!formData.batchYear || !formData.division)) {
+             setLoading(false);
+             CustomToast.error('Batch Year and Department are required to join an institute.');
+             return;
+           }
+           if (accountType === 'teacher' && !formData.division) {
+             setLoading(false);
+             CustomToast.error('Department is required to join an institute.');
+             return;
+           }
+        }
+
         payload = {
           name: formData.name,
           email: formData.email,
@@ -433,21 +446,21 @@ const Signup = ({ onSignupSuccess }) => {
 
                 {/* Batch & Division */}
                 {joinedInstituteName && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Batch Year</label>
-                      <input type="text" name="batchYear" value={formData.batchYear} onChange={handleChange}
-                        placeholder="e.g. 2025"
-                        className={`w-full px-4 py-3 bg-gray-100/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none shadow-inner ${
-                          accountType === 'teacher' ? 'focus:ring-cyan-500/50' : 'focus:ring-emerald-500/50'
-                        }`} />
-                    </div>
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className={`grid ${accountType === 'student' ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
+                    {accountType === 'student' && (
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Batch Year</label>
+                        <input type="text" name="batchYear" value={formData.batchYear} onChange={handleChange}
+                          placeholder="e.g. 2025"
+                          className="w-full px-4 py-3 bg-gray-100/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none shadow-inner focus:ring-emerald-500/50" />
+                      </div>
+                    )}
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">
-                        {accountType === 'teacher' ? 'Department' : 'Division'}
+                        Department
                       </label>
                       <input type="text" name="division" value={formData.division} onChange={handleChange}
-                        placeholder={accountType === 'teacher' ? "e.g. Computer Science" : "e.g. A"}
+                        placeholder="e.g. Computer Science"
                         className={`w-full px-4 py-3 bg-gray-100/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none shadow-inner ${
                           accountType === 'teacher' ? 'focus:ring-cyan-500/50' : 'focus:ring-emerald-500/50'
                         }`} />

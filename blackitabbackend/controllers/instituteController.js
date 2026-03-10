@@ -122,10 +122,11 @@ exports.getInstituteStats = async (req, res) => {
         roleCounts.forEach(r => { roles[r._id] = r.count; });
 
         const pendingQuestions = await ExamQuestion.countDocuments({ instituteId: instId, approvalStatus: 'pending' });
+        const pendingJoinRequests = await JoinRequest.countDocuments({ instituteId: instId, status: 'pending' });
 
         res.json({
             success: true,
-            data: { members, questions, pendingQuestions, posts, attempts, departmentsCount, roleCounts: roles }
+            data: { members, questions, pendingQuestions, pendingJoinRequests, posts, attempts, departmentsCount, roleCounts: roles }
         });
     } catch (error) {
         
@@ -689,9 +690,16 @@ exports.submitFeedback = async (req, res) => {
 // POST /api/institute/join — Student joins an institute by code (Creates a Request)
 exports.joinInstitute = async (req, res) => {
     try {
-        const { instituteCode } = req.body;
+        const { instituteCode, batchYear, departments } = req.body;
         if (!instituteCode) {
             return res.status(400).json({ success: false, message: 'Institute code is required' });
+        }
+        
+        if (!departments) {
+            return res.status(400).json({ success: false, message: 'Departments/Division is required to join an institute.' });
+        }
+        if (req.user.role === 'student' && !batchYear) {
+            return res.status(400).json({ success: false, message: 'Batch Year is required for students joining an institute.' });
         }
 
         // Check if user already belongs to an institute
@@ -724,6 +732,19 @@ exports.joinInstitute = async (req, res) => {
 
         await joinRequest.save();
 
+        // Update the user's batchYear and departments eagerly
+        // Note: departments comes from frontend as comma separated string or array. Let's make sure it's an array.
+        let deptsArray = [];
+        if (Array.isArray(departments)) deptsArray = departments;
+        else if (typeof departments === 'string') deptsArray = departments.split(',').map(d => d.trim()).filter(d => d);
+
+        await User.findByIdAndUpdate(req.user._id, {
+            batchYear: batchYear,
+            departments: deptsArray
+        });
+
+        await joinRequest.save();
+
         res.json({
             success: true,
             message: `Join request sent to "${institute.name}". Please wait for admin approval.`,
@@ -745,7 +766,7 @@ exports.getJoinRequests = async (req, res) => {
         if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
 
         const requests = await JoinRequest.find({ instituteId: instId, status: 'pending' })
-            .populate('userId', 'name email batchYear')
+            .populate('userId', 'name email batchYear role')
             .sort({ createdAt: -1 });
 
         res.json({ success: true, data: requests });

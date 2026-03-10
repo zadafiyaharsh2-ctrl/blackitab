@@ -143,6 +143,28 @@ const StudentPanel = () => {
 
   if (loading) return <LoadingSpinner />;
 
+  // Group filtered students
+  const groupedStudents = filteredStudents.reduce((acc, s) => {
+    const batch = s.batchYear ? String(s.batchYear).trim() : "";
+    const depts = (s.departments && s.departments.length > 0) ? s.departments.join(', ').trim() : "";
+
+    let key = "No batch & Department";
+    if (batch && !depts) key = `Batch: ${batch} - No Department`;
+    else if (!batch && depts) key = `No Batch - Dept: ${depts}`;
+    else if (batch && depts) key = `Batch: ${batch} - Dept: ${depts}`;
+
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(s);
+    return acc;
+  }, {});
+
+  // Sort keys: "No batch & Department" at the end, rest alphabetically
+  const sortedKeys = Object.keys(groupedStudents).sort((a, b) => {
+    if (a === "No batch & Department") return 1;
+    if (b === "No batch & Department") return -1;
+    return a.localeCompare(b);
+  });
+
   return (
     <div className="p-4 lg:p-8 max-w-6xl mx-auto space-y-6">
       
@@ -181,85 +203,94 @@ const StudentPanel = () => {
         </div>
       </div>
 
-      <div className="glass-panel border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50/80 dark:bg-white/5 border-b border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 text-sm">
-                <th className="p-4 font-semibold">Student</th>
-                <th className="p-4 font-semibold">Batch</th>
-                <th className="p-4 font-semibold">Departments</th>
-                <th className="p-4 font-semibold text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-white/10">
-              {filteredStudents.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="p-8 text-center text-gray-500">
-                    {searchQuery ? 'No students found matching your search.' : 'No students enrolled in the institute yet.'}
-                  </td>
-                </tr>
-              ) : (
-                filteredStudents.map(s => (
-                  <tr key={s._id} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group">
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center font-bold text-gray-600 dark:text-gray-300">
-                          {s.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="text-gray-900 dark:text-white font-bold">{s.name}</p>
-                          <p className="text-gray-500 text-xs">{s.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <span className="text-gray-600 dark:text-gray-400 text-sm">
-                        {s.batchYear || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex flex-wrap gap-1">
-                        {s.departments?.length > 0 ? (
-                          s.departments.map(d => (
-                            <span key={d} className="px-2 py-1 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded text-xs text-gray-600 dark:text-gray-400">
-                              {d}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-xs text-gray-400 dark:text-gray-500 italic">None</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-4 text-right">
-                      {(user?.role === 'institute' || user?.role === 'hod') && (
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => openEditModal(s)}
-                            className="p-2 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-500 dark:text-blue-400 rounded-lg transition-colors border border-blue-200 dark:border-blue-500/20"
-                            title="Edit Student"
-                          >
-                            <PencilSquareIcon className="w-4 h-4" />
-                          </button>
-                          {user?.role === 'institute' && (
-                            <button
-                              onClick={() => handleRemove(s._id)}
-                              className="p-2 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-500 dark:text-red-400 rounded-lg transition-colors border border-red-200 dark:border-red-500/20"
-                              title="Remove from Institute"
-                            >
-                              <TrashIcon className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {Object.keys(groupedStudents).length === 0 ? (
+        <div className="glass-panel text-center p-12 rounded-2xl border-gray-200 dark:border-white/10 text-gray-500">
+          {searchQuery ? 'No students found matching your search.' : 'No students enrolled in the institute yet.'}
         </div>
-      </div>
+      ) : (
+        <div className="space-y-8">
+          {sortedKeys.map(key => (
+            <div key={key} className="glass-panel border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm">
+              <div className="bg-gray-100/50 dark:bg-white/5 px-6 py-4 border-b border-gray-200 dark:border-white/10 flex items-center gap-3">
+                 <div className="w-2 h-6 md:h-8 bg-emerald-500 rounded-full"></div>
+                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">{key}</h3>
+                 <span className="ml-auto bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 py-1 px-3 rounded-full text-xs font-bold border border-emerald-500/20">
+                   {groupedStudents[key].length} Students
+                 </span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50/80 dark:bg-transparent border-b border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 text-sm">
+                      <th className="p-4 font-semibold w-1/3">Student</th>
+                      <th className="p-4 font-semibold">Batch</th>
+                      <th className="p-4 font-semibold">Departments</th>
+                      <th className="p-4 font-semibold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-white/10">
+                    {groupedStudents[key].map(s => (
+                      <tr key={s._id} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group">
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center font-bold text-gray-600 dark:text-gray-300">
+                              {s.name.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="text-gray-900 dark:text-white font-bold">{s.name}</p>
+                              <p className="text-gray-500 text-xs">{s.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <span className="text-gray-600 dark:text-gray-400 text-sm">
+                            {s.batchYear || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex flex-wrap gap-1">
+                            {s.departments?.length > 0 ? (
+                              s.departments.map(d => (
+                                <span key={d} className="px-2 py-1 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded text-xs text-gray-600 dark:text-gray-400">
+                                  {d}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-xs text-gray-400 dark:text-gray-500 italic">None</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4 text-right">
+                          {(user?.role === 'institute' || user?.role === 'hod') && (
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={() => openEditModal(s)}
+                                className="p-2 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-500 dark:text-blue-400 rounded-lg transition-colors border border-blue-200 dark:border-blue-500/20"
+                                title="Edit Student"
+                              >
+                                <PencilSquareIcon className="w-4 h-4" />
+                              </button>
+                              {user?.role === 'institute' && (
+                                <button
+                                  onClick={() => handleRemove(s._id)}
+                                  className="p-2 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-500 dark:text-red-400 rounded-lg transition-colors border border-red-200 dark:border-red-500/20"
+                                  title="Remove from Institute"
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Add Student Modal */}
       {isAddModalOpen && (

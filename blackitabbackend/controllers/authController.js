@@ -32,6 +32,16 @@ exports.register = async (req, res) => {
         const validRoles = ['student', 'teacher', 'hod', 'institute'];
         const assignedRole = validRoles.includes(role) ? role : 'student';
 
+        // Validation for joining an institute (non-admin roles)
+        if (instituteId && assignedRole !== 'institute') {
+            if (assignedRole === 'student' && (!batchYear || !division)) {
+                return res.status(400).json({ success: false, message: 'Batch Year and Department are required to join an institute.' });
+            }
+            if (assignedRole === 'teacher' && !division) {
+                return res.status(400).json({ success: false, message: 'Department is required for teachers joining an institute.' });
+            }
+        }
+        
         // Institute admin validation: email must be in institute's adminEmails
         if (assignedRole === 'institute') {
             if (!instituteId) {
@@ -49,13 +59,24 @@ exports.register = async (req, res) => {
             email: email.toLowerCase(),
             password,
             role: assignedRole,
-            instituteId,
-            instituteCode: instituteId ? instituteCode.toUpperCase() : '',
+            instituteId: assignedRole === 'institute' ? instituteId : null,
+            instituteCode: instituteId && assignedRole === 'institute' ? instituteCode.toUpperCase() : '',
             batchYear,
             division
         });
 
         await newUser.save();
+
+        // Create a Join Request if they provided an institute code but are not an admin
+        if (instituteId && assignedRole !== 'institute') {
+            const JoinRequest = require('../models/JoinRequest');
+            const joinRequest = new JoinRequest({
+                userId: newUser._id,
+                instituteId: instituteId,
+                status: 'pending'
+            });
+            await joinRequest.save();
+        }
 
         const token = jwt.sign(
             { userId: newUser._id, email: newUser.email },

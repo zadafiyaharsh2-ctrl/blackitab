@@ -8,7 +8,8 @@ import {
   DocumentTextIcon,
   CheckBadgeIcon,
   EyeIcon,
-  EyeSlashIcon
+  EyeSlashIcon,
+  UserPlusIcon
 } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { CustomToast } from '../../utils/CustomToast';
@@ -71,6 +72,13 @@ const InstituteDashboard = () => {
       icon: CheckBadgeIcon, 
       color: 'orange', 
       path: '/institute/questions' 
+    },
+    { 
+      title: 'Join Requests', 
+      value: stats?.pendingJoinRequests || 0, 
+      icon: UserPlusIcon, 
+      color: 'rose', 
+      path: '/institute/join-requests' 
     }
   ];
 
@@ -147,10 +155,6 @@ const InstituteDashboard = () => {
         <div className="glass-panel border-gray-200 dark:border-white/10 rounded-2xl p-6">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 tracking-tight">Quick Links</h3>
             <div className="space-y-3">
-                <button onClick={() => navigate('/institute/join-requests')} className="w-full text-left px-4 py-3.5 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 transition-colors flex items-center justify-between text-gray-700 dark:text-gray-300 cursor-pointer group shadow-sm font-medium">
-                    <span>Manage Join Requests</span>
-                    <span className="text-gray-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all">&rarr;</span>
-                </button>
                 <button onClick={() => navigate('/institute/theory')} className="w-full text-left px-4 py-3.5 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 transition-colors flex items-center justify-between text-gray-700 dark:text-gray-300 cursor-pointer group shadow-sm font-medium">
                     <span>Manage Theory Files</span>
                     <span className="text-gray-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all">&rarr;</span>

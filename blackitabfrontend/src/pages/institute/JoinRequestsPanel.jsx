@@ -59,7 +59,7 @@ const JoinRequestsPanel = () => {
             Pending Join Requests
           </h2>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Review and approve students requesting to join your institute.
+            Review and approve users requesting to join your institute.
           </p>
         </div>
         <div className="text-3xl font-bold text-primary-600 dark:text-primary-400">
@@ -79,7 +79,8 @@ const JoinRequestsPanel = () => {
             <table className="w-full text-left">
               <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                 <tr>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Student</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">User</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
                   <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
                   <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Batch Year</th>
                   <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Requested On</th>
@@ -91,6 +92,13 @@ const JoinRequestsPanel = () => {
                   <tr key={req._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="font-medium text-gray-900 dark:text-white">{req.userId?.name || 'Unknown User'}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {req.userId?.role ? (
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${req.userId.role === 'teacher' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'}`}>
+                          {req.userId.role.charAt(0).toUpperCase() + req.userId.role.slice(1)}
+                        </span>
+                      ) : '-'}
                     </td>
                     <td className="px-6 py-4 text-gray-500 dark:text-gray-400">
                       {req.userId?.email || 'N/A'}

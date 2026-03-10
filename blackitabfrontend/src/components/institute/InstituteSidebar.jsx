@@ -9,10 +9,15 @@ import {
   BellIcon, 
   BuildingOffice2Icon,
   ArrowRightOnRectangleIcon,
-  BookOpenIcon
+  BookOpenIcon,
+  SunIcon,
+  MoonIcon
 } from '@heroicons/react/24/outline';
+import { useTheme } from '../../context/ThemeContext';
+
 const InstituteSidebar = ({ isOpen, setIsOpen }) => {
   const navigate = useNavigate();
+  const { isDark, toggleTheme } = useTheme();
   const userDataStr = localStorage.getItem('user');
   const user = userDataStr ? JSON.parse(userDataStr) : null;
 
@@ -106,6 +111,18 @@ const InstituteSidebar = ({ isOpen, setIsOpen }) => {
               <p className="text-[10px] uppercase tracking-wider text-purple-600 dark:text-purple-400 font-bold">{user?.role?.replace('_', ' ')}</p>
             </div>
           </div>
+          <button
+            onClick={toggleTheme}
+            className="w-full flex items-center gap-3 px-4 py-3 mb-2 rounded-xl text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-yellow-500/10 hover:text-yellow-600 dark:hover:bg-white/10 dark:hover:text-yellow-400 transition-colors group"
+            title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {isDark ? (
+              <SunIcon className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-yellow-400 transition-colors" />
+            ) : (
+              <MoonIcon className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-yellow-600 transition-colors" />
+            )}
+            <span className="group-hover:dark:text-yellow-400 transition-colors">{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+          </button>
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-red-500/10 hover:text-red-500 dark:hover:bg-white/10 dark:hover:text-red-400 transition-colors group"

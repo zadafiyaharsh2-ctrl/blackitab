@@ -815,24 +815,58 @@ const Profile = () => {
                   value={joinInstituteCode}
                   onChange={e => setJoinInstituteCode(e.target.value.toUpperCase())}
                   placeholder="e.g. SURAT123"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all text-center text-lg font-bold tracking-widest uppercase"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all text-center text-lg font-bold tracking-widest uppercase mb-4"
                   autoFocus
                 />
+              </div>
+
+              <div className={`grid ${user?.role === 'student' ? 'grid-cols-2' : 'grid-cols-1'} gap-3 mb-2`}>
+                {user?.role === 'student' && (
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1 mb-1 block">Batch Year</label>
+                    <input
+                      type="text"
+                      value={joinBatchYear}
+                      onChange={e => setJoinBatchYear(e.target.value)}
+                      placeholder="e.g. 2025"
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all text-center"
+                    />
+                  </div>
+                )}
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1 mb-1 block">Department</label>
+                  <input
+                    type="text"
+                    value={joinDepartments}
+                    onChange={e => setJoinDepartments(e.target.value)}
+                    placeholder="e.g. CS"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all text-center"
+                  />
+                </div>
               </div>
 
               <button
                 onClick={async () => {
                   if (!joinInstituteCode.trim()) return toast.error('Please enter an institute code');
+                  if (user?.role === 'student' && !joinBatchYear.trim()) return toast.error('Please enter your batch year');
+                  if (!joinDepartments.trim()) return toast.error('Please enter your department/division');
+
                   setJoiningInstitute(true);
                   try {
                     const token = localStorage.getItem('token');
-                    const res = await axios.post(`${API_URL}/api/institute/join`, { instituteCode: joinInstituteCode }, {
+                    const res = await axios.post(`${API_URL}/api/institute/join`, {
+                      instituteCode: joinInstituteCode,
+                      batchYear: joinBatchYear,
+                      departments: joinDepartments
+                    }, {
                       headers: { Authorization: `Bearer ${token}` }
                     });
                     if (res.data.success) {
                       toast.success(res.data.message);
                       setShowJoinInstituteModal(false);
                       setJoinInstituteCode('');
+                      setJoinBatchYear('');
+                      setJoinDepartments('');
                     }
                   } catch (err) {
                     toast.error(err.response?.data?.message || 'Failed to join institute');
@@ -840,7 +874,7 @@ const Profile = () => {
                     setJoiningInstitute(false);
                   }
                 }}
-                disabled={joiningInstitute || !joinInstituteCode.trim()}
+                disabled={joiningInstitute || !joinInstituteCode.trim() || (user?.role === 'student' && !joinBatchYear.trim()) || !joinDepartments.trim()}
                 className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {joiningInstitute ? (
