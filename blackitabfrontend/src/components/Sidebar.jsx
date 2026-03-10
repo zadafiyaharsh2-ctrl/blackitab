@@ -114,7 +114,9 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
         initial={false}
         animate={{ width: sidebarWidth }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed left-0 top-0 h-screen z-50 flex flex-col glass-panel !rounded-none border-r border-gray-200 dark:border-white/10 shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_30px_-5px_rgba(255,255,255,0.02)] bg-white/95 dark:bg-[#000000]/80 backdrop-blur-xl"
+        className={`fixed left-0 top-0 h-screen z-50 flex flex-col glass-panel !rounded-none border-r border-gray-200 dark:border-white/10 shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_30px_-5px_rgba(255,255,255,0.02)] bg-white/95 dark:bg-[#000000]/80 backdrop-blur-xl transition-transform duration-300 md:translate-x-0 ${
+          isOpen ? 'translate-x-0 w-[280px]' : '-translate-x-full md:w-[80px]'
+        }`}
       >
         <div className="h-20 border-b border-gray-200/50 dark:border-white/10 flex items-center justify-between px-4 relative overflow-hidden">
            <div className="absolute top-0 left-0 w-full h-full bg-white/10 dark:bg-white/5 pointer-events-none" />
