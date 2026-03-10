@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { FaCog, FaTh, FaBookmark, FaUserTag, FaPlus, FaSearch, FaBell, FaEnvelope, FaPen, FaHeart, FaComment, FaPlay, FaLock, FaGraduationCap, FaRupeeSign, FaListUl, FaArrowLeft, FaShareAlt, FaBuilding, FaSignInAlt, FaTimes, FaExternalLinkAlt } from 'react-icons/fa';
+import { FaCog, FaTh, FaBookmark, FaUserTag, FaPlus, FaSearch, FaBell, FaEnvelope, FaPen, FaHeart, FaComment, FaPlay, FaLock, FaGraduationCap, FaRupeeSign, FaListUl, FaArrowLeft, FaShareAlt, FaBuilding, FaSignInAlt, FaTimes, FaExternalLinkAlt, FaChartLine, FaFire, FaCheckCircle } from 'react-icons/fa';
 import API_URL from '../config';
 import usePageTitle from '../hooks/usePageTitle';
 import toast from 'react-hot-toast';
@@ -12,6 +12,7 @@ import EditProfileModal from '../components/EditProfileModal';
 import StudyContentCard from '../components/StudyContentCard';
 import PlaylistCard from '../components/PlaylistCard';
 import CreatePlaylistModal from '../components/CreatePlaylistModal';
+import ActivityHeatmap from '../components/ActivityHeatmap';
 import { useSocketContext } from '../context/SocketContext';
 import { motion } from 'framer-motion';
 
@@ -28,7 +29,7 @@ const Profile = () => {
     }
     return parsedUser;
   });
-  const [activeTab, setActiveTab] = useState('posts');
+  const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
   const [isMyProfile, setIsMyProfile] = useState(true);
 
@@ -63,6 +64,11 @@ const Profile = () => {
   const [userListTitle, setUserListTitle] = useState('');
   const [userList, setUserList] = useState([]);
   const [isLoadingList, setIsLoadingList] = useState(false);
+
+  // Stats and Heatmap for Overview Tab
+  const [stats, setStats] = useState(null);
+  const [heatmapData, setHeatmapData] = useState([]);
+  const [loadingStats, setLoadingStats] = useState(false);
 
   // Get online users from Socket Context
   const { onlineUsers } = useSocketContext();
@@ -130,6 +136,31 @@ const Profile = () => {
     setPosts([]);
     fetchProfile();
   }, [navigate, userId]);
+
+  // Fetch Stats for Overview
+  useEffect(() => {
+    const fetchStats = async () => {
+      const targetId = user?._id || user?.id;
+      if (!targetId) return;
+      const token = localStorage.getItem('token');
+      try {
+        setLoadingStats(true);
+        const [statsRes, heatmapRes] = await Promise.all([
+          axios.get(`${API_URL}/api/progress/stats?userId=${targetId}`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API_URL}/api/progress/heatmap?userId=${targetId}`, { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+        if (statsRes.data?.success) setStats(statsRes.data.data);
+        if (heatmapRes.data?.success) setHeatmapData(heatmapRes.data.data);
+      } catch (err) {
+        console.error('Failed to fetch stats:', err);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+    if (user) {
+      fetchStats();
+    }
+  }, [user?._id, user?.id]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -653,6 +684,12 @@ const Profile = () => {
       <div className="mt-8 border-t border-gray-200 dark:border-white/5 pt-8">
         <div className="flex items-center justify-start md:justify-center gap-6 md:gap-12 border-b border-gray-200 dark:border-gray-800 pb-0 mb-6 overflow-x-auto w-full hide-scrollbar">
           <button
+            onClick={() => setActiveTab('overview')}
+            className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'overview' ? 'text-gray-900 border-gray-900 dark:text-white border-t dark:border-white -mt-[1px]' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
+          >
+            <FaChartLine size={12} /> Overview
+          </button>
+          <button
             onClick={() => setActiveTab('posts')}
             className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'posts' ? 'text-gray-900 border-gray-900 dark:text-white border-t dark:border-white -mt-[1px]' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
           >
@@ -672,6 +709,62 @@ const Profile = () => {
             <FaListUl size={12} /> Playlists
           </button>
         </div>
+
+        {activeTab === 'overview' && (
+          <div className="space-y-8 animate-fadeIn max-w-4xl mx-auto">
+            {loadingStats ? (
+              <div className="flex justify-center py-10"><div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div></div>
+            ) : (
+              <>
+                {/* Stats row */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                   <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
+                     <div className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-1">Rank</div>
+                     <div className="text-2xl font-black text-gray-900 dark:text-white">{stats?.rank || 'Unranked'}</div>
+                   </div>
+                   <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
+                     <div className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-1">Total XP</div>
+                     <div className="text-2xl font-black text-blue-500 dark:text-blue-400">{stats?.totalPoints || 0}</div>
+                   </div>
+                   <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
+                     <div className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-1">Current Streak</div>
+                     <div className="text-2xl font-black text-orange-500 dark:text-orange-400">{stats?.streak || 0} <FaFire className="inline" /></div>
+                   </div>
+                   <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
+                     <div className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-1">Solved</div>
+                     <div className="text-2xl font-black text-emerald-500 dark:text-emerald-400">{stats?.totalCompleted || 0}</div>
+                   </div>
+                </div>
+                
+                {/* Heatmap */}
+                <div className="bg-white dark:bg-[#080808] border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
+                   <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Activity Heatmap</h3>
+                   <ActivityHeatmap data={heatmapData} />
+                </div>
+
+                {/* Recent Activity */}
+                {stats?.recentActivity?.length > 0 && (
+                  <div className="bg-white dark:bg-[#080808] border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Recent Activity</h3>
+                    <div className="space-y-4">
+                      {stats.recentActivity.map((act, i) => (
+                        <div key={i} className="flex items-center gap-4 bg-gray-50 dark:bg-white/5 p-4 rounded-xl border border-gray-100 dark:border-white/5">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${act.type === 'completed' || act.completed ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'}`}>
+                             <FaCheckCircle />
+                          </div>
+                          <div>
+                            <div className="text-gray-900 dark:text-white font-medium">{act.topicId?.title || act.title || 'Completed a task'}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{new Date(act.completedAt || act.attemptedAt).toLocaleDateString()}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
         {activeTab === 'playlists' ? (
           // PLAYLISTS TAB
