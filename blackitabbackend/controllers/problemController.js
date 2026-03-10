@@ -180,7 +180,19 @@ exports.searchStudyContent = async (req, res) => {
                 { title: { $regex: query, $options: 'i' } },
                 { description: { $regex: query, $options: 'i' } }
             ]
-        }).populate('subjectId', 'name').select('title description subjectId').lean();
+        }).populate('subjectId', 'name').select('title description subjectId').limit(5).lean();
+
+        // Search exam questions
+        const ExamQuestion = require('../models/ExamQuestion');
+        const questions = await ExamQuestion.find({
+            question: { $regex: query, $options: 'i' }
+        }).select('question subject difficulty exam').limit(5).lean();
+
+        // Search users
+        const User = require('../models/User');
+        const users = await User.find({
+            name: { $regex: query, $options: 'i' }
+        }).select('name role').limit(5).lean();
 
         // Normalize data for the frontend
         const normalizedSubjects = subjects.map(s => ({
@@ -198,7 +210,22 @@ exports.searchStudyContent = async (req, res) => {
             subjectId: c.subjectId?._id
         }));
 
-        const results = [...normalizedSubjects, ...normalizedChapters];
+        const normalizedQuestions = questions.map(q => ({
+            _id: q._id,
+            name: q.question && q.question.length > 50 ? q.question.substring(0, 50) + '...' : (q.question || 'Question'),
+            type: 'question',
+            description: `${q.subject || 'Mixed Subject'} • ${q.difficulty || 'Medium'}`,
+            examId: q.exam // useful for navigation
+        }));
+
+        const normalizedUsers = users.map(u => ({
+            _id: u._id,
+            name: u.name,
+            type: 'user',
+            description: `Role: ${u.role === 'institute_admin' ? 'Institute Admin' : u.role === 'hod' ? 'HOD' : u.role === 'teacher' ? 'Teacher' : 'Student'}`
+        }));
+
+        const results = [...normalizedSubjects, ...normalizedChapters, ...normalizedQuestions, ...normalizedUsers];
 
         res.json({ success: true, data: results });
     } catch (err) {
