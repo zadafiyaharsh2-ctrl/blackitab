@@ -5,9 +5,9 @@ import { FaTrophy, FaFire, FaStar, FaMedal, FaArrowLeft, FaSpinner } from 'react
 import API_URL from '../config';
 import usePageTitle from '../hooks/usePageTitle';
 const RANK_STYLES = {
-    1: { bg: 'from-yellow-500/20 to-amber-500/10', border: 'border-yellow-500/40', glow: 'shadow-yellow-500/20', icon: '🥇', badge: 'bg-yellow-500 text-black' },
-    2: { bg: 'from-slate-400/20 to-gray-400/10', border: 'border-slate-400/40', glow: 'shadow-slate-400/20', icon: '🥈', badge: 'bg-slate-400 text-black' },
-    3: { bg: 'from-amber-700/20 to-orange-800/10', border: 'border-amber-700/40', glow: 'shadow-amber-700/20', icon: '🥉', badge: 'bg-amber-700 text-white' },
+    1: { bg: 'from-green-400/30 via-emerald-500/20 to-teal-900/40', border: 'border-green-400/60', glow: 'shadow-[0_0_60px_rgba(74,222,128,0.5)]', icon: '🃏', badge: 'bg-green-500 text-black' },
+    2: { bg: 'from-purple-500/30 via-fuchsia-500/20 to-purple-900/40', border: 'border-purple-500/60', glow: 'shadow-[0_0_50px_rgba(168,85,247,0.4)]', icon: '🎭', badge: 'bg-purple-500 text-white' },
+    3: { bg: 'from-red-500/30 via-rose-500/20 to-red-900/40', border: 'border-red-500/60', glow: 'shadow-[0_0_50px_rgba(244,63,94,0.4)]', icon: '🎪', badge: 'bg-red-500 text-white' },
 };
 
 const Leaderboard = () => {
@@ -48,30 +48,36 @@ const Leaderboard = () => {
     const rest = users.slice(3);
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] p-4 md:p-8 relative overflow-hidden font-sans w-full max-w-full flex justify-center">
-            {/* Background Orbs */}
-            <div className="fixed inset-0 z-0 pointer-events-none">
-                <div className="absolute top-[5%] left-[10%] w-[400px] h-[400px] bg-yellow-500/10 rounded-full blur-[120px] mix-blend-screen" />
-                <div className="absolute bottom-[10%] right-[10%] w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[150px] mix-blend-screen" />
+        <div className="min-h-screen bg-[#05000a] text-white p-4 md:p-8 relative overflow-hidden font-sans w-full max-w-full flex justify-center selection:bg-green-500/30">
+            {/* Background Orbs: Joker Theme (Deep Purples & Acid Greens) */}
+            <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '6s' }} />
+                <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-green-500/10 rounded-full blur-[150px] mix-blend-screen animate-pulse" style={{ animationDuration: '4s' }} />
+                <div className="absolute bottom-[-10%] left-[20%] w-[700px] h-[700px] bg-fuchsia-700/15 rounded-full blur-[150px] mix-blend-screen" />
+                
+                {/* Noise overlay for gritty feel */}
+                <div className="absolute inset-0 opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPSc0JyBoZWlnaHQ9JzQnPgo8cmVjdCB3aWR0aD0nNCcgaGVpZ2h0PSc0JyBmaWxsPScjZmZmJyBmaWxsLW9wYWNpdHk9JzAuMScvPgo8L3N2Zz4=')] mix-blend-overlay pointer-events-none"></div>
             </div>
 
             {/* Container forcing center */}
             <div className="w-full max-w-4xl relative z-10 flex flex-col items-center">
                 {/* Header */}
-                <div className="w-full flex flex-col items-center text-center mb-12 relative">
+                <div className="w-full flex flex-col items-center text-center mb-16 relative">
                     <button
                         onClick={() => navigate(-1)}
-                        className="absolute left-0 top-1 p-3 rounded-full bg-white/5 backdrop-blur-md border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                        className="absolute left-0 top-1 p-3 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 hover:border-purple-500/50 text-gray-400 hover:text-white hover:shadow-[0_0_15px_rgba(168,85,247,0.4)] transition-all z-20 group"
                     >
-                        <FaArrowLeft />
+                        <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" />
                     </button>
-                    <div className="inline-flex items-center justify-center p-4 rounded-3xl bg-gradient-to-br from-yellow-500/20 to-amber-600/20 border border-yellow-500/30 shadow-[0_0_30px_rgba(245,158,11,0.2)] mb-4">
-                        <FaTrophy className="text-4xl text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
+                    <div className="inline-flex items-center justify-center p-5 rounded-3xl bg-gradient-to-br from-green-500/20 via-purple-500/20 to-black border border-green-500/30 shadow-[0_0_40px_rgba(74,222,128,0.2)] mb-6 relative group overflow-hidden">
+                        <div className="absolute inset-0 bg-green-400/20 blur-xl group-hover:bg-green-400/40 transition-all duration-500"></div>
+                        <FaTrophy className="text-5xl text-green-400 drop-shadow-[0_0_20px_rgba(74,222,128,0.8)] relative z-10 animate-bounce" style={{ animationDuration: '3s' }} />
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight">
-                        Global <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-600">Leaderboard</span>
+                    <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter uppercase relative">
+                        <span className="absolute inset-0 text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-purple-500 to-green-400 blur-xl opacity-50 block">GLOBAL ELITE</span>
+                        GLOBAL <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-purple-500 to-fuchsia-500 animate-pulse">ELITE</span>
                     </h1>
-                    <p className="text-gray-500 dark:text-gray-400 text-lg mt-3 font-medium">Climb the ranks by solving problems and earning XP</p>
+                    <p className="text-green-400/80 text-lg md:text-xl mt-4 font-bold tracking-widest uppercase">Dominate the ranks. Prove your chaos.</p>
                 </div>
 
                 {loading ? (
@@ -104,11 +110,11 @@ const Leaderboard = () => {
                                         <div className="flex flex-col items-center mb-4 relative z-10 w-full">
                                             <div className="absolute -top-6 text-3xl sm:-top-8 sm:text-4xl drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] z-20 transition-transform group-hover:scale-110">{style.icon}</div>
                                             <div className={`relative ${isFirst ? 'w-24 h-24 sm:w-28 sm:h-28' : 'w-20 h-20 sm:w-24 sm:h-24'} rounded-full p-1 bg-gradient-to-br ${style.bg} inset-0 border-2 ${style.border} shadow-2xl ${style.glow} group-hover:shadow-[0_0_40px_rgba(255,255,255,0.2)] transition-shadow`}>
-                                                <div className="w-full h-full rounded-full bg-white dark:bg-gray-900 overflow-hidden flex items-center justify-center border-4 border-gray-900 dark:border-black">
+                                                <div className="w-full h-full rounded-full bg-black overflow-hidden flex items-center justify-center border-4 border-black">
                                                     {user.profileImage ? (
                                                         <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover" />
                                                     ) : (
-                                                        <span className={`font-black text-gray-700 dark:text-gray-300 ${isFirst ? 'text-4xl' : 'text-3xl'}`}>
+                                                        <span className={`font-black text-white ${isFirst ? 'text-4xl' : 'text-3xl'} drop-shadow-md`}>
                                                             {user.name?.charAt(0).toUpperCase()}
                                                         </span>
                                                     )}
@@ -137,18 +143,19 @@ const Leaderboard = () => {
                                     <div
                                         key={user._id}
                                         onClick={() => navigate(`/profile/${user._id}`)}
-                                        className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-5 rounded-2xl glass-panel cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl
+                                        className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-5 rounded-2xl cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl overflow-hidden relative group
                                             ${isSelf 
-                                                ? 'bg-blue-600/10 border border-blue-500/50 shadow-[0_0_20px_rgba(59,130,246,0.15)] ring-1 ring-blue-500/50' 
-                                                : 'border border-white/10 hover:border-white/20 hover:bg-white/5'
+                                                ? 'bg-gradient-to-r from-green-500/20 to-purple-500/10 border border-green-500/50 shadow-[0_0_30px_rgba(74,222,128,0.2)]' 
+                                                : 'bg-black/40 backdrop-blur-xl border border-white/10 hover:border-fuchsia-500/50 hover:bg-black/60 shadow-lg'
                                             }`}
                                     >
-                                        <div className="flex items-center gap-4 w-full sm:w-auto">
-                                            <div className="flex items-center justify-center w-10 sm:w-12 h-10 sm:h-12 rounded-xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 shrink-0">
-                                                <span className="font-black text-gray-500 dark:text-gray-400 text-base sm:text-lg">#{user.rank}</span>
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
+                                        <div className="flex items-center gap-4 w-full sm:w-auto relative z-10">
+                                            <div className="flex items-center justify-center w-10 sm:w-12 h-10 sm:h-12 rounded-xl bg-white/5 border border-white/10 shrink-0 shadow-[inset_0_0_15px_rgba(255,255,255,0.05)]">
+                                                <span className="font-black text-white text-base sm:text-lg drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">#{user.rank}</span>
                                             </div>
                                             
-                                            <div className="w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0 border-2 border-white/10">
+                                            <div className="w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-black flex items-center justify-center overflow-hidden shrink-0 border-2 border-white/20">
                                                 {user.profileImage ? (
                                                     <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover" />
                                                 ) : (
@@ -157,12 +164,14 @@ const Leaderboard = () => {
                                             </div>
                                             
                                             <div className="flex-1 min-w-0">
-                                                <p className={`font-bold text-base sm:text-lg truncate flex items-center gap-2 ${isSelf ? 'text-blue-500 dark:text-blue-400' : 'text-gray-900 dark:text-white'}`}>
+                                                <p className={`font-bold text-base sm:text-lg truncate flex items-center gap-2 ${isSelf ? 'text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]' : 'text-white'}`}>
                                                     {user.name} 
-                                                    {isSelf && <span className="text-[10px] uppercase tracking-wider bg-blue-500/20 text-blue-500 px-2 py-0.5 rounded-full border border-blue-500/30">You</span>}
+                                                    {isSelf && <span className="text-[10px] uppercase tracking-wider bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30">You</span>}
                                                 </p>
-                                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium tracking-wide mt-0.5 truncate">
-                                                    {user.stats?.problemsSolved || 0} Solved • {user.stats?.accuracy || 0}% Accuracy
+                                                <p className="text-xs sm:text-sm text-gray-400 font-medium tracking-wide mt-0.5 truncate flex items-center gap-2">
+                                                    <span className="flex items-center gap-1"><FaFire className="text-orange-500 text-xs" /> {user.stats?.problemsSolved || 0} Solved</span>
+                                                    <span className="text-gray-600">•</span>
+                                                    <span className={user.stats?.accuracy >= 80 ? 'text-green-400' : 'text-gray-400'}>{user.stats?.accuracy || 0}% Accuracy</span>
                                                 </p>
                                             </div>
                                         </div>
