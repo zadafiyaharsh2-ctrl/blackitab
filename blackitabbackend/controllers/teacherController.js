@@ -10,6 +10,7 @@ const TeacherContent = require('../models/TeacherContent');
 const TeacherScore = require('../models/TeacherScore');
 const TeacherFeedback = require('../models/TeacherFeedback');
 const ExamQuestion = require('../models/ExamQuestion');
+const Attendance = require('../models/Attendance');
 const { ROLE_HIERARCHY } = require('../middleware/roleMiddleware');
 
 // ══════════════════════════════════════════════════════════════
@@ -219,6 +220,11 @@ exports.addStudentsToBatch = async (req, res) => {
 // DELETE /api/teacher/batch/:batchId/students/:studentId
 exports.removeStudentFromBatch = async (req, res) => {
     try {
+        const userLevel = ROLE_HIERARCHY[req.user.role] || 0;
+        if (userLevel < ROLE_HIERARCHY['hod']) {
+            return res.status(403).json({ success: false, message: 'Only HOD or Institute Admin can remove students from a batch.' });
+        }
+
         const batch = await Batch.findById(req.params.batchId);
         if (!batch) return res.status(404).json({ success: false, message: 'Batch not found' });
 
@@ -841,6 +847,125 @@ exports.getDepartmentContent = async (req, res) => {
             .sort({ updatedAt: -1 });
 
         res.json({ success: true, data: content });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
+// PHASE 10: STUDENT ATTENDANCE SYSTEM
+// ══════════════════════════════════════════════════════════════
+
+// POST /api/teacher/attendance
+exports.submitAttendance = async (req, res) => {
+    try {
+        const { batchId, date, records } = req.body;
+        if (!batchId || !date || !records || !Array.isArray(records)) {
+            return res.status(400).json({ success: false, message: 'batchId, date, and records array are required' });
+        }
+        if (!req.user.instituteId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+
+        const batch = await Batch.findById(batchId);
+        if (!batch) return res.status(404).json({ success: false, message: 'Batch not found' });
+        if (!canManage(batch, req.user) && !batch.teacherIds.some(t => t.toString() === req.user._id.toString())) {
+            return res.status(403).json({ success: false, message: 'Not authorized for this batch' });
+        }
+
+        const attendanceDate = new Date(date);
+        attendanceDate.setHours(0, 0, 0, 0);
+
+        const existing = await Attendance.findOne({ batchId, date: attendanceDate });
+        if (existing) {
+            return res.status(400).json({ success: false, message: 'Attendance already submitted for this batch on this date. Use update instead.' });
+        }
+
+        const attendance = await Attendance.create({
+            batchId,
+            teacherId: req.user._id,
+            instituteId: req.user.instituteId,
+            date: attendanceDate,
+            records
+        });
+
+        res.status(201).json({ success: true, data: attendance });
+    } catch (error) {
+        if (error.code === 11000) return res.status(400).json({ success: false, message: 'Attendance already exists for this date.' });
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// GET /api/teacher/attendance/:batchId
+exports.getAttendanceHistory = async (req, res) => {
+    try {
+        const batch = await Batch.findById(req.params.batchId);
+        if (!batch) return res.status(404).json({ success: false, message: 'Batch not found' });
+        if (!canManage(batch, req.user) && !batch.teacherIds.some(t => t.toString() === req.user._id.toString())) {
+            return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+
+        const filter = { batchId: req.params.batchId };
+        
+        // Optional date filter
+        if (req.query.date) {
+            const date = new Date(req.query.date);
+            date.setHours(0, 0, 0, 0);
+            filter.date = date;
+        }
+
+        const history = await Attendance.find(filter)
+            .populate('records.studentId', 'name email')
+            .populate('teacherId', 'name')
+            .sort({ date: -1 });
+
+        res.json({ success: true, data: history });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// PUT /api/teacher/attendance/:id
+exports.updateAttendanceRecord = async (req, res) => {
+    try {
+        const { records } = req.body;
+        if (!records || !Array.isArray(records)) {
+            return res.status(400).json({ success: false, message: 'records array is required' });
+        }
+
+        const attendance = await Attendance.findById(req.params.id);
+        if (!attendance) return res.status(404).json({ success: false, message: 'Attendance record not found' });
+
+        const batch = await Batch.findById(attendance.batchId);
+        if (!canManage(batch, req.user) && !batch.teacherIds.some(t => t.toString() === req.user._id.toString())) {
+            return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+
+        attendance.records = records;
+        await attendance.save();
+
+        res.json({ success: true, data: attendance });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// DELETE /api/teacher/attendance/:id
+exports.deleteAttendanceRecord = async (req, res) => {
+    try {
+        const userLevel = ROLE_HIERARCHY[req.user.role] || 0;
+        if (userLevel < ROLE_HIERARCHY['hod']) {
+            return res.status(403).json({ success: false, message: 'Only HOD or Institute Admin can delete attendance records.' });
+        }
+
+        const attendance = await Attendance.findById(req.params.id);
+        if (!attendance) return res.status(404).json({ success: false, message: 'Attendance record not found' });
+
+        const batch = await Batch.findById(attendance.batchId);
+        if (!canManage(batch, req.user)) {
+             return res.status(403).json({ success: false, message: 'Not authorized for this institute/department' });
+        }
+
+        await Attendance.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: 'Attendance record deleted successfully' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
     }
