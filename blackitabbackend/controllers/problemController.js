@@ -219,7 +219,37 @@ exports.getExamQuestions = async (req, res) => {
             .select('-correctAnswer -explanation')
             .sort({ createdAt: -1 });
 
-        res.json({ success: true, data: questions });
+        let questionsWithAttempts = questions.map(q => q.toObject());
+
+        // Merge User Attempts if available
+        if (req.user) {
+            const Attempt = require('../models/Attempt');
+            const questionIds = questions.map(q => q._id);
+            const userAttempts = await Attempt.find({
+                userId: req.user._id,
+                questionId: { $in: questionIds }
+            }).sort({ attemptedAt: -1 }); // Get latest attempts first
+
+            // Map the latest attempt for each question
+            const attemptMap = {};
+            userAttempts.forEach(attempt => {
+                if (!attemptMap[attempt.questionId]) {
+                    // Only store the latest attempt for O(1) lookup
+                    attemptMap[attempt.questionId] = {
+                        isCorrect: attempt.isCorrect,
+                        selectedOption: attempt.selectedOption,
+                        attemptedAt: attempt.attemptedAt
+                    };
+                }
+            });
+
+            questionsWithAttempts = questionsWithAttempts.map(q => ({
+                ...q,
+                userAttempt: attemptMap[q._id] || null
+            }));
+        }
+
+        res.json({ success: true, data: questionsWithAttempts });
     } catch (err) {
         
         res.status(500).json({ success: false, message: 'Server Error' });

@@ -225,8 +225,8 @@ const StudentPanel = () => {
                   <thead>
                     <tr className="bg-gray-50/80 dark:bg-transparent border-b border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 text-sm">
                       <th className="p-4 font-semibold w-1/3">Student</th>
-                      <th className="p-4 font-semibold">Batch</th>
-                      <th className="p-4 font-semibold">Departments</th>
+                      <th className="hidden sm:table-cell p-4 font-semibold">Batch</th>
+                      <th className="hidden md:table-cell p-4 font-semibold">Departments</th>
                       <th className="p-4 font-semibold text-right">Actions</th>
                     </tr>
                   </thead>
@@ -251,12 +251,12 @@ const StudentPanel = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="p-4">
+                        <td className="hidden sm:table-cell p-4">
                           <span className="text-gray-600 dark:text-gray-400 text-sm">
                             {s.batchYear || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
                           </span>
                         </td>
-                        <td className="p-4">
+                        <td className="hidden md:table-cell p-4">
                           <div className="flex flex-wrap gap-1">
                             {s.departments?.length > 0 ? (
                               s.departments.map(d => (

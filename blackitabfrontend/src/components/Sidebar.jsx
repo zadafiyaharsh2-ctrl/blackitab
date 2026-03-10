@@ -97,6 +97,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
     { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
     { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy className="text-yellow-400" /> },
+    { path: '/notifications', label: 'Notifications', icon: <FaBell className="text-red-400" />, mobileOnly: true },
     { path: '/theory', label: 'Theory', icon: <FaBook /> },
   ];
 
@@ -167,6 +168,36 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
           <ul className="space-y-1.5">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path || (location.pathname.startsWith(item.path) && item.path !== '/');
+              if (item.mobileOnly) {
+                return (
+                  <li key={item.path} className="md:hidden">
+                    <Link to={item.path}>
+                      <motion.div
+                        whileHover={{ scale: 1.02, x: isOpen ? 4 : 0 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`relative flex items-center ${isOpen ? 'px-4 py-3' : 'px-0 py-3 justify-center'} rounded-xl text-sm font-semibold transition-all duration-300 overflow-hidden group ${
+                          isActive
+                            ? 'text-white shadow-sm font-bold'
+                            : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-white/10'
+                        }`}>
+                        {isActive && (
+                          <motion.div layoutId="active-nav-bg"
+                            className="absolute inset-0 bg-blue-600 dark:bg-blue-500 rounded-xl -z-10" />
+                        )}
+                        <span className={`relative z-10 text-lg ${isOpen ? 'mr-4' : ''} ${isActive ? 'text-white' : 'group-hover:text-blue-500 transition-colors'}`}>
+                          {item.icon}
+                        </span>
+                        <AnimatePresence>
+                          {isOpen && (
+                            <motion.span initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}
+                              className="flex-1 whitespace-nowrap z-10">{item.label}</motion.span>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    </Link>
+                  </li>
+                );
+              }
               return (
                 <li key={item.path}>
                   <Link to={item.path}>

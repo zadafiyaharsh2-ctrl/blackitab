@@ -139,8 +139,8 @@ const NotificationBell = () => {
         )}
       </AnimatePresence>
 
-      {/* Bell Button — Fixed top-right */}
-      <div className="fixed top-5 right-8 z-[998]">
+      {/* Bell Button — Fixed top-right (Hidden on mobile to live in hamburger) */}
+      <div className="hidden md:block fixed top-5 right-8 z-[998]">
         <motion.button
           onClick={handleOpen}
           whileHover={{ scale: 1.05 }}
