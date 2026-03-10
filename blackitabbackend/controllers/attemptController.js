@@ -161,7 +161,7 @@ exports.getDashboardAnalytics = async (req, res) => {
         // Recent activity
         const recentActivity = allAttempts.slice(0, 5).map(a => ({
             type: a.isCorrect ? 'completed' : 'attempted',
-            title: a.questionId?.content?.substring(0, 30) + '...' || 'Unknown Question',
+            title: a.questionId?.question ? (a.questionId.question.substring(0, 30) + '...') : 'Unknown Question',
             time: new Date(a.attemptedAt).toLocaleDateString(),
             difficulty: a.questionId?.difficulty || 'Medium'
         }));
