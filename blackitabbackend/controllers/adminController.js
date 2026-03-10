@@ -465,6 +465,110 @@ exports.deleteQuestion = async (req, res) => {
 };
 
 // ══════════════════════════════════════════════════════════════
+// PHASE 11: COMPREHENSIVE ADMIN CONTROL PANEL (SUPER ADMIN)
+// ══════════════════════════════════════════════════════════════
+
+// GET /api/admin/users/full/:id
+exports.getUserFullDetails = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id)
+            .select('-password')
+            .populate('instituteId', 'name instituteCode');
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        res.json({ success: true, data: user });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// PUT /api/admin/users/full/:id
+exports.editUserFull = async (req, res) => {
+    try {
+        // We only explicitly block password from being updated here (requires a separate flow if needed)
+        // All other fields from the body will be applied directly for the Super Admin
+        const updates = { ...req.body };
+        delete updates.password;
+
+        // Handle institute mapping manually to ensure consistency
+        if (updates.instituteCode !== undefined) {
+            if (updates.instituteCode === '' || updates.instituteCode === null) {
+                updates.instituteId = null;
+                updates.instituteCode = '';
+            } else {
+                const institute = await Institute.findOne({ instituteCode: updates.instituteCode.toUpperCase() });
+                if (!institute) {
+                    return res.status(400).json({ success: false, message: `Invalid institute code: ${updates.instituteCode}` });
+                }
+                updates.instituteId = institute._id;
+                updates.instituteCode = institute.instituteCode;
+            }
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { $set: updates },
+            { new: true, runValidators: true }
+        ).select('-password');
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        res.json({ success: true, message: 'System Admin: User entirely updated', data: user });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message || 'Server error' });
+    }
+};
+
+// GET /api/admin/institutes/:id/members
+exports.getInstituteMembers = async (req, res) => {
+    try {
+        const members = await User.find({ instituteId: req.params.id })
+            .select('name email role isBanned isVerified points streak xp departmentId')
+            .sort({ role: 1, name: 1 });
+        
+        res.json({ success: true, data: members, total: members.length });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// PUT /api/admin/institutes/full/:id
+exports.editInstituteFull = async (req, res) => {
+    try {
+        const updates = { ...req.body };
+
+        if (updates.instituteCode) {
+            updates.instituteCode = updates.instituteCode.toUpperCase();
+        }
+
+        const institute = await Institute.findByIdAndUpdate(
+            req.params.id,
+            { $set: updates },
+            { new: true, runValidators: true }
+        );
+
+        if (!institute) return res.status(404).json({ success: false, message: 'Institute not found' });
+        
+        // If institute code was changed, we optionally should update all users inside it.
+        // For right now, Mongoose hooks or a mass update would be requested if needed, 
+        // but typically Institute Codes don't change often. Let's do a mass update just in case.
+        if (updates.instituteCode) {
+            await User.updateMany(
+                { instituteId: institute._id },
+                { $set: { instituteCode: updates.instituteCode } }
+            );
+        }
+
+        res.json({ success: true, message: 'System Admin: Institute entirely updated', data: institute });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message || 'Server error' });
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
 // POST MODERATION
 // ══════════════════════════════════════════════════════════════
 
