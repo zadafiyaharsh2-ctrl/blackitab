@@ -103,6 +103,7 @@ const GlobalSearch = ({ isOpen, onClose }) => {
                                 onClick={() => handleSelect(item)}
                                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left"
                             >
+                                <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
                                     {item.type === 'user' ? (
                                         <FaUser className="text-sm" />
                                     ) : (
