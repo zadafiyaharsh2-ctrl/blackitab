@@ -7,7 +7,7 @@
  * This collection stores the actual content (paragraphs, lists, images, etc.)
  * for each topic, separate from the lightweight Topic model.
  * 
- * Collection Name: full_data_of_topics (explicitly set, not pluralized)
+ * Collection Name: FullTopicData (explicitly set, not pluralized)
  * 
  * Purpose:
  * - Store complete, detailed content for topics
@@ -21,7 +21,7 @@
  * 4. Caching: Can cache topic lists separately from content
  * 
  * Relationships:
- * - One full_data_of_topics entry belongs to one topic (one-to-one)
+ * - One FullTopicData entry belongs to one topic (one-to-one)
  * - topicId field references the _id in topics collection
  * 
  * Content Structure:
@@ -106,9 +106,9 @@ const TopicDataSchema = new mongoose.Schema({
 });
 
 // Create and export the model
-// First parameter: "full_data_of_topics" - exact collection name (NOT pluralized)
+// First parameter: "FullTopicData" - exact collection name (NOT pluralized)
 // Second parameter: TopicDataSchema - the schema definition
 // 
 // Note: Using exact collection name instead of letting Mongoose pluralize
 // This gives us explicit control over the collection name
-module.exports = mongoose.model("full_data_of_topics", TopicDataSchema);
+module.exports = mongoose.model("FullTopicData", TopicDataSchema);

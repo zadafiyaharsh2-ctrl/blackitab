@@ -6,7 +6,7 @@ import { CustomToast } from '../utils/CustomToast';
 import axios from 'axios';
 import API_URL from '../config';
 import usePageTitle from '../hooks/usePageTitle';
-import { useTheme } from '../context/useTheme';
+import { useTheme } from '../context/ThemeContext';
 
 const EXAMS = [
   { id: 'jee', label: 'JEE' },
@@ -23,7 +23,7 @@ const SUBJECTS = [
 
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
 
-const QuestionManagement = () => {
+const ManageQuestions = () => {
   usePageTitle('Question Bank');
   const { isDark } = useTheme();
 
@@ -1439,4 +1439,4 @@ const GeneratePaperTab = ({ isDark }) => {
   );
 };
 
-export default QuestionManagement;
+export default ManageQuestions;

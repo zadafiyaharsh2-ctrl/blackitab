@@ -54,8 +54,8 @@ import ExamQuestions from './pages/ExamQuestions';
 import Leaderboard from './pages/Leaderboard';
 import Onboarding from './pages/Onboarding';
 import TeacherDashboard from './pages/TeacherDashboard';
-import QuestionManagement from './pages/QuestionManagement';
-import TeacherBatches from './pages/TeacherBatches';
+import ManageQuestions from './pages/ManageQuestions';
+import TeacherClasses from './pages/TeacherClasses';
 import TeacherBatchDetail from './pages/TeacherBatchDetail';
 import StudentClasses from './pages/StudentClasses';
 
@@ -317,7 +317,7 @@ function App() {
               element={
                 <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <QuestionManagement />
+                    <ManageQuestions />
                   </MainLayout>
                 </ProtectedRoute>
               }
@@ -479,7 +479,7 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <TeacherBatches />
+                    <TeacherClasses />
                   </MainLayout>
                 </ProtectedRoute>
               }

@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaArrowRight } from 'react-icons/fa';
 import Logo from '../components/Logo';
-import Socialfeatures from '../components/Socilafeatures';
+import Socialfeatures from '../components/SocialFeatures';
 
 // Framer Motion Variants
 const containerVariants = {

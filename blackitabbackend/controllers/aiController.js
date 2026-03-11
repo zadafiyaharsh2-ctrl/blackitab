@@ -1,5 +1,5 @@
 const axios = require("axios");
-const AIQuestion = require("../models/AIQuestion");
+const AiQuestion = require("../models/AiQuestion");
 const ChatHistory = require("../models/ChatHistory");
 
 // ===================== DEBUG CONFIGURATION =====================
@@ -280,7 +280,7 @@ const askQuestion = async (req, res) => {
 
     debugLog("askQuestion - Saving Question", questionData);
 
-    const savedQuestion = await AIQuestion.create(questionData);
+    const savedQuestion = await AiQuestion.create(questionData);
 
     debugLog("askQuestion - Question Saved", {
       id: savedQuestion._id,
@@ -325,12 +325,12 @@ const getHistory = async (req, res) => {
       userId: userId.toString()});
 
     const [questions, total] = await Promise.all([
-      AIQuestion.find({ userId })
+      AiQuestion.find({ userId })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .select("question answer sources createdAt sessionId"),
-      AIQuestion.countDocuments({ userId }),
+      AiQuestion.countDocuments({ userId }),
     ]);
 
     debugLog("getHistory - Result", {
@@ -376,12 +376,12 @@ const deleteChat = async (req, res) => {
     }
 
     // Try APIQuestion as fallback (legacy)
-    const question = await AIQuestion.findOneAndDelete({
+    const question = await AiQuestion.findOneAndDelete({
       _id: req.params.id,
       userId: req.user._id});
     
     if (question) {
-      debugLog("deleteChat - Deleted AIQuestion", { id: question._id });
+      debugLog("deleteChat - Deleted AiQuestion", { id: question._id });
       return res.json({ success: true, ok: true, message: "Question deleted successfully" });
     }
 
@@ -400,7 +400,7 @@ const clearHistory = async (req, res) => {
       : "NOT AUTHENTICATED"});
 
   try {
-    const aiQuestionsResult = await AIQuestion.deleteMany({
+    const aiQuestionsResult = await AiQuestion.deleteMany({
       userId: req.user._id});
     const chatHistoryResult = await ChatHistory.deleteMany({
       userId: req.user._id});

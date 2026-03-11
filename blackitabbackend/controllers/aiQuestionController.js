@@ -1,5 +1,5 @@
 const axios = require('axios');
-const QuestionGenerated = require('../models/QuestionGenerated');
+const GeneratedQuestion = require('../models/GeneratedQuestion');
 
 const LANGCHAIN_API_URL = process.env.LANGCHAIN_API_URL || 'http://127.0.0.1:8000/query';
 
@@ -133,8 +133,8 @@ const generateQuestions = async (req, res) => {
         });
 
 
-        // Save each question as an individual QuestionGenerated document
-        const savedQuestions = await QuestionGenerated.insertMany(
+        // Save each question as an individual GeneratedQuestion document
+        const savedQuestions = await GeneratedQuestion.insertMany(
             validatedQuestions.map(q => ({
                 exam: exam,
                 subject: topic.trim(),

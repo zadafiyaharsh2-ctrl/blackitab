@@ -107,7 +107,7 @@ exports.getInstituteStats = async (req, res) => {
 
         const [members, questions, posts, attempts] = await Promise.all([
             User.countDocuments({ instituteId: instId }),
-            QuestionGenerated.countDocuments({ instituteId: instId }),
+            GeneratedQuestion.countDocuments({ instituteId: instId }),
             Post.countDocuments({ user: { $in: await User.find({ instituteId: instId }).distinct('_id') } }),
             Attempt.countDocuments({ userId: { $in: await User.find({ instituteId: instId }).distinct('_id') } })
         ]);
@@ -122,7 +122,7 @@ exports.getInstituteStats = async (req, res) => {
         const roles = {};
         roleCounts.forEach(r => { roles[r._id] = r.count; });
 
-        const pendingQuestions = await QuestionGenerated.countDocuments({ instituteId: instId, approvalStatus: 'pending' });
+        const pendingQuestions = await GeneratedQuestion.countDocuments({ instituteId: instId, approvalStatus: 'pending' });
         const pendingJoinRequests = await JoinRequest.countDocuments({ instituteId: instId, status: 'pending' });
 
         res.json({
@@ -320,7 +320,7 @@ exports.removeMember = async (req, res) => {
 // ══════════════════════════════════════════════════════════════
 // QUESTION MANAGEMENT
 // ══════════════════════════════════════════════════════════════
-const QuestionGenerated = require('../models/QuestionGenerated');
+const GeneratedQuestion = require('../models/GeneratedQuestion');
 
 // GET /api/institute/questions — List questions created by institute teachers
 exports.listInstituteQuestions = async (req, res) => {
@@ -328,7 +328,7 @@ exports.listInstituteQuestions = async (req, res) => {
         const instId = req.user.instituteId;
         if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
 
-        const questions = await QuestionGenerated.find({ instituteId: instId })
+        const questions = await GeneratedQuestion.find({ instituteId: instId })
             .populate('createdBy', 'name email role departments')
             .sort({ createdAt: -1 })
             .limit(100);
@@ -343,7 +343,7 @@ exports.listInstituteQuestions = async (req, res) => {
 exports.updateInstituteQuestion = async (req, res) => {
     try {
         const instId = req.user.instituteId;
-        const question = await QuestionGenerated.findById(req.params.id);
+        const question = await GeneratedQuestion.findById(req.params.id);
         if (!question || !question.instituteId || question.instituteId.toString() !== instId.toString()) {
             return res.status(404).json({ success: false, message: 'Question not found in your institute' });
         }
@@ -415,7 +415,7 @@ exports.updateInstituteQuestion = async (req, res) => {
 exports.deleteInstituteQuestion = async (req, res) => {
     try {
         const instId = req.user.instituteId;
-        const question = await QuestionGenerated.findById(req.params.id);
+        const question = await GeneratedQuestion.findById(req.params.id);
         if (!question || !question.instituteId || question.instituteId.toString() !== instId.toString()) {
             return res.status(404).json({ success: false, message: 'Question not found in your institute' });
         }
@@ -423,7 +423,7 @@ exports.deleteInstituteQuestion = async (req, res) => {
         if (question.isProblem) {
             await ExamQuestion.deleteOne({ sourceQuestionId: req.params.id });
         }
-        await QuestionGenerated.findByIdAndDelete(req.params.id);
+        await GeneratedQuestion.findByIdAndDelete(req.params.id);
         res.json({ success: true, message: 'Question deleted' });
     } catch (error) {
         

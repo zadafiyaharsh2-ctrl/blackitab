@@ -1,5 +1,5 @@
 const axios = require('axios');
-const QuestionGenerated = require('../models/QuestionGenerated');
+const GeneratedQuestion = require('../models/GeneratedQuestion');
 const ExamQuestion = require('../models/ExamQuestion');
 const { ROLE_HIERARCHY } = require('../middleware/roleMiddleware');
 
@@ -23,7 +23,7 @@ function canModify(question, user) {
     return false;
 }
 
-// ── Helper: Copy a QuestionGenerated doc to ExamQuestion ──
+// ── Helper: Copy a GeneratedQuestion doc to ExamQuestion ──
 async function _copyToExamQuestion(q) {
     const existing = await ExamQuestion.findOne({ sourceQuestionId: q._id });
     if (existing) return existing;
@@ -85,8 +85,8 @@ exports.listMyQuestions = async (req, res) => {
 
         const skip = (parseInt(page) - 1) * parseInt(limit);
         const [questions, total] = await Promise.all([
-            QuestionGenerated.find(filter).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
-            QuestionGenerated.countDocuments(filter)
+            GeneratedQuestion.find(filter).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
+            GeneratedQuestion.countDocuments(filter)
         ]);
 
         res.json({
@@ -112,7 +112,7 @@ exports.createQuestion = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Missing required fields: exam, subject, question, 4 options, correctAnswer' });
         }
 
-        const newQuestion = await QuestionGenerated.create({
+        const newQuestion = await GeneratedQuestion.create({
             exam,
             subject,
             question,
@@ -245,8 +245,8 @@ exports.generateQuestions = async (req, res) => {
             }
         });
 
-        // Save to QuestionGenerated (My Bank)
-        const savedQuestions = await QuestionGenerated.insertMany(
+        // Save to GeneratedQuestion (My Bank)
+        const savedQuestions = await GeneratedQuestion.insertMany(
             validatedQuestions.map(q => ({
                 exam,
                 subject: topic.trim(),
@@ -287,7 +287,7 @@ exports.generateQuestions = async (req, res) => {
 // GET /api/questions/:id
 exports.getQuestion = async (req, res) => {
     try {
-        const question = await QuestionGenerated.findById(req.params.id)
+        const question = await GeneratedQuestion.findById(req.params.id)
             .populate('createdBy', 'name email role');
         if (!question) {
             return res.status(404).json({ success: false, message: 'Question not found' });
@@ -317,7 +317,7 @@ exports.getQuestion = async (req, res) => {
 // PUT /api/questions/:id
 exports.updateQuestion = async (req, res) => {
     try {
-        const question = await QuestionGenerated.findById(req.params.id);
+        const question = await GeneratedQuestion.findById(req.params.id);
         if (!question) {
             return res.status(404).json({ success: false, message: 'Question not found' });
         }
@@ -332,7 +332,7 @@ exports.updateQuestion = async (req, res) => {
         const wasProblem = question.isProblem;
         const willBeProblem = updates.isProblem !== undefined ? updates.isProblem : wasProblem;
 
-        const updated = await QuestionGenerated.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+        const updated = await GeneratedQuestion.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
 
         // Copy-on-approve flow
         if (!wasProblem && willBeProblem) {
@@ -356,7 +356,7 @@ exports.updateQuestion = async (req, res) => {
 // DELETE /api/questions/:id
 exports.deleteQuestion = async (req, res) => {
     try {
-        const question = await QuestionGenerated.findById(req.params.id);
+        const question = await GeneratedQuestion.findById(req.params.id);
         if (!question) {
             return res.status(404).json({ success: false, message: 'Question not found' });
         }
@@ -370,7 +370,7 @@ exports.deleteQuestion = async (req, res) => {
             await ExamQuestion.deleteOne({ sourceQuestionId: req.params.id });
         }
 
-        await QuestionGenerated.findByIdAndDelete(req.params.id);
+        await GeneratedQuestion.findByIdAndDelete(req.params.id);
         res.json({ success: true, message: 'Question deleted' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
@@ -389,7 +389,7 @@ exports.changeVisibility = async (req, res) => {
             return res.status(400).json({ success: false, message: 'visibility must be: private, institute, or public' });
         }
 
-        const question = await QuestionGenerated.findById(req.params.id);
+        const question = await GeneratedQuestion.findById(req.params.id);
         if (!question) {
             return res.status(404).json({ success: false, message: 'Question not found' });
         }
@@ -428,11 +428,11 @@ exports.listInstituteQuestions = async (req, res) => {
 
         const skip = (parseInt(page) - 1) * parseInt(limit);
         const [questions, total] = await Promise.all([
-            QuestionGenerated.find(filter)
+            GeneratedQuestion.find(filter)
                 .populate('createdBy', 'name email role')
                 .sort({ createdAt: -1 })
                 .skip(skip).limit(parseInt(limit)),
-            QuestionGenerated.countDocuments(filter)
+            GeneratedQuestion.countDocuments(filter)
         ]);
 
         res.json({
@@ -452,7 +452,7 @@ exports.listPendingQuestions = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Not linked to an institute' });
         }
 
-        const questions = await QuestionGenerated.find({
+        const questions = await GeneratedQuestion.find({
             instituteId: req.user.instituteId,
             approvalStatus: 'pending'
         })

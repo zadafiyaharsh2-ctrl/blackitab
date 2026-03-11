@@ -123,10 +123,10 @@ const examQuestionSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    // Link back to the source QuestionGenerated document
+    // Link back to the source GeneratedQuestion document
     sourceQuestionId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'QuestionGenerated',
+        ref: 'GeneratedQuestion',
         default: null
     },
     createdAt: {

@@ -96,4 +96,4 @@ const questionGeneratedSchema = new mongoose.Schema({
 questionGeneratedSchema.index({ exam: 1, subject: 1 });
 questionGeneratedSchema.index({ createdBy: 1, createdAt: -1 });
 
-module.exports = mongoose.model('QuestionGenerated', questionGeneratedSchema);
+module.exports = mongoose.model('GeneratedQuestion', questionGeneratedSchema);

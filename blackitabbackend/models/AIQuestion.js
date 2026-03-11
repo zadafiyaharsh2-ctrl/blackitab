@@ -62,4 +62,4 @@ const aiQuestionSchema = new mongoose.Schema({
 // Compound index for efficient user history queries sorted by date
 aiQuestionSchema.index({ userId: 1, createdAt: -1 });
 
-module.exports = mongoose.model('AIQuestion', aiQuestionSchema);
+module.exports = mongoose.model('AiQuestion', aiQuestionSchema);

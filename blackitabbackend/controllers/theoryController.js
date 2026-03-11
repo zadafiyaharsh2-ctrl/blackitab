@@ -1,6 +1,6 @@
 const Subject = require('../models/Subject');
 const Topic = require('../models/Topic');
-const FullTopicData = require('../models/full_data_of_topics');
+const FullTopicData = require('../models/FullTopicData');
 
 // GET /api/subjects — all subjects with topic counts
 exports.getSubjects = async (req, res) => {
@@ -31,7 +31,7 @@ exports.getTopicsBySubject = async (req, res) => {
     }
 };
 
-// GET /api/topics/:id/full — full content for a topic (from full_data_of_topics collection)
+// GET /api/topics/:id/full — full content for a topic (from FullTopicData collection)
 exports.getTopicFullContent = async (req, res) => {
     try {
         const { id } = req.params;

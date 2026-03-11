@@ -5,7 +5,7 @@ import { FaUsers, FaPlus, FaTrash, FaChevronRight, FaTimes, FaGraduationCap, FaS
 import toast from 'react-hot-toast';
 import API_URL from '../config';
 
-const TeacherBatches = () => {
+const TeacherClasses = () => {
   const navigate = useNavigate();
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -215,4 +215,4 @@ const TeacherBatches = () => {
   );
 };
 
-export default TeacherBatches;
+export default TeacherClasses;

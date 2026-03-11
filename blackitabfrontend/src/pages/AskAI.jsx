@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useTheme } from '../context/useTheme';
+import { useTheme } from '../context/ThemeContext';
 import useAskAIChat from '../hooks/useAskAIChat';
 import usePageTitle from '../hooks/usePageTitle';
 import ReactMarkdown from 'react-markdown';

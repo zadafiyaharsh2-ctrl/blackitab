@@ -18,7 +18,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, ArrowLeft, CheckCircle, BookOpen } from 'lucide-react';
-import { useTheme } from '../context/useTheme';
+import { useTheme } from '../context/ThemeContext';
 
 const TopicDropdown = ({
     topics,
