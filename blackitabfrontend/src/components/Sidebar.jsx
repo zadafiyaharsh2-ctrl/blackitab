@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaHome, FaUsers, FaRobot, FaChartBar, FaUser, FaListAlt, FaSignOutAlt, FaBars, FaBook, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaBell, FaSearch, FaCalendarDay } from 'react-icons/fa';
+import { FaHome, FaUsers, FaRobot, FaChartBar, FaUser, FaListAlt, FaClipboardList, FaSignOutAlt, FaBars, FaBook, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaBell, FaSearch, FaCalendarDay, FaCommentDots, FaPenFancy } from 'react-icons/fa';
 import { MdReportProblem } from 'react-icons/md';
 import { useTheme } from '../context/ThemeContext';
 import Logo from './Logo';
@@ -84,6 +84,8 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       { path: '/teacher/assignments', label: 'Assignments', icon: <FaClipboardList className="text-yellow-400" /> },
       { path: '/question-management', label: 'Question Bank', icon: <FaListUl className="text-cyan-400" /> },
       { path: '/teacher/tests', label: 'Tests', icon: <FaListAlt className="text-green-400" /> }, // Added Tests link
+      { path: '/teacher/content', label: 'Theory Content', icon: <FaPenFancy className="text-pink-400" /> },
+      { path: '/teacher/feedback', label: 'Feedback', icon: <FaCommentDots className="text-rose-400" /> },
       { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
     ] : []),
 
