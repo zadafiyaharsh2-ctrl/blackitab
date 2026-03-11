@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaList, FaPlus, FaRobot, FaEdit, FaTrash, FaSearch, FaFilter, FaCheckCircle, FaBolt, FaSpinner, FaArrowLeft, FaTimes, FaTimesCircle, FaLightbulb } from 'react-icons/fa';
+import { FaList, FaPlus, FaRobot, FaEdit, FaTrash, FaSearch, FaFilter, FaCheckCircle, FaBolt, FaSpinner, FaArrowLeft, FaTimes, FaTimesCircle, FaLightbulb, FaEye } from 'react-icons/fa';
 import { CustomToast } from '../utils/CustomToast';
 import axios from 'axios';
 import API_URL from '../config';
