@@ -64,6 +64,21 @@ const ActivityHeatmap = () => {
 
   const firstDay = new Date(calendarData[0].fullDate).getDay();
 
+  const monthLabels = [];
+  let lastMonth = -1;
+  calendarData.forEach((day, index) => {
+    const month = day.fullDate.getMonth();
+    // Record month label if month changes and it's near the start of month
+    if (month !== lastMonth && day.fullDate.getDate() <= 14) {
+      const colIndex = Math.floor((index + firstDay) / 7);
+      monthLabels.push({
+        month: day.fullDate.toLocaleString('default', { month: 'short' }),
+        colIndex
+      });
+      lastMonth = month;
+    }
+  });
+
   // 🌙 DARK MODE (low = dark → high = bright)
   // ☀️ LIGHT MODE (reverse shades)
   const getColor = (count) => {
@@ -99,11 +114,30 @@ const ActivityHeatmap = () => {
     <div className={`${isDark ? 'bg-white/5 backdrop-blur-xl border-white/10 hover:border-white/20  ' : 'bg-white border-gray-200'} rounded-2xl shadow-lg p-6 border overflow-hidden`}>
 
       <div className="overflow-x-auto pb-2" ref={scrollRef}>
-        <div className="min-w-max">
+        <div className="min-w-max flex flex-col gap-1">
+          {/* Months Row */}
+          <div className="relative h-4 text-[10px] font-medium text-slate-500 dark:text-white/50 ml-[36px]">
+             {monthLabels.map((m, i) => (
+                <div key={i} className="absolute top-0" style={{ left: `${m.colIndex * 16}px` }}>
+                  {m.month}
+                </div>
+             ))}
+          </div>
 
-          {/* Heatmap Grid */}
-          <div className="flex">
-            <div className="grid grid-flow-col grid-rows-7 gap-1 h-[100px]">
+          <div className="flex gap-2">
+            {/* Days Column */}
+            <div className="grid grid-rows-7 gap-1 text-[10px] font-medium text-slate-500 dark:text-white/50 pr-1 w-7 text-right">
+              <div className="flex items-center justify-end h-3"></div>
+              <div className="flex items-center justify-end h-3">Mon</div>
+              <div className="flex items-center justify-end h-3"></div>
+              <div className="flex items-center justify-end h-3">Wed</div>
+              <div className="flex items-center justify-end h-3"></div>
+              <div className="flex items-center justify-end h-3">Fri</div>
+              <div className="flex items-center justify-end h-3"></div>
+            </div>
+
+            {/* Heatmap Grid */}
+            <div className="grid grid-flow-col grid-rows-7 gap-1">
 
               {/* Start padding */}
               {Array.from({ length: firstDay }).map((_, i) => (
@@ -114,25 +148,25 @@ const ActivityHeatmap = () => {
               {calendarData.map((day) => (
                 <div
                   key={day.date}
-                  className={`w-3 h-3 rounded-sm ${getColor(day.count)}   hover:ring-white cursor-pointer  z-10 relative`}
-                  title={`${day.count} activities on ${day.date}`}
+                  className={`w-3 h-3 rounded-[2px] ${getColor(day.count)} hover:ring-1 hover:ring-slate-400 dark:hover:ring-white cursor-pointer z-10 relative transition-all duration-200`}
+                  title={`${day.count} activities on ${day.fullDate.toDateString()}`}
                 ></div>
               ))}
             </div>
           </div>
 
           {/* Dynamic Legend - NOW WORKS IN DARK/LIGHT MODE */}
-          <div className={`flex items-center justify-end mt-4 text-xs font-semibold ${isDark ? 'text-white/70' : 'text-slate-500'} space-x-2`}>
-            <span>Less</span>
+          <div className={`flex items-center justify-end mt-4 text-[10px] font-medium ${isDark ? 'text-white/50' : 'text-slate-500'} space-x-1`}>
+            <span className="mr-1">Less</span>
 
             {legendLevels.map((level, i) => (
               <div
                 key={i}
-                className={`w-3 h-3 rounded-sm ${getColor(level)}`}
+                className={`w-3 h-3 rounded-[2px] ${getColor(level)}`}
               ></div>
             ))}
 
-            <span>More</span>
+            <span className="ml-1">More</span>
           </div>
 
         </div>
