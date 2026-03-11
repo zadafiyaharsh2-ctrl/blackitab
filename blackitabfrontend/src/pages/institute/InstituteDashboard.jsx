@@ -83,90 +83,75 @@ const InstituteDashboard = () => {
   ];
 
   return (
-    <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-6 relative z-10">
-      
-      {/* Banner Section */}
-      <div className="relative rounded-[2rem] overflow-hidden glass-panel h-48 lg:h-64 shadow-2xl border border-gray-200 dark:border-white/10">
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-5">
+
+      {/* Banner */}
+      <div className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 h-40 bg-gray-100 dark:bg-white/5">
         {institute?.bannerImage ? (
-          <img 
-            src={institute.bannerImage} 
-            alt="Institute Banner" 
-            className="w-full h-full object-cover opacity-80"
-          />
+          <img src={institute.bannerImage} alt="Banner" className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/5 dark:to-transparent flex flex-col items-center justify-center">
-            <BuildingOfficeIcon className="w-16 h-16 text-gray-300 dark:text-gray-600 mb-2" />
-            <p className="text-gray-500 dark:text-gray-400 font-medium">No banner image set</p>
+          <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+            <BuildingOfficeIcon className="w-10 h-10 mb-1 opacity-30" />
+            <p className="text-xs">No banner image</p>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-        <div className="absolute bottom-6 left-6 right-6">
-          <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2 drop-shadow-md">{institute?.name}</h1>
-          <div className="flex items-center gap-4 text-sm text-gray-200">
-            <div className="flex items-center gap-1 font-mono text-orange-400 bg-orange-500/20 border border-orange-500/30 px-3 py-1 rounded-full text-xs font-bold tracking-wider">
-              <span>CODE: {showCode ? institute?.instituteCode : '••••••••'}</span>
-              <button onClick={() => setShowCode(!showCode)} className="ml-1 hover:text-orange-300 " title={showCode ? "Hide Code" : "Show Code"}>
-                {showCode ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+        {institute?.bannerImage && <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />}
+        <div className="absolute bottom-4 left-5 right-5">
+          <h1 className={`text-xl font-bold ${institute?.bannerImage ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{institute?.name}</h1>
+          <div className="flex items-center gap-3 mt-1">
+            <span className={`flex items-center gap-1 font-mono text-xs px-2 py-0.5 rounded border ${institute?.bannerImage ? 'text-white border-white/30 bg-black/30' : 'text-gray-600 dark:text-gray-400 border-gray-300 dark:border-white/20 bg-white/80 dark:bg-black/30'}`}>
+              CODE: {showCode ? institute?.instituteCode : '••••••'}
+              <button onClick={() => setShowCode(!showCode)} className="ml-0.5">
+                {showCode ? <EyeSlashIcon className="w-3.5 h-3.5" /> : <EyeIcon className="w-3.5 h-3.5" />}
               </button>
-            </div>
-            {institute?.address && <span className="drop-shadow-sm font-medium">{institute.address}</span>}
+            </span>
+            {institute?.address && <span className={`text-xs ${institute?.bannerImage ? 'text-gray-200' : 'text-gray-500'}`}>{institute.address}</span>}
           </div>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         {statCards.map((card, idx) => (
-          <div 
-            key={idx}
-            onClick={() => navigate(card.path)}
-            className={`
-              glass-panel border-gray-200 dark:border-white/10 rounded-2xl p-6
-              hover:border-${card.color}-500/50  
-              cursor-pointer group relative overflow-hidden
-            `}
+          <div key={idx} onClick={() => navigate(card.path)}
+            className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5"
           >
-            <div className={`absolute -right-6 -top-6 w-24 h-24 bg-${card.color}-500/10 rounded-full blur-2xl group-hover:bg-${card.color}-500/20 `}></div>
-            <div className="flex items-start justify-between relative z-10">
-              <div>
-                <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider mb-1">{card.title}</p>
-                <h3 className="text-3xl font-black text-gray-900 dark:text-white">{card.value}</h3>
-              </div>
-              <div className={`p-3 bg-gray-100 dark:bg-white/5 shadow-inner border border-gray-200 dark:border-white/10 rounded-xl text-${card.color}-500 dark:text-${card.color}-400 group- `}>
-                <card.icon className="w-6 h-6" />
-              </div>
+            <div className="flex items-center justify-between mb-2">
+              <card.icon className="w-4 h-4 text-gray-400" />
             </div>
+            <p className="text-xl font-bold text-gray-900 dark:text-white">{card.value}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{card.title}</p>
           </div>
         ))}
       </div>
 
-      {/* Quick Info Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="glass-panel border-gray-200 dark:border-white/10 rounded-2xl p-6 lg:col-span-2">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2 tracking-tight">
-                <DocumentTextIcon className="w-5 h-5 text-blue-500" />
-                About Institute
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
-                {institute?.description || 'No description provided by the institute. Head over to the Profile section to add details.'}
-            </p>
+      {/* About + Quick Links */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-3">
+            <DocumentTextIcon className="w-3.5 h-3.5" /> About Institute
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap">
+            {institute?.description || 'No description provided. Head to Profile to add details.'}
+          </p>
         </div>
-        
-        <div className="glass-panel border-gray-200 dark:border-white/10 rounded-2xl p-6">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 tracking-tight">Quick Links</h3>
-            <div className="space-y-3">
-                <button onClick={() => navigate('/institute/theory')} className="w-full text-left px-4 py-3.5 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10  flex items-center justify-between text-gray-700 dark:text-gray-300 cursor-pointer group shadow-sm font-medium">
-                    <span>Manage Theory Files</span>
-                    <span className="text-gray-400 group-hover:text-blue-500 group- ">&rarr;</span>
-                </button>
-                <button onClick={() => navigate('/institute/questions')} className="w-full text-left px-4 py-3.5 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10  flex items-center justify-between text-gray-700 dark:text-gray-300 cursor-pointer group shadow-sm font-medium">
-                    <span>Review Questions</span>
-                    <span className="text-gray-400 group-hover:text-blue-500 group- ">&rarr;</span>
-                </button>
-            </div>
+        <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
+          <div className="px-4 py-3 border-b border-gray-100 dark:border-white/5">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Quick Links</h3>
+          </div>
+          <div className="divide-y divide-gray-100 dark:divide-white/5">
+            {[
+              { label: 'Manage Theory Files', path: '/institute/theory' },
+              { label: 'Review Questions', path: '/institute/questions' },
+              { label: 'Join Requests', path: '/institute/join-requests' },
+            ].map((l, i) => (
+              <button key={i} onClick={() => navigate(l.path)} className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center justify-between">
+                {l.label} <span className="text-gray-400">→</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-
     </div>
   );
 };

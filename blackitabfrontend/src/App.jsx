@@ -57,9 +57,9 @@ import TeacherDashboard from './pages/TeacherDashboard';
 import QuestionManagement from './pages/QuestionManagement';
 import TeacherBatches from './pages/TeacherBatches';
 import TeacherBatchDetail from './pages/TeacherBatchDetail';
+import StudentClasses from './pages/StudentClasses';
 
-// Imported Institute Pages and Layout
-import InstituteLayout from './layouts/InstituteLayout';
+// Imported Institute Pages
 import InstituteDashboard from './pages/institute/InstituteDashboard';
 import InstituteProfile from './pages/institute/InstituteProfile';
 import InstituteDepartments from './pages/institute/InstituteDepartments';
@@ -461,6 +461,18 @@ function App() {
               }
             />
 
+            {/* Student Classes Page */}
+            <Route
+              path="/student/classes"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <StudentClasses />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
             {/* Teacher Batches / Classrooms Route */}
             <Route
               path="/teacher/batches"
@@ -573,19 +585,35 @@ function App() {
               }
             />
 
-            {/* Institute Nested Routes using InstituteLayout */}
-            <Route path="/institute" element={<InstituteLayout />}>
-              <Route index element={<Navigate to="/institute/dashboard" replace />} />
-              <Route path="dashboard" element={<InstituteDashboard />} />
-              <Route path="profile" element={<InstituteProfile />} />
-              <Route path="departments" element={<InstituteDepartments />} />
-              <Route path="teachers" element={<TeacherPanel />} />
-              <Route path="students" element={<StudentPanel />} />
-              <Route path="theory" element={<TheoryChecking />} />
-              <Route path="questions" element={<QuestionChecker />} />
-              <Route path="join-requests" element={<JoinRequestsPanel />} />
-              <Route path="notifications" element={<InstituteNotifications />} />
-            </Route>
+            {/* ===== INSTITUTE ROUTES ===== */}
+            {/* All /institute/* routes now use the shared MainLayout + Sidebar */}
+            <Route path="/institute/dashboard"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteDashboard /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/profile"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteProfile /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/departments"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteDepartments /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/teachers"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TeacherPanel /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/students"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><StudentPanel /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/theory"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TheoryChecking /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/questions"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><QuestionChecker /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/join-requests"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><JoinRequestsPanel /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/notifications"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteNotifications /></MainLayout></ProtectedRoute>}
+            />
 
             {/* System Admin — separate layout (no sidebar) */}
             <Route path="/admin/login" element={<AdminLogin />} />
@@ -636,7 +664,7 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
         '/problems': 'Practice Problems', '/theory': 'Theory', '/social': 'Social Feed',
         '/analytics': 'Analytics', '/contest': 'Contest', '/ask-ai': 'AI Assistant',
         '/leaderboard': 'Leaderboard', '/profile': 'Profile', '/messages': 'Messages',
-        '/teacher-dashboard': 'Teacher Panel', '/question-paper': 'Question Paper',
+        '/teacher-dashboard': 'Teacher Dashboard', '/question-paper': 'Question Paper',
         '/institute': 'Institute Panel', '/school-analytics': 'School Analytics',
         '/question-management': 'Question Bank', '/notifications': 'Notifications'
       };
@@ -667,8 +695,8 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
       {/* Floating Social Button — Bottom Right */}
       <FloatingSocialButton />
 
-      {/* Notification Bell — Top Right */}
-      <NotificationBell />
+      {/* Notification Bell — Top Right (hidden on profile pages) */}
+      {!location.pathname.startsWith('/profile') && <NotificationBell />}
     </div>
   );
 }

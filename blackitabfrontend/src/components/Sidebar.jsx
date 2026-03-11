@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { FaHome, FaUsers, FaRobot, FaChartBar, FaUser, FaListAlt, FaSignOutAlt, FaBars, FaBook, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaBell, FaSearch, FaCalendarDay } from 'react-icons/fa';
+import { FaHome, FaUsers, FaRobot, FaChartBar, FaUser, FaListAlt, FaSignOutAlt, FaBars, FaBook, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaBell, FaSearch, FaCalendarDay, FaBuilding, FaUserTie, FaUserGraduate, FaFileAlt, FaClipboardCheck, FaUserPlus, FaSitemap } from 'react-icons/fa';
 import { MdReportProblem } from 'react-icons/md';
 import { useTheme } from '../context/ThemeContext';
 import Logo from './Logo';
@@ -14,6 +14,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
   const { toggleTheme, isDark } = useTheme();
   const [unreadCount, setUnreadCount] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [pendingJoinRequests, setPendingJoinRequests] = useState(0);
 
   useEffect(() => {
     const fetchUnread = async () => {
@@ -32,6 +33,23 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
   }, []);
 
   useEffect(() => {
+    if (!canAccessInstitute) return;
+    const fetchJoinRequests = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const res = await axios.get(`${API_URL}/api/institute/join-requests`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.success) setPendingJoinRequests(res.data.data.length);
+      } catch { }
+    };
+    fetchJoinRequests();
+    const interval = setInterval(fetchJoinRequests, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     const handler = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
@@ -46,16 +64,16 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     try { return JSON.parse(localStorage.getItem('user') || '{}').role || 'student'; } catch { return 'student'; }
   })();
 
-  const canAccessTeacher = ['teacher', 'hod', 'institute'].includes(userRole);
+  const canAccessTeacher = ['teacher', 'hod'].includes(userRole);
   const canAccessInstitute = userRole === 'institute';
 
-  const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
+  const navItems = canAccessInstitute ? [] : [
+    ...(canAccessTeacher ? [] : [{ path: '/dashboard', label: 'Dashboard', icon: <FaHome /> }]),
     { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
     { path: '/analytics', label: 'Analytics', icon: <FaChartBar /> },
 
     ...(canAccessTeacher ? [
-      { path: '/teacher-dashboard', label: 'Teacher Panel', icon: <FaSchool className="text-indigo-400" /> },
+      { path: '/teacher-dashboard', label: 'Teacher Dashboard', icon: <FaSchool className="text-indigo-400" /> },
       { path: '/teacher/batches', label: 'Classes & Batches', icon: <FaUsers className="text-blue-400" /> },
       { path: '/teacher/attendance', label: 'Attendance', icon: <FaCalendarDay className="text-purple-400" /> },
       { path: '/question-management', label: 'Question Bank', icon: <FaListUl className="text-cyan-400" /> },
@@ -63,15 +81,23 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
     ] : []),
 
-    ...(canAccessInstitute ? [
-      { path: '/institute-dashboard', label: 'Institute Panel', icon: <FaSchool className="text-orange-400" /> },
-    ] : []),
-
     { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
     { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
     { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy className="text-yellow-400" /> },
     { path: '/theory', label: 'Theory', icon: <FaBook /> },
   ];
+
+  const instituteNavItems = canAccessInstitute ? [
+    { path: '/institute/dashboard', label: 'Dashboard', icon: <FaBuilding /> },
+    { path: '/institute/teachers', label: "Teacher's Panel", icon: <FaUserTie /> },
+    { path: '/institute/students', label: 'Student Panel', icon: <FaUserGraduate /> },
+    { path: '/institute/theory', label: 'Theory Checking', icon: <FaFileAlt /> },
+    { path: '/institute/questions', label: 'Question Checker', icon: <FaClipboardCheck /> },
+    { path: '/institute/join-requests', label: 'Join Requests', icon: <FaUserPlus />, badge: pendingJoinRequests },
+    { path: '/institute/notifications', label: 'Notifications', icon: <FaBell /> },
+    { path: '/institute/departments', label: 'Departments', icon: <FaSitemap /> },
+    { path: '/institute/profile', label: 'Institute Profile', icon: <FaSchool /> },
+  ] : [];
 
   const sidebarWidth = isOpen ? 280 : 80;
 
@@ -117,12 +143,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
         {/* Role Badge */}
         {isOpen && userRole !== 'student' && (
           <div className="px-4 pb-2">
-            <div className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
-              userRole === 'institute' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
-              userRole === 'hod' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
-              userRole === 'teacher' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-              'bg-white/5 text-gray-400 border border-white/10'
-            }`}>
+            <div className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-white/5">
               {userRole === 'institute' ? '🏛 Institute Admin' :
                userRole === 'hod' ? '🎓 Head of Department' :
                userRole === 'teacher' ? '📚 Teacher' : userRole}
@@ -154,6 +175,49 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
               );
             })}
           </ul>
+
+          {/* Institute Section */}
+          {instituteNavItems.length > 0 && (
+            <ul className="mt-4 space-y-1.5">
+              {isOpen && (
+                <li className="px-2 pt-2 pb-1">
+                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Institute</span>
+                </li>
+              )}
+              {!isOpen && <li className="border-t border-gray-200 dark:border-white/10 mx-2 my-2" />}
+              {instituteNavItems.map((item) => {
+                const isActive = location.pathname === item.path || (location.pathname.startsWith(item.path) && item.path !== '/');
+                return (
+                  <li key={item.path}>
+                    <Link to={item.path}>
+                      <div className={`relative flex items-center ${isOpen ? 'px-4 py-3' : 'px-0 py-3 justify-center'} rounded-xl text-sm font-semibold overflow-hidden group ${
+                        isActive
+                          ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm font-bold'
+                          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-white/10'
+                      }`}>
+                        <span className={`relative z-10 text-lg ${isOpen ? 'mr-4' : ''} ${isActive ? 'text-white' : ''}`}>
+                          {item.icon}
+                        </span>
+                        {isOpen && (
+                          <>
+                            <span className="flex-1 whitespace-nowrap z-10">{item.label}</span>
+                            {item.badge > 0 && (
+                              <span className={`ml-auto text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                                isActive ? 'bg-white text-blue-600' : 'bg-red-500 text-white'
+                              }`}>{item.badge}</span>
+                            )}
+                          </>
+                        )}
+                        {!isOpen && item.badge > 0 && (
+                          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500" />
+                        )}
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </nav>
 
         {/* Bottom actions */}

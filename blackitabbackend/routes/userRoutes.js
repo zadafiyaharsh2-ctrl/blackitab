@@ -36,6 +36,12 @@ router.put('/link-manager', protect, userController.linkManager);
 // POST /api/user/batch/join
 router.post('/batch/join', protect, userController.joinBatch);
 
+// GET /api/user/batches — fetch all batches the student is enrolled in
+router.get('/batches', protect, userController.getMyBatches);
+
+// GET /api/user/batches/:batchId/attendance — student's own attendance for a batch
+router.get('/batches/:batchId/attendance', protect, userController.getMyAttendanceForBatch);
+
 // GET /api/user/leaderboard — XP-ranked with streak bonus
 router.get('/leaderboard', protect, userController.getLeaderboard);
 

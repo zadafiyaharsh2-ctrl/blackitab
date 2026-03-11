@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Attempt = require('../models/Attempt');
 const Batch = require('../models/Batch');
 const BatchJoinRequest = require('../models/BatchJoinRequest');
+const Attendance = require('../models/Attendance');
 
 exports.updateProfile = async (req, res) => {
     try {
@@ -197,3 +198,62 @@ exports.joinBatch = async (req, res) => {
     }
 };
 
+/**
+ * GET /api/user/batches
+ * Returns all batches the authenticated student is enrolled in.
+ */
+exports.getMyBatches = async (req, res) => {
+    try {
+        const batches = await Batch.find({ studentIds: req.user._id })
+            .populate('teacherIds', 'name email')
+            .lean();
+        res.json({ success: true, data: batches });
+    } catch (error) {
+        console.error('getMyBatches Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+/**
+ * GET /api/user/batches/:batchId/attendance
+ * Returns the authenticated student's attendance for a specific batch.
+ */
+exports.getMyAttendanceForBatch = async (req, res) => {
+    try {
+        const { batchId } = req.params;
+        const studentId = req.user._id;
+
+        const batch = await Batch.findOne({ _id: batchId, studentIds: studentId });
+        if (!batch) return res.status(403).json({ success: false, message: 'You are not enrolled in this class' });
+
+        const records = await Attendance.find({ classId: batchId })
+            .select('date records')
+            .sort({ date: -1 })
+            .lean();
+
+        let present = 0, absent = 0, late = 0;
+        const sessions = [];
+
+        for (const rec of records) {
+            const myEntry = rec.records.find(r => r.studentId?.toString() === studentId.toString());
+            if (myEntry) {
+                const status = myEntry.status;
+                if (status === 'Present') present++;
+                else if (status === 'Absent') absent++;
+                else if (status === 'Late') late++;
+                sessions.push({ date: rec.date, status });
+            }
+        }
+
+        const total = present + absent + late;
+        const attendancePercent = total > 0 ? Math.round((present / total) * 100) : null;
+
+        res.json({
+            success: true,
+            data: { summary: { present, absent, late, total, attendancePercent }, sessions }
+        });
+    } catch (error) {
+        console.error('getMyAttendanceForBatch Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
