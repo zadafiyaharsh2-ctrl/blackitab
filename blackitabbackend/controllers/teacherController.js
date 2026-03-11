@@ -99,8 +99,18 @@ exports.createBatch = async (req, res) => {
         if (!name) return res.status(400).json({ success: false, message: 'Batch name is required' });
         if (!req.user.instituteId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
 
+        // Generate a 6-digit unique class code
+        let classCode;
+        let isUnique = false;
+        while (!isUnique) {
+            classCode = Math.floor(100000 + Math.random() * 900000).toString();
+            const existing = await Batch.findOne({ classCode });
+            if (!existing) isUnique = true;
+        }
+
         const batch = await Batch.create({
             name, year, section,
+            classCode,
             departmentId: departmentId || req.user.departmentId || null,
             subjectId: subjectId || null,
             instituteId: req.user.instituteId,
@@ -109,6 +119,7 @@ exports.createBatch = async (req, res) => {
 
         res.status(201).json({ success: true, data: batch });
     } catch (error) {
+        console.error('Create Batch Error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -233,6 +244,103 @@ exports.removeStudentFromBatch = async (req, res) => {
 
         res.json({ success: true, message: 'Student removed from batch' });
     } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// ==============================================================================
+// BATCH JOIN REQUESTS & STUDENT SEARCH
+// ==============================================================================
+
+const BatchJoinRequest = require('../models/BatchJoinRequest');
+
+// GET /api/teacher/batch/:id/requests
+exports.getBatchJoinRequests = async (req, res) => {
+    try {
+        const batch = await Batch.findById(req.params.id);
+        if (!batch) return res.status(404).json({ success: false, message: 'Batch not found' });
+        if (!canManage(batch, req.user) && !batch.teacherIds.some(t => t.toString() === req.user._id.toString())) {
+            return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+
+        const requests = await BatchJoinRequest.find({ batchId: batch._id, status: 'pending' })
+            .populate('studentId', 'name email avatar isPremium createdAt')
+            .sort({ createdAt: -1 });
+
+        res.json({ success: true, data: requests });
+    } catch (error) {
+        console.error('Get Join Requests Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// PUT /api/teacher/batch/:id/requests/:requestId/approve
+exports.approveBatchJoinRequest = async (req, res) => {
+    try {
+        const batch = await Batch.findById(req.params.id);
+        if (!batch) return res.status(404).json({ success: false, message: 'Batch not found' });
+        if (!canManage(batch, req.user) && !batch.teacherIds.some(t => t.toString() === req.user._id.toString())) {
+            return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+
+        const joinRequest = await BatchJoinRequest.findOne({ _id: req.params.requestId, batchId: batch._id, status: 'pending' });
+        if (!joinRequest) return res.status(404).json({ success: false, message: 'Join request not found or not pending' });
+
+        // Add to batch if not already there
+        if (!batch.studentIds.includes(joinRequest.studentId)) {
+            batch.studentIds.push(joinRequest.studentId);
+            await batch.save();
+        }
+
+        joinRequest.status = 'approved';
+        await joinRequest.save();
+
+        res.json({ success: true, message: 'Request approved and student added to batch' });
+    } catch (error) {
+        console.error('Approve Join Request Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// PUT /api/teacher/batch/:id/requests/:requestId/reject
+exports.rejectBatchJoinRequest = async (req, res) => {
+    try {
+        const batch = await Batch.findById(req.params.id);
+        if (!batch) return res.status(404).json({ success: false, message: 'Batch not found' });
+        if (!canManage(batch, req.user) && !batch.teacherIds.some(t => t.toString() === req.user._id.toString())) {
+            return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+
+        const joinRequest = await BatchJoinRequest.findOne({ _id: req.params.requestId, batchId: batch._id, status: 'pending' });
+        if (!joinRequest) return res.status(404).json({ success: false, message: 'Join request not found or not pending' });
+
+        joinRequest.status = 'rejected';
+        await joinRequest.save();
+
+        res.json({ success: true, message: 'Request rejected' });
+    } catch (error) {
+        console.error('Reject Join Request Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// GET /api/teacher/students/search?q=searchterm
+exports.searchStudentsInInstitute = async (req, res) => {
+    try {
+        if (!req.user.instituteId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+        const { q } = req.query;
+        if (!q || q.length < 2) return res.json({ success: true, data: [] });
+
+        const regex = new RegExp(q, 'i');
+        const students = await User.find({
+            instituteId: req.user.instituteId,
+            role: 'student',
+            $or: [{ name: regex }, { email: regex }]
+        }).select('name email avatar').limit(20);
+
+        res.json({ success: true, data: students });
+    } catch (error) {
+        console.error('Search Students Error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -856,54 +964,54 @@ exports.getDepartmentContent = async (req, res) => {
 // PHASE 10: STUDENT ATTENDANCE SYSTEM
 // ══════════════════════════════════════════════════════════════
 
-// POST /api/teacher/attendance
+// POST /api/teacher/attendance (Saves or updates attendance for a class on a specific date)
 exports.submitAttendance = async (req, res) => {
     try {
-        const { batchId, date, records } = req.body;
-        if (!batchId || !date || !records || !Array.isArray(records)) {
-            return res.status(400).json({ success: false, message: 'batchId, date, and records array are required' });
+        const { classId, date, records } = req.body;
+        if (!classId || !date || !records || !Array.isArray(records)) {
+            return res.status(400).json({ success: false, message: 'classId, date, and records array are required' });
         }
         if (!req.user.instituteId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
 
-        const batch = await Batch.findById(batchId);
-        if (!batch) return res.status(404).json({ success: false, message: 'Batch not found' });
+        const batch = await Batch.findById(classId);
+        if (!batch) return res.status(404).json({ success: false, message: 'Class not found' });
         if (!canManage(batch, req.user) && !batch.teacherIds.some(t => t.toString() === req.user._id.toString())) {
-            return res.status(403).json({ success: false, message: 'Not authorized for this batch' });
+            return res.status(403).json({ success: false, message: 'Not authorized for this class' });
         }
 
         const attendanceDate = new Date(date);
         attendanceDate.setHours(0, 0, 0, 0);
 
-        const existing = await Attendance.findOne({ batchId, date: attendanceDate });
-        if (existing) {
-            return res.status(400).json({ success: false, message: 'Attendance already submitted for this batch on this date. Use update instead.' });
-        }
+        // upsert completely blocks duplicate logs and automatically handles updates on mistakes
+        const attendance = await Attendance.findOneAndUpdate(
+            { classId, date: attendanceDate },
+            {
+                instituteId: req.user.instituteId,
+                teacherId: req.user._id,
+                records
+            },
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
 
-        const attendance = await Attendance.create({
-            batchId,
-            teacherId: req.user._id,
-            instituteId: req.user.instituteId,
-            date: attendanceDate,
-            records
-        });
-
-        res.status(201).json({ success: true, data: attendance });
+        res.status(200).json({ success: true, data: attendance });
     } catch (error) {
         if (error.code === 11000) return res.status(400).json({ success: false, message: 'Attendance already exists for this date.' });
+        console.error('Submit Attendance Error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
-// GET /api/teacher/attendance/:batchId
+// GET /api/teacher/attendance/:classId
 exports.getAttendanceHistory = async (req, res) => {
     try {
-        const batch = await Batch.findById(req.params.batchId);
-        if (!batch) return res.status(404).json({ success: false, message: 'Batch not found' });
+        if (!req.user.instituteId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+        const batch = await Batch.findById(req.params.classId);
+        if (!batch) return res.status(404).json({ success: false, message: 'Class not found' });
         if (!canManage(batch, req.user) && !batch.teacherIds.some(t => t.toString() === req.user._id.toString())) {
             return res.status(403).json({ success: false, message: 'Not authorized' });
         }
 
-        const filter = { batchId: req.params.batchId };
+        const filter = { classId: req.params.classId, instituteId: req.user.instituteId };
         
         // Optional date filter
         if (req.query.date) {
@@ -913,60 +1021,78 @@ exports.getAttendanceHistory = async (req, res) => {
         }
 
         const history = await Attendance.find(filter)
-            .populate('records.studentId', 'name email')
+            .populate('records.studentId', 'name email avatar')
             .populate('teacherId', 'name')
             .sort({ date: -1 });
 
         res.json({ success: true, data: history });
     } catch (error) {
+        console.error('Get Attendance History Error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
-// PUT /api/teacher/attendance/:id
-exports.updateAttendanceRecord = async (req, res) => {
+// GET /api/teacher/attendance/:classId/analytics
+exports.getAttendanceAnalytics = async (req, res) => {
     try {
-        const { records } = req.body;
-        if (!records || !Array.isArray(records)) {
-            return res.status(400).json({ success: false, message: 'records array is required' });
-        }
-
-        const attendance = await Attendance.findById(req.params.id);
-        if (!attendance) return res.status(404).json({ success: false, message: 'Attendance record not found' });
-
-        const batch = await Batch.findById(attendance.batchId);
+        if (!req.user.instituteId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+        const batch = await Batch.findById(req.params.classId);
+        if (!batch) return res.status(404).json({ success: false, message: 'Class not found' });
         if (!canManage(batch, req.user) && !batch.teacherIds.some(t => t.toString() === req.user._id.toString())) {
             return res.status(403).json({ success: false, message: 'Not authorized' });
         }
 
-        attendance.records = records;
-        await attendance.save();
+        // The pipeline required to generate raw percentage metrics for dropdown risk and predictions
+        const pipeline = [
+            { $match: { classId: batch._id, instituteId: req.user.instituteId } },
+            { $unwind: "$records" },
+            {
+                $group: {
+                    _id: "$records.studentId",
+                    totalClasses: { $sum: 1 },
+                    presentCount: {
+                        $sum: { $cond: [{ $eq: ["$records.status", "Present"] }, 1, 0] }
+                    },
+                    lateCount: {
+                        $sum: { $cond: [{ $eq: ["$records.status", "Late"] }, 1, 0] }
+                    },
+                    absentCount: {
+                        $sum: { $cond: [{ $eq: ["$records.status", "Absent"] }, 1, 0] }
+                    }
+                }
+            },
+            {
+                $project: {
+                    studentId: "$_id",
+                    totalClasses: 1,
+                    presentCount: 1,
+                    lateCount: 1,
+                    absentCount: 1,
+                    attendancePercentage: {
+                        $multiply: [
+                            { $divide: ["$presentCount", "$totalClasses"] },
+                            100
+                        ]
+                    }
+                }
+            },
+            { $lookup: { from: "users", localField: "studentId", foreignField: "_id", as: "studentDetails" } },
+            { $unwind: "$studentDetails" },
+            {
+                $project: {
+                    _id: 1, studentId: 1, totalClasses: 1, presentCount: 1, lateCount: 1, absentCount: 1, attendancePercentage: 1,
+                    "studentName": "$studentDetails.name",
+                    "studentEmail": "$studentDetails.email",
+                    "studentAvatar": "$studentDetails.avatar"
+                }
+            },
+            { $sort: { attendancePercentage: 1 } } // Sort by those at most risk to drop out
+        ];
 
-        res.json({ success: true, data: attendance });
+        const analytics = await Attendance.aggregate(pipeline);
+        res.json({ success: true, data: analytics });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-};
-
-// DELETE /api/teacher/attendance/:id
-exports.deleteAttendanceRecord = async (req, res) => {
-    try {
-        const userLevel = ROLE_HIERARCHY[req.user.role] || 0;
-        if (userLevel < ROLE_HIERARCHY['hod']) {
-            return res.status(403).json({ success: false, message: 'Only HOD or Institute Admin can delete attendance records.' });
-        }
-
-        const attendance = await Attendance.findById(req.params.id);
-        if (!attendance) return res.status(404).json({ success: false, message: 'Attendance record not found' });
-
-        const batch = await Batch.findById(attendance.batchId);
-        if (!canManage(batch, req.user)) {
-             return res.status(403).json({ success: false, message: 'Not authorized for this institute/department' });
-        }
-
-        await Attendance.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: 'Attendance record deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Server error' });
+         console.error('Get Attendance Analytics Error:', error);
+         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

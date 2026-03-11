@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
-import { CameraIcon, PlusIcon, XMarkIcon, MapPinIcon, PhoneIcon, BuildingOfficeIcon, UserGroupIcon, IdentificationIcon, BookOpenIcon, InformationCircleIcon, PencilSquareIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { CameraIcon, XMarkIcon, MapPinIcon, PhoneIcon, BuildingOfficeIcon, UserGroupIcon, IdentificationIcon, BookOpenIcon, InformationCircleIcon, PencilSquareIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { CustomToast } from '../../utils/CustomToast';
 
@@ -10,11 +10,9 @@ const InstituteProfile = () => {
     const [institute, setInstitute] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Edit Modal State
     const [showEditModal, setShowEditModal] = useState(false);
     const [saving, setSaving] = useState(false);
 
-    // Form State for Edit Modal
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -66,25 +64,19 @@ const InstituteProfile = () => {
         e.preventDefault();
         try {
             setSaving(true);
-            
             const submitData = new FormData();
             submitData.append('name', formData.name);
             submitData.append('description', formData.description);
             submitData.append('contactPhone', formData.contactPhone);
             submitData.append('address', formData.address);
-            
             if (bannerFile) {
                 submitData.append('bannerImage', bannerFile);
             } else if (formData.bannerImage) {
                 submitData.append('bannerImage', formData.bannerImage);
             }
-
             const res = await api.put('/institute/profile', submitData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
-            
             if (res.data.success) {
                 setInstitute(res.data.data);
                 CustomToast.success('Profile updated successfully');
@@ -103,131 +95,119 @@ const InstituteProfile = () => {
 
     if (!institute) {
         return (
-            <div className="min-h-[60vh] flex flex-col items-center justify-center font-sans">
-                <BuildingOfficeIcon className="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" />
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Institute Profile Not Found</h2>
-                <p className="text-gray-500 text-sm mt-2">You don't seem to be linked to an active institute.</p>
+            <div className="min-h-[60vh] flex flex-col items-center justify-center">
+                <BuildingOfficeIcon className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" />
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Institute Profile Not Found</h2>
+                <p className="text-gray-500 text-sm mt-1">You don't seem to be linked to an active institute.</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-[90vh] text-gray-900 dark:text-white p-4 py-8 relative font-sans">
+        <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
 
-            <div className="max-w-5xl mx-auto relative z-10 space-y-8">
-                
-                {/* Headers & Actions */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-amber-500 dark:from-orange-400 dark:to-amber-300">
-                            Institute Profile
-                        </h1>
-                        <p className="text-gray-600 dark:text-gray-400 mt-1">Details and departments of your registered institute</p>
-                    </div>
-                    {isEditable && (
-                        <button
-                            onClick={() => setShowEditModal(true)}
-                            className="bg-white dark:bg-white/5 backdrop-blur-md border border-gray-200 dark:border-white/10 text-gray-800 dark:text-white hover:bg-gray-50 dark:hover:bg-white/10 px-5 py-2.5 rounded-xl font-semibold transition-all shadow-sm flex items-center gap-2 text-sm self-start sm:self-auto"
-                        >
-                            <PencilSquareIcon className="w-4 h-4" /> Edit Profile
-                        </button>
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <BuildingOfficeIcon className="w-5 h-5 text-gray-400" />
+                        Institute Profile
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Details and departments of your registered institute</p>
+                </div>
+                {isEditable && (
+                    <button
+                        onClick={() => setShowEditModal(true)}
+                        className="px-3 py-1.5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-1.5 self-start sm:self-auto"
+                    >
+                        <PencilSquareIcon className="w-4 h-4" /> Edit Profile
+                    </button>
+                )}
+            </div>
+
+            {/* Banner */}
+            <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
+                <div className="h-36 w-full relative bg-gray-100 dark:bg-white/5">
+                    {institute.bannerImage ? (
+                        <img src={institute.bannerImage} alt={institute.name} className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                            <BuildingOfficeIcon className="w-10 h-10 text-gray-300 dark:text-gray-600 opacity-50" />
+                        </div>
                     )}
+                    {institute.bannerImage && <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />}
+                    <div className="absolute bottom-4 left-5">
+                        <h2 className={`text-lg font-bold ${institute.bannerImage ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                            {institute.name}
+                        </h2>
+                        <div className="flex items-center gap-1 mt-1">
+                            <span className={`flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded border ${institute.bannerImage ? 'text-white border-white/30 bg-black/30' : 'text-gray-600 dark:text-gray-400 border-gray-200 dark:border-white/10 bg-white/80 dark:bg-black/30'}`}>
+                                <IdentificationIcon className="w-3.5 h-3.5" />
+                                {showCode ? institute.instituteCode : '••••••'}
+                                <button onClick={() => setShowCode(!showCode)} className="ml-0.5">
+                                    {showCode ? <EyeSlashIcon className="w-3.5 h-3.5" /> : <EyeIcon className="w-3.5 h-3.5" />}
+                                </button>
+                            </span>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Profile Banner Card */}
-                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-[2rem] overflow-hidden shadow-xl lg:shadow-2xl relative group">
-                    {/* Banner Image / Gradient Fallback */}
-                    <div className="h-48 md:h-64 w-full relative bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500">
-                        {institute.bannerImage && (
-                            <img src={institute.bannerImage} alt={institute.name} className="w-full h-full object-cover opacity-90 mix-blend-overlay" />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/40 to-transparent"></div>
-                        
-                        {/* Overlay Content */}
-                        <div className="absolute bottom-6 left-6 md:left-10 right-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
-                            <div>
-                                <h2 className="text-3xl md:text-5xl font-black text-white drop-shadow-lg tracking-tight mb-3">
-                                    {institute.name}
-                                </h2>
-                                <div className="flex flex-wrap items-center gap-3">
-                                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-lg border border-white/20 text-white text-sm font-semibold tracking-wide shadow-sm">
-                                        <IdentificationIcon className="w-4 h-4" /> Code: {showCode ? institute.instituteCode : '••••••••'}
-                                        <button onClick={() => setShowCode(!showCode)} className="ml-1 hover:text-orange-200 transition-colors" title={showCode ? "Hide Code" : "Show Code"}>
-                                            {showCode ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
-                                        </button>
-                                    </div>
+                {/* Details */}
+                <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    {/* Left: About + Departments */}
+                    <div className="lg:col-span-2 space-y-6">
+                        <div>
+                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-3">
+                                <InformationCircleIcon className="w-3.5 h-3.5" /> About Institute
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap">
+                                {institute.description || 'No description provided. The institute admin can add details here.'}
+                            </p>
+                        </div>
+
+                        <div>
+                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-3">
+                                <BookOpenIcon className="w-3.5 h-3.5" /> Departments
+                            </h3>
+                            {institute.departments && institute.departments.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                    {institute.departments.map((dept, index) => (
+                                        <span
+                                            key={index}
+                                            className="px-2.5 py-1 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 rounded-lg text-sm"
+                                        >
+                                            {dept}
+                                        </span>
+                                    ))}
                                 </div>
-                            </div>
+                            ) : (
+                                <p className="text-sm text-gray-400 italic">No departments have been added yet.</p>
+                            )}
                         </div>
                     </div>
 
-                    {/* Profile Details Content */}
-                    <div className="p-6 md:p-10 grid grid-cols-1 lg:grid-cols-3 gap-8 bg-white dark:bg-gray-900">
-                        
-                        {/* Left Column: About & Description */}
-                        <div className="lg:col-span-2 space-y-8">
-                            <div>
-                                <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-gray-900 dark:text-white border-b border-gray-100 dark:border-white/5 pb-3">
-                                    <InformationCircleIcon className="w-6 h-6 text-orange-500" /> About Institute
-                                </h3>
-                                <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-light whitespace-pre-wrap text-[15px]">
-                                    {institute.description || "No description provided. The institute admin can add details here to describe the campus, vision, and mission."}
-                                </p>
-                            </div>
-
-                            {/* Departments Section */}
-                            <div>
-                                <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-gray-900 dark:text-white border-b border-gray-100 dark:border-white/5 pb-3">
-                                    <BookOpenIcon className="w-6 h-6 text-orange-500" /> Departments
-                                </h3>
-                                {institute.departments && institute.departments.length > 0 ? (
-                                    <div className="flex flex-wrap gap-2.5">
-                                        {institute.departments.map((dept, index) => (
-                                            <span 
-                                                key={index}
-                                                className="px-4 py-2 bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 text-orange-700 dark:text-orange-300 rounded-xl text-sm font-medium shadow-sm transition-transform hover:-translate-y-0.5"
-                                            >
-                                                {dept}
-                                            </span>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="text-gray-500 italic text-[15px]">No departments have been added yet.</p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Right Column: Contact & Location */}
-                        <div className="space-y-6">
-                            <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-gray-900 dark:text-white border-b border-gray-100 dark:border-white/5 pb-3">
-                                Contact Info
-                            </h3>
-                            
-                            <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-6 border border-gray-200 dark:border-white/10 space-y-6">
-                                <div className="flex items-start gap-4 group">
-                                    <div className="w-10 h-10 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-white/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-sm">
-                                        <MapPinIcon className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-orange-500 transition-colors" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Address</p>
-                                        <p className="text-[15px] text-gray-600 dark:text-gray-400 leading-snug">
-                                            {institute.address || <span className="italic opacity-60">Not provided</span>}
-                                        </p>
-                                    </div>
+                    {/* Right: Contact Info */}
+                    <div>
+                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Contact Info</h3>
+                        <div className="space-y-3">
+                            <div className="flex items-start gap-3">
+                                <MapPinIcon className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-xs font-medium text-gray-500 mb-0.5">Address</p>
+                                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                                        {institute.address || <span className="italic text-gray-400">Not provided</span>}
+                                    </p>
                                 </div>
-
-                                <div className="w-full h-px bg-gray-200 dark:bg-white/5"></div>
-
-                                <div className="flex items-start gap-4 group">
-                                    <div className="w-10 h-10 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-white/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-sm">
-                                        <PhoneIcon className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-orange-500 transition-colors" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Contact Phone</p>
-                                        <p className="text-[15px] text-gray-600 dark:text-gray-400 leading-snug">
-                                            {institute.contactPhone || <span className="italic opacity-60">Not provided</span>}
-                                        </p>
-                                    </div>
+                            </div>
+                            <div className="w-full h-px bg-gray-100 dark:bg-white/5" />
+                            <div className="flex items-start gap-3">
+                                <PhoneIcon className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-xs font-medium text-gray-500 mb-0.5">Contact Phone</p>
+                                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                                        {institute.contactPhone || <span className="italic text-gray-400">Not provided</span>}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -235,103 +215,78 @@ const InstituteProfile = () => {
                 </div>
             </div>
 
-            {/* Edit Modal for Institute Admin */}
+            {/* Edit Modal */}
             {isEditable && showEditModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto" onClick={() => setShowEditModal(false)}>
-                    <div 
-                        className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 w-full max-w-2xl shadow-2xl relative my-8"
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 overflow-y-auto" onClick={() => setShowEditModal(false)}>
+                    <div
+                        className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-xl p-6 w-full max-w-2xl shadow-xl relative my-8"
                         onClick={e => e.stopPropagation()}
                     >
-                        <button onClick={() => setShowEditModal(false)} className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors">
-                            <XMarkIcon className="w-6 h-6" />
-                        </button>
+                        <div className="flex items-center justify-between mb-5 border-b border-gray-100 dark:border-white/5 pb-4">
+                            <h2 className="font-semibold text-gray-900 dark:text-white">Edit Profile</h2>
+                            <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-white">
+                                <XMarkIcon className="w-5 h-5" />
+                            </button>
+                        </div>
 
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Edit Profile</h2>
-
-                        {/* Banner Preview in Modal */}
-                        <div className="relative h-32 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden mb-6 border border-gray-200 dark:border-white/10 group flex items-center justify-center">
+                        {/* Banner Preview */}
+                        <div className="relative h-28 bg-gray-100 dark:bg-white/5 rounded-lg overflow-hidden mb-5 border border-gray-200 dark:border-white/10 flex items-center justify-center">
                             {formData.bannerImage ? (
                                 <img src={formData.bannerImage} alt="Banner Preview" className="w-full h-full object-cover opacity-80" />
                             ) : (
-                                <CameraIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                                <CameraIcon className="w-7 h-7 text-gray-400" />
                             )}
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span className="text-white font-medium text-sm backdrop-blur-sm bg-black/50 px-3 py-1.5 rounded-lg border border-white/20">Preview</span>
-                            </div>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                
-                                <div className="space-y-1.5 md:col-span-2">
-                                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider ml-1">Institute Name</label>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Institute Name</label>
                                     <input
-                                        type="text"
-                                        name="name"
-                                        value={formData.name}
-                                        onChange={handleChange}
-                                        className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all"
-                                        required
+                                        type="text" name="name" value={formData.name} onChange={handleChange} required
+                                        className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                                     />
                                 </div>
-
-                                <div className="space-y-1.5 md:col-span-2">
-                                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider ml-1">Banner Image</label>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Banner Image</label>
                                     <input
-                                        type="file"
-                                        name="bannerImage"
-                                        accept="image/*"
-                                        onChange={handleFileChange}
-                                        className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 dark:file:bg-orange-500/10 dark:file:text-orange-400 dark:hover:file:bg-orange-500/20"
+                                        type="file" name="bannerImage" accept="image/*" onChange={handleFileChange}
+                                        className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none cursor-pointer file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-gray-200 dark:file:bg-white/10 file:text-gray-700 dark:file:text-gray-300"
                                     />
                                 </div>
-
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider ml-1">Contact Phone</label>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Phone</label>
                                     <input
-                                        type="text"
-                                        name="contactPhone"
-                                        value={formData.contactPhone}
-                                        onChange={handleChange}
-                                        className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all"
+                                        type="text" name="contactPhone" value={formData.contactPhone} onChange={handleChange}
+                                        className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                                     />
                                 </div>
-
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider ml-1">Address</label>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address</label>
                                     <input
-                                        type="text"
-                                        name="address"
-                                        value={formData.address}
-                                        onChange={handleChange}
-                                        className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all"
+                                        type="text" name="address" value={formData.address} onChange={handleChange}
+                                        className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                                     />
                                 </div>
-
-                                <div className="space-y-1.5 md:col-span-2">
-                                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider ml-1">Description / About</label>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description / About</label>
                                     <textarea
-                                        name="description"
-                                        value={formData.description}
-                                        onChange={handleChange}
-                                        rows={4}
-                                        className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none resize-y transition-all"
+                                        name="description" value={formData.description} onChange={handleChange} rows={4}
+                                        className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-y"
                                     />
                                 </div>
                             </div>
 
-                            <div className="pt-6 mt-6 border-t border-gray-200 dark:border-white/10 flex justify-end gap-3 flex-wrap sm:flex-nowrap">
+                            <div className="pt-4 border-t border-gray-100 dark:border-white/5 flex justify-end gap-3">
                                 <button
-                                    type="button"
-                                    onClick={() => setShowEditModal(false)}
-                                    className="w-full sm:w-auto px-6 py-3 rounded-xl font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                                    type="button" onClick={() => setShowEditModal(false)}
+                                    className="px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5"
                                 >
                                     Cancel
                                 </button>
                                 <button
-                                    type="submit"
-                                    disabled={saving}
-                                    className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white font-bold px-8 py-3 rounded-xl shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    type="submit" disabled={saving}
+                                    className="px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold disabled:opacity-50"
                                 >
                                     {saving ? 'Saving...' : 'Save Profile'}
                                 </button>

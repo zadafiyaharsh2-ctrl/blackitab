@@ -1,15 +1,11 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import {
   FaSchool, FaChalkboardTeacher, FaUserGraduate, FaChartPie,
-  FaBrain, FaUsers, FaChartLine, FaCheckCircle, FaTimesCircle,
-  FaSearch, FaSpinner, FaFire, FaTrophy, FaArrowUp, FaArrowDown
+  FaBrain, FaUsers, FaChartLine, FaSearch, FaSpinner,
+  FaFire, FaTrophy
 } from 'react-icons/fa';
 import axios from 'axios';
-
 import API from '../config';
-const fadeIn = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } };
-const stagger = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } };
 
 export default function SchoolAnalytics() {
   const [schoolData, setSchoolData] = useState(null);
@@ -17,14 +13,12 @@ export default function SchoolAnalytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState('overview'); // overview | students | trends
+  const [activeTab, setActiveTab] = useState('overview');
 
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
 
-  useEffect(() => {
-    fetchAll();
-  }, []);
+  useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
     try {
@@ -42,22 +36,18 @@ export default function SchoolAnalytics() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <FaSpinner className="animate-spin text-4xl text-indigo-500" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <FaSpinner className="animate-spin text-2xl text-gray-400" />
+    </div>
+  );
 
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <p className="text-red-400 text-lg mb-4">{error}</p>
-        <button onClick={fetchAll} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Retry</button>
-      </div>
-    );
-  }
+  if (error) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+      <p className="text-red-400 text-sm">{error}</p>
+      <button onClick={fetchAll} className="px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5">Retry</button>
+    </div>
+  );
 
   if (!schoolData) return null;
 
@@ -70,138 +60,154 @@ export default function SchoolAnalytics() {
     .sort((a, b) => b.accuracy - a.accuracy)
     .slice(0, 5);
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-      {/* Header */}
-      <motion.div initial="hidden" animate="visible" variants={fadeIn}>
-        <div className="flex items-center gap-3 mb-1">
-          <FaSchool className="text-indigo-400 text-2xl" />
-          <h1 className="text-2xl font-bold text-white">{schoolData.institute.name} — Analytics</h1>
-        </div>
-        <p className="text-gray-500 text-sm">Deep analytics for your institution's performance</p>
-      </motion.div>
+  const tabs = ['overview', 'students', 'trends'];
 
-      {/* Tab Switcher */}
-      <div className="flex gap-2 bg-gray-900/80 rounded-xl p-1.5 w-fit border border-gray-700/50">
-        {['overview', 'students', 'trends'].map(tab => (
-          <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition capitalize ${
-              activeTab === tab ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800/60'
-            }`}>
-            {tab}
-          </button>
-        ))}
+  return (
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <FaSchool className="text-gray-400" />
+            {schoolData.institute.name}
+          </h1>
+          <p className="text-sm text-gray-500 mt-0.5">School performance analytics</p>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border border-gray-200 dark:border-white/10 rounded-lg overflow-hidden w-fit">
+          {tabs.map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 text-sm font-medium capitalize ${
+                activeTab === tab
+                  ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* ═══════════ OVERVIEW TAB ═══════════ */}
+      {/* ─── OVERVIEW TAB ─── */}
       {activeTab === 'overview' && (
-        <motion.div initial="hidden" animate="visible" variants={stagger} className="space-y-6">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="space-y-5">
+
+          {/* Summary cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { icon: <FaUserGraduate />, label: 'Students', value: schoolData.totalStudents, color: 'indigo' },
-              { icon: <FaBrain />, label: 'Avg Accuracy', value: `${schoolData.aggregateStats.avgAccuracy}%`, color: 'emerald' },
-              { icon: <FaChartLine />, label: 'Total Attempts', value: schoolData.aggregateStats.totalAttempts.toLocaleString(), color: 'amber' },
-              { icon: <FaFire />, label: 'Active This Week', value: schoolData.aggregateStats.activeThisWeek, color: 'rose' },
+              { icon: <FaUserGraduate />, label: 'Students', value: schoolData.totalStudents },
+              { icon: <FaBrain />, label: 'Avg Accuracy', value: `${schoolData.aggregateStats.avgAccuracy}%` },
+              { icon: <FaChartLine />, label: 'Total Attempts', value: schoolData.aggregateStats.totalAttempts.toLocaleString() },
+              { icon: <FaFire />, label: 'Active This Week', value: schoolData.aggregateStats.activeThisWeek },
             ].map((card, i) => (
-              <motion.div key={i} variants={fadeIn}
-                className="bg-gray-900/80 border border-gray-700/30 rounded-xl p-5 hover:border-gray-600/50 transition">
-                <div className={`text-${card.color}-400 text-xl mb-3`}>{card.icon}</div>
-                <p className="text-3xl font-bold text-white">{card.value}</p>
-                <p className="text-gray-500 text-xs mt-1">{card.label}</p>
-              </motion.div>
+              <div key={i} className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02]">
+                <p className="text-gray-400 text-sm mb-2">{card.icon}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{card.value}</p>
+                <p className="text-xs text-gray-500 mt-1">{card.label}</p>
+              </div>
             ))}
           </div>
 
-          {/* Staff Counts */}
+          {/* Staff overview */}
           {schoolData.staffCounts && Object.keys(schoolData.staffCounts).length > 0 && (
-            <motion.div variants={fadeIn} className="bg-gray-900/80 border border-gray-700/30 rounded-xl p-5">
-              <h3 className="text-white font-semibold mb-3 flex items-center gap-2"><FaChalkboardTeacher className="text-indigo-400" /> Staff Overview</h3>
-              <div className="flex gap-4">
+            <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                <FaChalkboardTeacher className="text-gray-400" /> Staff Overview
+              </h3>
+              <div className="flex gap-3 flex-wrap">
                 {Object.entries(schoolData.staffCounts).map(([role, count]) => (
-                  <div key={role} className="bg-gray-800/60 rounded-lg px-4 py-3 text-center">
-                    <p className="text-xl font-bold text-white">{count}</p>
-                    <p className="text-gray-500 text-xs capitalize">{role.replace('_', ' ')}s</p>
+                  <div key={role} className="border border-gray-200 dark:border-white/10 rounded-lg px-4 py-3 text-center min-w-[80px]">
+                    <p className="text-xl font-bold text-gray-900 dark:text-white">{count}</p>
+                    <p className="text-xs text-gray-500 capitalize mt-0.5">{role.replace('_', ' ')}s</p>
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* Division Breakdown */}
           {schoolData.divisionBreakdown.length > 0 && (
-            <motion.div variants={fadeIn} className="bg-gray-900/80 border border-gray-700/30 rounded-xl p-5">
-              <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><FaChartPie className="text-indigo-400" /> Division Performance</h3>
+            <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                <FaChartPie className="text-gray-400" /> Division Performance
+              </h3>
               <div className="space-y-3">
                 {schoolData.divisionBreakdown.map((d, i) => {
                   const maxAcc = Math.max(...schoolData.divisionBreakdown.map(x => x.avgAccuracy), 1);
                   const barWidth = (d.avgAccuracy / maxAcc) * 100;
+                  const barColor = d.avgAccuracy >= 70 ? 'bg-emerald-500' : d.avgAccuracy >= 40 ? 'bg-amber-500' : 'bg-red-500';
                   return (
                     <div key={i} className="flex items-center gap-4">
-                      <span className="text-indigo-400 font-mono font-bold w-20 text-right">{d.division}</span>
-                      <div className="flex-1 bg-gray-800/60 rounded-full h-8 overflow-hidden relative">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${barWidth}%` }}
-                          transition={{ delay: i * 0.1, duration: 0.6 }}
-                          className={`h-full rounded-full ${
-                            d.avgAccuracy >= 70 ? 'bg-gradient-to-r from-emerald-600 to-emerald-500' :
-                            d.avgAccuracy >= 40 ? 'bg-gradient-to-r from-amber-600 to-amber-500' :
-                            'bg-gradient-to-r from-red-600 to-red-500'
-                          }`}
-                        />
-                        <span className="absolute inset-0 flex items-center text-xs text-white font-medium pl-3">
-                          {d.avgAccuracy}% accuracy • {d.studentCount} students • {d.totalAttempts} attempts
+                      <span className="text-xs font-mono font-semibold text-gray-500 w-16 text-right">{d.division}</span>
+                      <div className="flex-1 bg-gray-100 dark:bg-white/5 rounded-full h-6 overflow-hidden relative">
+                        <div className={`h-full rounded-full ${barColor} opacity-80`} style={{ width: `${barWidth}%` }} />
+                        <span className="absolute inset-0 flex items-center text-xs font-medium pl-3 text-gray-700 dark:text-gray-200">
+                          {d.avgAccuracy}% · {d.studentCount} students
                         </span>
                       </div>
                     </div>
                   );
                 })}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* Top Performers */}
           {topPerformers.length > 0 && (
-            <motion.div variants={fadeIn} className="bg-gray-900/80 border border-gray-700/30 rounded-xl p-5">
-              <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><FaTrophy className="text-amber-400" /> Top Performers</h3>
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+            <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
+              <div className="px-5 py-3 border-b border-gray-100 dark:border-white/5">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <FaTrophy className="text-amber-400" /> Top Performers
+                </h3>
+              </div>
+              <div className="divide-y divide-gray-100 dark:divide-white/5">
                 {topPerformers.map((s, i) => (
-                  <div key={s._id} className={`rounded-xl p-4 text-center border ${
-                    i === 0 ? 'bg-gradient-to-br from-amber-900/30 to-amber-800/10 border-amber-500/30' :
-                    i === 1 ? 'bg-gradient-to-br from-gray-700/30 to-gray-600/10 border-gray-400/30' :
-                    i === 2 ? 'bg-gradient-to-br from-orange-900/30 to-orange-800/10 border-orange-500/30' :
-                    'bg-gray-800/40 border-gray-700/30'
-                  }`}>
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-bold text-white mx-auto mb-2">
+                  <div key={s._id} className="flex items-center gap-3 px-5 py-3">
+                    <span className={`text-sm font-bold w-5 ${i === 0 ? 'text-amber-500' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-orange-400' : 'text-gray-300 dark:text-gray-600'}`}>
+                      {i + 1}
+                    </span>
+                    <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-gray-200 shrink-0">
                       {s.profileImage ? <img src={s.profileImage} alt="" className="w-full h-full rounded-full object-cover" /> : s.name[0]}
                     </div>
-                    <p className="text-white font-medium text-sm truncate">{s.name}</p>
-                    <p className="text-emerald-400 font-bold text-lg">{s.accuracy}%</p>
-                    <p className="text-gray-500 text-xs">{s.totalAttempts} attempts</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{s.name}</p>
+                      <p className="text-xs text-gray-400">{s.totalAttempts} attempts</p>
+                    </div>
+                    <span className={`text-sm font-bold ${s.accuracy >= 70 ? 'text-emerald-600 dark:text-emerald-400' : s.accuracy >= 40 ? 'text-amber-600 dark:text-amber-400' : 'text-red-500'}`}>
+                      {s.accuracy}%
+                    </span>
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
-        </motion.div>
+        </div>
       )}
 
-      {/* ═══════════ STUDENTS TAB ═══════════ */}
+      {/* ─── STUDENTS TAB ─── */}
       {activeTab === 'students' && (
-        <motion.div initial="hidden" animate="visible" variants={fadeIn} className="space-y-4">
+        <div className="space-y-4">
           <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-            <input type="text" placeholder="Search students by name or email..."
-              value={search} onChange={e => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-gray-900/80 border border-gray-700/50 rounded-xl text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none" />
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+            <input
+              type="text"
+              placeholder="Search by name or email…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 dark:border-white/10 rounded-lg bg-white dark:bg-white/[0.02] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
           </div>
 
-          <div className="bg-gray-900/80 border border-gray-700/50 rounded-xl overflow-hidden">
+          <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-800/80 text-gray-400 text-xs uppercase">
+                  <tr className="border-b border-gray-100 dark:border-white/5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     <th className="px-4 py-3 text-left">#</th>
                     <th className="px-4 py-3 text-left">Student</th>
                     <th className="px-3 py-3 text-center">Division</th>
@@ -210,41 +216,42 @@ export default function SchoolAnalytics() {
                     <th className="px-3 py-3 text-center">Attempts</th>
                     <th className="px-3 py-3 text-center">XP</th>
                     <th className="px-3 py-3 text-center">Streak</th>
-                    <th className="px-3 py-3 text-center">Rank</th>
                     <th className="px-3 py-3 text-center">Topics</th>
                     <th className="px-3 py-3 text-center">Last Active</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                   {filteredStudents.map((s, i) => (
-                    <tr key={s._id} className="border-t border-gray-800/50 hover:bg-gray-800/30 transition">
-                      <td className="px-4 py-3 text-gray-500 text-xs">{i + 1}</td>
+                    <tr key={s._id} className="hover:bg-gray-50 dark:hover:bg-white/[0.02]">
+                      <td className="px-4 py-3 text-xs text-gray-400">{i + 1}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                          <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center text-xs font-semibold text-gray-600 dark:text-gray-300 shrink-0">
                             {s.profileImage ? <img src={s.profileImage} alt="" className="w-full h-full rounded-full object-cover" /> : s.name[0]}
                           </div>
                           <div>
-                            <p className="text-white text-sm">{s.name}</p>
-                            <p className="text-gray-600 text-xs">{s.email}</p>
+                            <p className="text-gray-900 dark:text-white font-medium">{s.name}</p>
+                            <p className="text-gray-400 text-xs">{s.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-3 text-center text-indigo-400 font-mono text-xs">{s.division}</td>
-                      <td className="px-3 py-3 text-center text-gray-400 text-xs">{s.batchYear}</td>
+                      <td className="px-3 py-3 text-center text-xs font-mono text-gray-500">{s.division}</td>
+                      <td className="px-3 py-3 text-center text-xs text-gray-500">{s.batchYear}</td>
                       <td className="px-3 py-3 text-center">
-                        <span className={`font-semibold ${s.accuracy >= 70 ? 'text-emerald-400' : s.accuracy >= 40 ? 'text-amber-400' : 'text-red-400'}`}>
+                        <span className={`text-sm font-semibold ${s.accuracy >= 70 ? 'text-emerald-600 dark:text-emerald-400' : s.accuracy >= 40 ? 'text-amber-600 dark:text-amber-400' : 'text-red-500'}`}>
                           {s.accuracy}%
                         </span>
                       </td>
-                      <td className="px-3 py-3 text-center text-gray-300">{s.totalAttempts}</td>
-                      <td className="px-3 py-3 text-center text-amber-400">{s.points.toLocaleString()}</td>
+                      <td className="px-3 py-3 text-center text-sm text-gray-700 dark:text-gray-300">{s.totalAttempts}</td>
+                      <td className="px-3 py-3 text-center text-sm text-gray-700 dark:text-gray-300">{s.points?.toLocaleString()}</td>
                       <td className="px-3 py-3 text-center">
-                        {s.streak > 0 ? <span className="text-orange-400 flex items-center justify-center gap-1"><FaFire className="text-xs" />{s.streak}</span> : <span className="text-gray-600">0</span>}
+                        {s.streak > 0
+                          ? <span className="text-orange-500 flex items-center justify-center gap-1 text-xs"><FaFire />{s.streak}</span>
+                          : <span className="text-gray-400 text-xs">0</span>
+                        }
                       </td>
-                      <td className="px-3 py-3 text-center text-gray-300">#{s.globalRank || '—'}</td>
-                      <td className="px-3 py-3 text-center text-cyan-400">{s.topicsCompleted}</td>
-                      <td className="px-3 py-3 text-center text-gray-500 text-xs">
+                      <td className="px-3 py-3 text-center text-sm text-gray-700 dark:text-gray-300">{s.topicsCompleted}</td>
+                      <td className="px-3 py-3 text-center text-xs text-gray-400">
                         {s.lastActive ? new Date(s.lastActive).toLocaleDateString() : '—'}
                       </td>
                     </tr>
@@ -252,130 +259,131 @@ export default function SchoolAnalytics() {
                 </tbody>
               </table>
               {filteredStudents.length === 0 && (
-                <div className="text-center py-12 text-gray-500">
-                  <FaUsers className="mx-auto text-4xl mb-3 opacity-30" />
+                <div className="text-center py-12 text-gray-400 text-sm">
+                  <FaUsers className="mx-auto text-3xl mb-3 opacity-30" />
                   <p>No students found{search ? ' matching your search' : ''}.</p>
                 </div>
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
       )}
 
-      {/* ═══════════ TRENDS TAB ═══════════ */}
+      {/* ─── TRENDS TAB ─── */}
       {activeTab === 'trends' && trends && (
-        <motion.div initial="hidden" animate="visible" variants={stagger} className="space-y-6">
-          {/* Weekly Trends */}
+        <div className="space-y-5">
+
+          {/* Weekly attempt trends */}
           {trends.weeklyTrends.length > 0 && (
-            <motion.div variants={fadeIn} className="bg-gray-900/80 border border-gray-700/30 rounded-xl p-5">
-              <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                <FaChartLine className="text-indigo-400" />
-                Weekly Attempt Trends (Last 8 Weeks)
+            <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                <FaChartLine className="text-gray-400" /> Weekly Attempts (Last 8 Weeks)
               </h3>
-              <div className="flex gap-3 items-end h-40">
+              <div className="flex gap-2 items-end h-32">
                 {trends.weeklyTrends.map((w, i) => {
                   const maxVal = Math.max(...trends.weeklyTrends.map(x => x.totalAttempts), 1);
                   const height = (w.totalAttempts / maxVal) * 100;
                   return (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                      <span className="text-xs text-gray-400">{w.totalAttempts}</span>
-                      <div className="w-full flex flex-col-reverse rounded-t overflow-hidden" style={{ height: `${Math.max(height, 4)}%` }}>
-                        <div className="bg-indigo-600/80 hover:bg-indigo-500 transition" style={{ height: `${w.accuracy}%` }} />
-                        <div className="bg-red-500/40" style={{ height: `${100 - w.accuracy}%` }} />
+                      <span className="text-[10px] text-gray-400">{w.totalAttempts}</span>
+                      <div className="w-full flex flex-col-reverse rounded-sm overflow-hidden border border-gray-100 dark:border-white/5" style={{ height: `${Math.max(height, 4)}%` }}>
+                        <div className="bg-blue-500/70" style={{ height: `${w.accuracy}%` }} />
+                        <div className="bg-red-400/30" style={{ height: `${100 - w.accuracy}%` }} />
                       </div>
-                      <span className="text-[10px] text-gray-500">{w.week}</span>
-                      <span className="text-[10px] text-emerald-400">{w.accuracy}%</span>
+                      <span className="text-[10px] text-gray-400">{w.week}</span>
+                      <span className="text-[10px] text-emerald-500">{w.accuracy}%</span>
                     </div>
                   );
                 })}
               </div>
-              <div className="flex gap-4 mt-3 text-xs text-gray-500">
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-indigo-600/80" /> Correct</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-500/40" /> Incorrect</span>
+              <div className="flex gap-4 mt-3 text-xs text-gray-400">
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-blue-500/70 inline-block" /> Correct</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-red-400/30 inline-block" /> Incorrect</span>
               </div>
-            </motion.div>
+            </div>
           )}
 
-          {/* Active Students */}
+          {/* Active students per week */}
           {trends.weeklyTrends.length > 0 && (
-            <motion.div variants={fadeIn} className="bg-gray-900/80 border border-gray-700/30 rounded-xl p-5">
-              <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                <FaUsers className="text-indigo-400" /> Active Students Per Week
+            <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                <FaUsers className="text-gray-400" /> Active Students / Week
               </h3>
-              <div className="flex gap-3 items-end h-24">
+              <div className="flex gap-2 items-end h-20">
                 {trends.weeklyTrends.map((w, i) => {
                   const maxActive = Math.max(...trends.weeklyTrends.map(x => x.activeStudents), 1);
                   const height = (w.activeStudents / maxActive) * 100;
                   return (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                      <span className="text-xs text-gray-400">{w.activeStudents}</span>
-                      <div className="w-full rounded-t bg-cyan-500/60 hover:bg-cyan-500 transition" style={{ height: `${Math.max(height, 4)}%` }} />
-                      <span className="text-[10px] text-gray-500">{w.week}</span>
+                      <span className="text-[10px] text-gray-400">{w.activeStudents}</span>
+                      <div className="w-full rounded-sm bg-emerald-500/60" style={{ height: `${Math.max(height, 4)}%` }} />
+                      <span className="text-[10px] text-gray-400">{w.week}</span>
                     </div>
                   );
                 })}
               </div>
-            </motion.div>
+            </div>
           )}
 
-          {/* Top Active This Week */}
+          {/* Top active this week */}
           {trends.topActiveThisWeek.length > 0 && (
-            <motion.div variants={fadeIn} className="bg-gray-900/80 border border-gray-700/30 rounded-xl p-5">
-              <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                <FaTrophy className="text-amber-400" /> Top Active This Week
-              </h3>
-              <div className="space-y-2">
+            <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
+              <div className="px-5 py-3 border-b border-gray-100 dark:border-white/5">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <FaTrophy className="text-amber-400" /> Top Active This Week
+                </h3>
+              </div>
+              <div className="divide-y divide-gray-100 dark:divide-white/5">
                 {trends.topActiveThisWeek.map((s, i) => (
-                  <div key={i} className="flex items-center gap-4 bg-gray-800/40 rounded-lg p-3">
-                    <span className={`text-lg font-bold ${i === 0 ? 'text-amber-400' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-orange-400' : 'text-gray-600'}`}>
-                      #{i + 1}
+                  <div key={i} className="flex items-center gap-3 px-5 py-3">
+                    <span className={`text-sm font-bold w-5 ${i === 0 ? 'text-amber-500' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-orange-400' : 'text-gray-300 dark:text-gray-600'}`}>
+                      {i + 1}
                     </span>
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                    <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center text-xs font-semibold text-gray-600 dark:text-gray-300 shrink-0">
                       {s.profileImage ? <img src={s.profileImage} alt="" className="w-full h-full rounded-full object-cover" /> : s.name[0]}
                     </div>
                     <div className="flex-1">
-                      <p className="text-white font-medium text-sm">{s.name}</p>
-                      <p className="text-gray-500 text-xs">{s.attempts} attempts this week</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{s.name}</p>
+                      <p className="text-xs text-gray-400">{s.attempts} attempts</p>
                     </div>
-                    <span className={`font-bold text-lg ${s.accuracy >= 70 ? 'text-emerald-400' : s.accuracy >= 40 ? 'text-amber-400' : 'text-red-400'}`}>
+                    <span className={`text-sm font-bold ${s.accuracy >= 70 ? 'text-emerald-600 dark:text-emerald-400' : s.accuracy >= 40 ? 'text-amber-600 dark:text-amber-400' : 'text-red-500'}`}>
                       {s.accuracy}%
                     </span>
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
 
-          {/* New Signups */}
+          {/* New signups */}
           {trends.newStudentsPerWeek.length > 0 && (
-            <motion.div variants={fadeIn} className="bg-gray-900/80 border border-gray-700/30 rounded-xl p-5">
-              <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                <FaUserGraduate className="text-indigo-400" /> New Student Signups
+            <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                <FaUserGraduate className="text-gray-400" /> New Student Signups
               </h3>
-              <div className="flex gap-3 items-end h-20">
+              <div className="flex gap-2 items-end h-16">
                 {trends.newStudentsPerWeek.map((w, i) => {
                   const maxNew = Math.max(...trends.newStudentsPerWeek.map(x => x.count), 1);
                   const height = (w.count / maxNew) * 100;
                   return (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                      <span className="text-xs text-emerald-400">{w.count}</span>
-                      <div className="w-full rounded-t bg-emerald-500/60 hover:bg-emerald-500 transition" style={{ height: `${Math.max(height, 8)}%` }} />
-                      <span className="text-[10px] text-gray-500">{w.week}</span>
+                      <span className="text-[10px] text-emerald-500">{w.count}</span>
+                      <div className="w-full rounded-sm bg-emerald-500/50" style={{ height: `${Math.max(height, 8)}%` }} />
+                      <span className="text-[10px] text-gray-400">{w.week}</span>
                     </div>
                   );
                 })}
               </div>
-            </motion.div>
-          )}
-
-          {/* Empty state if no trends */}
-          {trends.weeklyTrends.length === 0 && trends.topActiveThisWeek.length === 0 && (
-            <div className="text-center py-12 text-gray-500">
-              <FaChartLine className="mx-auto text-4xl mb-3 opacity-30" />
-              <p>No activity data yet. Trends will appear once students start solving questions.</p>
             </div>
           )}
-        </motion.div>
+
+          {trends.weeklyTrends.length === 0 && trends.topActiveThisWeek.length === 0 && (
+            <div className="text-center py-16 border border-dashed border-gray-200 dark:border-white/10 rounded-xl">
+              <FaChartLine className="mx-auto text-3xl text-gray-300 dark:text-gray-600 mb-3" />
+              <p className="text-gray-400 text-sm">No trend data yet. Trends appear once students start solving questions.</p>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

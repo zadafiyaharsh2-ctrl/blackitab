@@ -18,8 +18,8 @@ router.get('/stats', requireRole('institute', 'hod'), instituteController.getIns
 router.get('/departments/stats', requireRole('institute', 'hod', 'teacher'), instituteController.getDepartmentStats);
 
 // ── Profile ──
-const { bannerUpload } = require('../middleware/upload');
-router.put('/profile', requireRole('institute'), bannerUpload.single('bannerImage'), instituteController.updateInstituteProfile);
+const { handleBannerUpload } = require('../middleware/upload');
+router.put('/profile', requireRole('institute'), handleBannerUpload, instituteController.updateInstituteProfile);
 
 // ── Member Management ──
 router.get('/members', requireRole('hod', 'institute', 'teacher'), instituteController.getMembers);

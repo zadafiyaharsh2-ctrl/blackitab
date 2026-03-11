@@ -14,7 +14,7 @@ import PlaylistCard from '../components/PlaylistCard';
 import CreatePlaylistModal from '../components/CreatePlaylistModal';
 import ActivityHeatmap from '../components/ActivityHeatmap';
 import { useSocketContext } from '../context/SocketContext';
-import { motion } from 'framer-motion';
+
 
 const Profile = () => {
   usePageTitle('Profile');
@@ -428,11 +428,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen text-gray-900 dark:text-white p-4 py-8 relative overflow-hidden font-sans">
-      {/* Background Orbs */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] mix-blend-screen" />
-        <div className="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[150px] mix-blend-screen" />
-      </div>
+
       <div className="max-w-6xl mx-auto relative z-10">
 
       {/* MODALS */}
@@ -922,9 +918,7 @@ const Profile = () => {
       {/* Join Institute Modal */}
       {showJoinInstituteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowJoinInstituteModal(false)}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+          <div
             className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl relative"
             onClick={e => e.stopPropagation()}
           >
@@ -1051,7 +1045,7 @@ const Profile = () => {
                 )}
               </button>
             </div>
-          </motion.div>
+          </div>
         </div>
       )}
 

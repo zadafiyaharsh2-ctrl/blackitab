@@ -22,6 +22,12 @@ router.get('/batch/:id/students', teacherController.getBatchStudents);
 router.post('/batch/:id/students', teacherController.addStudentsToBatch);
 router.delete('/batch/:batchId/students/:studentId', teacherController.removeStudentFromBatch);
 
+// ── Batch Join Requests & Student Search ──
+router.get('/batch/:id/requests', teacherController.getBatchJoinRequests);
+router.put('/batch/:id/requests/:requestId/approve', teacherController.approveBatchJoinRequest);
+router.put('/batch/:id/requests/:requestId/reject', teacherController.rejectBatchJoinRequest);
+router.get('/students/search', teacherController.searchStudentsInInstitute);
+
 // ── Phase 5: Assignments ──
 router.post('/assignment', teacherController.createAssignment);
 router.get('/assignments', teacherController.getMyAssignments);
@@ -65,8 +71,7 @@ router.get('/department/content', requireMinRole('hod'), teacherController.getDe
 
 // ── Phase 10: Student Attendance System ──
 router.post('/attendance', teacherController.submitAttendance);
-router.get('/attendance/:batchId', teacherController.getAttendanceHistory);
-router.put('/attendance/:id', teacherController.updateAttendanceRecord);
-router.delete('/attendance/:id', teacherController.deleteAttendanceRecord);
+router.get('/attendance/:classId', teacherController.getAttendanceHistory);
+router.get('/attendance/:classId/analytics', teacherController.getAttendanceAnalytics);
 
 module.exports = router;

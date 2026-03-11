@@ -130,7 +130,7 @@ html.dark::-webkit-scrollbar-thumb:hover {
 /* Utility Classes */
 @layer utilities {
   .glass-panel {
-    @apply bg-white/95 dark:bg-[#080808]/80 backdrop-blur-xl border border-gray-200/80 dark:border-white/10 shadow-sm rounded-2xl;
+    @apply bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/10 shadow-sm rounded-2xl;
   }
   .ui-surface {
     @apply bg-white dark:bg-[#050505] border border-gray-200 dark:border-white/10 rounded-xl shadow-sm;

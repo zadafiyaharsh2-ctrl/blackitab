@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Check, X, Users } from 'lucide-react';
+import { UserPlusIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { FaSpinner } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import api from '../../utils/api';
 
@@ -13,6 +14,7 @@ const JoinRequestsPanel = () => {
 
   const fetchRequests = async () => {
     try {
+      setLoading(true);
       const res = await api.get('/institute/join-requests');
       setRequests(res.data.data);
     } catch (error) {
@@ -26,7 +28,7 @@ const JoinRequestsPanel = () => {
     try {
       const res = await api.post(`/institute/join-requests/${id}/approve`);
       toast.success(res.data.message);
-      fetchRequests(); // Refresh list
+      fetchRequests();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to approve request');
     }
@@ -36,7 +38,7 @@ const JoinRequestsPanel = () => {
     try {
       const res = await api.post(`/institute/join-requests/${id}/reject`);
       toast.success(res.data.message);
-      fetchRequests(); // Refresh list
+      fetchRequests();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to reject request');
     }
@@ -44,90 +46,96 @@ const JoinRequestsPanel = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <FaSpinner className="animate-spin text-2xl text-gray-400" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Users className="w-6 h-6 text-primary-500" />
-            Pending Join Requests
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Review and approve users requesting to join your institute.
-          </p>
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <UserPlusIcon className="w-5 h-5 text-gray-400" />
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Join Requests</h1>
+            <p className="text-sm text-gray-500">Review and approve users requesting to join your institute</p>
+          </div>
         </div>
-        <div className="text-3xl font-bold text-primary-600 dark:text-primary-400">
-          {requests.length}
-        </div>
+        <span className="text-sm font-semibold text-gray-900 dark:text-white">{requests.length} pending</span>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+      {/* Table */}
+      <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
         {requests.length === 0 ? (
-          <div className="p-12 text-center text-gray-500 dark:text-gray-400">
-            <Users className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">No pending requests</h3>
-            <p className="mt-1">You have no new requests to process.</p>
+          <div className="text-center py-12">
+            <UserPlusIcon className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-sm font-medium text-gray-900 dark:text-white">No pending requests</p>
+            <p className="text-xs text-gray-400 mt-1">You have no new requests to process.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+              <thead className="border-b border-gray-100 dark:border-white/5">
                 <tr>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">User</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Batch Year</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Requested On</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Batch Year</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Requested On</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                 {requests.map((req) => (
-                  <tr key={req._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900 dark:text-white">{req.userId?.name || 'Unknown User'}</div>
+                  <tr key={req._id} className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gray-900 dark:bg-white flex items-center justify-center text-white dark:text-gray-900 text-sm font-bold shrink-0">
+                          {(req.userId?.name || '?').charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">{req.userId?.name || 'Unknown User'}</span>
+                      </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-3">
                       {req.userId?.role ? (
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${req.userId.role === 'teacher' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'}`}>
+                        <span className="text-xs font-medium px-2 py-0.5 rounded border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400">
                           {req.userId.role.charAt(0).toUpperCase() + req.userId.role.slice(1)}
                         </span>
-                      ) : '-'}
+                      ) : <span className="text-gray-400 text-sm">-</span>}
                     </td>
-                    <td className="px-6 py-4 text-gray-500 dark:text-gray-400">
+                    <td className="px-5 py-3 text-sm text-gray-500 dark:text-gray-400">
                       {req.userId?.email || 'N/A'}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-3">
                       {req.userId?.batchYear ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                        <span className="text-xs font-medium px-2 py-0.5 rounded border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400">
                           {req.userId.batchYear}
                         </span>
-                      ) : '-'}
+                      ) : <span className="text-gray-400 text-sm">-</span>}
                     </td>
-                    <td className="px-6 py-4 text-gray-500 dark:text-gray-400 text-sm">
+                    <td className="px-5 py-3 text-sm text-gray-500 dark:text-gray-400">
                       {new Date(req.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button
-                        onClick={() => handleApprove(req._id)}
-                        className="inline-flex items-center justify-center p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/40 transition-colors"
-                        title="Approve Request"
-                      >
-                        <Check className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleReject(req._id)}
-                        className="inline-flex items-center justify-center p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 transition-colors"
-                        title="Reject Request"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
+                    <td className="px-5 py-3 text-right">
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => handleApprove(req._id)}
+                          className="p-1.5 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-emerald-600 hover:border-emerald-200 dark:hover:border-emerald-500/30 dark:hover:text-emerald-400 transition-colors"
+                          title="Approve"
+                        >
+                          <CheckIcon className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleReject(req._id)}
+                          className="p-1.5 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-red-600 hover:border-red-200 dark:hover:border-red-500/30 dark:hover:text-red-400 transition-colors"
+                          title="Reject"
+                        >
+                          <XMarkIcon className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -1,300 +1,181 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import {
-  FaTrophy, FaChartLine, FaCode, FaGlobe, FaMedal, FaShieldAlt,
-  FaRocket, FaClock, FaCalendarAlt
-} from 'react-icons/fa';
+import { FaTrophy, FaChartLine, FaCode, FaGlobe, FaMedal, FaShieldAlt, FaRocket, FaClock, FaCalendarAlt, FaSpinner } from 'react-icons/fa';
 import axios from 'axios';
 import API_URL from '../config';
 import usePageTitle from '../hooks/usePageTitle';
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.05 } }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 8 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.2 } }
-};
-
 function useCountdown(targetDate) {
   const [timeLeft, setTimeLeft] = useState('');
-
   useEffect(() => {
     if (!targetDate) return;
-
     const tick = () => {
       const diff = new Date(targetDate) - Date.now();
-      if (diff <= 0) {
-        setTimeLeft('Started!');
-        return;
-      }
-      const d = Math.floor(diff / 86400000);
-      const h = Math.floor((diff % 86400000) / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
+      if (diff <= 0) { setTimeLeft('Started!'); return; }
+      const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), m = Math.floor((diff % 3600000) / 60000);
       setTimeLeft(d > 0 ? `${d}d ${h}h ${m}m` : `${h}h ${m}m`);
     };
-
     tick();
     const id = setInterval(tick, 60000);
     return () => clearInterval(id);
   }, [targetDate]);
-
   return timeLeft;
 }
 
-const difficultyClasses = {
-  Beginner: 'text-emerald-700 bg-emerald-100 border-emerald-200 dark:text-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/30',
-  Intermediate: 'text-amber-700 bg-amber-100 border-amber-200 dark:text-amber-300 dark:bg-amber-500/10 dark:border-amber-500/30',
-  Advanced: 'text-rose-700 bg-rose-100 border-rose-200 dark:text-rose-300 dark:bg-rose-500/10 dark:border-rose-500/30',
+const diffBadge = {
+  Beginner: 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/20',
+  Intermediate: 'text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/20',
+  Advanced: 'text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/20',
 };
 
-const featureCards = [
-  {
-    icon: FaGlobe,
-    title: 'Global Arena',
-    description: 'Compete with developers worldwide in scheduled coding rounds.',
-    iconClass: 'text-blue-700 dark:text-blue-300',
-    iconBg: 'bg-blue-100 dark:bg-blue-500/10'
-  },
-  {
-    icon: FaChartLine,
-    title: 'ELO Rating',
-    description: 'Track growth through a consistent rating system.',
-    iconClass: 'text-cyan-700 dark:text-cyan-300',
-    iconBg: 'bg-cyan-100 dark:bg-cyan-500/10'
-  },
-  {
-    icon: FaTrophy,
-    title: 'Weekly Challenges',
-    description: 'Join recurring events from beginner to advanced level.',
-    iconClass: 'text-indigo-700 dark:text-indigo-300',
-    iconBg: 'bg-indigo-100 dark:bg-indigo-500/10'
-  },
-  {
-    icon: FaCode,
-    title: 'Post-Contest Analysis',
-    description: 'Review performance and identify what to improve next.',
-    iconClass: 'text-slate-700 dark:text-slate-300',
-    iconBg: 'bg-slate-200 dark:bg-slate-700/60'
-  },
-];
-
-const ratingTiers = [
-  { name: 'Grandmaster', range: '2400+', className: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30' },
-  { name: 'Master', range: '2100-2399', className: 'text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/30' },
-  { name: 'Expert', range: '1900-2099', className: 'text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-500/10 border-violet-200 dark:border-violet-500/30' },
-  { name: 'Specialist', range: '1600-1899', className: 'text-cyan-700 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-500/10 border-cyan-200 dark:border-cyan-500/30' },
-  { name: 'Pupil', range: '1400-1599', className: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30' },
-  { name: 'Newbie', range: '0-1399', className: 'text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600' },
+const tiers = [
+  { name: 'Grandmaster', range: '2400+', cls: 'text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/20' },
+  { name: 'Master', range: '2100-2399', cls: 'text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-500/20' },
+  { name: 'Expert', range: '1900-2099', cls: 'text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/20' },
+  { name: 'Specialist', range: '1600-1899', cls: 'text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-500/20' },
+  { name: 'Pupil', range: '1400-1599', cls: 'text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20' },
+  { name: 'Newbie', range: '0-1399', cls: 'text-gray-500 dark:text-gray-400 border-gray-200 dark:border-white/10' },
 ];
 
 function ContestCard({ contest, type }) {
   const navigate = useNavigate();
   const countdown = useCountdown(type === 'upcoming' ? contest.startTime : null);
-  const start = new Date(contest.startTime);
-  const end = new Date(contest.endTime);
+  const start = new Date(contest.startTime), end = new Date(contest.endTime);
   const durationH = Math.round((end - start) / 3600000);
-  const qCount = contest.questions?.length || 0;
   const difficulty = contest.difficultyLevel || 'Intermediate';
-  const difficultyClass = difficultyClasses[difficulty] || difficultyClasses.Intermediate;
-
   return (
-    <motion.div
-      variants={itemVariants}
-      whileHover={{ y: -2 }}
-      className="glass-panel p-6 border border-slate-200 dark:border-slate-700"
-    >
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="min-w-0">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 truncate">{contest.title}</h3>
-          {contest.description && (
-            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 line-clamp-2">{contest.description}</p>
-          )}
+    <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] flex flex-col gap-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-bold text-gray-900 dark:text-white">{contest.title}</h3>
+          {contest.description && <p className="text-xs text-gray-500 mt-1 line-clamp-2">{contest.description}</p>}
         </div>
-        <span className={`shrink-0 px-3 py-1 text-xs font-semibold rounded-full border ${difficultyClass}`}>
-          {difficulty}
-        </span>
+        <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded border ${diffBadge[difficulty] || diffBadge.Intermediate}`}>{difficulty}</span>
       </div>
-
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="rounded-xl p-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-center">
-          <FaClock className="text-blue-600 dark:text-blue-300 mx-auto mb-1 text-sm" />
-          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{durationH}h</p>
-          <p className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">Duration</p>
-        </div>
-        <div className="rounded-xl p-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-center">
-          <FaCode className="text-cyan-600 dark:text-cyan-300 mx-auto mb-1 text-sm" />
-          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{qCount}</p>
-          <p className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">Questions</p>
-        </div>
-        <div className="rounded-xl p-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-center">
-          <FaCalendarAlt className="text-indigo-600 dark:text-indigo-300 mx-auto mb-1 text-sm" />
-          <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-            {start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </p>
-          <p className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">Date</p>
-        </div>
+      <div className="grid grid-cols-3 gap-2 text-center">
+        {[
+          { icon: <FaClock />, value: `${durationH}h`, label: 'Duration' },
+          { icon: <FaCode />, value: contest.questions?.length || 0, label: 'Questions' },
+          { icon: <FaCalendarAlt />, value: start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), label: 'Date' },
+        ].map((m, i) => (
+          <div key={i} className="border border-gray-100 dark:border-white/5 rounded-lg py-2">
+            <div className="text-gray-400 text-xs flex justify-center mb-1">{m.icon}</div>
+            <p className="text-xs font-bold text-gray-900 dark:text-white">{m.value}</p>
+            <p className="text-[10px] text-gray-400">{m.label}</p>
+          </div>
+        ))}
       </div>
-
       {type === 'upcoming' && countdown && (
-        <div className="mb-4 text-center py-2 rounded-lg bg-blue-50 border border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/30">
-          <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">Starts in: </span>
-          <span className="text-xs font-mono font-bold text-blue-800 dark:text-blue-200">{countdown}</span>
+        <div className="text-center py-1.5 rounded-lg border border-blue-200 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/5 text-xs text-blue-600 dark:text-blue-400">
+          Starts in <strong>{countdown}</strong>
         </div>
       )}
-
       <button
         onClick={() => navigate(type === 'past' ? '/leaderboard' : '/problems')}
-        className={`w-full py-3 rounded-xl font-semibold text-sm transition-colors ${
-          type === 'upcoming'
-            ? 'bg-blue-600 hover:bg-blue-700 text-white'
-            : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200'
-        }`}
+        className={`w-full py-2.5 rounded-lg text-sm font-semibold ${type === 'upcoming' ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900' : 'border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5'}`}
       >
         {type === 'upcoming' ? 'Register & Practice' : 'View Leaderboard'}
       </button>
-    </motion.div>
+    </div>
   );
 }
 
 const Contest = () => {
   usePageTitle('Contests');
-
   const navigate = useNavigate();
   const [tab, setTab] = useState('upcoming');
   const [contests, setContests] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchContests = async () => {
+    const fetch = async () => {
       setLoading(true);
       try {
         const res = await axios.get(`${API_URL}/api/contests?status=${tab}&limit=20`);
-        if (res.data.success) {
-          setContests(res.data.data);
-        } else {
-          setContests([]);
-        }
-      } catch {
-        setContests([]);
-      } finally {
-        setLoading(false);
-      }
+        setContests(res.data.success ? res.data.data : []);
+      } catch { setContests([]); }
+      finally { setLoading(false); }
     };
-
-    fetchContests();
+    fetch();
   }, [tab]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-6 pt-20">
-      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-7xl mx-auto space-y-8">
-        <motion.section variants={itemVariants} className="glass-panel p-8 md:p-10 border border-slate-200 dark:border-slate-700">
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="w-16 h-16 rounded-2xl bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center">
-              <FaTrophy className="text-3xl text-blue-700 dark:text-blue-300" />
-            </div>
-            <div className="text-center md:text-left">
-              <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-100">Contest Arena</h1>
-              <p className="text-base md:text-lg text-slate-600 dark:text-slate-300 mt-2 max-w-2xl">
-                Join competitive rounds, benchmark your performance, and improve consistently.
-              </p>
-            </div>
-          </div>
-        </motion.section>
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
 
-        <motion.section variants={itemVariants} className="flex justify-center gap-2">
-          {['upcoming', 'active', 'past'].map((value) => {
-            const active = tab === value;
-            return (
-              <button
-                key={value}
-                onClick={() => setTab(value)}
-                className={`px-5 py-2 rounded-full text-sm font-semibold uppercase tracking-wide transition-colors ${
-                  active
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-slate-600 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
-                }`}
-              >
-                {value}
-              </button>
-            );
-          })}
-        </motion.section>
+      {/* Header */}
+      <div>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <FaTrophy className="text-amber-400" /> Contest Arena
+        </h1>
+        <p className="text-sm text-gray-500 mt-0.5">Join competitive rounds, benchmark your performance, and improve consistently.</p>
+      </div>
 
-        <motion.section variants={itemVariants}>
-          {loading ? (
-            <div className="text-center py-20 text-slate-500 dark:text-slate-400">
-              <div className="w-8 h-8 border-2 border-slate-300 dark:border-slate-700 border-t-blue-600 rounded-full animate-spin mx-auto mb-3" />
-              Loading contests...
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-gray-200 dark:border-white/10">
+        {['upcoming', 'active', 'past'].map(t => (
+          <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 text-sm font-medium border-b-2 capitalize -mb-px transition-colors ${tab === t ? 'border-gray-900 dark:border-white text-gray-900 dark:text-white' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}>{t}</button>
+        ))}
+      </div>
+
+      {/* Contests */}
+      {loading ? (
+        <div className="flex justify-center py-16"><FaSpinner className="animate-spin text-gray-400 text-xl" /></div>
+      ) : contests.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {contests.map(c => <ContestCard key={c._id} contest={c} type={tab} />)}
+        </div>
+      ) : (
+        <div className="border border-dashed border-gray-200 dark:border-white/10 rounded-xl p-16 text-center text-gray-400">
+          <FaTrophy className="text-3xl mx-auto mb-3 opacity-30" />
+          <p className="font-semibold text-gray-700 dark:text-gray-300">No {tab} contests</p>
+          {tab === 'upcoming' && <p className="text-sm mt-1">Check back soon — new contests are scheduled regularly.</p>}
+        </div>
+      )}
+
+      {/* Why Compete */}
+      <div>
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Why Compete?</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { icon: <FaGlobe />, title: 'Global Arena', desc: 'Compete with developers worldwide in scheduled coding rounds.' },
+            { icon: <FaChartLine />, title: 'ELO Rating', desc: 'Track growth through a consistent rating system.' },
+            { icon: <FaTrophy />, title: 'Weekly Challenges', desc: 'Join recurring events from beginner to advanced level.' },
+            { icon: <FaCode />, title: 'Post-Contest Analysis', desc: 'Review performance and identify what to improve next.' },
+          ].map((f, i) => (
+            <div key={i} className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] text-center">
+              <div className="text-gray-400 text-lg mb-2 flex justify-center">{f.icon}</div>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{f.title}</p>
+              <p className="text-xs text-gray-500">{f.desc}</p>
             </div>
-          ) : contests.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {contests.map((contest) => (
-                <ContestCard key={contest._id} contest={contest} type={tab} />
-              ))}
+          ))}
+        </div>
+      </div>
+
+      {/* Rating Tiers */}
+      <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-4">
+          <FaShieldAlt /> Rating Tiers
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+          {tiers.map(t => (
+            <div key={t.name} className={`border rounded-lg p-3 text-center ${t.cls}`}>
+              <FaMedal className="mx-auto mb-1 text-sm" />
+              <p className="text-xs font-semibold">{t.name}</p>
+              <p className="text-[10px] opacity-70">{t.range}</p>
             </div>
-          ) : (
-            <div className="glass-panel border border-slate-200 dark:border-slate-700 text-center py-16">
-              <FaTrophy className="text-4xl text-slate-400 dark:text-slate-500 mx-auto mb-3" />
-              <p className="text-lg font-semibold text-slate-700 dark:text-slate-200">No {tab} contests</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                {tab === 'upcoming' ? 'Check back soon - new contests are scheduled regularly.' : 'All caught up.'}
-              </p>
-            </div>
-          )}
-        </motion.section>
+          ))}
+        </div>
+      </div>
 
-        <motion.section variants={itemVariants}>
-          <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-4 text-center">Why Compete?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {featureCards.map((feature) => {
-              const Icon = feature.icon;
-              return (
-                <div key={feature.title} className="glass-panel p-5 border border-slate-200 dark:border-slate-700 text-center">
-                  <div className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center ${feature.iconBg}`}>
-                    <Icon className={`text-xl ${feature.iconClass}`} />
-                  </div>
-                  <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-1">{feature.title}</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">{feature.description}</p>
-                </div>
-              );
-            })}
-          </div>
-        </motion.section>
-
-        <motion.section variants={itemVariants} className="glass-panel p-6 border border-slate-200 dark:border-slate-700">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-slate-900 dark:text-slate-100">
-            <FaShieldAlt className="text-blue-700 dark:text-blue-300" />
-            Rating Tiers
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {ratingTiers.map((tier) => (
-              <div key={tier.name} className={`rounded-xl border p-4 text-center ${tier.className}`}>
-                <FaMedal className="mx-auto mb-1" />
-                <p className="text-sm font-semibold">{tier.name}</p>
-                <p className="text-[11px] opacity-80">{tier.range}</p>
-              </div>
-            ))}
-          </div>
-        </motion.section>
-
-        <motion.section variants={itemVariants} className="glass-panel p-8 md:p-12 border border-slate-200 dark:border-slate-700 text-center">
-          <FaRocket className="text-4xl text-blue-700 dark:text-blue-300 mx-auto mb-4" />
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-3">Ready to Compete?</h2>
-          <p className="text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-7">
-            Sharpen your skills with practice sets and prepare for your next contest round.
-          </p>
-          <button
-            onClick={() => navigate('/problems')}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-full transition-colors"
-          >
-            Start Practicing Now
-          </button>
-        </motion.section>
-      </motion.div>
+      {/* CTA */}
+      <div className="border border-gray-200 dark:border-white/10 rounded-xl p-8 bg-white dark:bg-white/[0.02] text-center">
+        <FaRocket className="text-2xl text-gray-400 mx-auto mb-3" />
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Ready to Compete?</h3>
+        <p className="text-sm text-gray-500 mb-4">Sharpen your skills with practice sets and prepare for your next contest round.</p>
+        <button onClick={() => navigate('/problems')} className="px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold">
+          Start Practicing
+        </button>
+      </div>
     </div>
   );
 };
