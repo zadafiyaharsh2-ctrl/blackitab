@@ -251,18 +251,20 @@ exports.getProgressStats = async (req, res) => {
 
         // Populate question details manually or via populate if ref is set in model
         // Assume Attempt has questionId ref to ExamQuestion, but we can fetch manually
-        const attemptQIds = recentAttempts.map(a => a.questionId);
+        const attemptQIds = recentAttempts.map(a => a.questionId).filter(Boolean);
         const questions = await ExamQuestion.find({ _id: { $in: attemptQIds } }).select('question subject difficulty').lean();
         const qMap = {};
-        questions.forEach(q => qMap[q._id.toString()] = q);
+        questions.forEach(q => {
+            if (q && q._id) qMap[q._id.toString()] = q;
+        });
 
         const formattedAttempts = recentAttempts.map(act => {
-            const q = qMap[act.questionId.toString()];
+            const q = act.questionId ? qMap[act.questionId.toString()] : null;
             return {
                 type: 'attempt',
                 completed: act.isCorrect,
-                title: q ? (q.question.length > 50 ? q.question.substring(0, 50) + '...' : q.question) : 'Question Attempt',
-                subjectId: { name: q ? q.subject : 'Mixed' },
+                title: q && q.question ? (q.question.length > 50 ? q.question.substring(0, 50) + '...' : q.question) : 'Question Attempt',
+                subjectId: { name: q && q.subject ? q.subject : 'Mixed' },
                 completedAt: act.createdAt
             };
         });
@@ -336,7 +338,7 @@ exports.getProgressStats = async (req, res) => {
                 rankTier}
         });
     } catch (error) {
-        
+        console.error('Error fetching progress stats:', error);
         res.status(500).json({ success: false, message: 'Error fetching statistics' });
     }
 };
