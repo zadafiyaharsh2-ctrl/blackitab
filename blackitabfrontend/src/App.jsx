@@ -60,6 +60,8 @@ import CreateExamQuestion from './pages/CreateExamQuestion';
 import MyQuestions from './pages/MyQuestions';
 import QuestionPaper from './pages/QuestionPaper';
 import TeacherBatches from './pages/TeacherBatches';
+import TeacherAssignments from './pages/TeacherAssignments';
+import TeacherAssignmentDetail from './pages/TeacherAssignmentDetail';
 
 // Imported Institute Pages and Layout
 import InstituteLayout from './layouts/InstituteLayout';
@@ -578,6 +580,42 @@ function App() {
                 <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <QuestionPaper />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Classes & Batches */}
+            <Route
+              path="/teacher/batches"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherBatches />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Assignments */}
+            <Route
+              path="/teacher/assignments"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherAssignments />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Assignment Detail / Grading */}
+            <Route
+              path="/teacher/assignment/:id"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherAssignmentDetail />
                   </MainLayout>
                 </ProtectedRoute>
               }
