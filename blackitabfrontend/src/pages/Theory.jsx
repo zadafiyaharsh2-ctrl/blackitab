@@ -19,49 +19,62 @@
 // Import React hooks for state management and side effects
 import React, { useState, useEffect, useRef } from "react";
 
+// Import React Router hooks for dynamic routing
+import { useParams, useNavigate } from "react-router-dom";
+
 // Import axios for making HTTP requests to the backend API
 import axios from "axios";
 
 // Import icons from lucide-react library for UI elements
 import { BookOpen, ChevronRight, Menu, CheckCircle, ArrowRight } from "lucide-react";
 
-// Import the TopicSidebar component that shows the list of topics
-import TopicSidebar from "../components/TopicSidebar";
+// Import the TopicDropdown component for topic navigation at the top
+import TopicDropdown from "../components/TopicDropdown";
+// Import the AskAI sidebar component for the right panel
+import AskAISidebar from "../components/AskAISidebar";
+import { motion, AnimatePresence } from "framer-motion";
 import API_URL from "../config";
+
 
 const Theory = () => {
   // ============================================================================
+  // ROUTING
+  // ============================================================================
+  const { subjectId } = useParams(); // Get subjectId from URL (e.g., /theory/:subjectId)
+  const navigate = useNavigate();
+
+  // ============================================================================
   // STATE MANAGEMENT
   // ============================================================================
-  
+
   // Array of all subjects (e.g., DBMS, Operating Systems, etc.)
   // Initially empty, populated when component mounts
   const [subjects, setSubjects] = useState([]);
-  
+
   // Currently selected subject object (contains _id, name, description)
   // null means no subject selected, shows subject selection page
   const [selectedSubject, setSelectedSubject] = useState(null);
-  
+
   // Array of topics for the selected subject
   // Each topic has _id, name, subjectId
   const [topics, setTopics] = useState([]);
-  
+
   // Currently selected topic object
   // When this changes, full content is fetched from API
   const [selectedTopic, setSelectedTopic] = useState(null);
-  
+
   // Full content data for the selected topic
   // Contains title, content array with blocks (paragraphs, headings, lists, images)
   const [topicContent, setTopicContent] = useState(null);
-  
+
   // Loading state for initial subjects fetch
   // Shows spinner while subjects are being loaded
   const [loading, setLoading] = useState(true);
-  
+
   // Controls whether the topic sidebar is open or closed
   // Used for mobile responsiveness - sidebar can be toggled
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  
+
   // Track completed topics using localStorage
   // Format: { subjectId: { topicId: true, topicId2: true } }
   const [completedTopics, setCompletedTopics] = useState({});
@@ -78,16 +91,16 @@ const Theory = () => {
     // Define async function to fetch subjects
     const fetchSubjects = async () => {
       try {
-        // Make GET request to subjects API endpoint
-        // Make GET request to subjects API endpoint
         const res = await axios.get(`${API_URL}/api/subjects`);
-        
-        // Check if response indicates success
-        // Backend returns { success: true, data: [...subjects] }
-        if (res.data.success) setSubjects(res.data.data);
+
+        // If we get an empty array or the request succeeds but has no data, use mock data
+        if (res.data.success && res.data.data && res.data.data.length > 0) {
+          setSubjects(res.data.data);
+        } else {
+          setSubjects([]);
+        }
       } catch (err) {
-        // Log any errors that occur during fetch
-        console.error("Error fetching subjects:", err);
+        setSubjects([]);
       } finally {
         // Always set loading to false, whether request succeeds or fails
         // This hides the loading spinner
@@ -97,7 +110,7 @@ const Theory = () => {
 
     // Call the fetch function
     fetchSubjects();
-    
+
     // Load completed topics from backend API
     const fetchCompletedTopics = async () => {
       try {
@@ -106,13 +119,13 @@ const Theory = () => {
           // User not logged in - that's okay, progress won't be saved
           return;
         }
-        
+
         const res = await axios.get(`${API_URL}/api/progress`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-        
+
         if (res.data.success) {
           setCompletedTopics(res.data.data);
         }
@@ -126,9 +139,32 @@ const Theory = () => {
         }
       }
     };
-    
+
     fetchCompletedTopics();
   }, []); // Empty dependency array means this runs only once on mount
+
+  // ============================================================================
+  // EFFECT: SYNC URL PARAM WITH SELECTED SUBJECT
+  // ============================================================================
+  // When subjects are loaded and we have a subjectId from URL, auto-select that subject
+  useEffect(() => {
+    if (subjectId && subjects.length > 0 && !selectedSubject) {
+      const found = subjects.find(s => s._id === subjectId);
+      if (found) {
+        setSelectedSubject(found);
+      } else {
+        // Invalid subjectId in URL, redirect to /theory
+        navigate('/theory', { replace: true });
+      }
+    }
+    // If no subjectId in URL but a subject is selected, clear it
+    if (!subjectId && selectedSubject) {
+      setSelectedSubject(null);
+      setTopics([]);
+      setSelectedTopic(null);
+      setTopicContent(null);
+    }
+  }, [subjectId, subjects]);
 
   // ============================================================================
   // EFFECT 2: FETCH TOPICS WHEN SUBJECT IS SELECTED
@@ -143,26 +179,20 @@ const Theory = () => {
     // Define async function to fetch topics
     const fetchTopics = async () => {
       try {
-        // Make GET request to topics API endpoint
-        // Uses selectedSubject._id to get topics for specific subject
         const res = await axios.get(
           `${API_URL}/api/subjects/${selectedSubject._id}/topics`
         );
 
-        // Check if response indicates success
-        if (res.data.success) {
-          // Update topics state with fetched data
+        if (res.data.success && res.data.data && res.data.data.length > 0) {
           setTopics(res.data.data);
-
-          // Auto-select the first topic for better UX
-          // This immediately shows content instead of blank page
-          if (res.data.data.length > 0) {
-            setSelectedTopic(res.data.data[0]);
-          }
+          setSelectedTopic(res.data.data[0]);
+        } else {
+          setTopics([]);
+          setSelectedTopic(null);
         }
       } catch (err) {
-        // Log any errors that occur during fetch
-        console.error("Error fetching topics:", err);
+        setTopics([]);
+        setSelectedTopic(null);
       }
     };
 
@@ -182,22 +212,22 @@ const Theory = () => {
     // Define async function to fetch topic content
     const fetchTopicData = async () => {
       try {
-        // Make GET request to full content API endpoint
-        // Uses selectedTopic._id to get full content for specific topic
-        // Backend queries full_data_of_topics collection where topicId matches
         const res = await axios.get(
           `${API_URL}/api/topics/${selectedTopic._id}/full`
         );
 
-        // Check if response indicates success
-        if (res.data.success) {
-          // Update topicContent state with fetched data
-          // This contains the full content array with all blocks
+        const token = localStorage.getItem('token');
+        if (res.data.success && res.data.data) {
           setTopicContent(res.data.data);
+          // Auto-mark topic as completed when loaded
+          if (token && selectedTopic) {
+            markTopicAsComplete(selectedTopic._id);
+          }
+        } else {
+          setTopicContent(null);
         }
       } catch (err) {
-        // Log any errors that occur during fetch
-        console.error("Error fetching topic content:", err);
+        setTopicContent(null);
       }
     };
 
@@ -295,7 +325,7 @@ const Theory = () => {
           return (
             <div key={index} className="my-8 flex flex-col items-center">
               {/* Image element with responsive sizing */}
-              <img 
+              <img
                 src={block.src} // Image path (relative to public folder)
                 alt={block.alt || "Topic illustration"} // Alt text for accessibility
                 className="max-w-full h-auto rounded-lg shadow-md" // Responsive, rounded, with shadow
@@ -335,13 +365,13 @@ const Theory = () => {
         case "table":
           // Check if table is too wide (more than 5 columns)
           const shouldSplit = block.headers && block.headers.length > 5;
-          
+
           if (shouldSplit) {
             // Split table into two halves
             const midPoint = Math.ceil(block.headers.length / 2);
             const firstHalfHeaders = block.headers.slice(0, midPoint);
             const secondHalfHeaders = block.headers.slice(midPoint);
-            
+
             return (
               <div key={index} className="my-6">
                 {/* First half of table */}
@@ -369,7 +399,7 @@ const Theory = () => {
                     </tbody>
                   </table>
                 </div>
-                
+
                 {/* Second half of table */}
                 <div className="overflow-x-auto max-w-full">
                   <table className="w-full border-collapse border border-gray-300 dark:border-gray-700">
@@ -395,7 +425,7 @@ const Theory = () => {
                     </tbody>
                   </table>
                 </div>
-                
+
                 {/* Render caption if provided */}
                 {block.caption && (
                   <p className="text-sm text-gray-600 mt-2 italic text-center">
@@ -405,7 +435,7 @@ const Theory = () => {
               </div>
             );
           }
-          
+
           // Normal table rendering for tables with 5 or fewer columns
           return (
             <div key={index} className="my-6 overflow-x-auto max-w-full">
@@ -451,11 +481,11 @@ const Theory = () => {
       }
     });
   };
-  
+
   // ============================================================================
   // HELPER FUNCTIONS FOR TOPIC COMPLETION
   // ============================================================================
-  
+
   /**
    * Check if a topic is completed
    * @param {string} topicId - The ID of the topic to check
@@ -465,14 +495,14 @@ const Theory = () => {
     if (!selectedSubject || !topicId) return false;
     return completedTopics[selectedSubject._id]?.[topicId] === true;
   };
-  
+
   /**
    * Mark current topic as complete and move to next topic
    * Saves completion status to backend database
    */
   const handleNextTopic = async () => {
     if (!selectedTopic || !selectedSubject) return;
-    
+
     // Optimistically update UI immediately for better UX
     const updated = {
       ...completedTopics,
@@ -482,7 +512,7 @@ const Theory = () => {
       }
     };
     setCompletedTopics(updated);
-    
+
     // Save to backend database
     try {
       const token = localStorage.getItem('token');
@@ -490,7 +520,7 @@ const Theory = () => {
         alert('Please log in to save your progress');
         return;
       }
-      
+
       await axios.post(
         `${API_URL}/api/progress/mark-complete`,
         {
@@ -503,7 +533,7 @@ const Theory = () => {
           }
         }
       );
-      
+
       console.log('✅ Topic completion saved to database');
     } catch (error) {
       console.error('Error saving progress:', error);
@@ -512,14 +542,14 @@ const Theory = () => {
       alert('Failed to save progress. Please try again.');
       return; // Don't navigate if save failed
     }
-    
+
     // Find next topic and navigate to it
     const currentIndex = topics.findIndex(t => t._id === selectedTopic._id);
     if (currentIndex < topics.length - 1) {
       // Move to next topic
       const nextTopic = topics[currentIndex + 1];
       setSelectedTopic(nextTopic);
-      
+
       // Scroll to top smoothly
       // Scroll to top smoothly
       if (contentRef.current) {
@@ -559,11 +589,11 @@ const Theory = () => {
               const completedCount = Object.keys(completedTopics[subject._id] || {}).length;
               const totalTopics = subject.topicCount || 0;
               const progressPercentage = totalTopics > 0 ? Math.round((completedCount / totalTopics) * 100) : 0;
-              
+
               return (
                 <div
                   key={subject._id} // Unique key for React list rendering
-                  onClick={() => setSelectedSubject(subject)} // Set selected subject on click
+                  onClick={() => navigate(`/theory/${subject._id}`)} // Navigate to dynamic subject route
                   className="bg-white dark:bg-gray-800/50 backdrop-blur-md rounded-xl shadow-lg hover:shadow-xl cursor-pointer p-6 border border-gray-300 dark:border-gray-700 group transition hover:border-blue-500/30"
                 >
                   {/* Icon container with hover effect */}
@@ -574,7 +604,7 @@ const Theory = () => {
 
                   {/* Subject name */}
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">{subject.name}</h2>
-                  
+
                   {/* Subject description (limited to 2 lines) */}
                   <p className="text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">
                     {subject.description}
@@ -591,7 +621,7 @@ const Theory = () => {
                         {progressPercentage}%
                       </span>
                     </div>
-                    
+
                     {/* Progress bar */}
                     <div className="w-full bg-gray-700 rounded-full h-2">
                       <div
@@ -618,95 +648,102 @@ const Theory = () => {
   // VIEW 2: TOPIC CONTENT PAGE WITH SIDEBAR
   // ============================================================================
   // This view is shown when a subject is selected
-  // Layout: Left side shows topic content, right side shows topic sidebar
+  // Layout: Top has topic dropdown, left side shows content, right side has AskAI sidebar
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-white dark:bg-transparent overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-64px)] bg-white dark:bg-transparent overflow-hidden">
 
       {/* ========================================
-          LEFT SIDE: TOPIC CONTENT AREA
+          TOP BAR: TOPIC DROPDOWN NAVIGATION
           ======================================== */}
-      <div ref={contentRef} className="flex-1 p-6 lg:p-12 overflow-y-auto">
-
-        {/* ========================================
-            MOBILE HEADER
-            ======================================== 
-            Only visible on mobile (hidden on lg screens)
-            Shows topic name and menu button to open sidebar */}
-        <div className="lg:hidden flex justify-between items-center mb-4">
-          {/* Current topic name */}
-          <span className="font-bold text-gray-900 dark:text-white">{selectedTopic?.name}</span>
-          {/* Menu button to open sidebar on mobile */}
-          <button onClick={() => setSidebarOpen(true)}>
-            <Menu className="text-gray-700 dark:text-gray-300" />
-          </button>
-        </div>
-
-        {/* ========================================
-            TOPIC CONTENT CONTAINER
-            ======================================== */}
-        <div className="max-w-4xl mx-auto">
-          {/* Topic title as main heading */}
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 border-b border-gray-300 dark:border-gray-700 pb-3">
-            {selectedTopic?.name}
-          </h1>
-
-          {/* Content area with prose styling for better typography */}
-          <div className="prose prose-lg">
-            {/* Conditional rendering: show content or loading message */}
-            {topicContent ? (
-              <>
-                {/* Render the topic content */}
-                {renderContent(topicContent.content)}
-                
-                {/* Next Button at the end of content */}
-                <div className="not-prose mt-12 mb-8 flex items-center justify-between border-t pt-8">
-                  <div className="flex items-center text-sm text-gray-600">
-                    {isTopicCompleted(selectedTopic._id) ? (
-                      <div className="flex items-center text-green-600">
-                        <CheckCircle className="h-5 w-5 mr-2" />
-                        <span className="font-medium">Topic Completed!</span>
-                      </div>
-                    ) : (
-                      <span>Mark this topic as complete and continue</span>
-                    )}
-                  </div>
-                  <button
-                    onClick={handleNextTopic}
-                    className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-gray-900 dark:text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg"
-                  >
-                    <span>Next Topic</span>
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </button>
-                </div>
-              </>
-            ) : (
-              // If content is still loading, show loading message
-              <p className="text-gray-600 dark:text-gray-400">Loading content...</p>
-            )}
-          </div>
-        </div>
+      <div className="px-4 lg:px-8 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 backdrop-blur-sm flex-shrink-0">
+        <TopicDropdown
+          topics={topics}
+          selectedTopic={selectedTopic}
+          onSelectTopic={(t) => {
+            setSelectedTopic(t);
+          }}
+          subjectName={selectedSubject.name}
+          onBackToSubjects={() => navigate('/theory')}
+          completedTopics={completedTopics[selectedSubject._id] || {}}
+        />
       </div>
 
       {/* ========================================
-          RIGHT SIDE: TOPIC SIDEBAR
-          ========================================
-          Shows list of all topics for the selected subject
-          User can click topics to change content */}
-      <TopicSidebar
-        topics={topics} // Array of all topics for current subject
-        selectedTopic={selectedTopic} // Currently selected topic (for highlighting)
-        onSelectTopic={(t) => {
-          // When user clicks a topic:
-          setSelectedTopic(t); // Update selected topic (triggers content fetch)
-          // On mobile, close sidebar after selection for better UX
-          if (window.innerWidth < 1024) setSidebarOpen(false);
-        }}
-        isOpen={sidebarOpen} // Controls sidebar visibility (mobile)
-        onToggle={() => setSidebarOpen(!sidebarOpen)} // Toggle sidebar open/close
-        subjectName={selectedSubject.name} // Subject name to display in sidebar header
-        onBackToSubjects={() => setSelectedSubject(null)} // Go back to subject selection
-        completedTopics={completedTopics[selectedSubject._id] || {}} // Pass completed topics for this subject
-      />
+          MAIN AREA: CONTENT + ASK AI SIDEBAR
+          ======================================== */}
+      <div className="flex flex-1 overflow-hidden">
+
+        {/* ========================================
+            LEFT SIDE: TOPIC CONTENT AREA
+            ======================================== */}
+        <div ref={contentRef} className="flex-1 p-6 lg:p-12 overflow-y-auto">
+
+          {/* ========================================
+              MOBILE HEADER
+              ======================================== 
+              Only visible on mobile (hidden on lg screens)
+              Shows topic name and menu button to open AskAI sidebar */}
+          <div className="lg:hidden flex justify-between items-center mb-4">
+            <span className="font-bold text-gray-900 dark:text-white">{selectedTopic?.name}</span>
+            <button onClick={() => setSidebarOpen(true)} title="Open AI Assistant">
+              <Menu className="text-gray-700 dark:text-gray-300" />
+            </button>
+          </div>
+
+          {/* ========================================
+              TOPIC CONTENT CONTAINER
+              ======================================== */}
+          <div className="max-w-4xl mx-auto">
+            {/* Topic title as main heading */}
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 border-b border-gray-300 dark:border-gray-700 pb-3">
+              {selectedTopic?.name}
+            </h1>
+
+            {/* Content area with prose styling for better typography */}
+            <div className="prose prose-lg">
+              {topicContent ? (
+                <>
+                  {renderContent(topicContent.content)}
+
+                  {/* Next Button at the end of content */}
+                  <div className="not-prose mt-12 mb-8 flex items-center justify-between border-t pt-8">
+                    <div className="flex items-center text-sm text-gray-600">
+                      {isTopicCompleted(selectedTopic._id) ? (
+                        <div className="flex items-center text-green-600">
+                          <CheckCircle className="h-5 w-5 mr-2" />
+                          <span className="font-medium">Topic Completed!</span>
+                        </div>
+                      ) : (
+                        <span>Mark this topic as complete and continue</span>
+                      )}
+                    </div>
+                    <button
+                      onClick={handleNextTopic}
+                      className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-gray-900 dark:text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg"
+                    >
+                      <span>Next Topic</span>
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <p className="text-gray-600 dark:text-gray-400">Loading content...</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================
+            RIGHT SIDE: ASK AI SIDEBAR
+            ========================================
+            AI chat assistant for help with the current topic */}
+        <AskAISidebar
+          isOpen={sidebarOpen}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
+          subjectName={selectedSubject.name}
+          topicName={selectedTopic?.name}
+        />
+      </div>
     </div>
   );
 };

@@ -1,214 +1,183 @@
-import { useTheme } from '../context/useTheme';
-import { 
-  FaTrophy, 
-  FaChartLine, 
-  FaCode, 
-  FaGlobe, 
-  FaMedal, 
-  FaClock, 
-  FaUserFriends, 
-  FaRocket,
-  FaStar,
-  FaShieldAlt
-} from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FaTrophy, FaChartLine, FaCode, FaGlobe, FaMedal, FaShieldAlt, FaRocket, FaClock, FaCalendarAlt, FaSpinner } from 'react-icons/fa';
+import axios from 'axios';
+import API_URL from '../config';
+import usePageTitle from '../hooks/usePageTitle';
+
+function useCountdown(targetDate) {
+  const [timeLeft, setTimeLeft] = useState('');
+  useEffect(() => {
+    if (!targetDate) return;
+    const tick = () => {
+      const diff = new Date(targetDate) - Date.now();
+      if (diff <= 0) { setTimeLeft('Started!'); return; }
+      const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), m = Math.floor((diff % 3600000) / 60000);
+      setTimeLeft(d > 0 ? `${d}d ${h}h ${m}m` : `${h}h ${m}m`);
+    };
+    tick();
+    const id = setInterval(tick, 60000);
+    return () => clearInterval(id);
+  }, [targetDate]);
+  return timeLeft;
+}
+
+const diffBadge = {
+  Beginner: 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/20',
+  Intermediate: 'text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/20',
+  Advanced: 'text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/20',
+};
+
+const tiers = [
+  { name: 'Grandmaster', range: '2400+', cls: 'text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/20' },
+  { name: 'Master', range: '2100-2399', cls: 'text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-500/20' },
+  { name: 'Expert', range: '1900-2099', cls: 'text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/20' },
+  { name: 'Specialist', range: '1600-1899', cls: 'text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-500/20' },
+  { name: 'Pupil', range: '1400-1599', cls: 'text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20' },
+  { name: 'Newbie', range: '0-1399', cls: 'text-gray-500 dark:text-gray-400 border-gray-200 dark:border-white/10' },
+];
+
+function ContestCard({ contest, type }) {
+  const navigate = useNavigate();
+  const countdown = useCountdown(type === 'upcoming' ? contest.startTime : null);
+  const start = new Date(contest.startTime), end = new Date(contest.endTime);
+  const durationH = Math.round((end - start) / 3600000);
+  const difficulty = contest.difficultyLevel || 'Intermediate';
+  return (
+    <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] flex flex-col gap-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-bold text-gray-900 dark:text-white">{contest.title}</h3>
+          {contest.description && <p className="text-xs text-gray-500 mt-1 line-clamp-2">{contest.description}</p>}
+        </div>
+        <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded border ${diffBadge[difficulty] || diffBadge.Intermediate}`}>{difficulty}</span>
+      </div>
+      <div className="grid grid-cols-3 gap-2 text-center">
+        {[
+          { icon: <FaClock />, value: `${durationH}h`, label: 'Duration' },
+          { icon: <FaCode />, value: contest.questions?.length || 0, label: 'Questions' },
+          { icon: <FaCalendarAlt />, value: start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), label: 'Date' },
+        ].map((m, i) => (
+          <div key={i} className="border border-gray-100 dark:border-white/5 rounded-lg py-2">
+            <div className="text-gray-400 text-xs flex justify-center mb-1">{m.icon}</div>
+            <p className="text-xs font-bold text-gray-900 dark:text-white">{m.value}</p>
+            <p className="text-[10px] text-gray-400">{m.label}</p>
+          </div>
+        ))}
+      </div>
+      {type === 'upcoming' && countdown && (
+        <div className="text-center py-1.5 rounded-lg border border-blue-200 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/5 text-xs text-blue-600 dark:text-blue-400">
+          Starts in <strong>{countdown}</strong>
+        </div>
+      )}
+      <button
+        onClick={() => navigate(type === 'past' ? '/leaderboard' : '/problems')}
+        className={`w-full py-2.5 rounded-lg text-sm font-semibold ${type === 'upcoming' ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900' : 'border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+      >
+        {type === 'upcoming' ? 'Register & Practice' : 'View Leaderboard'}
+      </button>
+    </div>
+  );
+}
 
 const Contest = () => {
-  const { isDark } = useTheme();
+  usePageTitle('Contests');
+  const navigate = useNavigate();
+  const [tab, setTab] = useState('upcoming');
+  const [contests, setContests] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const contestFeatures = [
-    {
-      icon: FaGlobe,
-      title: 'Global Competitive Arena',
-      description: 'Join thousands of developers worldwide in real-time coding battles. Test your algorithmic skills against the best minds and see where you stand on the global stage.',
-      color: 'blue',
-      gradient: 'from-blue-500 to-cyan-500'
-    },
-    {
-      icon: FaChartLine,
-      title: 'Dynamic Rating System',
-      description: 'Earn your rank through a sophisticated ELO-based rating system. Your rating updates after every contest based on your performance relative to other participants and the difficulty of problems solved.',
-      color: 'green',
-      gradient: 'from-green-500 to-emerald-500'
-    },
-    {
-      icon: FaTrophy,
-      title: 'Weekly Championships',
-      description: 'Participate in regularly scheduled contests with varying difficulty levels. From beginner-friendly rounds to elite grandmaster challenges, there\'s a competition for every skill level.',
-      color: 'yellow',
-      gradient: 'from-yellow-500 to-orange-500'
-    },
-    {
-      icon: FaCode,
-      title: 'Post-Contest Analysis',
-      description: 'Access detailed editorials, optimal solutions, and performance analytics immediately after the contest. Understand what you missed and learn how to solve problems more efficiently.',
-      color: 'purple',
-      gradient: 'from-purple-500 to-pink-500'
-    }
-  ];
-
-  const ratingTiers = [
-    { name: 'Grandmaster', range: '2400+', color: 'text-red-500', bg: 'bg-red-500/10' },
-    { name: 'Master', range: '2100-2399', color: 'text-orange-500', bg: 'bg-orange-500/10' },
-    { name: 'Expert', range: '1900-2099', color: 'text-purple-500', bg: 'bg-purple-500/10' },
-    { name: 'Specialist', range: '1600-1899', color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
-    { name: 'Pupil', range: '1400-1599', color: 'text-green-500', bg: 'bg-green-500/10' },
-    { name: 'Newbie', range: '0-1399', color: 'text-gray-500', bg: 'bg-gray-500/10' },
-  ];
+  useEffect(() => {
+    const fetch = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(`${API_URL}/api/contests?status=${tab}&limit=20`);
+        setContests(res.data.success ? res.data.data : []);
+      } catch { setContests([]); }
+      finally { setLoading(false); }
+    };
+    fetch();
+  }, [tab]);
 
   return (
-    <div className="min-h-screen p-6">
-      {/* Coming Soon Banner */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className={`${isDark ? 'bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border-yellow-700/50' : 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-300'} rounded-xl p-4 border backdrop-blur-md text-center`}>
-          <h2 className={`text-2xl md:text-3xl font-bold ${isDark ? 'text-yellow-400' : 'text-yellow-600'} mb-1 flex items-center justify-center gap-2`}>
-            🚀 Coming Soon!
-          </h2>
-          <p className={`${isDark ? 'text-yellow-200' : 'text-yellow-700'} font-medium`}>
-            The Competitive Programming Arena is currently under development.
-          </p>
-        </div>
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+
+      {/* Header */}
+      <div>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <FaTrophy className="text-amber-400" /> Contest Arena
+        </h1>
+        <p className="text-sm text-gray-500 mt-0.5">Join competitive rounds, benchmark your performance, and improve consistently.</p>
       </div>
 
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto mb-12">
-        <div className={`${isDark ? 'bg-gradient-to-br from-red-900/40 via-orange-900/40 to-yellow-900/40 border-red-700/50' : 'bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 border-red-200'} rounded-3xl p-8 md:p-12 border backdrop-blur-md shadow-2xl relative overflow-hidden`}>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/10 rounded-full blur-3xl"></div>
-          
-          <div className="relative z-10">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="p-4 bg-gradient-to-br from-red-500 to-orange-600 rounded-2xl shadow-lg">
-                <FaTrophy className="text-4xl text-gray-900 dark:text-white" />
-              </div>
-              <div>
-                <h1 className={`text-4xl md:text-5xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'}`}>
-                  Competitive Arena
-                </h1>
-                <p className={`text-lg ${isDark ? 'text-red-300' : 'text-red-600'} font-semibold mt-1`}>
-                  Prove Your Skills. Climb the Ranks. Become a Legend.
-                </p>
-              </div>
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-gray-200 dark:border-white/10">
+        {['upcoming', 'active', 'past'].map(t => (
+          <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 text-sm font-medium border-b-2 capitalize -mb-px transition-colors ${tab === t ? 'border-gray-900 dark:border-white text-gray-900 dark:text-white' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}>{t}</button>
+        ))}
+      </div>
+
+      {/* Contests */}
+      {loading ? (
+        <div className="flex justify-center py-16"><FaSpinner className="animate-spin text-gray-400 text-xl" /></div>
+      ) : contests.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {contests.map(c => <ContestCard key={c._id} contest={c} type={tab} />)}
+        </div>
+      ) : (
+        <div className="border border-dashed border-gray-200 dark:border-white/10 rounded-xl p-16 text-center text-gray-400">
+          <FaTrophy className="text-3xl mx-auto mb-3 opacity-30" />
+          <p className="font-semibold text-gray-700 dark:text-gray-300">No {tab} contests</p>
+          {tab === 'upcoming' && <p className="text-sm mt-1">Check back soon — new contests are scheduled regularly.</p>}
+        </div>
+      )}
+
+      {/* Why Compete */}
+      <div>
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Why Compete?</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { icon: <FaGlobe />, title: 'Global Arena', desc: 'Compete with developers worldwide in scheduled coding rounds.' },
+            { icon: <FaChartLine />, title: 'ELO Rating', desc: 'Track growth through a consistent rating system.' },
+            { icon: <FaTrophy />, title: 'Weekly Challenges', desc: 'Join recurring events from beginner to advanced level.' },
+            { icon: <FaCode />, title: 'Post-Contest Analysis', desc: 'Review performance and identify what to improve next.' },
+          ].map((f, i) => (
+            <div key={i} className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] text-center">
+              <div className="text-gray-400 text-lg mb-2 flex justify-center">{f.icon}</div>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{f.title}</p>
+              <p className="text-xs text-gray-500">{f.desc}</p>
             </div>
-            
-            <p className={`text-xl ${isDark ? 'text-gray-200' : 'text-gray-700'} mb-8 leading-relaxed max-w-4xl`}>
-              Step into the ultimate coding battleground. Participate in high-stakes contests, solve complex algorithmic 
-              challenges under pressure, and earn your place on the global leaderboard. Our sophisticated rating system 
-              ensures you're always competing against worthy adversaries.
-            </p>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Main Features Grid */}
-      <div className="max-w-7xl mx-auto mb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {contestFeatures.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <div
-                key={index}
-                className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700' : 'bg-white border-gray-200'} rounded-2xl p-8 border backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] group`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`p-4 rounded-xl bg-gradient-to-br ${feature.gradient} shadow-lg group-hover:scale-110 transition-transform`}>
-                    <Icon className="text-3xl text-gray-900 dark:text-white" />
-                  </div>
-                  <div>
-                    <h3 className={`text-2xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'} mb-3`}>
-                      {feature.title}
-                    </h3>
-                    <p className={`${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'} text-lg leading-relaxed`}>
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Rating System Explained */}
-      <div className="max-w-7xl mx-auto mb-12">
-        <div className={`${isDark ? 'bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border-blue-700/50' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'} rounded-2xl p-8 border backdrop-blur-md`}>
-          <div className="flex items-center gap-3 mb-8">
-            <FaShieldAlt className="text-4xl text-blue-500" />
-            <h2 className={`text-3xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'}`}>
-              The Rating System
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div>
-              <p className={`${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'} text-lg mb-6 leading-relaxed`}>
-                Our rating system is designed to accurately reflect your skill level. You start with a base rating, 
-                and after every contest, your rating changes based on:
-              </p>
-              <ul className="space-y-4 mb-8">
-                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'}`}>
-                  <FaCheckCircle className="text-green-500" />
-                  <span>Your rank in the contest</span>
-                </li>
-                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'}`}>
-                  <FaCheckCircle className="text-green-500" />
-                  <span>The ratings of your opponents</span>
-                </li>
-                <li className={`flex items-center gap-3 ${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'}`}>
-                  <FaCheckCircle className="text-green-500" />
-                  <span>The difficulty of problems solved</span>
-                </li>
-              </ul>
-              <p className={`${isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-600'} italic`}>
-                "Consistency is key. Regular participation and steady improvement are rewarded over lucky spikes."
-              </p>
+      {/* Rating Tiers */}
+      <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-4">
+          <FaShieldAlt /> Rating Tiers
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+          {tiers.map(t => (
+            <div key={t.name} className={`border rounded-lg p-3 text-center ${t.cls}`}>
+              <FaMedal className="mx-auto mb-1 text-sm" />
+              <p className="text-xs font-semibold">{t.name}</p>
+              <p className="text-[10px] opacity-70">{t.range}</p>
             </div>
-
-            {/* Rating Tiers Visualization */}
-            <div className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/60' : 'bg-white/90'} rounded-xl p-6 border ${isDark ? 'border-gray-300 dark:border-gray-700' : 'border-gray-200'}`}>
-              <h3 className={`text-xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'} mb-4 text-center`}>
-                Rating Tiers
-              </h3>
-              <div className="space-y-3">
-                {ratingTiers.map((tier, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-500/5 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <FaMedal className={`${tier.color}`} />
-                      <span className={`font-bold ${tier.color}`}>{tier.name}</span>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-mono font-bold ${tier.bg} ${tier.color}`}>
-                      {tier.range}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Call to Action */}
-      <div className="max-w-4xl mx-auto text-center">
-        <div className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700' : 'bg-white border-gray-200'} rounded-2xl p-8 md:p-12 border backdrop-blur-md shadow-xl`}>
-          <FaRocket className={`text-5xl ${isDark ? 'text-blue-400' : 'text-blue-600'} mx-auto mb-4`} />
-          <h2 className={`text-3xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'} mb-4`}>
-            Ready to Compete?
-          </h2>
-          <p className={`text-lg ${isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-600'} mb-8 max-w-2xl mx-auto leading-relaxed`}>
-            Prepare yourself for the ultimate challenge. Practice problems, learn algorithms, and get ready 
-            to make your mark on the leaderboard when the arena opens.
-          </p>
-          <button className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-gray-900 dark:text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg">
-            Start Practicing Now
-          </button>
-        </div>
+      {/* CTA */}
+      <div className="border border-gray-200 dark:border-white/10 rounded-xl p-8 bg-white dark:bg-white/[0.02] text-center">
+        <FaRocket className="text-2xl text-gray-400 mx-auto mb-3" />
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Ready to Compete?</h3>
+        <p className="text-sm text-gray-500 mb-4">Sharpen your skills with practice sets and prepare for your next contest round.</p>
+        <button onClick={() => navigate('/problems')} className="px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold">
+          Start Practicing
+        </button>
       </div>
     </div>
   );
 };
-
-// Helper Icon for the list
-const FaCheckCircle = ({ className }) => (
-  <svg className={`w-5 h-5 ${className}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-);
 
 export default Contest;

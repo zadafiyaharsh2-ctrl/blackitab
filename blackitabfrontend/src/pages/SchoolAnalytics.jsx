@@ -1,192 +1,390 @@
-import { useTheme } from '../context/useTheme';
-import { 
-  FaSchool, 
-  FaChalkboardTeacher, 
-  FaUserGraduate, 
-  FaChartPie, 
-  FaBrain, 
-  FaLock, 
-  FaUsers, 
-  FaExclamationTriangle,
-  FaLightbulb,
-  FaChartLine
+import { useState, useEffect } from 'react';
+import {
+  FaSchool, FaChalkboardTeacher, FaUserGraduate, FaChartPie,
+  FaBrain, FaUsers, FaChartLine, FaSearch, FaSpinner,
+  FaFire, FaTrophy
 } from 'react-icons/fa';
+import axios from 'axios';
+import API from '../config';
 
-const SchoolAnalytics = () => {
-  const { isDark } = useTheme();
+export default function SchoolAnalytics() {
+  const [schoolData, setSchoolData] = useState(null);
+  const [trends, setTrends] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [activeTab, setActiveTab] = useState('overview');
 
-  const features = [
-    {
-      icon: FaUserGraduate,
-      title: 'Student Performance Insights',
-      description: 'Students can see exactly where they stand within their institute. Get your school-wide rank, identify your personal weak topics, and compare your progress with peers to stay motivated.',
-      color: 'blue',
-      gradient: 'from-blue-500 to-cyan-500'
-    },
-    {
-      icon: FaChalkboardTeacher,
-      title: 'Teacher Command Center',
-      description: 'Teachers get a bird\'s-eye view of their entire class. Access detailed analytics for every student, monitor attendance and activity, and understand the collective learning health of each division.',
-      color: 'green',
-      gradient: 'from-green-500 to-emerald-500'
-    },
-    {
-      icon: FaBrain,
-      title: 'ML-Powered Behavior Analysis',
-      description: 'Our advanced Machine Learning algorithms analyze student activity patterns on the platform to understand learning behaviors, focus levels, and engagement, providing deeper insights than just test scores.',
-      color: 'purple',
-      gradient: 'from-purple-500 to-pink-500'
-    },
-    {
-      icon: FaChartPie,
-      title: 'Division-Level Weakness Heatmap',
-      description: 'Identify systemic gaps in understanding. If 60% of Division A is weak in "Schema Design", the system alerts the teacher immediately so they can schedule a revision session or assign targeted homework.',
-      color: 'orange',
-      gradient: 'from-orange-500 to-red-500'
+  const token = localStorage.getItem('token');
+  const headers = { Authorization: `Bearer ${token}` };
+
+  useEffect(() => { fetchAll(); }, []);
+
+  const fetchAll = async () => {
+    try {
+      setLoading(true);
+      const [schoolRes, trendsRes] = await Promise.all([
+        axios.get(`${API}/api/analytics/school`, { headers }),
+        axios.get(`${API}/api/analytics/school/trends`, { headers })
+      ]);
+      setSchoolData(schoolRes.data.data);
+      setTrends(trendsRes.data.data);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load analytics');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  return (
-    <div className="min-h-screen p-6">
-      {/* Coming Soon Banner */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className={`${isDark ? 'bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border-yellow-700/50' : 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-300'} rounded-xl p-4 border backdrop-blur-md text-center`}>
-          <h2 className={`text-2xl md:text-3xl font-bold ${isDark ? 'text-yellow-400' : 'text-yellow-600'} mb-1 flex items-center justify-center gap-2`}>
-            🚀 Coming Soon!
-          </h2>
-          <p className={`${isDark ? 'text-yellow-200' : 'text-yellow-700'} font-medium`}>
-            The School Analytics module is currently under development.
-          </p>
-        </div>
-      </div>
-
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto mb-12">
-        <div className={`${isDark ? 'bg-gradient-to-br from-indigo-900/40 via-blue-900/40 to-cyan-900/40 border-indigo-700/50' : 'bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 border-indigo-200'} rounded-3xl p-8 md:p-12 border backdrop-blur-md shadow-2xl relative overflow-hidden`}>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl"></div>
-          
-          <div className="relative z-10">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="p-4 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl shadow-lg">
-                <FaSchool className="text-4xl text-gray-900 dark:text-white" />
-              </div>
-              <div>
-                <h1 className={`text-4xl md:text-5xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'}`}>
-                  Institutional Analytics
-                </h1>
-                <p className={`text-lg ${isDark ? 'text-indigo-300' : 'text-indigo-600'} font-semibold mt-1`}>
-                  Connecting Classrooms with Data-Driven Insights
-                </p>
-              </div>
-            </div>
-            
-            <p className={`text-xl ${isDark ? 'text-gray-200' : 'text-gray-700'} mb-8 leading-relaxed max-w-4xl`}>
-              A comprehensive ecosystem connecting students, teachers, and institutes. 
-              By using a unique <strong>Institute Code</strong>, we unlock powerful analytics that help 
-              teachers take timely action and students understand their standing in the school.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Access Mechanism */}
-      <div className="max-w-7xl mx-auto mb-12">
-        <div className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700' : 'bg-white border-gray-200'} rounded-2xl p-8 border backdrop-blur-md text-center`}>
-          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mb-4 shadow-lg">
-            <FaLock className="text-2xl text-gray-900 dark:text-white" />
-          </div>
-          <h2 className={`text-2xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'} mb-4`}>
-            Secure Institute Access
-          </h2>
-          <p className={`${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-600'} max-w-2xl mx-auto text-lg`}>
-            Students gain access to their school's private dashboard by entering a unique 
-            <strong> Institute Code</strong> provided by their administration. This links their profile 
-            to their specific division and batch, enabling personalized school-level tracking.
-          </p>
-        </div>
-      </div>
-
-      {/* Main Features Grid */}
-      <div className="max-w-7xl mx-auto mb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <div
-                key={index}
-                className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700' : 'bg-white border-gray-200'} rounded-2xl p-8 border backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] group`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`p-4 rounded-xl bg-gradient-to-br ${feature.gradient} shadow-lg group-hover:scale-110 transition-transform`}>
-                    <Icon className="text-3xl text-gray-900 dark:text-white" />
-                  </div>
-                  <div>
-                    <h3 className={`text-2xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'} mb-3`}>
-                      {feature.title}
-                    </h3>
-                    <p className={`${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'} text-lg leading-relaxed`}>
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Teacher Action Example Section */}
-      <div className="max-w-7xl mx-auto">
-        <div className={`${isDark ? 'bg-gradient-to-r from-red-900/30 to-orange-900/30 border-red-700/50' : 'bg-gradient-to-r from-red-50 to-orange-50 border-red-200'} rounded-2xl p-8 border backdrop-blur-md`}>
-          <div className="flex items-center gap-3 mb-6">
-            <FaLightbulb className="text-3xl text-orange-500" />
-            <h2 className={`text-3xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'}`}>
-              Actionable Insights for Teachers
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div>
-              <p className={`${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'} text-lg mb-6 leading-relaxed`}>
-                We don't just show data; we prompt action. Our system aggregates student performance at the division level 
-                to highlight critical learning gaps that need immediate classroom attention.
-              </p>
-              <ul className="space-y-4">
-                <li className={`flex items-start gap-3 ${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'}`}>
-                  <FaChartLine className="text-green-500 text-xl mt-1" />
-                  <span><strong>Real-time Monitoring:</strong> See which students are active and what topics they are studying right now.</span>
-                </li>
-                <li className={`flex items-start gap-3 ${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-700'}`}>
-                  <FaUsers className="text-blue-500 text-xl mt-1" />
-                  <span><strong>Division Comparison:</strong> Compare performance across different batches (e.g., Div A vs. Div B).</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Example Card */}
-            <div className={`${isDark ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white'} rounded-xl p-6 border ${isDark ? 'border-gray-300 dark:border-gray-700' : 'border-gray-200'} shadow-lg transform rotate-1 hover:rotate-0 transition-transform duration-300`}>
-              <div className="flex items-center gap-2 mb-4 text-red-500 font-bold uppercase text-sm tracking-wide">
-                <FaExclamationTriangle /> Critical Alert
-              </div>
-              <h3 className={`text-xl font-bold ${isDark ? 'text-gray-900 dark:text-white' : 'text-gray-900'} mb-2`}>
-                Topic Weakness Detected: Division A
-              </h3>
-              <div className="w-full bg-gray-200 rounded-full h-4 mb-4 dark:bg-gray-700">
-                <div className="bg-red-500 h-4 rounded-full" style={{ width: '60%' }}></div>
-              </div>
-              <p className={`${isDark ? 'text-gray-700 dark:text-gray-300' : 'text-gray-600'} mb-4`}>
-                <strong>60% of students</strong> in Division A are failing questions related to <strong>"Database Schema Design"</strong>.
-              </p>
-              <button className="w-full py-2 bg-red-500 hover:bg-red-600 text-gray-900 dark:text-white rounded-lg font-semibold transition-colors">
-                Schedule Revision Class
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <FaSpinner className="animate-spin text-2xl text-gray-400" />
     </div>
   );
-};
 
-export default SchoolAnalytics;
+  if (error) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+      <p className="text-red-400 text-sm">{error}</p>
+      <button onClick={fetchAll} className="px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5">Retry</button>
+    </div>
+  );
+
+  if (!schoolData) return null;
+
+  const filteredStudents = schoolData.students.filter(s =>
+    s.name.toLowerCase().includes(search.toLowerCase()) ||
+    s.email.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const topPerformers = [...schoolData.students]
+    .sort((a, b) => b.accuracy - a.accuracy)
+    .slice(0, 5);
+
+  const tabs = ['overview', 'students', 'trends'];
+
+  return (
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <FaSchool className="text-gray-400" />
+            {schoolData.institute.name}
+          </h1>
+          <p className="text-sm text-gray-500 mt-0.5">School performance analytics</p>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border border-gray-200 dark:border-white/10 rounded-lg overflow-hidden w-fit">
+          {tabs.map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 text-sm font-medium capitalize ${
+                activeTab === tab
+                  ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── OVERVIEW TAB ─── */}
+      {activeTab === 'overview' && (
+        <div className="space-y-5">
+
+          {/* Summary cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { icon: <FaUserGraduate />, label: 'Students', value: schoolData.totalStudents },
+              { icon: <FaBrain />, label: 'Avg Accuracy', value: `${schoolData.aggregateStats.avgAccuracy}%` },
+              { icon: <FaChartLine />, label: 'Total Attempts', value: schoolData.aggregateStats.totalAttempts.toLocaleString() },
+              { icon: <FaFire />, label: 'Active This Week', value: schoolData.aggregateStats.activeThisWeek },
+            ].map((card, i) => (
+              <div key={i} className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02]">
+                <p className="text-gray-400 text-sm mb-2">{card.icon}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{card.value}</p>
+                <p className="text-xs text-gray-500 mt-1">{card.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Staff overview */}
+          {schoolData.staffCounts && Object.keys(schoolData.staffCounts).length > 0 && (
+            <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                <FaChalkboardTeacher className="text-gray-400" /> Staff Overview
+              </h3>
+              <div className="flex gap-3 flex-wrap">
+                {Object.entries(schoolData.staffCounts).map(([role, count]) => (
+                  <div key={role} className="border border-gray-200 dark:border-white/10 rounded-lg px-4 py-3 text-center min-w-[80px]">
+                    <p className="text-xl font-bold text-gray-900 dark:text-white">{count}</p>
+                    <p className="text-xs text-gray-500 capitalize mt-0.5">{role.replace('_', ' ')}s</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Division Breakdown */}
+          {schoolData.divisionBreakdown.length > 0 && (
+            <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                <FaChartPie className="text-gray-400" /> Division Performance
+              </h3>
+              <div className="space-y-3">
+                {schoolData.divisionBreakdown.map((d, i) => {
+                  const maxAcc = Math.max(...schoolData.divisionBreakdown.map(x => x.avgAccuracy), 1);
+                  const barWidth = (d.avgAccuracy / maxAcc) * 100;
+                  const barColor = d.avgAccuracy >= 70 ? 'bg-emerald-500' : d.avgAccuracy >= 40 ? 'bg-amber-500' : 'bg-red-500';
+                  return (
+                    <div key={i} className="flex items-center gap-4">
+                      <span className="text-xs font-mono font-semibold text-gray-500 w-16 text-right">{d.division}</span>
+                      <div className="flex-1 bg-gray-100 dark:bg-white/5 rounded-full h-6 overflow-hidden relative">
+                        <div className={`h-full rounded-full ${barColor} opacity-80`} style={{ width: `${barWidth}%` }} />
+                        <span className="absolute inset-0 flex items-center text-xs font-medium pl-3 text-gray-700 dark:text-gray-200">
+                          {d.avgAccuracy}% · {d.studentCount} students
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Top Performers */}
+          {topPerformers.length > 0 && (
+            <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
+              <div className="px-5 py-3 border-b border-gray-100 dark:border-white/5">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <FaTrophy className="text-amber-400" /> Top Performers
+                </h3>
+              </div>
+              <div className="divide-y divide-gray-100 dark:divide-white/5">
+                {topPerformers.map((s, i) => (
+                  <div key={s._id} className="flex items-center gap-3 px-5 py-3">
+                    <span className={`text-sm font-bold w-5 ${i === 0 ? 'text-amber-500' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-orange-400' : 'text-gray-300 dark:text-gray-600'}`}>
+                      {i + 1}
+                    </span>
+                    <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-gray-200 shrink-0">
+                      {s.profileImage ? <img src={s.profileImage} alt="" className="w-full h-full rounded-full object-cover" /> : s.name[0]}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{s.name}</p>
+                      <p className="text-xs text-gray-400">{s.totalAttempts} attempts</p>
+                    </div>
+                    <span className={`text-sm font-bold ${s.accuracy >= 70 ? 'text-emerald-600 dark:text-emerald-400' : s.accuracy >= 40 ? 'text-amber-600 dark:text-amber-400' : 'text-red-500'}`}>
+                      {s.accuracy}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── STUDENTS TAB ─── */}
+      {activeTab === 'students' && (
+        <div className="space-y-4">
+          <div className="relative">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+            <input
+              type="text"
+              placeholder="Search by name or email…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 dark:border-white/10 rounded-lg bg-white dark:bg-white/[0.02] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
+          </div>
+
+          <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 dark:border-white/5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left">#</th>
+                    <th className="px-4 py-3 text-left">Student</th>
+                    <th className="px-3 py-3 text-center">Division</th>
+                    <th className="px-3 py-3 text-center">Batch</th>
+                    <th className="px-3 py-3 text-center">Accuracy</th>
+                    <th className="px-3 py-3 text-center">Attempts</th>
+                    <th className="px-3 py-3 text-center">XP</th>
+                    <th className="px-3 py-3 text-center">Streak</th>
+                    <th className="px-3 py-3 text-center">Topics</th>
+                    <th className="px-3 py-3 text-center">Last Active</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                  {filteredStudents.map((s, i) => (
+                    <tr key={s._id} className="hover:bg-gray-50 dark:hover:bg-white/[0.02]">
+                      <td className="px-4 py-3 text-xs text-gray-400">{i + 1}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center text-xs font-semibold text-gray-600 dark:text-gray-300 shrink-0">
+                            {s.profileImage ? <img src={s.profileImage} alt="" className="w-full h-full rounded-full object-cover" /> : s.name[0]}
+                          </div>
+                          <div>
+                            <p className="text-gray-900 dark:text-white font-medium">{s.name}</p>
+                            <p className="text-gray-400 text-xs">{s.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 text-center text-xs font-mono text-gray-500">{s.division}</td>
+                      <td className="px-3 py-3 text-center text-xs text-gray-500">{s.batchYear}</td>
+                      <td className="px-3 py-3 text-center">
+                        <span className={`text-sm font-semibold ${s.accuracy >= 70 ? 'text-emerald-600 dark:text-emerald-400' : s.accuracy >= 40 ? 'text-amber-600 dark:text-amber-400' : 'text-red-500'}`}>
+                          {s.accuracy}%
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-center text-sm text-gray-700 dark:text-gray-300">{s.totalAttempts}</td>
+                      <td className="px-3 py-3 text-center text-sm text-gray-700 dark:text-gray-300">{s.points?.toLocaleString()}</td>
+                      <td className="px-3 py-3 text-center">
+                        {s.streak > 0
+                          ? <span className="text-orange-500 flex items-center justify-center gap-1 text-xs"><FaFire />{s.streak}</span>
+                          : <span className="text-gray-400 text-xs">0</span>
+                        }
+                      </td>
+                      <td className="px-3 py-3 text-center text-sm text-gray-700 dark:text-gray-300">{s.topicsCompleted}</td>
+                      <td className="px-3 py-3 text-center text-xs text-gray-400">
+                        {s.lastActive ? new Date(s.lastActive).toLocaleDateString() : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {filteredStudents.length === 0 && (
+                <div className="text-center py-12 text-gray-400 text-sm">
+                  <FaUsers className="mx-auto text-3xl mb-3 opacity-30" />
+                  <p>No students found{search ? ' matching your search' : ''}.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── TRENDS TAB ─── */}
+      {activeTab === 'trends' && trends && (
+        <div className="space-y-5">
+
+          {/* Weekly attempt trends */}
+          {trends.weeklyTrends.length > 0 && (
+            <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                <FaChartLine className="text-gray-400" /> Weekly Attempts (Last 8 Weeks)
+              </h3>
+              <div className="flex gap-2 items-end h-32">
+                {trends.weeklyTrends.map((w, i) => {
+                  const maxVal = Math.max(...trends.weeklyTrends.map(x => x.totalAttempts), 1);
+                  const height = (w.totalAttempts / maxVal) * 100;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                      <span className="text-[10px] text-gray-400">{w.totalAttempts}</span>
+                      <div className="w-full flex flex-col-reverse rounded-sm overflow-hidden border border-gray-100 dark:border-white/5" style={{ height: `${Math.max(height, 4)}%` }}>
+                        <div className="bg-blue-500/70" style={{ height: `${w.accuracy}%` }} />
+                        <div className="bg-red-400/30" style={{ height: `${100 - w.accuracy}%` }} />
+                      </div>
+                      <span className="text-[10px] text-gray-400">{w.week}</span>
+                      <span className="text-[10px] text-emerald-500">{w.accuracy}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex gap-4 mt-3 text-xs text-gray-400">
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-blue-500/70 inline-block" /> Correct</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-red-400/30 inline-block" /> Incorrect</span>
+              </div>
+            </div>
+          )}
+
+          {/* Active students per week */}
+          {trends.weeklyTrends.length > 0 && (
+            <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                <FaUsers className="text-gray-400" /> Active Students / Week
+              </h3>
+              <div className="flex gap-2 items-end h-20">
+                {trends.weeklyTrends.map((w, i) => {
+                  const maxActive = Math.max(...trends.weeklyTrends.map(x => x.activeStudents), 1);
+                  const height = (w.activeStudents / maxActive) * 100;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                      <span className="text-[10px] text-gray-400">{w.activeStudents}</span>
+                      <div className="w-full rounded-sm bg-emerald-500/60" style={{ height: `${Math.max(height, 4)}%` }} />
+                      <span className="text-[10px] text-gray-400">{w.week}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Top active this week */}
+          {trends.topActiveThisWeek.length > 0 && (
+            <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
+              <div className="px-5 py-3 border-b border-gray-100 dark:border-white/5">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <FaTrophy className="text-amber-400" /> Top Active This Week
+                </h3>
+              </div>
+              <div className="divide-y divide-gray-100 dark:divide-white/5">
+                {trends.topActiveThisWeek.map((s, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3">
+                    <span className={`text-sm font-bold w-5 ${i === 0 ? 'text-amber-500' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-orange-400' : 'text-gray-300 dark:text-gray-600'}`}>
+                      {i + 1}
+                    </span>
+                    <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center text-xs font-semibold text-gray-600 dark:text-gray-300 shrink-0">
+                      {s.profileImage ? <img src={s.profileImage} alt="" className="w-full h-full rounded-full object-cover" /> : s.name[0]}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{s.name}</p>
+                      <p className="text-xs text-gray-400">{s.attempts} attempts</p>
+                    </div>
+                    <span className={`text-sm font-bold ${s.accuracy >= 70 ? 'text-emerald-600 dark:text-emerald-400' : s.accuracy >= 40 ? 'text-amber-600 dark:text-amber-400' : 'text-red-500'}`}>
+                      {s.accuracy}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* New signups */}
+          {trends.newStudentsPerWeek.length > 0 && (
+            <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                <FaUserGraduate className="text-gray-400" /> New Student Signups
+              </h3>
+              <div className="flex gap-2 items-end h-16">
+                {trends.newStudentsPerWeek.map((w, i) => {
+                  const maxNew = Math.max(...trends.newStudentsPerWeek.map(x => x.count), 1);
+                  const height = (w.count / maxNew) * 100;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                      <span className="text-[10px] text-emerald-500">{w.count}</span>
+                      <div className="w-full rounded-sm bg-emerald-500/50" style={{ height: `${Math.max(height, 8)}%` }} />
+                      <span className="text-[10px] text-gray-400">{w.week}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {trends.weeklyTrends.length === 0 && trends.topActiveThisWeek.length === 0 && (
+            <div className="text-center py-16 border border-dashed border-gray-200 dark:border-white/10 rounded-xl">
+              <FaChartLine className="mx-auto text-3xl text-gray-300 dark:text-gray-600 mb-3" />
+              <p className="text-gray-400 text-sm">No trend data yet. Trends appear once students start solving questions.</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

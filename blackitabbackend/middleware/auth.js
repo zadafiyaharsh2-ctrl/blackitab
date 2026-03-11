@@ -28,8 +28,8 @@ const authMiddleware = async (req, res, next) => {
         req.user = user;
         next();
     } catch (error) {
-        console.error('Auth middleware error:', error);
-        res.status(500).json({ success: false, message: 'Authentication error', error: error.message });
+
+        res.status(500).json({ success: false, message: 'Authentication error' });
     }
 };
 

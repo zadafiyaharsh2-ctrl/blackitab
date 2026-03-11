@@ -13,6 +13,9 @@ router.get('/user/:id', socialController.getUserProfile);
 // Notifications
 router.get('/notifications', socialController.getNotifications);
 router.get('/notifications/unread-count', socialController.getUnreadNotificationCount);
+router.put('/notifications/:id/read', socialController.markNotificationAsRead);
+router.delete('/notifications/:id', socialController.deleteNotification);
+router.delete('/notifications', socialController.clearAllNotifications);
 
 // Follow/Unfollow
 router.post('/follow/:id', socialController.followUser);

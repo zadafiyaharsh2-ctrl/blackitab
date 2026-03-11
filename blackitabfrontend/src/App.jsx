@@ -41,25 +41,38 @@ import Contest from './pages/Contest';
 import ProblemChapters from './pages/ProblemChapters';
 import ProblemList from './pages/ProblemList';
 import ProblemDetail from './pages/ProblemDetail';
-import Store from './pages/Store';
-import Jobs from './pages/Jobs';
 import Profile from './pages/Profile';
 import LandingPage from './pages/LandingPage';
 import Theory from './pages/Theory';
-import Projects from './pages/Projects';
 import SocialListPage from './pages/SocialListPage';
 import Messages from './pages/Messages';
 import Notifications from './pages/Notifications';
 import CreatePost from './pages/CreatePost';
 import StudyContent from './pages/StudyContent';
 import ContentDetail from './pages/ContentDetail';
-import PlaylistList from './pages/PlaylistList';
-import PlaylistDetail from './pages/PlaylistDetail';
-import Earnings from './pages/Earnings';
-import AIQuestionGenerator from './pages/AIQuestionGenerator';
 import ExamQuestions from './pages/ExamQuestions';
 import Leaderboard from './pages/Leaderboard';
 import Onboarding from './pages/Onboarding';
+import TeacherDashboard from './pages/TeacherDashboard';
+import QuestionManagement from './pages/QuestionManagement';
+import TeacherBatches from './pages/TeacherBatches';
+import TeacherBatchDetail from './pages/TeacherBatchDetail';
+import StudentClasses from './pages/StudentClasses';
+
+// Imported Institute Pages
+import InstituteDashboard from './pages/institute/InstituteDashboard';
+import InstituteProfile from './pages/institute/InstituteProfile';
+import InstituteDepartments from './pages/institute/InstituteDepartments';
+import TeacherPanel from './pages/institute/TeacherPanel';
+import StudentPanel from './pages/institute/StudentPanel';
+import TheoryChecking from './pages/institute/TheoryChecking';
+import QuestionChecker from './pages/institute/QuestionChecker';
+import JoinRequestsPanel from './pages/institute/JoinRequestsPanel';
+import InstituteNotifications from './pages/institute/InstituteNotifications';
+
+import TeacherAttendance from './pages/TeacherAttendance';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
 // ============================================================================
 // IMPORT COMPONENTS
 // ============================================================================
@@ -127,9 +140,17 @@ function App() {
       <Toaster
         position="bottom-right"
         toastOptions={{
-          style: { background: '#1a1a1a', color: '#fff', borderRadius: '10px', border: '1px solid #333' },
-          success: { iconTheme: { primary: '#22c55e', secondary: '#fff' } },
-          error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } }
+          className: 'dark:bg-gray-800/90 bg-white/90 backdrop-blur-md dark:text-white text-gray-900 shadow-xl border dark:border-gray-700/50 border-gray-200/50',
+          duration: 4000,
+          style: {
+            borderRadius: '12px',
+          },
+          success: {
+            iconTheme: { primary: '#10b981', secondary: '#fff' },
+          },
+          error: {
+            iconTheme: { primary: '#ef4444', secondary: '#fff' },
+          },
         }}
       />
       {/* BrowserRouter enables URL-based routing */}
@@ -232,11 +253,11 @@ function App() {
               }
             />
 
-            {/* School Analytics */}
+            {/* School Analytics — teacher/hod/institute only */}
             <Route
               path="/school-analytics"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <SchoolAnalytics />
                   </MainLayout>
@@ -290,13 +311,13 @@ function App() {
               }
             />
 
-            {/* AI Question Generator */}
+            {/* Question Management (Consolidated Page) */}
             <Route
-              path="/ai-questions"
+              path="/question-management"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <AIQuestionGenerator />
+                    <QuestionManagement />
                   </MainLayout>
                 </ProtectedRoute>
               }
@@ -350,37 +371,13 @@ function App() {
               }
             />
 
-            {/* Online Projects */}
+            {/* Theory Subject Page (Dynamic Route) */}
             <Route
-              path="/ide"
+              path="/theory/:subjectId"
               element={
                 <ProtectedRoute>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Projects />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Store / Marketplace */}
-            <Route
-              path="/store"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Store />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Job Board */}
-            <Route
-              path="/jobs"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Jobs />
+                    <Theory />
                   </MainLayout>
                 </ProtectedRoute>
               }
@@ -464,6 +461,66 @@ function App() {
               }
             />
 
+            {/* Student Classes Page */}
+            <Route
+              path="/student/classes"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <StudentClasses />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Batches / Classrooms Route */}
+            <Route
+              path="/teacher/batches"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherBatches />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Batch Detail / Classroom Management Route */}
+            <Route
+              path="/teacher/batch/:batchId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherBatchDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Attendance Route */}
+            <Route
+              path="/teacher/attendance"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherAttendance />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Attendance Route */}
+            <Route
+              path="/teacher/attendance"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherAttendance />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
             {/* Study Content Route */}
             <Route
               path="/study-content"
@@ -476,39 +533,7 @@ function App() {
               }
             />
 
-            {/* Playlist Routes */}
-            <Route
-              path="/playlists"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <PlaylistList />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/playlist/:id"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <PlaylistDetail />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
             {/* Individual Content Detail Route */}
-            <Route
-              path="/earnings"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Earnings />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
             <Route
               path="/content/:contentId"
               element={
@@ -530,6 +555,69 @@ function App() {
               }
 
             />
+
+            {/* ===== ROLE-BASED ROUTES ===== */}
+
+            {/* Teacher / HOD Dashboard */}
+            <Route
+              path="/teacher-dashboard"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherDashboard />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* (Old Routes Removed: CreateExamQuestion and MyQuestions) */}
+
+
+            {/* Institute Profile — accessible to all authenticated users (students see read-only) */}
+            <Route
+              path="/institute-view"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <InstituteProfile />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ===== INSTITUTE ROUTES ===== */}
+            {/* All /institute/* routes now use the shared MainLayout + Sidebar */}
+            <Route path="/institute/dashboard"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteDashboard /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/profile"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteProfile /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/departments"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteDepartments /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/teachers"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TeacherPanel /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/students"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><StudentPanel /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/theory"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TheoryChecking /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/questions"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><QuestionChecker /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/join-requests"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><JoinRequestsPanel /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/notifications"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteNotifications /></MainLayout></ProtectedRoute>}
+            />
+
+            {/* System Admin — separate layout (no sidebar) */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
             {/* 404 — catch all unknown routes */}
             <Route path="*" element={
@@ -561,56 +649,54 @@ function App() {
  * - sidebarOpen, setSidebarOpen: Controls sidebar state
  * - onLogout: Function to handle logout action
  */
-// Import Social Sidebar
-import SocialSidebar from './components/SocialSidebar';
+
+import FloatingSocialButton from './components/FloatingSocialButton';
+import NotificationBell from './components/NotificationBell';
 
 function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
-  // Determine if we are in a Social context
   const location = useLocation();
-  const isSocial = ['/social', '/profile', '/network', '/messages', '/earnings', '/create-post', '/playlists', '/playlist', '/notifications'].some(path => location.pathname.startsWith(path));
 
-  // State for Social Sidebar (independent toggle)
-  const [socialSidebarOpen, setSocialSidebarOpen] = useState(true);
+  // Track last visited page for "Resume Last Session" on Dashboard
+  useEffect(() => {
+    const skip = ['/dashboard', '/login', '/signup', '/onboarding', '/admin'];
+    if (!skip.some(p => location.pathname.startsWith(p))) {
+      const pageNames = {
+        '/problems': 'Practice Problems', '/theory': 'Theory', '/social': 'Social Feed',
+        '/analytics': 'Analytics', '/contest': 'Contest', '/ask-ai': 'AI Assistant',
+        '/leaderboard': 'Leaderboard', '/profile': 'Profile', '/messages': 'Messages',
+        '/teacher-dashboard': 'Teacher Dashboard', '/question-paper': 'Question Paper',
+        '/institute': 'Institute Panel', '/school-analytics': 'School Analytics',
+        '/question-management': 'Question Bank', '/notifications': 'Notifications'
+      };
+      const label = Object.entries(pageNames).find(([k]) => location.pathname.startsWith(k));
+      if (label) {
+        localStorage.setItem('blackitab_last_page', JSON.stringify({ path: location.pathname, label: label[1], time: Date.now() }));
+      }
+    }
+  }, [location.pathname]);
 
-  // If user is not passed as prop, try to get from localStorage (fallback)
-  const currentUser = user || JSON.parse(localStorage.getItem('user') || '{}');
-
-  // Calculate Layout Dimensions
-  const mainSidebarWidth = sidebarOpen ? '16rem' : '4rem'; // w-64 vs w-16
-  const socialSidebarWidth = socialSidebarOpen ? '16rem' : '4rem';
+  const activeSidebarWidth = sidebarOpen ? '16rem' : '4rem';
 
   return (
     <div className="min-h-screen flex bg-gray-50 dark:bg-black text-gray-900 dark:text-white transition-colors duration-300">
-      {/* 1. Main Sidebar - ALWAYS VISIBLE, FIXED LEFT */}
-      {/* Ensure z-50 to be on top */}
+      {/* Main Sidebar — Always present */}
       <div className="z-50">
         <Sidebar onLogout={onLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       </div>
 
-      {/* 2. Social Sidebar - RENDER ONLY IF SOCIAL, POSITIONED NEXT TO MAIN */}
-      {/* Animate presence could be added here later, for now conditional rendering */}
-      {isSocial && (
-        <SocialSidebar
-          onLogout={onLogout}
-          isOpen={socialSidebarOpen}
-          setIsOpen={setSocialSidebarOpen}
-          user={currentUser}
-          leftOffset={mainSidebarWidth} // Position it right after Main Sidebar
-        />
-      )}
-
-      {/* 3. Main Content Area */}
-      {/* Margin Left = Main Sidebar Width + (Social Sidebar Width if visible) */}
+      {/* Main Content Area */}
       <div
         className={`flex-1 transition-all duration-300 ${location.pathname.startsWith('/messages') ? '' : 'p-6'}`}
-        style={{
-          marginLeft: isSocial
-            ? `calc(${mainSidebarWidth} + ${socialSidebarWidth})`
-            : mainSidebarWidth
-        }}
+        style={{ marginLeft: activeSidebarWidth }}
       >
         {children}
       </div>
+
+      {/* Floating Social Button — Bottom Right */}
+      <FloatingSocialButton />
+
+      {/* Notification Bell — Top Right (hidden on profile pages) */}
+      {!location.pathname.startsWith('/profile') && <NotificationBell />}
     </div>
   );
 }

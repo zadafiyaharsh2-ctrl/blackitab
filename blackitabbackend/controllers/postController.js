@@ -85,7 +85,7 @@ exports.createPost = async (req, res) => {
 
         res.status(201).json({ success: true, post: newPost });
     } catch (error) {
-        console.error('Create post error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -115,10 +115,10 @@ exports.getUserPosts = async (req, res) => {
 
         // Privacy: only show posts if public, self, or accepted follower
         if (targetUser.isPrivate && req.params.userId !== req.user._id.toString()) {
-            const isFollowing = await require('../models/FollowerList').exists({
-                userId: req.params.userId,
-                followerId: req.user._id,
-                status: 'accepted'
+            const isFollowing = await require('../models/Connection').exists({
+                sourceUserId: req.user._id,
+                targetUserId: req.params.userId,
+                connectionType: 'follow'
             });
 
             if (!isFollowing) {
@@ -133,7 +133,7 @@ exports.getUserPosts = async (req, res) => {
 
         res.json({ success: true, data: posts });
     } catch (err) {
-        console.error('Error fetching user posts:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -157,7 +157,7 @@ exports.deletePost = async (req, res) => {
         await post.deleteOne();
         res.json({ success: true, message: 'Post removed' });
     } catch (err) {
-        console.error('Error deleting post:', err);
+        
         if (err.kind === 'ObjectId') return res.status(404).json({ success: false, message: 'Post not found' });
         res.status(500).json({ success: false, message: 'Server Error' });
     }
@@ -177,7 +177,7 @@ exports.likePost = async (req, res) => {
         await post.save();
         res.json({ success: true, likes: post.likes });
     } catch (err) {
-        console.error('Like error:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -196,7 +196,7 @@ exports.unlikePost = async (req, res) => {
         await post.save();
         res.json({ success: true, likes: post.likes });
     } catch (err) {
-        console.error('Unlike error:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -214,14 +214,17 @@ exports.addComment = async (req, res) => {
         await post.save();
         await post.populate('comments.user', 'name profileImage');
 
-        // Real-time comment event
-        if (req.io) {
-            req.io.emit('new_comment', { postId: post._id, comment: post.comments[0] });
+        // Real-time comment event - broadcast to anyone viewing the post (could be enhanced with room per post)
+        const socketService = req.app.get('socketService');
+        // Currently there is no "post room", so emitting globally or we can skip this until rooms per post are added
+        // Alternatively, if we just want to notify post owner:
+        if (socketService) {
+            socketService.emitToUser(post.user.toString(), 'new_comment', { postId: post._id, comment: post.comments[0] });
         }
 
         res.json({ success: true, comments: post.comments });
     } catch (err) {
-        console.error('Add comment error:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -243,7 +246,7 @@ exports.deleteComment = async (req, res) => {
         await post.save();
         res.json({ success: true, comments: post.comments });
     } catch (err) {
-        console.error('Delete comment error:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -258,7 +261,7 @@ exports.getStudyContent = async (req, res) => {
 
         res.json({ success: true, data: studyContent });
     } catch (err) {
-        console.error('Get study content error:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -273,7 +276,7 @@ exports.getPaidContent = async (req, res) => {
 
         res.json({ success: true, data: posts });
     } catch (error) {
-        console.error('Fetch paid content error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -289,8 +292,8 @@ exports.getContentById = async (req, res) => {
 
         let isFollowing = false;
         if (req.user && content.user) {
-            const FollowerList = require('../models/FollowerList');
-            const exists = await FollowerList.exists({ userId: content.user._id, followerId: req.user._id });
+            const Connection = require('../models/Connection');
+            const exists = await Connection.exists({ sourceUserId: req.user._id, targetUserId: content.user._id, connectionType: 'follow' });
             isFollowing = !!exists;
         }
 
@@ -299,7 +302,7 @@ exports.getContentById = async (req, res) => {
 
         res.json({ success: true, data: { ...content.toObject(), isFollowing } });
     } catch (err) {
-        console.error('Get content by ID error:', err);
+        
         if (err.kind === 'ObjectId') return res.status(404).json({ success: false, message: 'Content not found' });
         res.status(500).json({ success: false, message: 'Server Error' });
     }
@@ -318,7 +321,7 @@ exports.getRecentVideos = async (req, res) => {
 
         res.json({ success: true, data: videos });
     } catch (error) {
-        console.error('Fetch recent videos error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -345,7 +348,7 @@ exports.likeComment = async (req, res) => {
         await post.save();
         res.json({ success: true, liked: !alreadyLiked, likeCount: comment.likes.length });
     } catch (err) {
-        console.error('Like comment error:', err);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

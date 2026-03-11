@@ -1,12 +1,25 @@
 import { Navigate } from 'react-router-dom';
 
+const ROLE_HOME = {
+  student: '/dashboard',
+  teacher: '/teacher-dashboard',
+  hod: '/teacher-dashboard',
+  institute_admin: '/institute/dashboard',
+  institute: '/institute/dashboard',
+};
+
 const PublicRoute = ({ children }) => {
   const token = localStorage.getItem('token');
-  const user = localStorage.getItem('user');
+  const userData = localStorage.getItem('user');
 
-  // If user is already logged in, redirect to dashboard
-  if (token && user) {
-    return <Navigate to="/dashboard" replace />;
+  // If user is already logged in, redirect to their role-appropriate page
+  if (token && userData) {
+    try {
+      const user = JSON.parse(userData);
+      return <Navigate to={ROLE_HOME[user.role] || '/dashboard'} replace />;
+    } catch {
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   return children;

@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema({
   streak: { type: Number, default: 0 },
   lastActiveDate: { type: Date },
   points: { type: Number, default: 0 },
+  xp: { type: Number, default: 0 },
 
   // Social metrics
   followerCount: { type: Number, default: 0 },
@@ -51,8 +52,65 @@ const userSchema = new mongoose.Schema({
   profileImage: {
     type: String,
     default: ''
-  }
-});
+  },
+
+  // --- HIERARCHY & ROLES ---
+  role: {
+    type: String,
+    enum: ['student', 'teacher', 'hod', 'institute'],
+    default: 'student'
+  },
+  instituteId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Institute',
+    default: null
+  },
+  instituteCode: {
+    type: String,
+    default: '',
+    uppercase: true,
+    trim: true
+  },
+  batchYear: { type: String },
+  division: { type: String },
+  reportsToUser: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  departments: [{
+    type: String,
+    trim: true
+  }],
+
+  // --- TEACHER-SPECIFIC FIELDS ---
+  departmentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Department',
+    default: null
+  },
+  specialization: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  teacherSince: {
+    type: Date,
+    default: null
+  },
+  teacherRating: {
+    score: { type: Number, default: 0 },
+    totalReviews: { type: Number, default: 0 }
+  },
+
+  // --- MASSIVE SCALE METRICS ---
+  globalRank: { type: Number, default: 0 },
+  longestStreak: { type: Number, default: 0 },
+  rating: { type: Number, default: 0 }, // Percentile rating (0-100)
+
+  // --- MODERATION ---
+  isBanned: { type: Boolean, default: false }
+}, { strict: false });
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {

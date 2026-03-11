@@ -1,5 +1,5 @@
 const axios = require('axios');
-const ExamQuestion = require('../models/ExamQuestion');
+const QuestionGenerated = require('../models/QuestionGenerated');
 
 const LANGCHAIN_API_URL = process.env.LANGCHAIN_API_URL || 'http://127.0.0.1:8000/query';
 
@@ -21,7 +21,6 @@ const generateQuestions = async (req, res) => {
         const questionCount = Math.min(Math.max(parseInt(count) || 5, 1), 20);
         const validDifficulty = ['Easy', 'Medium', 'Hard'].includes(difficulty) ? difficulty : 'Medium';
 
-        console.log(`Generating ${questionCount} ${validDifficulty} questions on "${topic}" for exam "${exam}"`);
 
         const prompt = `
         You are an expert exam setter. Create a ${validDifficulty} difficulty multiple-choice quiz about "${topic}".
@@ -55,13 +54,12 @@ const generateQuestions = async (req, res) => {
 
         let quizData;
         try {
-            console.log('Sending prompt to AI...', { url: LANGCHAIN_API_URL });
+
             const response = await axios.post(LANGCHAIN_API_URL, {
                 query: prompt,
                 top_k: 3
             }, { timeout: 120000 });
 
-            console.log('AI Service Response Status:', response.status);
 
             const aiText = response.data.answer || response.data.response || '';
 
@@ -69,13 +67,12 @@ const generateQuestions = async (req, res) => {
                 throw new Error('Empty response from AI service');
             }
 
-            console.log('AI Raw Text Response length:', aiText.length);
 
             const jsonStartIndex = aiText.indexOf('{');
             const jsonEndIndex = aiText.lastIndexOf('}');
 
             if (jsonStartIndex === -1 || jsonEndIndex === -1) {
-                console.error('AI Response (Failure):', aiText);
+
                 throw new Error('AI did not return a valid JSON object');
             }
 
@@ -87,20 +84,19 @@ const generateQuestions = async (req, res) => {
                 else if (parsed.data) quizData = parsed.data;
                 else quizData = parsed;
             } catch (parseError) {
-                console.error('JSON Parse Error:', parseError);
-                console.error('Failed JSON String:', jsonString);
+
+
                 throw new Error('Failed to parse AI response as JSON');
             }
 
         } catch (apiError) {
-            console.error('AI Service Error:', apiError.message);
+
             if (apiError.response) {
-                console.error('AI Error Data:', apiError.response.data);
+
             }
             return res.status(503).json({
                 success: false,
-                message: 'AI service unavailable or failed to generate valid JSON. Please try again.',
-                error: apiError.message
+                message: 'AI service unavailable or failed to generate valid JSON. Please try again.'
             });
         }
 
@@ -113,7 +109,7 @@ const generateQuestions = async (req, res) => {
         }
 
         if (questionsList.length === 0) {
-            console.error('Invalid Quiz Data Structure:', quizData);
+
             return res.status(500).json({ success: false, message: 'AI returned an empty or invalid quiz format.' });
         }
 
@@ -136,10 +132,9 @@ const generateQuestions = async (req, res) => {
             }
         });
 
-        console.log(`Successfully parsed ${validatedQuestions.length} questions`);
 
-        // Save each question as an individual ExamQuestion document
-        const savedQuestions = await ExamQuestion.insertMany(
+        // Save each question as an individual QuestionGenerated document
+        const savedQuestions = await QuestionGenerated.insertMany(
             validatedQuestions.map(q => ({
                 exam: exam,
                 subject: topic.trim(),
@@ -148,11 +143,14 @@ const generateQuestions = async (req, res) => {
                 correctAnswer: q.correctAnswer,
                 difficulty: validDifficulty,
                 explanation: q.explanation,
-                isAiGenerated: true
+                isAiGenerated: true,
+                createdBy: req.user._id,
+                instituteId: req.user.instituteId || null,
+                visibility: 'public',
+                isPublic: true
             }))
         );
 
-        console.log(`Saved ${savedQuestions.length} questions to ExamQuestion for exam "${exam}"`);
 
         res.json({
             success: true,
@@ -165,8 +163,8 @@ const generateQuestions = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Generate Questions Global Error:', error);
-        res.status(500).json({ success: false, message: 'Failed to generate questions', error: error.message });
+        
+        res.status(500).json({ success: false, message: 'Failed to generate questions' });
     }
 };
 

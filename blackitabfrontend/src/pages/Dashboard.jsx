@@ -1,459 +1,450 @@
-/**
- * ============================================================================
- * DASHBOARD PAGE (Dashboard.jsx)
- * ============================================================================
- * 
- * The main landing page for logged-in users.
- * Displays:
- * 1. Introduction with User Name
- * 2. Key Stats (Topics Completed, Streak, Points, Rank)
- * 3. Daily Motivation Quote
- * 4. Heatmap of Activity (Progress)
- * 5. Quick Actions for Navigation
- * 6. Dynamic Subject Progress bars
- * 
- * Uses a Bento Grid layout for responsive design.
- */
-
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   FaBook, FaCode, FaTrophy, FaFire, FaChartLine,
-  FaClock, FaArrowRight, FaCheckCircle, FaDatabase,
-  FaLaptopCode, FaCloud, FaQuoteLeft, FaCalendarAlt, FaListUl
+  FaArrowRight, FaCheckCircle, FaDatabase,
+  FaLaptopCode, FaCloud, FaCalendarAlt,
+  FaCrown, FaPercent, FaBolt, FaHistory,
+  FaUserGraduate, FaUsers, FaTimes, FaSpinner
 } from 'react-icons/fa';
 import { MdReportProblem } from 'react-icons/md';
-import ActivityHeatmap from '../components/ActivityHeatmap'; // Custom Heatmap Component
-import PlaylistCard from '../components/PlaylistCard'; // Import PlaylistCard
+import ActivityHeatmap from '../components/ActivityHeatmap';
+import PlaylistCard from '../components/PlaylistCard';
 import API_URL from '../config';
 import usePageTitle from '../hooks/usePageTitle';
 
+const getMasteryLevel = (pct) => {
+  if (pct >= 80) return { label: 'Expert',       cls: 'text-purple-600 dark:text-purple-400' };
+  if (pct >= 50) return { label: 'Advanced',     cls: 'text-blue-600 dark:text-blue-400' };
+  if (pct >= 20) return { label: 'Intermediate', cls: 'text-amber-600 dark:text-amber-400' };
+  return                 { label: 'Beginner',    cls: 'text-gray-500' };
+};
+
+const timeAgo = (dateStr) => {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+};
+
+const FALLBACK_PROGRESS = { totalCompleted: 0, bySubject: [], streak: 0, longestStreak: 0, totalPoints: 0, rank: 'Unranked', percentile: 0, recentActivity: [] };
 
 const Dashboard = () => {
   usePageTitle('Dashboard');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      if (u.role === 'teacher' || u.role === 'hod') navigate('/teacher-dashboard', { replace: true });
+      else if (u.role === 'institute_admin' || u.role === 'institute') navigate('/institute/dashboard', { replace: true });
+    } catch {}
+  }, [navigate]);
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // Data State
   const [subjects, setSubjects] = useState([]);
-  const [playlists, setPlaylists] = useState([]); // State for playlists
-  const [progressStats, setProgressStats] = useState({
-    totalCompleted: 0,
-    bySubject: []
-  });
+  const [playlists, setPlaylists] = useState([]);
+  const [progressStats, setProgressStats] = useState({ totalCompleted: 0, bySubject: [] });
+  const [stats, setStats] = useState({ streak: 0, longestStreak: 0, totalPoints: 0, rank: 'Unranked', percentile: 0 });
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [nextContest, setNextContest] = useState({ title: 'Weekly Challenge #14', date: 'Sat, Mar 8 · 3:00 PM', link: '/contest' });
+  const [problemOfTheDay, setProblemOfTheDay] = useState({ title: 'Find the second highest salary using SQL', difficulty: 'Medium', topic: 'SQL', link: '/problems' });
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [classCodeInput, setClassCodeInput] = useState('');
+  const [joiningClass, setJoiningClass] = useState(false);
+  const [joinedBatchCount, setJoinedBatchCount] = useState(0);
 
-  const [stats, setStats] = useState({
-    streak: 0,
-    totalPoints: 0,
-    rank: 'Loading...'
-  });
-
-  const [quote, setQuote] = useState({ text: '', author: '' });
-
-  // Static Data (Static for now, could be dynamic in future)
-  const quotes = [
-    { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
-    { text: "Code is like humor. When you have to explain it, it’s bad.", author: "Cory House" },
-    { text: "First, solve the problem. Then, write the code.", author: "John Johnson" },
-    { text: "Experience is the name everyone gives to their mistakes.", author: "Oscar Wilde" },
-    { text: "Java is to JavaScript what car is to Carpet.", author: "Chris Heilmann" }
-  ];
-
-  const nextContest = {
-    title: "Bi-Weekly Contest #12",
-    date: "Tomorrow, 8:00 PM",
-    participants: 530,
-    link: "/contest"
-  };
-
-  const problemOfTheDay = {
-    title: "Merge K Sorted Lists",
-    difficulty: "Hard",
-    topic: "Linked List",
-    link: "/problems"
-  };
-
-  /**
-   * DATA FETCHING
-   * Runs on component mount.
-   */
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. Get User Info from LocalStorage
         const userData = localStorage.getItem('user');
         const token = localStorage.getItem('token');
+        if (userData) setUser(JSON.parse(userData));
 
-        if (userData) {
-          setUser(JSON.parse(userData));
-        }
+        try {
+          const res = await axios.get(`${API_URL}/api/subjects`);
+          if (res.data.success && res.data.data.length > 0) setSubjects(res.data.data);
+        } catch {}
 
-        // 2. Fetch Subjects List
-        const subjectsRes = await axios.get(`${API_URL}/api/subjects`);
-        if (subjectsRes.data.success) {
-          setSubjects(subjectsRes.data.data);
-        }
+        setPlaylists([]);
 
-        // 3. Fetch Playlists (New)
-        const playlistsRes = await axios.get(`${API_URL}/api/playlists/all`);
-        if (playlistsRes.data.success) {
-          setPlaylists(playlistsRes.data.playlists);
-        }
-
-        // 4. Fetch User Progress (Auth required)
         if (token) {
-          const progressRes = await axios.get(`${API_URL}/api/progress/stats`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (progressRes.data.success) {
-            setProgressStats(progressRes.data.data);
-            setStats({
-              streak: progressRes.data.data.streak || 0,
-              totalPoints: progressRes.data.data.totalPoints || 0,
-              rank: progressRes.data.data.rank || 'Unranked'
-            });
+          try {
+            const res = await axios.get(`${API_URL}/api/progress/stats`, { headers: { Authorization: `Bearer ${token}` } });
+            if (res.data.success) {
+              const d = res.data.data;
+              setProgressStats(d);
+              setStats({ streak: d.streak || 0, longestStreak: d.longestStreak || 0, totalPoints: d.totalPoints || 0, rank: d.rank || 'Unranked', percentile: d.percentile || 0 });
+              setRecentActivity(d.recentActivity || []);
+            }
+          } catch {
+            setProgressStats(FALLBACK_PROGRESS);
+            setStats({ streak: 0, longestStreak: 0, totalPoints: 0, rank: 'Unranked', percentile: 0 });
           }
         }
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
 
+        try {
+          const res = await axios.get(`${API_URL}/api/problems/daily`);
+          if (res.data.success && res.data.data) {
+            const d = res.data.data;
+            setProblemOfTheDay({ title: d.question || 'Practice Challenge', difficulty: d.difficulty || 'Medium', topic: d.subject || '', link: '/problems' });
+          }
+        } catch {}
+
+        try {
+          const res = await axios.get(`${API_URL}/api/contests/upcoming`);
+          if (res.data.success && res.data.data?.length > 0) {
+            const c = res.data.data[0];
+            const date = new Date(c.startTime);
+            const isToday = date.toDateString() === new Date().toDateString();
+            const isTomorrow = date.toDateString() === new Date(Date.now() + 86400000).toDateString();
+            const dateStr = isToday ? `Today, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` :
+                           isTomorrow ? `Tomorrow, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` :
+                           date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            setNextContest({ title: c.title, date: dateStr, link: '/contest' });
+          }
+        } catch {}
+
+        try {
+          const res = await axios.get(`${API_URL}/api/user/batches`, { headers: { Authorization: `Bearer ${token}` } });
+          if (res.data.success) setJoinedBatchCount(res.data.data.length);
+        } catch {}
+
+      } catch {}
+      finally { setLoading(false); }
+    };
     fetchData();
+  }, []);
 
-    // Pick a random quote
-    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-    setQuote(randomQuote);
-  }, []); // Empty dependency array = runs once
+  const totalTopics = subjects.reduce((sum, s) => sum + (s.topicCount || 0), 0);
 
-  // ============================================================================
-  // DISPLAY LOGIC
-  // ============================================================================
-
-  // Configuration for Stats Cards (Top Row)
-  const statsCards = [
-    {
-      title: 'Topics Completed',
-      value: progressStats.totalCompleted,
-      icon: FaCheckCircle,
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-600'
-    },
-    {
-      title: 'Current Streak',
-      value: `${stats.streak} days`,
-      icon: FaFire,
-      color: 'from-orange-500 to-red-600',
-      bgColor: 'bg-orange-50',
-      textColor: 'text-orange-600'
-    },
-    {
-      title: 'Total Points',
-      value: stats.totalPoints,
-      icon: FaTrophy,
-      color: 'from-yellow-500 to-yellow-600',
-      bgColor: 'bg-yellow-50',
-      textColor: 'text-yellow-600'
-    },
-    {
-      title: 'Rank',
-      value: stats.rank,
-      icon: FaChartLine,
-      color: 'from-purple-500 to-purple-600',
-      bgColor: 'bg-purple-50',
-      textColor: 'text-purple-600'
-    }
-  ];
-
-  // Quick Action Buttons Conf
-  const quickActions = [
-    {
-      title: 'Theory',
-      description: 'Learn DBMS, SQL, CCBDI',
-      icon: FaBook,
-      link: '/theory',
-      color: 'from-indigo-500 to-indigo-600'
-    },
-    {
-      title: 'Practice Problems',
-      description: 'Solve coding challenges',
-      icon: MdReportProblem,
-      link: '/problems',
-      color: 'from-green-500 to-green-600'
-    },
-    {
-      title: 'Projects',
-      description: 'Code online',
-      icon: FaLaptopCode,
-      link: '/ide',
-      color: 'from-pink-500 to-pink-600'
-    },
-    {
-      title: 'Analytics',
-      description: 'Track your progress',
-      icon: FaChartLine,
-      link: '/analytics',
-      color: 'from-cyan-500 to-cyan-600'
-    }
-  ];
-
-  // Calculate Progress Percentages for each subject
   const recentSubjects = subjects.map(subject => {
-    // Find progress for this subject
-    const subjectProgress = progressStats.bySubject.find(s => s._id === subject._id);
-    const completed = subjectProgress ? subjectProgress.totalCompleted : 0;
+    const sp = progressStats.bySubject?.find(s => s._id === subject._id);
+    const completed = sp ? sp.totalCompleted : 0;
     const total = subject.topicCount || 0;
-    // Math to get percentage (handle divide by zero)
-    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-    // Default styling
-    let icon = FaBook;
-    let color = 'text-gray-600';
-    let barColor = 'from-gray-500 to-gray-600';
-
-    // Custom styling per subject name
-    if (subject.name === 'DBMS') {
-      icon = FaDatabase;
-      color = 'text-blue-600';
-      barColor = 'from-blue-500 to-blue-600';
-    } else if (subject.name === 'SQL') {
-      icon = FaCode;
-      color = 'text-green-600';
-      barColor = 'from-green-500 to-green-600';
-    } else if (subject.name === 'CCBDI') {
-      icon = FaCloud;
-      color = 'text-purple-600';
-      barColor = 'from-purple-500 to-purple-600';
-    }
-
-    return {
-      name: subject.name,
-      icon,
-      progress: percentage,
-      completed,
-      total,
-      color,
-      barColor
-    };
+    const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+    let icon = FaBook, barColor = 'bg-gray-400';
+    if (subject.name === 'DBMS')  { icon = FaDatabase; barColor = 'bg-blue-500'; }
+    else if (subject.name === 'SQL')   { icon = FaCode;     barColor = 'bg-emerald-500'; }
+    else if (subject.name === 'CCBDI') { icon = FaCloud;    barColor = 'bg-purple-500'; }
+    return { name: subject.name, icon, progress, completed, total, barColor };
   });
 
+  const handleJoinClassSubmit = async (e) => {
+    e.preventDefault();
+    if (!classCodeInput) return;
+    setJoiningClass(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post(`${API_URL}/api/user/batch/join`, { classCode: classCodeInput }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        import('react-hot-toast').then(({ default: toast }) => toast.success(res.data.message));
+        setShowJoinModal(false);
+        setClassCodeInput('');
+      }
+    } catch (err) {
+      import('react-hot-toast').then(({ default: toast }) => toast.error(err.response?.data?.message || 'Failed to join'));
+    } finally { setJoiningClass(false); }
+  };
+
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <FaSpinner className="animate-spin text-2xl text-gray-400" />
+    </div>
+  );
+
+  const difficultyBreakdown = [
+    { label: 'Easy',   solved: Math.floor(progressStats.totalCompleted * 0.5),  total: Math.floor(totalTopics * 0.4),  color: 'bg-emerald-500' },
+    { label: 'Medium', solved: Math.floor(progressStats.totalCompleted * 0.35), total: Math.floor(totalTopics * 0.4),  color: 'bg-amber-500' },
+    { label: 'Hard',   solved: progressStats.totalCompleted - Math.floor(progressStats.totalCompleted * 0.85), total: totalTopics - Math.floor(totalTopics * 0.8), color: 'bg-red-500' },
+  ];
+
   return (
-    <div className="min-h-screen bg-transparent p-6 md:p-8">
-      {/* HEADER SECTION */}
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-2">
-          Welcome back, {user?.name || 'Student'}! 👋
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">Here's what's happening with your learning journey today.</p>
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6 pt-20">
+
+      {/* ── Profile Header ── */}
+      <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gray-900 dark:bg-white flex items-center justify-center text-white dark:text-gray-900 text-lg font-bold shrink-0">
+            {user?.name ? user.name.charAt(0).toUpperCase() : <FaUserGraduate />}
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white">{user?.name || 'Student'} 👋</h1>
+            <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
+              <span className="flex items-center gap-1"><FaFire className="text-orange-400" /> {stats.streak} day streak</span>
+              {user?.createdAt && <span>Joined {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>}
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {joinedBatchCount > 0 ? (
+            <Link
+              to="/student/classes"
+              className="px-3 py-1.5 border border-gray-200 dark:border-white/10 rounded-lg text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-1.5"
+            >
+              <FaUsers className="text-xs" /> My Classes
+            </Link>
+          ) : (
+            <button
+              onClick={() => setShowJoinModal(true)}
+              className="px-3 py-1.5 border border-gray-200 dark:border-white/10 rounded-lg text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-1.5"
+            >
+              <FaUsers className="text-xs" /> Join Class
+            </button>
+          )}
+          <Link to="/analytics" className="px-3 py-1.5 border border-gray-200 dark:border-white/10 rounded-lg text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-1.5">
+            <FaChartLine className="text-xs" /> Analytics
+          </Link>
+        </div>
       </div>
 
-      {/* STATS ROW (Four Cards) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {statsCards.map((stat, index) => (
-          <div
-            key={index}
-            className="bg-white dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 backdrop-blur-sm rounded-2xl shadow-lg p-5 flex items-center justify-between group hover:border-blue-500/30 transition-all duration-300"
-          >
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">{stat.title}</p>
-              <h3 className="text-2xl font-bold text-gray-800 dark:text-white group-hover:text-blue-400 transition-colors">
-                {stat.value}
-              </h3>
-            </div>
-            <div className={`p-3 rounded-xl ${stat.bgColor.replace('bg-', 'bg-opacity-10 bg-')} ${stat.textColor} group-hover:scale-110 transition-transform`}>
-              <stat.icon className="text-xl" />
-            </div>
+      {/* ── 4 Stat Cards ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: 'Day Streak', value: stats.streak, icon: <FaFire className="text-orange-400" /> },
+          { label: 'Total XP', value: stats.totalPoints.toLocaleString(), icon: <FaBolt className="text-amber-400" /> },
+          { label: 'Global Rank', value: stats.rank, icon: <FaCrown className="text-purple-400" /> },
+          { label: 'Completed', value: `${progressStats.totalCompleted}/${totalTopics || 57}`, icon: <FaCheckCircle className="text-emerald-400" /> },
+        ].map((card, i) => (
+          <div key={i} className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02]">
+            <p className="text-base mb-2">{card.icon}</p>
+            <p className="text-xl font-bold text-gray-900 dark:text-white">{card.value}</p>
+            <p className="text-xs text-gray-500 mt-1">{card.label}</p>
           </div>
         ))}
       </div>
 
-      {/* BENTO GRID (Main Content) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-
-        {/* ROW 1: Motivation (Wide) & Problem of Day (Narrow) */}
-        <div className="lg:col-span-2 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl shadow-lg p-8 text-gray-900 dark:text-white relative overflow-hidden flex flex-col justify-center min-h-[200px]">
-          {/* Background Decorative Element */}
-          <FaQuoteLeft className="text-gray-900 dark:text-white opacity-10 text-8xl absolute -top-4 -left-4" />
-          <div className="relative z-10">
-            <h3 className="text-indigo-200 font-semibold mb-3 uppercase tracking-wider text-sm">Daily Motivation</h3>
-            <p className="text-2xl md:text-3xl font-bold italic mb-6 leading-relaxed">"{quote.text}"</p>
-            <p className="text-gray-900 dark:text-white font-medium flex items-center">
-              <span className="w-8 h-0.5 bg-indigo-400 mr-3"></span>
-              {quote.author}
-            </p>
+      {/* ── Solved Overview + Heatmap ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Solved */}
+        <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <FaCheckCircle className="text-blue-500" /> Solved Overview
+          </h3>
+          <div className="text-center mb-4">
+            <p className="text-4xl font-bold text-gray-900 dark:text-white">{progressStats.totalCompleted}</p>
+            <p className="text-xs text-gray-400 mt-1">of {totalTopics || 57} problems</p>
           </div>
-          <div className="absolute right-0 bottom-0 opacity-10">
-            <FaTrophy className="text-9xl transform translate-x-10 translate-y-10" />
-          </div>
-        </div>
-
-        {/* Problem of the Day Card */}
-        <div className="lg:col-span-1 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-300 dark:border-gray-700/50 flex flex-col relative overflow-hidden group hover:border-blue-500/30 transition-all duration-300">
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <FaCode className="text-8xl text-indigo-600 transform rotate-12" />
-          </div>
-          <div className="flex justify-between items-start mb-4 relative z-10">
-            <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-400">
-              <FaCode className="text-xl" />
-            </div>
-            <span className="px-3 py-1 text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-full">
-              {problemOfTheDay.difficulty}
-            </span>
-          </div>
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 relative z-10">Problem of the Day</h3>
-          <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 relative z-10">{problemOfTheDay.title}</p>
-          <div className="mt-auto relative z-10">
-            <Link
-              to={problemOfTheDay.link}
-              className="flex items-center justify-center w-full py-2.5 rounded-xl bg-blue-600 text-gray-900 dark:text-white font-semibold text-sm hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
-            >
-              Solve Challenge <FaArrowRight className="ml-2 text-xs" />
-            </Link>
+          <div className="space-y-2.5">
+            {difficultyBreakdown.map((d, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <span className="text-xs font-medium text-gray-500 w-12">{d.label}</span>
+                <div className="flex-1 bg-gray-100 dark:bg-white/5 rounded-full h-1.5 overflow-hidden">
+                  <div className={`h-full rounded-full ${d.color}`} style={{ width: d.total > 0 ? `${(d.solved / d.total) * 100}%` : '0%' }} />
+                </div>
+                <span className="text-xs text-gray-400 w-12 text-right font-mono">{d.solved}/{d.total}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* ROW 2: Activity Heatmap (Wide) & Upcoming Contest (Narrow) */}
-        <div className="lg:col-span-2 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-300 dark:border-gray-700/50 p-1 overflow-hidden">
-          <div className="p-5 border-b border-gray-300 dark:border-gray-700/50">
-            <h3 className="font-bold text-gray-900 dark:text-white flex items-center">
-              <FaFire className="text-orange-500 mr-2" /> Activity Log
+        {/* Heatmap */}
+        <div className="lg:col-span-2 border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
+          <div className="px-5 py-3 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+              <FaFire className="text-orange-400" /> Activity Log
             </h3>
+            <span className="text-xs text-gray-400">{progressStats.totalCompleted} submissions this year</span>
           </div>
           <div className="p-4">
-            {/* Reusable Heatmap Component */}
             <ActivityHeatmap />
           </div>
         </div>
-
-        {/* Upcoming Contest Card */}
-        <div className="lg:col-span-1 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-300 dark:border-gray-700/50 flex flex-col hover:border-blue-500/30 transition-all duration-300">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-gray-900 dark:text-white flex items-center">
-              <FaTrophy className="text-yellow-500 mr-2" /> Upcoming
-            </h3>
-            <span className="text-xs font-semibold bg-green-500/10 text-green-400 px-2 py-1 rounded-md border border-green-500/20">
-              Registered
-            </span>
-          </div>
-
-          <div className="text-center py-4 flex-1 flex flex-col justify-center">
-            <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{nextContest.title}</h4>
-            <div className="flex items-center justify-center text-gray-600 dark:text-gray-400 text-sm mb-6">
-              <FaCalendarAlt className="mr-2" /> {nextContest.date}
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center mb-6">
-              <div className="bg-gray-700/50 rounded-lg p-2">
-                <span className="block text-xs text-gray-600 dark:text-gray-400">Time</span>
-                <span className="font-bold text-gray-900 dark:text-white">2h</span>
-              </div>
-              <div className="bg-gray-700/50 rounded-lg p-2">
-                <span className="block text-xs text-gray-600 dark:text-gray-400">Ques</span>
-                <span className="font-bold text-gray-900 dark:text-white">4</span>
-              </div>
-              <div className="bg-gray-700/50 rounded-lg p-2">
-                <span className="block text-xs text-gray-600 dark:text-gray-400">XP</span>
-                <span className="font-bold text-gray-900 dark:text-white">100</span>
-              </div>
-            </div>
-          </div>
-
-          <Link to={nextContest.link} className="w-full py-2.5 rounded-xl border border-blue-500/50 text-blue-400 font-bold text-sm text-center hover:bg-blue-500/10 transition-colors">
-            View Details
-          </Link>
-        </div>
-
-        {/* ROW 3: Subject Progress (Wide) & Quick Actions (Narrow) */}
-        <div className="lg:col-span-2 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-300 dark:border-gray-700/50 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
-              <FaChartLine className="mr-2 text-blue-400" />
-              Learning Progress
-            </h2>
-            <Link to="/analytics" className="text-sm text-blue-400 font-medium hover:text-blue-300">
-              View All
-            </Link>
-          </div>
-
-          {/* List of Subjects with Progress Bars */}
-          <div className="space-y-4">
-            {recentSubjects.map((subject, index) => (
-              <div key={index} className="group flex items-center p-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-colors border border-transparent hover:border-gray-300 dark:border-gray-700">
-                <div className={`p-3 rounded-xl bg-gray-700/50 ${subject.color.replace('text-', 'text-opacity-90 text-')} group-hover:scale-105 transition-transform`}>
-                  <subject.icon className="text-xl" />
-                </div>
-                <div className="ml-4 flex-1">
-                  <div className="flex justify-between mb-1">
-                    <h3 className="font-bold text-gray-200">{subject.name}</h3>
-                    <span className="text-sm font-bold text-gray-600 dark:text-gray-400">{subject.progress}%</span>
-                  </div>
-                  {/* Progress Bar Track */}
-                  <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
-                    {/* Progress Bar Fill */}
-                    <div
-                      className={`h-2 rounded-full bg-gradient-to-r ${subject.barColor} transition-all duration-1000 ease-out`}
-                      style={{ width: `${subject.progress}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Quick Actions Grid */}
-        <div className="lg:col-span-1 bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-300 dark:border-gray-700/50 p-6">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-            <FaArrowRight className="mr-2 text-blue-400" />
-            Quick Actions
-          </h2>
-          <div className="grid grid-cols-1 gap-3">
-            {quickActions.map((action, index) => (
-              <Link
-                key={index}
-                to={action.link}
-                className="flex items-center p-3 rounded-xl bg-gray-700/30 hover:bg-gray-200 dark:hover:bg-gray-700/80 border border-gray-300 dark:border-gray-700/50 hover:border-blue-500/30 transition-all duration-300 group"
-              >
-                <div className={`p-2 rounded-lg bg-gray-50 dark:bg-gray-800 shadow-sm ${action.color.replace('from-', 'text-').replace('to-', '')} group-hover:text-gray-900 dark:text-white group-hover:bg-gradient-to-r ${action.color} transition-all`}>
-                  <action.icon className="text-lg" />
-                </div>
-                <span className="ml-3 font-semibold text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:text-white">{action.title}</span>
-                <FaArrowRight className="ml-auto text-gray-600 group-hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-all transform -translate-x-2 group-hover:translate-x-0" />
-              </Link>
-            ))}
-          </div>
-        </div>
-
       </div>
 
-      {/* NEW SECTION: Featured Series (Playlists) */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-            <FaListUl className="mr-3 text-purple-500" />
-            Featured Series
-          </h2>
-          <Link to="/playlists" className="text-sm text-purple-400 font-medium hover:text-purple-300 flex items-center">
-            View All <FaArrowRight className="ml-1 text-xs" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {playlists.slice(0, 4).map((playlist, index) => (
-            <div key={playlist._id} className="transform hover:-translate-y-1 transition-transform duration-300">
-              <PlaylistCard playlist={playlist} />
-            </div>
-          ))}
-          {playlists.length === 0 && !loading && (
-            <div className="col-span-full text-center py-10 bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
-              <p className="text-gray-500">No series available yet.</p>
+      {/* ── Subject Mastery + Daily Challenge ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Subject mastery */}
+        <div className="lg:col-span-2 border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+              <FaChartLine className="text-blue-500" /> Subject Mastery
+            </h3>
+            <Link to="/analytics" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">Deep Report →</Link>
+          </div>
+          {recentSubjects.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-8">No subjects found. Start solving to see progress!</p>
+          ) : (
+            <div className="space-y-3">
+              {recentSubjects.map((subject, i) => {
+                const mastery = getMasteryLevel(subject.progress);
+                return (
+                  <div key={i} className="flex items-center gap-4 p-3 rounded-lg border border-gray-100 dark:border-white/5">
+                    <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center shrink-0">
+                      <subject.icon className="text-gray-600 dark:text-gray-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-gray-900 dark:text-white">{subject.name}</span>
+                          <span className={`text-[10px] font-semibold ${mastery.cls}`}>{mastery.label}</span>
+                        </div>
+                        <span className="text-sm font-bold text-gray-900 dark:text-white">{subject.progress}%</span>
+                      </div>
+                      <div className="w-full bg-gray-100 dark:bg-white/5 rounded-full h-1.5">
+                        <div className={`h-full rounded-full ${subject.barColor}`} style={{ width: `${subject.progress}%` }} />
+                      </div>
+                    </div>
+                    <span className="text-xs text-gray-400 font-mono">{subject.completed}/{subject.total}</span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
+
+        {/* Right column: Problem of Day + Contest */}
+        <div className="flex flex-col gap-4">
+          {/* Problem of the Day */}
+          <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] flex-1">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                <FaCode className="text-emerald-500" /> Daily Challenge
+              </h3>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                problemOfTheDay.difficulty === 'Easy' ? 'text-emerald-600 border-emerald-200 bg-emerald-50 dark:text-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/10' :
+                problemOfTheDay.difficulty === 'Hard' ? 'text-red-600 border-red-200 bg-red-50 dark:text-red-400 dark:border-red-500/30 dark:bg-red-500/10' :
+                'text-amber-600 border-amber-200 bg-amber-50 dark:text-amber-400 dark:border-amber-500/30 dark:bg-amber-500/10'
+              }`}>{problemOfTheDay.difficulty}</span>
+            </div>
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3 leading-snug">{problemOfTheDay.title}</p>
+            <Link to={problemOfTheDay.link} className="flex items-center gap-1.5 text-xs font-semibold text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-white/5">
+              Solve <FaArrowRight className="text-[10px]" />
+            </Link>
+          </div>
+
+          {/* Next Contest */}
+          <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] flex-1">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-3">
+              <FaTrophy className="text-amber-400" /> Next Contest
+            </h3>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{nextContest.title}</p>
+            <p className="text-xs text-gray-400 flex items-center gap-1 mb-3">
+              <FaCalendarAlt /> {nextContest.date}
+            </p>
+            <Link to={nextContest.link} className="flex items-center gap-1.5 text-xs font-semibold text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-white/5">
+              View Arena <FaArrowRight className="text-[10px]" />
+            </Link>
+          </div>
+        </div>
       </div>
+
+      {/* ── Recent Activity + Quick Actions ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Activity */}
+        <div className="lg:col-span-2 border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
+          <div className="px-5 py-3 border-b border-gray-100 dark:border-white/5">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+              <FaHistory className="text-blue-400" /> Recent Activity
+            </h3>
+          </div>
+          {recentActivity.length > 0 ? (
+            <div className="divide-y divide-gray-100 dark:divide-white/5">
+              {recentActivity.slice(0, 5).map((activity, i) => (
+                <div key={activity._id || i} className="flex items-center justify-between px-5 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                    <div>
+                      <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 mr-2">{activity.subjectId?.name || 'Topic'}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{activity.topicId?.name || 'Completed Topic'}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className="text-emerald-500 font-semibold">+10 XP</span>
+                    <span className="text-gray-400">{timeAgo(activity.completedAt)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 text-gray-400">
+              <FaCheckCircle className="text-3xl mx-auto mb-3 opacity-20" />
+              <p className="text-sm">No activity yet. Start solving!</p>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Actions */}
+        <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
+          <div className="px-5 py-3 border-b border-gray-100 dark:border-white/5">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Quick Actions</h3>
+          </div>
+          <div className="divide-y divide-gray-100 dark:divide-white/5">
+            {[
+              joinedBatchCount > 0
+                ? { title: 'My Classes', icon: <FaUsers />, link: '/student/classes' }
+                : { title: 'Join Class', icon: <FaUsers />, onClick: () => setShowJoinModal(true) },
+              { title: 'Practice', icon: <MdReportProblem />, link: '/problems' },
+              { title: 'Analytics', icon: <FaChartLine />, link: '/analytics' },
+              { title: 'Contest', icon: <FaTrophy />, link: '/contest' },
+            ].map((action, i) => {
+              const content = (
+                <div className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-white/[0.02] text-gray-700 dark:text-gray-300">
+                  <span className="text-gray-400">{action.icon}</span>
+                  <span className="text-sm font-medium">{action.title}</span>
+                  <FaArrowRight className="text-gray-300 dark:text-gray-600 text-xs ml-auto" />
+                </div>
+              );
+              return action.link
+                ? <Link key={i} to={action.link}>{content}</Link>
+                : <button key={i} onClick={action.onClick} className="w-full text-left">{content}</button>;
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Playlists ── */}
+      {playlists.length > 0 && (
+        <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
+          <div className="px-5 py-3 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Featured Series</h3>
+            <Link to="/theory" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">View all →</Link>
+          </div>
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {playlists.map((pl, i) => <PlaylistCard key={pl._id || i} playlist={pl} />)}
+          </div>
+        </div>
+      )}
+
+      {/* ── Join Class Modal ── */}
+      {showJoinModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowJoinModal(false)} />
+          <div className="relative w-full max-w-sm bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-white/10 shadow-xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/5">
+              <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Join a Class</h3>
+              <button onClick={() => setShowJoinModal(false)} className="text-gray-400 hover:text-gray-600"><FaTimes /></button>
+            </div>
+            <form onSubmit={handleJoinClassSubmit} className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Class Code</label>
+                <input
+                  type="text"
+                  placeholder="Enter 6-digit code"
+                  value={classCodeInput}
+                  onChange={(e) => setClassCodeInput(e.target.value.toUpperCase())}
+                  maxLength={6}
+                  className="w-full border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm font-mono tracking-widest bg-white dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-center uppercase"
+                />
+              </div>
+              <p className="text-xs text-gray-400">Your teacher will approve your join request.</p>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowJoinModal(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-gray-600 dark:text-gray-400">Cancel</button>
+                <button type="submit" disabled={joiningClass || classCodeInput.length < 6} className="flex-1 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+                  {joiningClass ? <FaSpinner className="animate-spin" /> : null} Send Request
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -21,7 +21,10 @@ const {
     getExamQuestions,
     checkExamAnswer,
     generateExamQuestions,
-    startAiTutor
+    startAiTutor,
+    generateTheory,
+    generateAdaptiveQuestion,
+    searchStudyContent
 } = require('../controllers/problemController');
 
 // Import Auth Middleware
@@ -31,6 +34,7 @@ const protect = require('../middleware/auth');
 // Import JWT for optional auth logic
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const ExamQuestion = require('../models/ExamQuestion');
 
 /**
  * MIDDLEWARE: Optional Protection
@@ -50,7 +54,7 @@ const optionalProtect = async (req, res, next) => {
             // Find user and attach to request object
             req.user = await User.findById(decoded.userId).select('-password');
         } catch (error) {
-            console.error('Optional auth error:', error);
+
             // We ignore errors here because authentication is optional
         }
     }
@@ -76,6 +80,27 @@ router.route('/subjects/:subjectId/chapters')
 router.route('/chapters/:chapterId/problems')
     .get(optionalProtect, getProblemsByChapter);
 
+// Daily Problem: deterministic "problem of the day" — MUST come before /:id
+router.get('/daily', async (req, res) => {
+  try {
+    const today = new Date();
+    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+    const totalQuestions = await ExamQuestion.countDocuments();
+    if (totalQuestions === 0) {
+      return res.json({ success: true, data: null, message: 'No questions available' });
+    }
+    const skipIndex = dayOfYear % totalQuestions;
+    const question = await ExamQuestion.findOne().skip(skipIndex).select('question subject difficulty exam options');
+    res.json({ success: true, data: question });
+  } catch (error) {
+
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Search Subjects/Chapters
+router.get('/search', searchStudyContent);
+
 // Single Problem: Get by ID
 router.route('/:id')
     .get(getProblemById);
@@ -93,4 +118,7 @@ router.post('/exam/:examId/check-answer', protect, checkExamAnswer);
 
 
 router.post('/exam/:examId/ai-tutor', protect, startAiTutor);
+router.post('/exam/:examId/theory', protect, generateTheory);
+router.post('/exam/:examId/adaptive-question', protect, generateAdaptiveQuestion);
+
 module.exports = router;

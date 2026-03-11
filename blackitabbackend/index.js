@@ -8,6 +8,7 @@ require('dotenv').config();
 
 const connectDB = require('./config/database');
 const User = require('./models/User');
+const { startCronJobs } = require('./services/cronService');
 
 // Controllers used directly in this file
 const authController = require('./controllers/authController');
@@ -20,9 +21,17 @@ const socialRoutes = require('./routes/socialRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const postRoutes = require('./routes/postRoutes');
 const userRoutes = require('./routes/userRoutes');
-const playlistRoutes = require('./routes/playlistRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const aiQuestionRoutes = require('./routes/aiQuestionRoutes');
+const instituteRoutes = require('./routes/instituteRoutes');
+const attemptRoutes = require('./routes/attemptRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const examRoutes = require('./routes/examRoutes');
+const contestRoutes = require('./routes/contestRoutes');
+const questionRoutes = require('./routes/questionRoutes');
+const teacherRoutes = require('./routes/teacherRoutes');
+const adminChatRoutes = require('./routes/adminChatRoutes');
 
 // --- Server Setup ---
 
@@ -46,27 +55,9 @@ const io = new Server(server, {
   }
 });
 
-const userSocketMap = {}; // { userId: socketId }
-
-io.on('connection', (socket) => {
-  const userId = socket.handshake.query.userId;
-  console.log(`Socket: Connected ${socket.id} (user: ${userId})`);
-
-  if (userId && userId !== "undefined") {
-    userSocketMap[userId] = socket.id;
-  }
-
-  io.emit("getOnlineUsers", Object.keys(userSocketMap));
-
-  socket.on('disconnect', () => {
-    console.log(`Socket: Disconnected ${socket.id}`);
-    delete userSocketMap[userId];
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
-  });
-});
-
-const getReceiverSocketId = (receiverId) => userSocketMap[receiverId];
-app.set('getReceiverSocketId', getReceiverSocketId);
+const socketService = require('./services/socketService');
+socketService.initSocketService(io);
+app.set('socketService', socketService);
 
 // --- Middleware ---
 
@@ -96,6 +87,7 @@ app.get('/', (req, res) => res.send('API is running...'));
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 app.post('/api/register', authController.register);
+app.post('/api/register-institute', authController.registerInstitute);
 app.post('/api/login', authController.login);
 
 // --- Theory Routes (inline) ---
@@ -112,9 +104,17 @@ app.use('/api/social', socialRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/user', userRoutes);
-app.use('/api/playlists', playlistRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/ai-questions', aiQuestionRoutes);
+app.use('/api/institute', instituteRoutes);
+app.use('/api/attempts', attemptRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/exams', examRoutes);
+app.use('/api/contests', contestRoutes);
+app.use('/api/questions', questionRoutes);
+app.use('/api/teacher', teacherRoutes);
+app.use('/api/admin-chat', adminChatRoutes);
 
 // --- GET /api/me — Current User (protected) ---
 
@@ -132,12 +132,33 @@ app.get('/api/me', async (req, res) => {
       return res.status(401).json({ success: false, message: 'User not found' });
     }
 
+    // Populate institute info if user belongs to one
+    let instituteInfo = null;
+    const isPrivileged = ['institute', 'hod'].includes(user.role);
+
+    if (user.instituteId) {
+      const Institute = require('./models/Institute');
+      const inst = await Institute.findById(user.instituteId).select('name instituteCode description bannerImage');
+      if (inst) {
+        instituteInfo = { 
+          _id: inst._id, 
+          name: inst.name, 
+          instituteCode: isPrivileged ? inst.instituteCode : undefined, 
+          description: inst.description, 
+          bannerImage: inst.bannerImage 
+        };
+      }
+    }
+
     res.json({
       success: true,
       user: {
         id: user._id,
         email: user.email,
         name: user.name,
+        role: user.role,
+        instituteId: user.instituteId,
+        institute: instituteInfo,
         bio: user.bio,
         profileImage: user.profileImage,
         followerCount: user.followerCount || 0,
@@ -159,4 +180,7 @@ app.get('/api/me', async (req, res) => {
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
   console.log(`MongoDB connection: ${process.env.MONGODB_URI || 'mongodb://localhost:27017/blackitab'}`);
+  
+  // Start background algorithmic jobs
+  startCronJobs();
 });

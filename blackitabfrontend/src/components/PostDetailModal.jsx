@@ -105,7 +105,7 @@ const PostDetailModal = ({ isOpen, onClose, post, onPostDeleted }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-[1px] animate-in fade-in duration-300">
       
       {/* Close Area */}
       <div className="absolute inset-0 cursor-default" onClick={onClose}></div>
@@ -118,10 +118,10 @@ const PostDetailModal = ({ isOpen, onClose, post, onPostDeleted }) => {
       </button>
 
       {/* Main Container */}
-      <div className="relative w-full max-w-7xl h-full md:h-[90vh] flex flex-col md:flex-row bg-black rounded-none md:rounded-2xl overflow-hidden shadow-2xl z-10 animate-in zoom-in-95 duration-300 border border-gray-200 dark:border-white/5">
+      <div className="relative w-full md:w-[95vw] max-w-6xl h-full md:h-[90vh] flex flex-col md:flex-row bg-black rounded-none md:rounded-2xl overflow-hidden shadow-2xl z-10 animate-in zoom-in-95 duration-300 border border-gray-200 dark:border-white/5">
         
         {/* LEFT: MEDIA (Cinematic) */}
-        <div className="flex-1 relative bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden">
+        <div className="flex-1 min-w-0 min-h-0 relative bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden bg-black/5 dark:bg-white/5">
              
              {/* Blurred Ambient Background */}
              <div className="absolute inset-0 opacity-30 blur-3xl scale-125 pointer-events-none">
@@ -133,28 +133,28 @@ const PostDetailModal = ({ isOpen, onClose, post, onPostDeleted }) => {
              </div>
 
              {/* Main Content */}
-             <div className="relative z-10 max-w-full max-h-full w-full h-full flex items-center justify-center p-0 md:p-4">
+             <div className="relative z-10 w-full h-full flex items-center justify-center p-0 md:p-4">
                  {currentPost.mediaType === 'video' ? (
-                     <video controls autoPlay className="max-w-full max-h-full rounded-md shadow-2xl">
+                     <video controls autoPlay className="max-w-full max-h-full object-contain rounded-none md:rounded-md shadow-2xl">
                          <source src={currentPost.mediaUrl} />
                      </video>
                  ) : (
                      <img 
                         src={currentPost.mediaUrl} 
                         alt="Post" 
-                        className="max-w-full max-h-full object-contain rounded-md shadow-2xl"
+                        className="max-w-full max-h-full object-contain rounded-none md:rounded-md shadow-2xl"
                      />
                  )}
              </div>
         </div>
 
         {/* RIGHT: SIDEBAR (Glass/Clean) */}
-        <div className="w-full md:w-[400px] lg:w-[500px] bg-gray-950 flex flex-col h-[45vh] md:h-full border-l border-gray-300 dark:border-white/10">
+        <div className="w-full md:w-[400px] lg:w-[500px] bg-white dark:bg-gray-950 flex flex-col h-[45vh] md:h-full border-l border-gray-200 dark:border-white/10">
             
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-white/5 bg-gray-950/50 backdrop-blur-md sticky top-0 z-20">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-white/5 bg-white/80 dark:bg-gray-950/50 backdrop-blur-md sticky top-0 z-20">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-orange-400 p-[2px]">
+                    <div className="w-10 h-10 rounded-full bg-blue-600 p-[2px]">
                         <img 
                             src={currentPost.user?.profileImage || `https://ui-avatars.com/api/?name=${currentPost.user?.name}&background=1f2937&color=fff`} 
                             alt={currentPost.user?.name} 
@@ -192,10 +192,12 @@ const PostDetailModal = ({ isOpen, onClose, post, onPostDeleted }) => {
                                 alt=""
                             />
                         </div>
-                        <div className="text-sm">
-                            <span className="font-semibold text-gray-900 dark:text-white mr-2">{currentPost.user?.name}</span>
-                            <span className="text-gray-700 dark:text-gray-300 leading-relaxed font-light">{currentPost.caption}</span>
-                            <div className="text-xs text-gray-500 mt-2">{new Date(currentPost.createdAt).toLocaleDateString()}</div>
+                        <div className="text-sm flex-1">
+                            <div>
+                                <span className="font-semibold text-gray-900 dark:text-white mr-2">{currentPost.user?.name}</span>
+                                <span className="text-xs text-gray-500">{new Date(currentPost.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <div className="text-gray-700 dark:text-gray-300 leading-relaxed font-light mt-0.5 whitespace-pre-wrap">{currentPost.caption}</div>
                         </div>
                     </div>
                 )}
@@ -210,10 +212,12 @@ const PostDetailModal = ({ isOpen, onClose, post, onPostDeleted }) => {
                                 alt=""
                             />
                         </div>
-                        <div className="text-sm">
-                            <span className="font-semibold text-gray-900 dark:text-white mr-2">{comment.user?.name || 'User'}</span>
-                            <span className="text-gray-700 dark:text-gray-300 leading-relaxed font-light">{comment.text}</span>
-                            <div className="text-xs text-gray-500 mt-1">{new Date(comment.createdAt).toLocaleDateString()}</div>
+                        <div className="text-sm flex-1">
+                            <div>
+                                <span className="font-semibold text-gray-900 dark:text-white mr-2">{comment.user?.name || 'User'}</span>
+                                <span className="text-xs text-gray-500">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <div className="text-gray-700 dark:text-gray-300 leading-relaxed font-light mt-0.5 whitespace-pre-wrap">{comment.text}</div>
                         </div>
                     </div>
                 ))}
@@ -229,7 +233,7 @@ const PostDetailModal = ({ isOpen, onClose, post, onPostDeleted }) => {
             </div>
 
             {/* Actions Footer */}
-            <div className="p-4 border-t border-gray-200 dark:border-white/5 bg-black/20">
+            <div className="p-4 border-t border-gray-200 dark:border-white/5 bg-white dark:bg-gray-950">
                 <div className="flex items-center justify-between mb-4 px-1">
                     <div className="flex items-center gap-5">
                         <button onClick={handleLike} className="transition-transform active:scale-90">
@@ -266,7 +270,7 @@ const PostDetailModal = ({ isOpen, onClose, post, onPostDeleted }) => {
                      <button 
                         onClick={handleComment}
                         disabled={!commentText.trim() || loading}
-                        className={`text-sm font-semibold transition-colors ${commentText.trim() ? 'text-blue-500 hover:text-gray-900 dark:text-white' : 'text-blue-500/30 cursor-default'}`}
+                        className={`text-sm font-semibold transition-colors ${commentText.trim() ? 'text-blue-500 hover:text-gray-900 dark:hover:text-white' : 'text-blue-500/30 cursor-default'}`}
                      >
                         {loading ? '...' : 'Post'}
                      </button>

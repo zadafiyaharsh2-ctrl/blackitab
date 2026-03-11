@@ -11,7 +11,7 @@ exports.getProblemSubjects = async (req, res) => {
         const subjects = await ProblemSubject.find().sort({ createdAt: 1 });
         res.status(200).json({ success: true, count: subjects.length, data: subjects });
     } catch (err) {
-        console.error('Error fetching problem subjects:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -22,7 +22,7 @@ exports.createProblemSubject = async (req, res) => {
         const subject = await ProblemSubject.create(req.body);
         res.status(201).json({ success: true, data: subject });
     } catch (err) {
-        console.error('Error creating problem subject:', err);
+        
         if (err.code === 11000) {
             return res.status(400).json({ success: false, message: 'Subject already exists' });
         }
@@ -36,7 +36,7 @@ exports.getChaptersBySubject = async (req, res) => {
         const chapters = await ProblemChapter.find({ subjectId: req.params.subjectId }).sort({ createdAt: 1 });
         res.status(200).json({ success: true, count: chapters.length, data: chapters });
     } catch (err) {
-        console.error('Error fetching problem chapters:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -64,7 +64,7 @@ exports.getProblemsByChapter = async (req, res) => {
 
         res.status(200).json({ success: true, count: problemsWithStatus.length, data: problemsWithStatus });
     } catch (err) {
-        console.error('Error fetching problems:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -78,7 +78,7 @@ exports.getProblemById = async (req, res) => {
         }
         res.status(200).json({ success: true, data: problem });
     } catch (err) {
-        console.error('Error fetching problem:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -112,6 +112,7 @@ const updateUserStreakAndPoints = async (userId, pointsToAdd) => {
     }
 
     user.points = (user.points || 0) + pointsToAdd;
+    user.xp = (user.xp || 0) + 10;
     await user.save();
 };
 
@@ -152,7 +153,55 @@ exports.updateProblemStatus = async (req, res) => {
 
         res.status(200).json({ success: true, data: progress });
     } catch (err) {
-        console.error('Error updating problem status:', err);
+        
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// GET /api/problems/search — search for subjects or chapters
+exports.searchStudyContent = async (req, res) => {
+    try {
+        const { query } = req.query;
+        if (!query) {
+            return res.status(400).json({ success: false, message: 'Search query required' });
+        }
+
+        // Search subjects
+        const subjects = await ProblemSubject.find({
+            $or: [
+                { name: { $regex: query, $options: 'i' } },
+                { description: { $regex: query, $options: 'i' } }
+            ]
+        }).select('name description').lean();
+
+        // Search chapters (populate subject for context if needed, but not required if keeping simple)
+        const chapters = await ProblemChapter.find({
+            $or: [
+                { title: { $regex: query, $options: 'i' } },
+                { description: { $regex: query, $options: 'i' } }
+            ]
+        }).populate('subjectId', 'name').select('title description subjectId').lean();
+
+        // Normalize data for the frontend
+        const normalizedSubjects = subjects.map(s => ({
+            _id: s._id,
+            name: s.name,
+            type: 'subject',
+            description: s.description || 'Subject'
+        }));
+
+        const normalizedChapters = chapters.map(c => ({
+            _id: c._id,
+            name: c.title,
+            type: 'chapter',
+            description: `Chapter in ${c.subjectId?.name || 'Unknown Subject'}`,
+            subjectId: c.subjectId?._id
+        }));
+
+        const results = [...normalizedSubjects, ...normalizedChapters];
+
+        res.json({ success: true, data: results });
+    } catch (err) {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -163,7 +212,7 @@ exports.getExamQuestions = async (req, res) => {
     try {
         const { examId } = req.params;
         const { subject } = req.query;
-        const filter = { exam: examId };
+        const filter = { exam: examId, isProblem: true };
         if (subject) filter.subject = subject;
 
         const questions = await ExamQuestion.find(filter)
@@ -172,7 +221,7 @@ exports.getExamQuestions = async (req, res) => {
 
         res.json({ success: true, data: questions });
     } catch (err) {
-        console.error('Error fetching exam Questions: ', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
 
     }
@@ -193,7 +242,7 @@ exports.checkExamAnswer = async (req, res) => {
             data: isCorrect ? { correct: true, correctAnswer: question.correctAnswer } : { correct: false }
         });
     } catch (err) {
-        console.error('Error checking answer:', err);
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -227,7 +276,7 @@ exports.generateExamQuestions = async (req, res) => {
         res.json({ success: true, data: safeQuestions });
 
     } catch (err) {
-        console.error('Error generateing questions: ', err);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -321,14 +370,14 @@ exports.startAiTutor = async (req, res) => {
 
         // --- API CALL & ROBUST PARSING ---
         try {
-            console.log('AI Tutor: Sending request to AI...', { step, subject: question.subject });
+
             const aiRes = await axios.post(LANGCHAIN_API_URL, {
                 query: prompt,
                 top_k: 3
             }, { timeout: 120000 }); // 2 min timeout for complex generation
-            console.log(aiRes)
+
             let aiText = aiRes.data.answer || aiRes.data.response || '';
-            console.log(aiText)
+
             if (!aiText) throw new Error('Empty response from AI');
 
             // Robust JSON Extraction
@@ -336,7 +385,7 @@ exports.startAiTutor = async (req, res) => {
             const jsonEndIndex = aiText.lastIndexOf('}');
 
             if (jsonStartIndex === -1 || jsonEndIndex === -1) {
-                console.error('AI Tutor: Failed to find JSON in response:', aiText);
+
                 throw new Error('Invalid JSON format from AI');
             }
 
@@ -346,8 +395,8 @@ exports.startAiTutor = async (req, res) => {
             try {
                 aiData = JSON.parse(jsonString);
             } catch (pErr) {
-                console.error('AI Tutor: JSON Parse Error:', pErr);
-                console.error('Failed JSON string:', jsonString);
+
+
                 throw new Error('JSON Parse Failed');
             }
 
@@ -360,7 +409,6 @@ exports.startAiTutor = async (req, res) => {
             });
 
         } catch (aiErr) {
-            console.error('AI Tutor Service Error:', aiErr.message);
 
             // Generate a basic fallback response to keep the UI functional
             res.json({
@@ -384,7 +432,143 @@ exports.startAiTutor = async (req, res) => {
         }
 
     } catch (err) {
-        console.error('Error in AI tutor:', err);
+        
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// POST /api/problems/exam/:examId/theory
+exports.generateTheory = async (req, res) => {
+    try {
+        const { failedQuestionIds } = req.body;
+        if (!failedQuestionIds || failedQuestionIds.length === 0) {
+            return res.status(400).json({ success: false, message: 'No questions provided.' });
+        }
+
+        const questions = await ExamQuestion.find({ _id: { $in: failedQuestionIds } });
+        if (!questions.length) {
+            return res.status(404).json({ success: false, message: 'Questions not found' });
+        }
+
+        const LANGCHAIN_API_URL = process.env.LANGCHAIN_API_URL || 'http://127.0.0.1:8000/query';
+        const subjects = [...new Set(questions.map(q => q.subject))].join(', ');
+
+        const systemContext = `You are a world-class Expert Tutor preparing a study guide.`;
+        const userTask = `
+        The student has recently failed ${questions.length} questions related to ${subjects}.
+        Please provide a concise but comprehensive study guide (Markdown format) covering the key principles they need to understand to solve these types of problems in the future. Focus mostly on the core concepts.
+        `;
+        const outputFormat = `
+        Output ONLY valid JSON:
+        {
+            "theory": "## Study Guide\\n\\nDetailed explanation here use Markdown..."
+        }
+        `;
+        
+        const prompt = `${systemContext}\n\n${userTask}\n\n${outputFormat}\n\nIMPORTANT: Return ONLY the raw JSON string. No markdown formatting.`;
+
+        try {
+
+            const aiRes = await axios.post(LANGCHAIN_API_URL, { query: prompt, top_k: 3 }, { timeout: 120000 });
+            let aiText = aiRes.data.answer || aiRes.data.response || '';
+            const jsonStartIndex = aiText.indexOf('{');
+            const jsonEndIndex = aiText.lastIndexOf('}');
+            const jsonString = aiText.substring(jsonStartIndex, jsonEndIndex + 1);
+            const aiData = JSON.parse(jsonString);
+
+            res.json({ success: true, theory: aiData.theory });
+        } catch (aiErr) {
+
+            res.json({
+                success: true,
+                theory: `### Self Study Recommendation\\n\\nPlease review the core concepts for topics: ${subjects}.`
+            });
+        }
+    } catch (err) {
+        
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// POST /api/problems/exam/:examId/adaptive-question
+exports.generateAdaptiveQuestion = async (req, res) => {
+    try {
+        const { failedQuestionId, targetDifficulty } = req.body;
+        const { examId } = req.params;
+
+        if (!failedQuestionId) {
+            return res.status(400).json({ success: false, message: 'Missing failedQuestionId' });
+        }
+
+        const question = await ExamQuestion.findById(failedQuestionId);
+        if (!question) {
+            return res.status(404).json({ success: false, message: 'Original question not found' });
+        }
+
+        const LANGCHAIN_API_URL = process.env.LANGCHAIN_API_URL || 'http://127.0.0.1:8000/query';
+
+        const systemContext = `You are an Expert Question Generator specializing in adaptive testing.`;
+        const userTask = `
+        Context:
+        - Subject/Topic: ${question.subject}
+        - Exam Type: ${examId.toUpperCase()}
+        - Target Difficulty Level: ${targetDifficulty || 'Medium'}
+        - Original Question the student failed: "${question.question}"
+        
+        YOUR TASK:
+        Create EXACTLY ONE brand new multiple-choice question.
+        The question must test the same core concept as the Original Question, but strictly adhere to the requested Target Difficulty Level.
+        Make sure the question has exactly 4 options. Ensure the options are plausible.
+        `;
+        const outputFormat = `
+        Output ONLY valid JSON:
+        {
+            "question": "The new adaptive question text...",
+            "options": ["Option A", "Option B", "Option C", "Option D"],
+            "correctAnswer": 0,
+            "explanation": "Brief explanation of why the answer is correct."
+        }
+        `;
+        
+        const prompt = `${systemContext}\n\n${userTask}\n\n${outputFormat}\n\nIMPORTANT: Return ONLY the raw JSON string. No markdown formatting.`;
+
+        try {
+
+            const aiRes = await axios.post(LANGCHAIN_API_URL, { query: prompt, top_k: 3 }, { timeout: 60000 });
+            let aiText = aiRes.data.answer || aiRes.data.response || '';
+            const jsonStartIndex = aiText.indexOf('{');
+            const jsonEndIndex = aiText.lastIndexOf('}');
+            
+            if (jsonStartIndex === -1 || jsonEndIndex === -1) {
+                throw new Error("Invalid format");
+            }
+
+            const jsonString = aiText.substring(jsonStartIndex, jsonEndIndex + 1);
+            const aiData = JSON.parse(jsonString);
+
+            // Give it an id similar to how they're structured, or just a temporary format
+            res.json({
+                success: true,
+                data: {
+                    _id: 'adaptive_' + Date.now(),
+                    exam: examId,
+                    subject: question.subject,
+                    question: aiData.question,
+                    options: aiData.options,
+                    correctAnswer: aiData.correctAnswer,
+                    explanation: aiData.explanation,
+                    difficulty: targetDifficulty,
+                    isAIGenerated: true,
+                    isAdaptive: true
+                }
+            });
+        } catch (aiErr) {
+
+            res.status(500).json({ success: false, message: 'Failed to generate adaptive question' });
+        }
+
+    } catch (err) {
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };

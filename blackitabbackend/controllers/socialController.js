@@ -1,7 +1,5 @@
 const User = require('../models/User');
-const FollowerList = require('../models/FollowerList');
-const FollowingList = require('../models/FollowingList');
-const SubscriberList = require('../models/SubscriberList');
+const Connection = require('../models/Connection');
 const Notification = require('../models/Notification');
 
 // --- Search ---
@@ -23,21 +21,20 @@ exports.searchUsers = async (req, res) => {
             ]
         }).select('name email followerCount subscriberCount profileImage bio');
 
-        let results = users;
+        let results = users.map(u => u.toObject());
 
         if (currentUserId) {
-            const following = await FollowingList.find({ userId: currentUserId }).select('followingId');
-            const followingIds = new Set(following.map(f => f.followingId.toString()));
+            const myFollows = await Connection.find({ sourceUserId: currentUserId, connectionType: 'follow' });
+            
+            const followingIds = new Set(
+                myFollows.filter(c => c.status === 'accepted').map(c => c.targetUserId.toString())
+            );
+            const pendingIds = new Set(
+                myFollows.filter(c => c.status === 'pending').map(c => c.targetUserId.toString())
+            );
 
-            const pendingRequests = await FollowerList.find({
-                userId: { $in: users.map(u => u._id) },
-                followerId: currentUserId,
-                status: 'pending'
-            }).select('userId');
-            const pendingIds = new Set(pendingRequests.map(p => p.userId.toString()));
-
-            results = users.map(user => ({
-                ...user.toObject(),
+            results = results.map(user => ({
+                ...user,
                 isFollowing: followingIds.has(user._id.toString()),
                 isRequested: pendingIds.has(user._id.toString())
             }));
@@ -45,14 +42,12 @@ exports.searchUsers = async (req, res) => {
 
         res.json({ success: true, data: results });
     } catch (error) {
-        console.error('Search error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
 // --- Notifications ---
-
-// GET /api/social/notifications
 exports.getNotifications = async (req, res) => {
     try {
         const notifications = await Notification.find({ recipient: req.user._id })
@@ -60,8 +55,8 @@ exports.getNotifications = async (req, res) => {
             .sort({ createdAt: -1 })
             .lean();
 
-        const followingList = await FollowingList.find({ userId: req.user._id }).select('followingId');
-        const followingIds = new Set(followingList.map(f => f.followingId.toString()));
+        const myFollows = await Connection.find({ sourceUserId: req.user._id, connectionType: 'follow', status: 'accepted' });
+        const followingIds = new Set(myFollows.map(c => c.targetUserId.toString()));
 
         const notificationsWithStatus = notifications.map(note => ({
             ...note,
@@ -70,7 +65,7 @@ exports.getNotifications = async (req, res) => {
 
         res.json({ success: true, data: notificationsWithStatus });
     } catch (error) {
-        console.error('Get notifications error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -81,14 +76,48 @@ exports.getUnreadNotificationCount = async (req, res) => {
         const count = await Notification.countDocuments({ recipient: req.user._id, read: false });
         res.json({ success: true, count });
     } catch (error) {
-        console.error('Get unread count error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// PUT /api/social/notifications/:id/read
+exports.markNotificationAsRead = async (req, res) => {
+    try {
+        const notification = await Notification.findOneAndUpdate(
+            { _id: req.params.id, recipient: req.user._id },
+            { read: true },
+            { new: true }
+        );
+        if (!notification) return res.status(404).json({ success: false, message: 'Notification not found' });
+        res.json({ success: true, notification });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// DELETE /api/social/notifications/:id
+exports.deleteNotification = async (req, res) => {
+    try {
+        const result = await Notification.findOneAndDelete({ _id: req.params.id, recipient: req.user._id });
+        if (!result) return res.status(404).json({ success: false, message: 'Notification not found' });
+        res.json({ success: true, message: 'Notification deleted' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// DELETE /api/social/notifications
+exports.clearAllNotifications = async (req, res) => {
+    try {
+        await Notification.deleteMany({ recipient: req.user._id });
+        res.json({ success: true, message: 'All notifications cleared' });
+    } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
 // --- Follow ---
 
-// POST /api/social/follow/:id — send follow request (auto-accept for public profiles)
 exports.followUser = async (req, res) => {
     try {
         const targetUserId = req.params.id;
@@ -103,27 +132,19 @@ exports.followUser = async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        const existingFollow = await FollowerList.findOne({ userId: targetUserId, followerId: currentUserId });
+        const existingConnection = await Connection.findOne({ sourceUserId: currentUserId, targetUserId, connectionType: 'follow' });
 
-        if (existingFollow) {
-            if (existingFollow.status === 'accepted') {
-                // Self-healing: ensure FollowingList entry exists
-                const existingFollowing = await FollowingList.findOne({ userId: currentUserId, followingId: targetUserId });
-                if (!existingFollowing) {
-                    await FollowingList.create({ userId: currentUserId, followingId: targetUserId, status: 'accepted' });
-                }
-                return res.json({ success: true, message: 'You are now following this user', status: 'accepted' });
-            } else {
-                return res.json({ success: true, message: 'Follow request already sent', status: 'pending' });
-            }
+        if (existingConnection) {
+            return res.json({ success: true, message: existingConnection.status === 'accepted' ? 'You are now following' : 'Follow request already sent', status: existingConnection.status });
         }
 
         if (!targetUser.isPrivate) {
-            // Public profile → auto-accept
-            await FollowerList.create({ userId: targetUserId, followerId: currentUserId, status: 'accepted' });
-            await FollowingList.create({ userId: currentUserId, followingId: targetUserId, status: 'accepted' });
+            // Auto accept
+            await Connection.create({ sourceUserId: currentUserId, targetUserId, connectionType: 'follow', status: 'accepted' });
+            
             await User.findByIdAndUpdate(targetUserId, { $inc: { followerCount: 1 } });
             await User.findByIdAndUpdate(currentUserId, { $inc: { followingCount: 1 } });
+            
             await Notification.create({
                 recipient: targetUserId,
                 sender: currentUserId,
@@ -132,159 +153,137 @@ exports.followUser = async (req, res) => {
             });
             return res.json({ success: true, message: 'You are now following this user', status: 'accepted' });
         } else {
-            // Private profile → pending request
-            await FollowerList.create({ userId: targetUserId, followerId: currentUserId, status: 'pending' });
+            // Pending request
+            await Connection.create({ sourceUserId: currentUserId, targetUserId, connectionType: 'follow', status: 'pending' });
             await Notification.create({ recipient: targetUserId, sender: currentUserId, type: 'follow_request' });
             return res.json({ success: true, message: 'Follow request sent', status: 'pending' });
         }
     } catch (error) {
-        console.error('Follow user error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
-// POST /api/social/accept-follow/:senderId — accept a pending follow request
 exports.acceptFollowRequest = async (req, res) => {
     try {
         const senderId = req.params.senderId;
         const currentUserId = req.user._id;
 
-        const followRequest = await FollowerList.findOne({ userId: currentUserId, followerId: senderId, status: 'pending' });
-        if (!followRequest) {
-            return res.status(404).json({ success: false, message: 'No pending follow request found' });
+        const connection = await Connection.findOne({ sourceUserId: senderId, targetUserId: currentUserId, connectionType: 'follow', status: 'pending' });
+        if (!connection) {
+            return res.status(404).json({ success: false, message: 'No pending request found' });
         }
 
-        followRequest.status = 'accepted';
-        await followRequest.save();
+        connection.status = 'accepted';
+        await connection.save();
 
         await User.findByIdAndUpdate(currentUserId, { $inc: { followerCount: 1 } });
         await User.findByIdAndUpdate(senderId, { $inc: { followingCount: 1 } });
-        await FollowingList.create({ userId: senderId, followingId: currentUserId });
 
         await Notification.findOneAndDelete({ recipient: currentUserId, sender: senderId, type: 'follow_request' });
         await Notification.create({ recipient: senderId, sender: currentUserId, type: 'follow_accepted' });
 
         res.json({ success: true, message: 'Follow request accepted' });
     } catch (error) {
-        console.error('Accept follow error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
-// POST /api/social/reject-follow/:senderId
 exports.rejectFollowRequest = async (req, res) => {
     try {
         const senderId = req.params.senderId;
         const currentUserId = req.user._id;
 
-        const result = await FollowerList.findOneAndDelete({ userId: currentUserId, followerId: senderId, status: 'pending' });
-        if (!result) {
-            return res.status(404).json({ success: false, message: 'No pending follow request found' });
-        }
+        const result = await Connection.findOneAndDelete({ sourceUserId: senderId, targetUserId: currentUserId, connectionType: 'follow', status: 'pending' });
+        if (!result) return res.status(404).json({ success: false, message: 'No pending request found' });
 
         res.json({ success: true, message: 'Follow request rejected' });
     } catch (error) {
-        console.error('Reject follow error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
-// POST /api/social/unfollow/:id — unfollow or cancel pending request
 exports.unfollowUser = async (req, res) => {
     try {
         const targetUserId = req.params.id;
         const currentUserId = req.user._id;
 
-        const existingFollow = await FollowerList.findOneAndDelete({ userId: targetUserId, followerId: currentUserId });
+        const existingConnection = await Connection.findOneAndDelete({ sourceUserId: currentUserId, targetUserId, connectionType: 'follow' });
 
-        // Also remove FollowingList entry
-        await FollowingList.findOneAndDelete({ userId: currentUserId, followingId: targetUserId });
-
-        if (!existingFollow) {
-            return res.status(400).json({ success: false, message: 'You are not following this user' });
+        if (!existingConnection) {
+            return res.status(400).json({ success: false, message: 'You are not following' });
         }
 
-        if (existingFollow.status === 'accepted') {
+        if (existingConnection.status === 'accepted') {
             await User.findByIdAndUpdate(targetUserId, { $inc: { followerCount: -1 } });
             await User.findByIdAndUpdate(currentUserId, { $inc: { followingCount: -1 } });
-        } else if (existingFollow.status === 'pending') {
-            // Cancel pending request — clean up notification
+        } else if (existingConnection.status === 'pending') {
             await Notification.findOneAndDelete({ recipient: targetUserId, sender: currentUserId, type: 'follow_request' });
         }
 
         res.json({ success: true, message: 'User unfollowed successfully' });
     } catch (error) {
-        console.error('Unfollow user error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
 // --- Subscribe ---
-
-// POST /api/social/subscribe/:id
 exports.subscribeUser = async (req, res) => {
     try {
         const targetUserId = req.params.id;
         const currentUserId = req.user._id;
 
-        if (targetUserId === currentUserId.toString()) {
-            return res.status(400).json({ success: false, message: 'You cannot subscribe to yourself' });
-        }
+        if (targetUserId === currentUserId.toString()) return res.status(400).json({ success: false, message: 'Cannot subscribe to self' });
 
         const targetUser = await User.findById(targetUserId);
-        if (!targetUser) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
+        if (!targetUser) return res.status(404).json({ success: false, message: 'User not found' });
 
-        const existingSub = await SubscriberList.findOne({ userId: targetUserId, subscriberId: currentUserId });
-        if (existingSub) {
-            return res.status(400).json({ success: false, message: 'You are already subscribed to this user' });
-        }
+        const existingSub = await Connection.findOne({ sourceUserId: currentUserId, targetUserId, connectionType: 'subscribe' });
+        if (existingSub) return res.status(400).json({ success: false, message: 'Already subscribed' });
 
-        await SubscriberList.create({ userId: targetUserId, subscriberId: currentUserId });
+        await Connection.create({ sourceUserId: currentUserId, targetUserId, connectionType: 'subscribe', status: 'accepted' });
         await User.findByIdAndUpdate(targetUserId, { $inc: { subscriberCount: 1 } });
 
         res.json({ success: true, message: 'Subscribed successfully' });
     } catch (error) {
-        console.error('Subscribe user error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
-// POST /api/social/unsubscribe/:id
 exports.unsubscribeUser = async (req, res) => {
     try {
         const targetUserId = req.params.id;
         const currentUserId = req.user._id;
 
-        const existingSub = await SubscriberList.findOneAndDelete({ userId: targetUserId, subscriberId: currentUserId });
-        if (!existingSub) {
-            return res.status(400).json({ success: false, message: 'You are not subscribed to this user' });
-        }
+        const existingSub = await Connection.findOneAndDelete({ sourceUserId: currentUserId, targetUserId, connectionType: 'subscribe' });
+        if (!existingSub) return res.status(400).json({ success: false, message: 'Not subscribed' });
 
         await User.findByIdAndUpdate(targetUserId, { $inc: { subscriberCount: -1 } });
         res.json({ success: true, message: 'Unsubscribed successfully' });
     } catch (error) {
-        console.error('Unsubscribe user error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
 // --- Profile & Lists ---
-
-// GET /api/social/followers/:userId
 exports.getFollowers = async (req, res) => {
     try {
         const userId = req.params.userId;
         const currentUserId = req.user._id;
 
-        const followers = await FollowerList.find({ userId }).populate('followerId', 'name email followerCount subscriberCount profileImage bio');
+        const connections = await Connection.find({ targetUserId: userId, connectionType: 'follow', status: 'accepted' })
+                                  .populate('sourceUserId', 'name email followerCount subscriberCount profileImage bio');
 
-        const myFollowing = await FollowingList.find({ userId: currentUserId }).select('followingId');
-        const myFollowingIds = new Set(myFollowing.map(f => f.followingId.toString()));
+        const myFollows = await Connection.find({ sourceUserId: currentUserId, connectionType: 'follow', status: 'accepted' });
+        const myFollowingIds = new Set(myFollows.map(f => f.targetUserId.toString()));
 
-        const users = followers
-            .map(f => f.followerId)
+        const users = connections
+            .map(c => c.sourceUserId)
             .filter(u => u && u._id.toString() !== currentUserId.toString())
             .map(u => ({
                 ...(u.toObject ? u.toObject() : u),
@@ -293,57 +292,65 @@ exports.getFollowers = async (req, res) => {
 
         res.json({ success: true, users, data: users });
     } catch (error) {
-        console.error('Get followers error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
-// GET /api/social/following/:userId
 exports.getFollowing = async (req, res) => {
     try {
         const { userId } = req.params;
         const currentUserId = req.user._id;
 
-        const following = await FollowingList.find({ userId })
-            .populate('followingId', 'name email followerCount subscriberCount profileImage bio')
-            .lean();
+        const connections = await Connection.find({ sourceUserId: userId, connectionType: 'follow', status: 'accepted' })
+                                  .populate('targetUserId', 'name email followerCount subscriberCount profileImage bio');
 
-        const myFollowing = await FollowingList.find({ userId: currentUserId }).select('followingId');
-        const myFollowingIds = new Set(myFollowing.map(f => f.followingId.toString()));
+        const myFollows = await Connection.find({ sourceUserId: currentUserId, connectionType: 'follow', status: 'accepted' });
+        const myFollowingIds = new Set(myFollows.map(f => f.targetUserId.toString()));
 
-        const users = following
-            .map(f => f.followingId)
+        const users = connections
+            .map(c => c.targetUserId)
             .filter(u => u && u._id.toString() !== currentUserId.toString())
-            .map(u => ({ ...u, isFollowing: myFollowingIds.has(u._id.toString()) }));
+            .map(u => ({ 
+                ...(u.toObject ? u.toObject() : u), 
+                isFollowing: myFollowingIds.has(u._id.toString()) 
+            }));
 
         res.json({ success: true, users, data: users });
     } catch (error) {
-        console.error('Get following error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
-// GET /api/social/user/:id — public user profile with follow status
 exports.getUserProfile = async (req, res) => {
     try {
         const userId = req.params.id;
         const currentUserId = req.user._id;
 
         const user = await User.findById(userId).select('-password').lean();
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-        const isFollowing = await FollowingList.exists({ userId: currentUserId, followingId: userId });
-        const isRequested = await FollowerList.exists({ userId: userId, followerId: currentUserId, status: 'pending' });
-        const isFollower = await FollowerList.exists({ userId: currentUserId, followerId: userId, status: 'accepted' });
+        const isFollowing = await Connection.exists({ sourceUserId: currentUserId, targetUserId: userId, connectionType: 'follow', status: 'accepted' });
+        const isRequested = await Connection.exists({ sourceUserId: currentUserId, targetUserId: userId, connectionType: 'follow', status: 'pending' });
+        const isFollower = await Connection.exists({ sourceUserId: userId, targetUserId: currentUserId, connectionType: 'follow', status: 'accepted' });
+
+        // Populate institute info
+        let instituteInfo = null;
+        if (user.instituteId) {
+            const Institute = require('../models/Institute');
+            const inst = await Institute.findById(user.instituteId).select('name instituteCode description bannerImage');
+            if (inst) {
+                instituteInfo = { _id: inst._id, name: inst.name, instituteCode: inst.instituteCode, description: inst.description, bannerImage: inst.bannerImage };
+            }
+        }
 
         res.json({
             success: true,
-            user: { ...user, isFollowing: !!isFollowing, isRequested: !!isRequested, isFollower: !!isFollower }
+            user: { ...user, institute: instituteInfo, isFollowing: !!isFollowing, isRequested: !!isRequested, isFollower: !!isFollower }
         });
     } catch (error) {
-        console.error('Get user profile error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

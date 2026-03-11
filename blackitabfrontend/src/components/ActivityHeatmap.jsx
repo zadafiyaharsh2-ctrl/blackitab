@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { useTheme } from '../context/useTheme';
+import { useTheme } from '../context/ThemeContext';
 import API_URL from '../config';
 
 const ActivityHeatmap = () => {
@@ -68,19 +68,19 @@ const ActivityHeatmap = () => {
   // ☀️ LIGHT MODE (reverse shades)
   const getColor = (count) => {
     if (isDark) {
-      if (count === 0) return "bg-white dark:bg-gray-900";
-      if (count < 2) return "bg-green-900";
-      if (count < 5) return "bg-green-700";
-      if (count < 10) return "bg-green-500";
-      if (count < 15) return "bg-green-300";
-      return "bg-green-200";
+      if (count === 0) return "bg-white/5 border border-white/10";
+      if (count < 2) return "bg-emerald-900/80 border border-emerald-800/50 shadow-[0_0_8px_rgba(6,95,70,0.5)]";
+      if (count < 5) return "bg-emerald-700 border border-emerald-500/50 shadow-[0_0_12px_rgba(4,120,87,0.6)]";
+      if (count < 10) return "bg-emerald-500 border border-emerald-400/80 shadow-[0_0_15px_rgba(16,185,129,0.8)]";
+      if (count < 15) return "bg-emerald-400 border border-emerald-300 shadow-[0_0_20px_rgba(52,211,153,0.9)]";
+      return "bg-emerald-300 border border-white shadow-[0_0_25px_rgba(110,231,183,1)]";
     } else {
-      if (count === 0) return "bg-gray-200";
-      if (count < 2) return "bg-green-200";
-      if (count < 5) return "bg-green-400";
-      if (count < 10) return "bg-green-600";
-      if (count < 15) return "bg-green-800";
-      return "bg-green-800";
+      if (count === 0) return "bg-slate-100 border border-slate-200";
+      if (count < 2) return "bg-emerald-200";
+      if (count < 5) return "bg-emerald-400";
+      if (count < 10) return "bg-emerald-500 shadow-md";
+      if (count < 15) return "bg-emerald-600 shadow-lg";
+      return "bg-emerald-700 shadow-xl";
     }
   };
 
@@ -89,14 +89,14 @@ const ActivityHeatmap = () => {
 
   if (loading) {
     return (
-      <div className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md p-6 border h-full flex items-center justify-center`}>
-        <div className="animate-spin h-8 w-8 border-b-2 border-orange-600 rounded-full"></div>
+      <div className={`${isDark ? 'bg-white/5 backdrop-blur-xl border-white/10' : 'bg-white border-gray-100'} rounded-2xl shadow-lg p-6 border h-full flex items-center justify-center`}>
+        <div className=" h-8 w-8 border-b-2 border-orange-600 rounded-full"></div>
       </div>
     );
   }
 
   return (
-    <div className={`${isDark ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md p-6 border overflow-hidden`}>
+    <div className={`${isDark ? 'bg-white/5 backdrop-blur-xl border-white/10 hover:border-white/20  ' : 'bg-white border-gray-200'} rounded-2xl shadow-lg p-6 border overflow-hidden`}>
 
       <div className="overflow-x-auto pb-2" ref={scrollRef}>
         <div className="min-w-max">
@@ -114,7 +114,7 @@ const ActivityHeatmap = () => {
               {calendarData.map((day) => (
                 <div
                   key={day.date}
-                  className={`w-3 h-3 rounded-sm ${getColor(day.count)} transition-colors hover:ring-2 hover:ring-orange-600 cursor-pointer`}
+                  className={`w-3 h-3 rounded-sm ${getColor(day.count)}   hover:ring-white cursor-pointer  z-10 relative`}
                   title={`${day.count} activities on ${day.date}`}
                 ></div>
               ))}
@@ -122,7 +122,7 @@ const ActivityHeatmap = () => {
           </div>
 
           {/* Dynamic Legend - NOW WORKS IN DARK/LIGHT MODE */}
-          <div className={`flex items-center justify-end mt-4 text-xs ${isDark ? 'text-gray-600 dark:text-gray-400' : 'text-gray-500'} space-x-2`}>
+          <div className={`flex items-center justify-end mt-4 text-xs font-semibold ${isDark ? 'text-white/70' : 'text-slate-500'} space-x-2`}>
             <span>Less</span>
 
             {legendLevels.map((level, i) => (

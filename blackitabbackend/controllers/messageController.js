@@ -31,10 +31,8 @@ const storage = new CloudinaryStorage({
             resource_type,
             format,
             use_filename: true,
-            unique_filename: true,
-        };
-    },
-});
+            unique_filename: true};
+    }});
 
 const upload = multer({ storage: storage });
 exports.uploadMiddleware = upload.single('media');
@@ -52,10 +50,10 @@ exports.sendMessage = async (req, res) => {
         // Privacy check — can't message private accounts unless following
         const recipientUser = await User.findById(recipientId);
         if (recipientUser && recipientUser.isPrivate) {
-            const isFollowing = await require('../models/FollowerList').exists({
-                userId: recipientId,
-                followerId: senderId,
-                status: 'accepted'
+            const isFollowing = await require('../models/Connection').exists({
+                sourceUserId: senderId,
+                targetUserId: recipientId,
+                connectionType: 'follow'
             });
 
             if (!isFollowing && senderId.toString() !== recipientId.toString()) {
@@ -104,13 +102,31 @@ exports.sendMessage = async (req, res) => {
         const newMessage = await Message.create(messageData);
         const populatedMessage = await newMessage.populate('sender', 'name profileImage');
 
-        if (req.io) {
-            req.io.emit('new_message', { message: populatedMessage });
+        // Upsert a notification to prevent spamming the user with 100 ping notifications
+        const Notification = require('../models/Notification');
+        await Notification.findOneAndUpdate(
+            { recipient: recipientId, sender: senderId, type: 'new_message' },
+            { 
+               read: false, 
+               message: `New message from ${populatedMessage.sender.name}`,
+               createdAt: Date.now(),
+               relatedId: newMessage._id
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+
+        const socketService = req.app.get('socketService');
+        if (socketService) {
+            // Emit to recipient's active tabs
+            socketService.emitToUser(recipientId, 'new_message', { message: populatedMessage });
+
+            // Emit to sender's OTHER active tabs (so sending from one tab syncs to the other tab)
+            socketService.emitToUser(senderId, 'new_message', { message: populatedMessage });
         }
 
         res.status(201).json({ success: true, message: populatedMessage });
     } catch (error) {
-        console.error('Send message error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -134,7 +150,7 @@ exports.getMessages = async (req, res) => {
 
         res.json({ success: true, messages });
     } catch (error) {
-        console.error('Get messages error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -154,7 +170,7 @@ exports.getConversations = async (req, res) => {
 
         res.json({ success: true, conversations: users });
     } catch (error) {
-        console.error('Get conversations error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -187,7 +203,7 @@ exports.downloadMessageMedia = async (req, res) => {
 
         response.data.pipe(res);
     } catch (error) {
-        console.error('Download media error:', error);
+        
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
