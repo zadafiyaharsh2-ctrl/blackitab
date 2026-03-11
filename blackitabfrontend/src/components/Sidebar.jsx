@@ -64,26 +64,30 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     try { return JSON.parse(localStorage.getItem('user') || '{}').role || 'student'; } catch { return 'student'; }
   })();
 
-  const canAccessTeacher = ['teacher', 'hod'].includes(userRole);
+  const canAccessTeacher = ['teacher', 'hod', 'institute'].includes(userRole);
   const canAccessInstitute = userRole === 'institute';
 
-  const navItems = canAccessInstitute ? [] : [
-    ...(canAccessTeacher ? [] : [{ path: '/dashboard', label: 'Dashboard', icon: <FaHome /> }]),
-    { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
-    { path: '/analytics', label: 'Analytics', icon: <FaChartBar /> },
+  const navItems = [
+    
 
     ...(canAccessTeacher ? [
-      { path: '/teacher-dashboard', label: 'Teacher Dashboard', icon: <FaSchool className="text-indigo-400" /> },
-      { path: '/teacher/batches', label: 'Classes & Batches', icon: <FaUsers className="text-blue-400" /> },
-      { path: '/teacher/attendance', label: 'Attendance', icon: <FaCalendarDay className="text-purple-400" /> },
-      { path: '/question-management', label: 'Question Bank', icon: <FaListUl className="text-cyan-400" /> },
-      { path: '/teacher/tests', label: 'Tests', icon: <FaListAlt className="text-green-400" /> },
+      { path: '/teacher-dashboard', label: 'Teacher Dashboard', icon: <FaSchool /> },
+      { path: '/teacher/batches', label: 'Classes & Batches', icon: <FaUsers /> },
+      { path: '/teacher/attendance', label: 'Attendance', icon: <FaCalendarDay /> },
+      { path: '/question-management', label: 'Question Bank', icon: <FaListUl /> },
+      { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
+      { path: '/teacher/tests', label: 'Tests', icon: <FaListAlt /> },
       { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
     ] : []),
+    // ...(canAccessTeacher ? [] : [
+    //   { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
+    // ]),
+    
+    // { path: '/analytics', label: 'Analytics', icon: <FaChartBar /> },
 
     { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
     { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
-    { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy className="text-yellow-400" /> },
+    { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy /> },
     { path: '/theory', label: 'Theory', icon: <FaBook /> },
   ];
 
