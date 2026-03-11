@@ -28,36 +28,36 @@ import { SocketContextProvider } from './context/SocketContext';
 // ============================================================================
 // IMPORT PAGES
 // ============================================================================
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
-import Social from './pages/Social';
-// import AI from './pages/AI';
-import AskAI from './pages/AskAI';
-import Analytics from './pages/Analytics';
-import SchoolAnalytics from './pages/SchoolAnalytics';
-import Problems from './pages/Problems';
-import Contest from './pages/Contest';
-import ProblemChapters from './pages/ProblemChapters';
-import ProblemList from './pages/ProblemList';
-import ProblemDetail from './pages/ProblemDetail';
-import Profile from './pages/Profile';
-import LandingPage from './pages/LandingPage';
-import Theory from './pages/Theory';
-import SocialListPage from './pages/SocialListPage';
-import Messages from './pages/Messages';
-import Notifications from './pages/Notifications';
-import CreatePost from './pages/CreatePost';
-import StudyContent from './pages/StudyContent';
-import ContentDetail from './pages/ContentDetail';
-import ExamQuestions from './pages/ExamQuestions';
-import Leaderboard from './pages/Leaderboard';
-import Onboarding from './pages/Onboarding';
-import TeacherDashboard from './pages/TeacherDashboard';
-import ManageQuestions from './pages/ManageQuestions';
-import TeacherClasses from './pages/TeacherClasses';
-import TeacherBatchDetail from './pages/TeacherBatchDetail';
-import StudentClasses from './pages/StudentClasses';
+import Login from './pages/public/Login';
+import Signup from './pages/public/Signup';
+import Dashboard from './pages/student/Dashboard';
+import Social from './pages/student/Social';
+// import AI from './pages/student/AI';
+import AskAI from './pages/student/AskAI';
+import Analytics from './pages/teacher/Analytics';
+import SchoolAnalytics from './pages/admin/SchoolAnalytics';
+import Problems from './pages/student/Problems';
+import Contest from './pages/student/Contest';
+import ProblemChapters from './pages/student/ProblemChapters';
+import ProblemList from './pages/student/ProblemList';
+import ProblemDetail from './pages/student/ProblemDetail';
+import Profile from './pages/shared/Profile';
+import LandingPage from './pages/public/LandingPage';
+import Theory from './pages/student/Theory';
+import SocialListPage from './pages/student/SocialListPage';
+import Messages from './pages/shared/Messages';
+import Notifications from './pages/shared/Notifications';
+import CreatePost from './pages/student/CreatePost';
+import StudyContent from './pages/student/StudyContent';
+import ContentDetail from './pages/student/ContentDetail';
+import ExamQuestions from './pages/teacher/ExamQuestions';
+import Leaderboard from './pages/student/Leaderboard';
+import Onboarding from './pages/public/Onboarding';
+import TeacherDashboard from './pages/teacher/TeacherDashboard';
+import ManageQuestions from './pages/teacher/ManageQuestions';
+import TeacherClasses from './pages/teacher/TeacherClasses';
+import TeacherBatchDetail from './pages/teacher/TeacherBatchDetail';
+import StudentClasses from './pages/student/StudentClasses';
 
 // Imported Institute Pages
 import InstituteDashboard from './pages/institute/InstituteDashboard';
@@ -70,15 +70,15 @@ import QuestionChecker from './pages/institute/QuestionChecker';
 import JoinRequestsPanel from './pages/institute/JoinRequestsPanel';
 import InstituteNotifications from './pages/institute/InstituteNotifications';
 
-import TeacherAttendance from './pages/TeacherAttendance';
-import AdminLogin from './pages/AdminLogin';
-import AdminDashboard from './pages/AdminDashboard';
+import TeacherAttendance from './pages/teacher/TeacherAttendance';
+import AdminLogin from './pages/public/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
 // ============================================================================
 // IMPORT COMPONENTS
 // ============================================================================
-import Sidebar from './components/Sidebar';
-import ProtectedRoute from './components/ProtectedRoute'; // Wrapper that checks if user is logged in
-import PublicRoute from './components/PublicRoute';     // Wrapper for pages accessible only when logged out (like Login)
+import Sidebar from './components/shared/Sidebar';
+import ProtectedRoute from './components/auth/ProtectedRoute'; // Wrapper that checks if user is logged in
+import PublicRoute from './components/auth/PublicRoute';     // Wrapper for pages accessible only when logged out (like Login)
 
 
 function App() {
@@ -650,8 +650,8 @@ function App() {
  * - onLogout: Function to handle logout action
  */
 
-import FloatingSocialButton from './components/FloatingSocialButton';
-import NotificationBell from './components/NotificationBell';
+import FloatingSocialButton from './components/student/FloatingSocialButton';
+import NotificationBell from './components/shared/NotificationBell';
 
 function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
   const location = useLocation();

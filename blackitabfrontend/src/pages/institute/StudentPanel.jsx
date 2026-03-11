@@ -8,7 +8,7 @@ import {
   PencilSquareIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
-import LoadingSpinner from '../../components/LoadingSpinner';
+import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import { CustomToast } from '../../utils/CustomToast';
 
 const StudentPanel = () => {

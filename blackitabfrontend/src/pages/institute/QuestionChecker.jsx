@@ -11,7 +11,7 @@ import {
   ExclamationTriangleIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
-import LoadingSpinner from '../../components/LoadingSpinner';
+import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import { CustomToast } from '../../utils/CustomToast';
 
 const QuestionChecker = () => {

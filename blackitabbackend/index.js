@@ -11,27 +11,27 @@ const User = require('./models/User');
 const { startCronJobs } = require('./services/cronService');
 
 // Controllers used directly in this file
-const authController = require('./controllers/authController');
-const theoryController = require('./controllers/theoryController');
+const authController = require('./controllers/shared/authController');
+const theoryController = require('./controllers/shared/theoryController');
 
 // Route modules
-const progressRoutes = require('./routes/progress');
-const problemRoutes = require('./routes/problemRoutes');
-const socialRoutes = require('./routes/socialRoutes');
-const messageRoutes = require('./routes/messageRoutes');
-const postRoutes = require('./routes/postRoutes');
-const userRoutes = require('./routes/userRoutes');
-const aiRoutes = require('./routes/aiRoutes');
-const aiQuestionRoutes = require('./routes/aiQuestionRoutes');
-const instituteRoutes = require('./routes/instituteRoutes');
-const attemptRoutes = require('./routes/attemptRoutes');
-const analyticsRoutes = require('./routes/analyticsRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-const examRoutes = require('./routes/examRoutes');
-const contestRoutes = require('./routes/contestRoutes');
-const questionRoutes = require('./routes/questionRoutes');
-const teacherRoutes = require('./routes/teacherRoutes');
-const adminChatRoutes = require('./routes/adminChatRoutes');
+const progressRoutes = require('./routes/student/progress');
+const problemRoutes = require('./routes/student/problemRoutes');
+const socialRoutes = require('./routes/shared/socialRoutes');
+const messageRoutes = require('./routes/shared/messageRoutes');
+const postRoutes = require('./routes/shared/postRoutes');
+const userRoutes = require('./routes/shared/userRoutes');
+const aiRoutes = require('./routes/shared/aiRoutes');
+const aiQuestionRoutes = require('./routes/shared/aiQuestionRoutes');
+const instituteRoutes = require('./routes/institute/instituteRoutes');
+const attemptRoutes = require('./routes/student/attemptRoutes');
+const analyticsRoutes = require('./routes/shared/analyticsRoutes');
+const adminRoutes = require('./routes/admin/adminRoutes');
+const examRoutes = require('./routes/shared/examRoutes');
+const contestRoutes = require('./routes/student/contestRoutes');
+const questionRoutes = require('./routes/shared/questionRoutes');
+const teacherRoutes = require('./routes/teacher/teacherRoutes');
+const adminChatRoutes = require('./routes/admin/adminChatRoutes');
 
 // --- Server Setup ---
 

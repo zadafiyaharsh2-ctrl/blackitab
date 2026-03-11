@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { CameraIcon, XMarkIcon, MapPinIcon, PhoneIcon, BuildingOfficeIcon, UserGroupIcon, IdentificationIcon, BookOpenIcon, InformationCircleIcon, PencilSquareIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import LoadingSpinner from '../../components/LoadingSpinner';
+import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import { CustomToast } from '../../utils/CustomToast';
 
 const InstituteProfile = () => {
