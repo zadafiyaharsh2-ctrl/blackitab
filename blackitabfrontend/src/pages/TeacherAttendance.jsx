@@ -48,17 +48,33 @@ export default function TeacherAttendance() {
   };
 
   useEffect(() => {
-    if (selectedBatch && viewMode === 'take') fetchStudents(selectedBatch._id);
-  }, [selectedBatch, viewMode]);
+    if (selectedBatch && viewMode === 'take') fetchStudents(selectedBatch._id, attendanceDate);
+  }, [selectedBatch, viewMode, attendanceDate]);
 
-  const fetchStudents = async (batchId) => {
+  const fetchStudents = async (batchId, date) => {
     try {
       setLoadingStudents(true);
-      const res = await axios.get(`${API}/api/teacher/batch/${batchId}`, { headers });
-      const studentData = res.data.data.studentIds || [];
+      // Fetch students for the batch
+      const studentRes = await axios.get(`${API}/api/teacher/batch/${batchId}`, { headers });
+      const studentData = studentRes.data.data.studentIds || [];
       setStudents(studentData);
+
+      // Also check if attendance already exists for this exact date to pre-fill it
+      let savedRecords = [];
+      try {
+        const histRes = await axios.get(`${API}/api/teacher/attendance/${batchId}?date=${date}`, { headers });
+        if (histRes.data.data && histRes.data.data.length > 0) {
+          savedRecords = histRes.data.data[0].records;
+        }
+      } catch (err) {
+        console.error("Could not fetch day history", err);
+      }
+
       const init = {};
-      studentData.forEach(s => { init[s._id] = 'Present'; });
+      studentData.forEach(s => {
+        const existing = savedRecords.find(r => r.studentId?._id === s._id || r.studentId === s._id);
+        init[s._id] = existing ? existing.status : 'Present';
+      });
       setAttendanceState(init);
     } catch {
       setStudents(DUMMY_STUDENTS);
