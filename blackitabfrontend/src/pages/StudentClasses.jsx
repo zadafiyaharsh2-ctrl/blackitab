@@ -9,12 +9,6 @@ import { AcademicCapIcon } from '@heroicons/react/24/outline';
 import API_URL from '../config';
 import toast from 'react-hot-toast';
 
-const STATUS_STYLE = {
-  Present: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30',
-  Absent:  'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/30',
-  Late:    'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30',
-};
-
 const AttendanceBar = ({ percent }) => {
   const color = percent >= 75 ? 'bg-emerald-500' : percent >= 50 ? 'bg-amber-500' : 'bg-red-500';
   return (
@@ -23,6 +17,167 @@ const AttendanceBar = ({ percent }) => {
     </div>
   );
 };
+
+const STATUS_CONFIG = {
+  Present: {
+    dot: 'bg-emerald-500 shadow-emerald-500/40 shadow-md',
+    ring: 'ring-2 ring-emerald-200 dark:ring-emerald-500/30',
+    numColor: 'text-white',
+    label: 'text-emerald-600 dark:text-emerald-400',
+    big: true,
+  },
+  Absent: {
+    dot: 'bg-red-500 shadow-red-500/40 shadow-md',
+    ring: 'ring-2 ring-red-200 dark:ring-red-500/30',
+    numColor: 'text-white',
+    label: 'text-red-500 dark:text-red-400',
+    big: true,
+  },
+  Late: {
+    dot: 'bg-amber-400 shadow-amber-400/40 shadow-md',
+    ring: 'ring-2 ring-amber-200 dark:ring-amber-400/30',
+    numColor: 'text-white',
+    label: 'text-amber-500 dark:text-amber-300',
+    big: true,
+  },
+};
+
+// Helper: strip time from a Date → "YYYY-MM-DD" key
+const toKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+const AttendanceTimeline = ({ sessions }) => {
+  const scrollRef = React.useRef(null);
+
+  // Build session lookup keyed by date string
+  const sessionMap = {};
+  sessions.forEach(s => {
+    const k = toKey(new Date(s.date));
+    sessionMap[k] = s.status;
+  });
+
+  // Date range: first session → today
+  const dates = sessions.map(s => new Date(s.date));
+  const earliest = dates.length ? new Date(Math.min(...dates)) : new Date();
+  const today = new Date();
+  earliest.setHours(0,0,0,0);
+  today.setHours(0,0,0,0);
+
+  // Generate ALL calendar days
+  const allDays = [];
+  for (let d = new Date(earliest); d <= today; d.setDate(d.getDate() + 1)) {
+    allDays.push(new Date(d));
+  }
+
+  // Summary counts
+  const present = sessions.filter(s => s.status === 'Present').length;
+  const absent  = sessions.filter(s => s.status === 'Absent').length;
+  const late    = sessions.filter(s => s.status === 'Late').length;
+
+  // Auto-scroll to the right (most recent = rightmost)
+  React.useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+    }
+  }, []);
+
+  return (
+    <div>
+      {/* Header: Legend + summary */}
+      <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-gray-100 dark:border-white/5">
+        <div className="flex items-center gap-4">
+          {[['Present','bg-emerald-500'],['Absent','bg-red-500'],['Late','bg-amber-400'],['No class','bg-gray-300 dark:bg-white/15']].map(([l,c]) => (
+            <span key={l} className="flex items-center gap-1.5 text-[10px] text-gray-400 font-medium">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${c}`}/>
+              {l}
+            </span>
+          ))}
+        </div>
+        <div className="flex items-center gap-2 text-[10px] font-bold">
+          {present > 0 && <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">{present} P</span>}
+          {absent  > 0 && <span className="px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400">{absent} A</span>}
+          {late    > 0 && <span className="px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400">{late} L</span>}
+        </div>
+      </div>
+
+      {/* Single scrollable strip */}
+      <div ref={scrollRef} className="overflow-x-auto px-5 py-5">
+        <div className="flex items-end gap-0 min-w-max relative">
+          {/* Baseline timeline rail */}
+          <div className="absolute left-0 right-0 top-[28px] h-px bg-gray-200 dark:bg-white/10 z-0" />
+
+          {allDays.map((d, i) => {
+            const key    = toKey(d);
+            const status = sessionMap[key]; // undefined = no class
+            const cfg    = STATUS_CONFIG[status];
+            const isToday = toKey(d) === toKey(new Date());
+
+            // Month boundary label
+            const isMonthStart = d.getDate() === 1 || i === 0;
+
+            const dayNum   = d.getDate();
+            const dayShort = d.toLocaleDateString('en-US', { weekday: 'short' });
+            const fullDate = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+            return (
+              <div key={key} className="flex flex-col items-center relative z-10" style={{ minWidth: '44px' }}>
+                {/* Month label above on 1st of month */}
+                {isMonthStart ? (
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1 whitespace-nowrap">
+                    {d.toLocaleDateString('en-US', { month: 'short' })}
+                  </span>
+                ) : (
+                  <span className="mb-1 h-[13px]" />
+                )}
+
+                {/* Dot + tooltip */}
+                <div className="group relative flex flex-col items-center">
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 hidden group-hover:block z-30 pointer-events-none">
+                    <div className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg whitespace-nowrap shadow-xl">
+                      <div>{fullDate}</div>
+                      <div className={`mt-0.5 font-bold ${
+                        status === 'Present' ? 'text-emerald-300 dark:text-emerald-600' :
+                        status === 'Absent'  ? 'text-red-300 dark:text-red-500' :
+                        status === 'Late'    ? 'text-amber-300 dark:text-amber-500' :
+                        'text-gray-400'
+                      }`}>{status || 'No class'}</div>
+                    </div>
+                    <div className="w-2 h-2 bg-gray-900 dark:bg-gray-100 rotate-45 mx-auto -mt-1" />
+                  </div>
+
+                  {cfg ? (
+                    /* Recorded session — big dot */
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center ${cfg.dot} ${cfg.ring} ${isToday ? 'outline outline-2 outline-offset-2 outline-gray-900 dark:outline-white' : ''}`}>
+                      <span className={`text-xs font-bold ${cfg.numColor}`}>{dayNum}</span>
+                    </div>
+                  ) : (
+                    /* No class — small gray dot */
+                    <div className={`w-5 h-5 rounded-full bg-gray-100 dark:bg-white/10 border border-gray-200 dark:border-white/15 flex items-center justify-center mx-auto mt-2 ${isToday ? 'outline outline-2 outline-offset-2 outline-gray-400' : ''}`}>
+                      <span className="text-[8px] font-semibold text-gray-400">{dayNum}</span>
+                    </div>
+                  )}
+
+                  {/* Day label below */}
+                  <span className="text-[8px] font-semibold text-gray-400 dark:text-gray-500 mt-1 uppercase">
+                    {dayShort}
+                  </span>
+
+                  {/* Status label */}
+                  {cfg && (
+                    <span className={`text-[8px] font-bold mt-0.5 ${cfg.label}`}>
+                      {status.slice(0,3).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 const ClassCard = ({ batch }) => {
   const [expanded, setExpanded] = useState(false);
@@ -108,26 +263,15 @@ const ClassCard = ({ batch }) => {
         )}
       </div>
 
-      {/* Expanded session list */}
+      {/* Expanded session timeline */}
       {expanded && (
         <div className="border-t border-gray-100 dark:border-white/5">
           {loadingAttendance ? (
-            <div className="flex items-center justify-center py-6">
+            <div className="flex items-center justify-center py-8">
               <FaSpinner className="animate-spin text-gray-400 text-lg" />
             </div>
           ) : attendance?.sessions?.length > 0 ? (
-            <div className="divide-y divide-gray-100 dark:divide-white/5 max-h-64 overflow-y-auto">
-              {attendance.sessions.map((s, i) => (
-                <div key={i} className="flex items-center justify-between px-5 py-2.5">
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
-                    {new Date(s.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-                  </span>
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${STATUS_STYLE[s.status]}`}>
-                    {s.status}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <AttendanceTimeline sessions={attendance.sessions} />
           ) : (
             <div className="text-center py-8 text-gray-400 text-sm">
               No attendance records found for this class yet.
