@@ -147,7 +147,14 @@ const TeacherBatches = () => {
 
                 <div className="flex justify-between items-start mb-4 pl-2">
                   <div>
-                    <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-tight mb-1">{batch.name}</h3>
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">{batch.name}</h3>
+                      {batch.classCode && (
+                        <div className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 rounded text-xs font-mono font-bold border border-indigo-200 dark:border-indigo-500/30">
+                          {batch.classCode}
+                        </div>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400">
                       <FaGraduationCap /> {batch.subjectId?.name || 'General Batch'}
                     </div>

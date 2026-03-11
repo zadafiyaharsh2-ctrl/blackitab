@@ -39,6 +39,13 @@ const batchSchema = new mongoose.Schema({
         ref: 'Subject',
         default: null
     },
+    classCode: {
+        type: String,
+        unique: true,
+        sparse: true,
+        uppercase: true,
+        trim: true
+    },
     createdAt: {
         type: Date,
         default: Date.now
@@ -49,5 +56,6 @@ const batchSchema = new mongoose.Schema({
 batchSchema.index({ teacherIds: 1 });
 batchSchema.index({ studentIds: 1 });
 batchSchema.index({ instituteId: 1, year: 1 });
+batchSchema.index({ classCode: 1 });
 
 module.exports = mongoose.model('Batch', batchSchema);

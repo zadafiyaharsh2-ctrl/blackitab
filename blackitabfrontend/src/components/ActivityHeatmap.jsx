@@ -90,13 +90,13 @@ const ActivityHeatmap = () => {
   if (loading) {
     return (
       <div className={`${isDark ? 'bg-white/5 backdrop-blur-xl border-white/10' : 'bg-white border-gray-100'} rounded-2xl shadow-lg p-6 border h-full flex items-center justify-center`}>
-        <div className="animate-spin h-8 w-8 border-b-2 border-orange-600 rounded-full"></div>
+        <div className=" h-8 w-8 border-b-2 border-orange-600 rounded-full"></div>
       </div>
     );
   }
 
   return (
-    <div className={`${isDark ? 'bg-white/5 backdrop-blur-xl border-white/10 hover:border-white/20 transition-all duration-300' : 'bg-white border-gray-200'} rounded-2xl shadow-lg p-6 border overflow-hidden`}>
+    <div className={`${isDark ? 'bg-white/5 backdrop-blur-xl border-white/10 hover:border-white/20  ' : 'bg-white border-gray-200'} rounded-2xl shadow-lg p-6 border overflow-hidden`}>
 
       <div className="overflow-x-auto pb-2" ref={scrollRef}>
         <div className="min-w-max">
@@ -114,7 +114,7 @@ const ActivityHeatmap = () => {
               {calendarData.map((day) => (
                 <div
                   key={day.date}
-                  className={`w-3 h-3 rounded-sm ${getColor(day.count)} transition-all hover:ring-2 hover:ring-white cursor-pointer hover:scale-110 z-10 relative`}
+                  className={`w-3 h-3 rounded-sm ${getColor(day.count)}   hover:ring-white cursor-pointer  z-10 relative`}
                   title={`${day.count} activities on ${day.date}`}
                 ></div>
               ))}

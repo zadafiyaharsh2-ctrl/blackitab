@@ -1,5 +1,7 @@
 const User = require('../models/User');
 const Attempt = require('../models/Attempt');
+const Batch = require('../models/Batch');
+const BatchJoinRequest = require('../models/BatchJoinRequest');
 
 exports.updateProfile = async (req, res) => {
     try {
@@ -158,6 +160,39 @@ exports.getLeaderboard = async (req, res) => {
         res.json({ success: true, data: ranked });
     } catch (error) {
         
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+exports.joinBatch = async (req, res) => {
+    try {
+        const { classCode } = req.body;
+        if (!classCode) return res.status(400).json({ success: false, message: 'Class code is required' });
+
+        const batch = await Batch.findOne({ classCode: classCode.toUpperCase() });
+        if (!batch) return res.status(404).json({ success: false, message: 'Invalid class code. Please check and try again.' });
+
+        // Check if student is already in the batch
+        if (batch.studentIds.includes(req.user._id)) {
+            return res.status(400).json({ success: false, message: 'You are already enrolled in this class' });
+        }
+
+        // Check if there is already a pending request
+        const existingReq = await BatchJoinRequest.findOne({ studentId: req.user._id, batchId: batch._id, status: 'pending' });
+        if (existingReq) return res.status(400).json({ success: false, message: 'Join request has already been sent and is pending approval' });
+
+        // Use the first teacher assigned to the batch or null if not available
+        const primaryTeacher = batch.teacherIds && batch.teacherIds.length > 0 ? batch.teacherIds[0] : null;
+
+        await BatchJoinRequest.create({
+            studentId: req.user._id,
+            batchId: batch._id,
+            teacherId: primaryTeacher
+        });
+
+        res.json({ success: true, message: 'Join request sent successfully to the teacher' });
+    } catch (error) {
+        console.error('Join Batch Error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

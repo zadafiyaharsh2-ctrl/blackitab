@@ -56,6 +56,7 @@ import Onboarding from './pages/Onboarding';
 import TeacherDashboard from './pages/TeacherDashboard';
 import QuestionManagement from './pages/QuestionManagement';
 import TeacherBatches from './pages/TeacherBatches';
+import TeacherBatchDetail from './pages/TeacherBatchDetail';
 
 // Imported Institute Pages and Layout
 import InstituteLayout from './layouts/InstituteLayout';
@@ -467,6 +468,18 @@ function App() {
                 <ProtectedRoute>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherBatches />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Batch Detail / Classroom Management Route */}
+            <Route
+              path="/teacher/batch/:batchId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherBatchDetail />
                   </MainLayout>
                 </ProtectedRoute>
               }

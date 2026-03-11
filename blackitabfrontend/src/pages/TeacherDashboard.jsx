@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { motion } from 'framer-motion';
 import {
   FaChalkboardTeacher, FaUsers, FaClipboardList, FaCalendarAlt,
   FaStar, FaBookOpen, FaBullhorn, FaCommentDots,
@@ -10,9 +9,6 @@ import {
 } from 'react-icons/fa';
 
 import API from '../config';
-
-const fadeIn = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } };
-const stagger = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } };
 
 export default function TeacherDashboard() {
   const [dashboard, setDashboard] = useState(null);
@@ -41,7 +37,7 @@ export default function TeacherDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <FaSpinner className="animate-spin text-4xl text-indigo-500" />
+        <FaSpinner className=" text-4xl text-indigo-500" />
       </div>
     );
   }
@@ -50,7 +46,7 @@ export default function TeacherDashboard() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
         <p className="text-red-400 text-lg mb-4">{error}</p>
-        <button onClick={fetchDashboard} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+        <button onClick={fetchDashboard} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 ">
           Retry
         </button>
       </div>
@@ -62,7 +58,7 @@ export default function TeacherDashboard() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       {/* ─── Header ─── */}
-      <motion.div initial="hidden" animate="visible" variants={fadeIn} className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
             <FaChalkboardTeacher className="text-indigo-500" />
@@ -75,22 +71,22 @@ export default function TeacherDashboard() {
         </div>
         <div className="flex gap-3 flex-wrap">
           <Link to="/question-management"
-            className="px-4 py-2 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-lg hover:bg-emerald-600/30 transition text-sm flex items-center gap-2">
+            className="px-4 py-2 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-lg hover:bg-emerald-600/30  text-sm flex items-center gap-2">
             <FaPlusCircle /> Question Bank
           </Link>
           <Link to="/question-paper"
-            className="px-4 py-2 bg-rose-600/20 text-rose-400 border border-rose-500/30 rounded-lg hover:bg-rose-600/30 transition text-sm flex items-center gap-2">
+            className="px-4 py-2 bg-rose-600/20 text-rose-400 border border-rose-500/30 rounded-lg hover:bg-rose-600/30  text-sm flex items-center gap-2">
             <FaFileAlt /> Question Paper
           </Link>
           <Link to="/school-analytics"
-            className="px-4 py-2 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-lg hover:bg-indigo-600/30 transition text-sm flex items-center gap-2">
+            className="px-4 py-2 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-lg hover:bg-indigo-600/30  text-sm flex items-center gap-2">
             <FaChartLine /> School Analytics
           </Link>
         </div>
-      </motion.div>
+      </div>
 
       {/* ─── Summary Cards ─── */}
-      <motion.div initial="hidden" animate="visible" variants={stagger} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'My Batches', value: d.batchCount || 0, icon: <FaUsers />, color: 'indigo', link: null },
           { label: 'Questions Created', value: d.questionCount || 0, icon: <FaClipboardList />, color: 'emerald', link: '/question-management' },
@@ -101,16 +97,16 @@ export default function TeacherDashboard() {
           const wrapperProps = card.link ? { to: card.link } : {};
           return (
             <Wrapper key={i} {...wrapperProps}>
-              <motion.div variants={fadeIn}
-                className={`glass-panel rounded-xl p-5 border border-${card.color}-500/20 hover:border-${card.color}-500/40 transition cursor-pointer group`}>
-                <div className={`text-${card.color}-400 text-xl mb-3 group-hover:scale-110 transition-transform`}>{card.icon}</div>
+              <div
+                className={`glass-panel rounded-xl p-5 border border-${card.color}-500/20 hover:border-${card.color}-500/40  cursor-pointer group`}>
+                <div className={`text-${card.color}-400 text-xl mb-3 group- `}>{card.icon}</div>
                 <p className="text-3xl font-bold text-gray-900 dark:text-white">{card.value}</p>
                 <p className="text-gray-500 dark:text-gray-400 text-xs mt-1 font-medium">{card.label}</p>
-              </motion.div>
+              </div>
             </Wrapper>
           );
         })}
-      </motion.div>
+      </div>
 
       {/* ─── Tabs ─── */}
       <div className="flex gap-2 border-b border-gray-200 dark:border-white/10 pb-1">
@@ -120,7 +116,7 @@ export default function TeacherDashboard() {
           { key: 'actions', label: 'Quick Actions', icon: <FaPlusCircle /> },
         ].map((tab) => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-xl transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-xl  ${
               activeTab === tab.key
                 ? 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 border border-gray-200 dark:border-white/10 border-b-white dark:border-b-gray-900 shadow-sm -mb-[1px]'
                 : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
@@ -133,9 +129,9 @@ export default function TeacherDashboard() {
 
       {/* ─── Tab Content ─── */}
       {activeTab === 'overview' && (
-        <motion.div initial="hidden" animate="visible" variants={stagger} className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Student Rating Summary */}
-          <motion.div variants={fadeIn} className="glass-panel rounded-xl p-6 border border-gray-200 dark:border-white/10">
+          <div className="glass-panel rounded-xl p-6 border border-gray-200 dark:border-white/10">
             <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
               <FaStar className="text-amber-400" /> Student Ratings
             </h3>
@@ -150,14 +146,14 @@ export default function TeacherDashboard() {
                   <span className="text-sm font-bold text-gray-900 dark:text-white">{d.studentRating?.totalReviews || 0}</span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-2">
-                  <div className="bg-gradient-to-r from-amber-400 to-orange-500 h-2 rounded-full transition-all" style={{ width: `${((d.studentRating?.average || 0) / 5) * 100}%` }} />
+                  <div className="bg-gradient-to-r from-amber-400 to-orange-500 h-2 rounded-full " style={{ width: `${((d.studentRating?.average || 0) / 5) * 100}%` }} />
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Role & Info */}
-          <motion.div variants={fadeIn} className="glass-panel rounded-xl p-6 border border-gray-200 dark:border-white/10">
+          <div className="glass-panel rounded-xl p-6 border border-gray-200 dark:border-white/10">
             <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
               <FaGraduationCap className="text-indigo-400" /> Your Info
             </h3>
@@ -185,11 +181,11 @@ export default function TeacherDashboard() {
                 </div>
               )}
             </div>
-          </motion.div>
+          </div>
 
           {/* Institute Scores */}
           {d.instituteScores && d.instituteScores.length > 0 && (
-            <motion.div variants={fadeIn} className="glass-panel rounded-xl p-6 border border-gray-200 dark:border-white/10 lg:col-span-2">
+            <div className="glass-panel rounded-xl p-6 border border-gray-200 dark:border-white/10 lg:col-span-2">
               <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                 <FaAward className="text-rose-400" /> Institute Scores
               </h3>
@@ -201,13 +197,13 @@ export default function TeacherDashboard() {
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
-        </motion.div>
+        </div>
       )}
 
       {activeTab === 'ratings' && (
-        <motion.div initial="hidden" animate="visible" variants={fadeIn} className="space-y-4">
+        <div className="space-y-4">
           <div className="glass-panel rounded-xl p-6 border border-gray-200 dark:border-white/10">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <FaCommentDots className="text-blue-400" /> Recent Student Feedback
@@ -217,11 +213,11 @@ export default function TeacherDashboard() {
               View detailed analytics →
             </Link>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {activeTab === 'actions' && (
-        <motion.div initial="hidden" animate="visible" variants={stagger} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             { label: 'Manage Batches', desc: 'Create and view student groups', icon: <FaUsers />, link: '/teacher/batches', color: 'blue' },
             { label: 'Take Attendance', desc: 'Mark daily attendance grid', icon: <FaCalendarDay />, link: '/teacher/attendance', color: 'indigo' },
@@ -230,15 +226,15 @@ export default function TeacherDashboard() {
             { label: 'School Analytics', desc: 'Monitor student performance', icon: <FaChartLine />, link: '/school-analytics', color: 'teal' },
           ].map((action, i) => (
             <Link key={i} to={action.link}>
-              <motion.div variants={fadeIn} whileHover={{ y: -4 }}
-                className={`glass-panel rounded-xl p-5 border border-${action.color}-500/20 hover:border-${action.color}-500/40 transition group cursor-pointer`}>
-                <div className={`text-${action.color}-400 text-2xl mb-3 group-hover:scale-110 transition-transform`}>{action.icon}</div>
+              <div
+                className={`glass-panel rounded-xl p-5 border border-${action.color}-500/20 hover:border-${action.color}-500/40  group cursor-pointer`}>
+                <div className={`text-${action.color}-400 text-2xl mb-3 group- `}>{action.icon}</div>
                 <p className="font-bold text-gray-900 dark:text-white text-sm">{action.label}</p>
                 <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">{action.desc}</p>
-              </motion.div>
+              </div>
             </Link>
           ))}
-        </motion.div>
+        </div>
       )}
     </div>
   );

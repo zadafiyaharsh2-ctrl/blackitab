@@ -33,6 +33,9 @@ router.put('/update-profile', protect, upload.single('profileImage'), userContro
 // PUT /api/user/link-manager
 router.put('/link-manager', protect, userController.linkManager);
 
+// POST /api/user/batch/join
+router.post('/batch/join', protect, userController.joinBatch);
+
 // GET /api/user/leaderboard — XP-ranked with streak bonus
 router.get('/leaderboard', protect, userController.getLeaderboard);
 

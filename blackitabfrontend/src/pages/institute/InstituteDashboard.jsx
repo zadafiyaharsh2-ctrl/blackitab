@@ -105,7 +105,7 @@ const InstituteDashboard = () => {
           <div className="flex items-center gap-4 text-sm text-gray-200">
             <div className="flex items-center gap-1 font-mono text-orange-400 bg-orange-500/20 border border-orange-500/30 px-3 py-1 rounded-full text-xs font-bold tracking-wider">
               <span>CODE: {showCode ? institute?.instituteCode : '••••••••'}</span>
-              <button onClick={() => setShowCode(!showCode)} className="ml-1 hover:text-orange-300 transition-colors" title={showCode ? "Hide Code" : "Show Code"}>
+              <button onClick={() => setShowCode(!showCode)} className="ml-1 hover:text-orange-300 " title={showCode ? "Hide Code" : "Show Code"}>
                 {showCode ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
               </button>
             </div>
@@ -122,17 +122,17 @@ const InstituteDashboard = () => {
             onClick={() => navigate(card.path)}
             className={`
               glass-panel border-gray-200 dark:border-white/10 rounded-2xl p-6
-              hover:border-${card.color}-500/50 transition-all duration-300
+              hover:border-${card.color}-500/50  
               cursor-pointer group relative overflow-hidden
             `}
           >
-            <div className={`absolute -right-6 -top-6 w-24 h-24 bg-${card.color}-500/10 rounded-full blur-2xl group-hover:bg-${card.color}-500/20 transition-all`}></div>
+            <div className={`absolute -right-6 -top-6 w-24 h-24 bg-${card.color}-500/10 rounded-full blur-2xl group-hover:bg-${card.color}-500/20 `}></div>
             <div className="flex items-start justify-between relative z-10">
               <div>
                 <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider mb-1">{card.title}</p>
                 <h3 className="text-3xl font-black text-gray-900 dark:text-white">{card.value}</h3>
               </div>
-              <div className={`p-3 bg-gray-100 dark:bg-white/5 shadow-inner border border-gray-200 dark:border-white/10 rounded-xl text-${card.color}-500 dark:text-${card.color}-400 group-hover:scale-110 transition-transform`}>
+              <div className={`p-3 bg-gray-100 dark:bg-white/5 shadow-inner border border-gray-200 dark:border-white/10 rounded-xl text-${card.color}-500 dark:text-${card.color}-400 group- `}>
                 <card.icon className="w-6 h-6" />
               </div>
             </div>
@@ -155,13 +155,13 @@ const InstituteDashboard = () => {
         <div className="glass-panel border-gray-200 dark:border-white/10 rounded-2xl p-6">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 tracking-tight">Quick Links</h3>
             <div className="space-y-3">
-                <button onClick={() => navigate('/institute/theory')} className="w-full text-left px-4 py-3.5 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 transition-colors flex items-center justify-between text-gray-700 dark:text-gray-300 cursor-pointer group shadow-sm font-medium">
+                <button onClick={() => navigate('/institute/theory')} className="w-full text-left px-4 py-3.5 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10  flex items-center justify-between text-gray-700 dark:text-gray-300 cursor-pointer group shadow-sm font-medium">
                     <span>Manage Theory Files</span>
-                    <span className="text-gray-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all">&rarr;</span>
+                    <span className="text-gray-400 group-hover:text-blue-500 group- ">&rarr;</span>
                 </button>
-                <button onClick={() => navigate('/institute/questions')} className="w-full text-left px-4 py-3.5 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 transition-colors flex items-center justify-between text-gray-700 dark:text-gray-300 cursor-pointer group shadow-sm font-medium">
+                <button onClick={() => navigate('/institute/questions')} className="w-full text-left px-4 py-3.5 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10  flex items-center justify-between text-gray-700 dark:text-gray-300 cursor-pointer group shadow-sm font-medium">
                     <span>Review Questions</span>
-                    <span className="text-gray-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all">&rarr;</span>
+                    <span className="text-gray-400 group-hover:text-blue-500 group- ">&rarr;</span>
                 </button>
             </div>
         </div>
