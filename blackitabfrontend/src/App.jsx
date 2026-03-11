@@ -55,7 +55,6 @@ import Leaderboard from './pages/Leaderboard';
 import Onboarding from './pages/Onboarding';
 import TeacherDashboard from './pages/TeacherDashboard';
 import QuestionManagement from './pages/QuestionManagement';
-import QuestionPaper from './pages/QuestionPaper';
 import TeacherBatches from './pages/TeacherBatches';
 
 // Imported Institute Pages and Layout
@@ -548,17 +547,6 @@ function App() {
 
             {/* (Old Routes Removed: CreateExamQuestion and MyQuestions) */}
 
-            {/* Question Paper Generator */}
-            <Route
-              path="/question-paper"
-              element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <QuestionPaper />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
 
             {/* Institute Profile — accessible to all authenticated users (students see read-only) */}
             <Route

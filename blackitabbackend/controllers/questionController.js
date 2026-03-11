@@ -45,7 +45,8 @@ async function _copyToExamQuestion(q) {
         visibility: q.visibility,
         approvalStatus: 'approved',
         isProblem: true,
-        sourceQuestionId: q._id
+        sourceQuestionId: q._id,
+        designatedFor: q.designatedFor
     });
 }
 
@@ -61,7 +62,8 @@ async function _syncExamQuestion(q) {
             subject: q.subject,
             difficulty: q.difficulty,
             exam: q.exam,
-            tags: q.tags
+            tags: q.tags,
+            designatedFor: q.designatedFor
         }
     );
 }
@@ -104,7 +106,7 @@ exports.listMyQuestions = async (req, res) => {
 // POST /api/questions — Create a question manually
 exports.createQuestion = async (req, res) => {
     try {
-        const { exam, subject, question, options, correctAnswer, difficulty, explanation, tags, visibility } = req.body;
+        const { exam, subject, question, options, correctAnswer, difficulty, explanation, tags, visibility, designatedFor } = req.body;
 
         if (!exam || !subject || !question || !options || options.length !== 4 || correctAnswer === undefined) {
             return res.status(400).json({ success: false, message: 'Missing required fields: exam, subject, question, 4 options, correctAnswer' });
@@ -120,6 +122,7 @@ exports.createQuestion = async (req, res) => {
             explanation: explanation || 'No explanation available',
             tags: tags || [],
             visibility: visibility || 'public',
+            designatedFor: (designatedFor && designatedFor.length > 0) ? designatedFor : ['digital'],
             isPublic: visibility !== 'private',
             approvalStatus: 'pending',
             createdBy: req.user._id,
@@ -139,7 +142,7 @@ exports.createQuestion = async (req, res) => {
 // POST /api/questions/generate — AI generates questions (teacher can edit after)
 exports.generateQuestions = async (req, res) => {
     try {
-        const { topic, difficulty = 'Medium', count = 5, exam = 'jee', visibility = 'public' } = req.body;
+        const { topic, difficulty = 'Medium', count = 5, exam = 'jee', visibility = 'public', designatedFor } = req.body;
 
         if (!topic || !topic.trim()) {
             return res.status(400).json({ success: false, message: 'Topic is required' });
@@ -254,6 +257,7 @@ exports.generateQuestions = async (req, res) => {
                 explanation: q.explanation,
                 isAiGenerated: true,
                 visibility: visibility,
+                designatedFor: (designatedFor && designatedFor.length > 0) ? designatedFor : ['digital'],
                 isPublic: visibility !== 'private',
                 createdBy: req.user._id,
                 instituteId: req.user.instituteId || null,
