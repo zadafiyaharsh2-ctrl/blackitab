@@ -59,6 +59,10 @@ import QuestionManagement from './pages/QuestionManagement';
 import TeacherBatches from './pages/TeacherBatches';
 import TeacherAssignments from './pages/TeacherAssignments';
 import TeacherAssignmentDetail from './pages/TeacherAssignmentDetail';
+import TeacherTests from './pages/TeacherTests';
+import TeacherTestDetail from './pages/TeacherTestDetail';
+import TeacherContent from './pages/TeacherContent';
+import TeacherFeedback from './pages/TeacherFeedback';
 
 // Imported Institute Pages and Layout
 import InstituteLayout from './layouts/InstituteLayout';
@@ -580,6 +584,54 @@ function App() {
                 <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherAssignmentDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Tests / Exams */}
+            <Route
+              path="/teacher/tests"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherTests />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Test Detail / Results */}
+            <Route
+              path="/teacher/test/:id"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherTestDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Content Creation */}
+            <Route
+              path="/teacher/content"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherContent />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Feedback & Complaints */}
+            <Route
+              path="/teacher/feedback"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherFeedback />
                   </MainLayout>
                 </ProtectedRoute>
               }
