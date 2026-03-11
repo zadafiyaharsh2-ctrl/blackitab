@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaHome, FaUsers, FaRobot, FaChartBar, FaUser, FaSignOutAlt, FaBars, FaBook, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaBell, FaSearch, FaCalendarDay, FaClipboardList } from 'react-icons/fa';
+import { FaHome, FaUsers, FaRobot, FaChartBar, FaUser, FaListAlt, FaSignOutAlt, FaBars, FaBook, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaBell, FaSearch, FaCalendarDay } from 'react-icons/fa';
 import { MdReportProblem } from 'react-icons/md';
 import { useTheme } from '../context/ThemeContext';
 import Logo from './Logo';
@@ -83,8 +83,8 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       { path: '/teacher/attendance', label: 'Attendance', icon: <FaCalendarDay className="text-purple-400" /> },
       { path: '/teacher/assignments', label: 'Assignments', icon: <FaClipboardList className="text-yellow-400" /> },
       { path: '/question-management', label: 'Question Bank', icon: <FaListUl className="text-cyan-400" /> },
+      { path: '/teacher/tests', label: 'Tests', icon: <FaListAlt className="text-green-400" /> }, // Added Tests link
       { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
-      { path: '/question-paper', label: 'Question Paper', icon: <FaBook className="text-rose-400" /> },
     ] : []),
 
     // ─── Institute Admin only ───

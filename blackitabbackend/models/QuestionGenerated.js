@@ -38,6 +38,11 @@ const questionGeneratedSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    designatedFor: [{
+        type: String,
+        enum: ['digital', 'paper'],
+        default: ['digital']
+    }],
     topicId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Topic'
