@@ -18,7 +18,13 @@ export default function TeacherAttendance() {
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [students, setStudents] = useState([]);
   const [viewMode, setViewMode] = useState('take');
-  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
+  const getLocalDateString = () => {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().split('T')[0];
+  };
+
+  const [attendanceDate, setAttendanceDate] = useState(getLocalDateString());
   const [attendanceState, setAttendanceState] = useState({});
   const [historyRecords, setHistoryRecords] = useState([]);
   const [selectedHistory, setSelectedHistory] = useState(null);
@@ -169,7 +175,7 @@ export default function TeacherAttendance() {
               <input
                 type="date"
                 value={attendanceDate}
-                max={new Date().toISOString().split('T')[0]}
+                max={getLocalDateString()}
                 onChange={(e) => setAttendanceDate(e.target.value)}
                 className="text-sm border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 bg-white dark:bg-white/5 text-gray-700 dark:text-gray-200 outline-none focus:ring-2 focus:ring-blue-500/30"
               />

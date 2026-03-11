@@ -64,12 +64,10 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     try { return JSON.parse(localStorage.getItem('user') || '{}').role || 'student'; } catch { return 'student'; }
   })();
 
-  const canAccessTeacher = ['teacher', 'hod', 'institute'].includes(userRole);
+  const canAccessTeacher = ['teacher', 'hod'].includes(userRole);
   const canAccessInstitute = userRole === 'institute';
 
   const navItems = [
-    
-
     ...(canAccessTeacher ? [
       { path: '/teacher-dashboard', label: 'Teacher Dashboard', icon: <FaSchool /> },
       { path: '/teacher/batches', label: 'Classes & Batches', icon: <FaUsers /> },
@@ -78,17 +76,19 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
       { path: '/teacher/tests', label: 'Tests', icon: <FaListAlt /> },
       { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
+    ] : !canAccessInstitute ? [
+      { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
+      { path: '/classes', label: 'My Classes', icon: <FaUsers /> },
+      { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
     ] : []),
-    // ...(canAccessTeacher ? [] : [
-    //   { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
-    // ]),
-    
-    // { path: '/analytics', label: 'Analytics', icon: <FaChartBar /> },
-
-    { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
-    { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
-    { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy /> },
-    { path: '/theory', label: 'Theory', icon: <FaBook /> },
+    ...( !canAccessInstitute ? [
+      { path: '/analytics', label: 'Analytics', icon: <FaChartBar /> },
+      { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
+      { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
+      { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy /> },
+      { path: '/theory', label: 'Theory', icon: <FaBook /> },
+      { path: '/social', label: 'Community', icon: <FaUsers /> },
+    ] : [])
   ];
 
   const instituteNavItems = canAccessInstitute ? [

@@ -463,7 +463,7 @@ function App() {
 
             {/* Student Classes Page */}
             <Route
-              path="/student/classes"
+              path="/classes"
               element={
                 <ProtectedRoute>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
