@@ -1,5 +1,5 @@
 const axios = require('axios');
-const ExamQuestion = require('../models/ExamQuestion');
+const QuestionGenerated = require('../models/QuestionGenerated');
 
 const LANGCHAIN_API_URL = process.env.LANGCHAIN_API_URL || 'http://127.0.0.1:8000/query';
 
@@ -133,8 +133,8 @@ const generateQuestions = async (req, res) => {
         });
 
 
-        // Save each question as an individual ExamQuestion document
-        const savedQuestions = await ExamQuestion.insertMany(
+        // Save each question as an individual QuestionGenerated document
+        const savedQuestions = await QuestionGenerated.insertMany(
             validatedQuestions.map(q => ({
                 exam: exam,
                 subject: topic.trim(),
@@ -143,7 +143,11 @@ const generateQuestions = async (req, res) => {
                 correctAnswer: q.correctAnswer,
                 difficulty: validDifficulty,
                 explanation: q.explanation,
-                isAiGenerated: true
+                isAiGenerated: true,
+                createdBy: req.user._id,
+                instituteId: req.user.instituteId || null,
+                visibility: 'public',
+                isPublic: true
             }))
         );
 

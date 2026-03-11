@@ -74,9 +74,9 @@ export default function TeacherDashboard() {
           </p>
         </div>
         <div className="flex gap-3 flex-wrap">
-          <Link to="/create-question"
+          <Link to="/question-management"
             className="px-4 py-2 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-lg hover:bg-emerald-600/30 transition text-sm flex items-center gap-2">
-            <FaPlusCircle /> Create Question
+            <FaPlusCircle /> Question Bank
           </Link>
           <Link to="/question-paper"
             className="px-4 py-2 bg-rose-600/20 text-rose-400 border border-rose-500/30 rounded-lg hover:bg-rose-600/30 transition text-sm flex items-center gap-2">
@@ -93,7 +93,7 @@ export default function TeacherDashboard() {
       <motion.div initial="hidden" animate="visible" variants={stagger} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'My Batches', value: d.batchCount || 0, icon: <FaUsers />, color: 'indigo', link: null },
-          { label: 'Questions Created', value: d.questionCount || 0, icon: <FaClipboardList />, color: 'emerald', link: '/my-questions' },
+          { label: 'Questions Created', value: d.questionCount || 0, icon: <FaClipboardList />, color: 'emerald', link: '/question-management' },
           { label: 'Assignments', value: d.assignmentCount || 0, icon: <FaBookOpen />, color: 'amber', link: null },
           { label: 'Exams Scheduled', value: d.examCount || 0, icon: <FaCalendarAlt />, color: 'rose', link: null },
         ].map((card, i) => {
@@ -225,9 +225,7 @@ export default function TeacherDashboard() {
           {[
             { label: 'Manage Batches', desc: 'Create and view student groups', icon: <FaUsers />, link: '/teacher/batches', color: 'blue' },
             { label: 'Take Attendance', desc: 'Mark daily attendance grid', icon: <FaCalendarDay />, link: '/teacher/attendance', color: 'indigo' },
-            { label: 'Generate AI Questions', desc: 'Auto-generate questions from a topic', icon: <FaGraduationCap />, link: '/ai-questions', color: 'emerald' },
-            { label: 'Create Manual Question', desc: 'Write a question by hand', icon: <FaPlusCircle />, link: '/create-question', color: 'purple' },
-            { label: 'My Questions', desc: 'View and manage your questions', icon: <FaClipboardList />, link: '/my-questions', color: 'amber' },
+            { label: 'Question Bank', desc: 'Manage & Generate Questions', icon: <FaClipboardList />, link: '/question-management', color: 'amber' },
             { label: 'Generate Question Paper', desc: 'Export questions as PDF', icon: <FaFileAlt />, link: '/question-paper', color: 'rose' },
             { label: 'School Analytics', desc: 'Monitor student performance', icon: <FaChartLine />, link: '/school-analytics', color: 'teal' },
           ].map((action, i) => (

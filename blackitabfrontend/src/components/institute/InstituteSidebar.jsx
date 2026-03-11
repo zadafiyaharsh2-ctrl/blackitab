@@ -74,8 +74,8 @@ const InstituteSidebar = ({ isOpen, setIsOpen }) => {
 
       {/* Sidebar container */}
       <div className={`
-        fixed lg:static inset-y-0 left-0 z-50
-        w-64 glass-panel !rounded-none border-r border-gray-200 dark:border-white/10
+        fixed lg:sticky lg:top-0 inset-y-0 left-0 z-50
+        w-64 lg:h-screen glass-panel !rounded-none border-r border-gray-200 dark:border-white/10
         shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_30px_-5px_rgba(255,255,255,0.02)] 
         bg-white/95 dark:bg-[#000000]/80 backdrop-blur-xl
         transform transition-transform duration-300 ease-in-out
