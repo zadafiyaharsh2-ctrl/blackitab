@@ -59,6 +59,12 @@ import QuestionManagement from './pages/QuestionManagement';
 import TeacherBatches from './pages/TeacherBatches';
 import TeacherBatchDetail from './pages/TeacherBatchDetail';
 import StudentClasses from './pages/StudentClasses';
+import TeacherAssignments from './pages/TeacherAssignments';
+import TeacherAssignmentDetail from './pages/TeacherAssignmentDetail';
+import TeacherTests from './pages/TeacherTests';
+import TeacherTestDetail from './pages/TeacherTestDetail';
+import TeacherContent from './pages/TeacherContent';
+import TeacherFeedback from './pages/TeacherFeedback';
 
 // Imported Institute Pages
 import InstituteDashboard from './pages/institute/InstituteDashboard';
@@ -154,7 +160,6 @@ function App() {
           },
         }}
       />
-      {/* BrowserRouter enables URL-based routing */}
       {/* BrowserRouter enables URL-based routing */}
       <SocketContextProvider authUser={user}>
         <BrowserRouter>
@@ -471,55 +476,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
-            {/* Teacher Batches / Classrooms Route */}
-            <Route
-              path="/teacher/batches"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <TeacherBatches />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Teacher Batch Detail / Classroom Management Route */}
-            <Route
-              path="/teacher/batch/:batchId"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <TeacherBatchDetail />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Teacher Attendance Route */}
-            <Route
-              path="/teacher/attendance"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <TeacherAttendance />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Teacher Attendance Route */}
-            <Route
-              path="/teacher/attendance"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <TeacherAttendance />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
             {/* Study Content Route */}
             <Route
               path="/study-content"
@@ -579,6 +535,30 @@ function App() {
                 <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherBatches />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Batch Detail / Classroom Management */}
+            <Route
+              path="/teacher/batch/:batchId"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherBatchDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Attendance */}
+            <Route
+              path="/teacher/attendance"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherAttendance />
                   </MainLayout>
                 </ProtectedRoute>
               }
@@ -756,12 +736,6 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
         localStorage.setItem('blackitab_last_page', JSON.stringify({ path: location.pathname, label: label[1], time: Date.now() }));
       }
     }
-  }, [location.pathname]);
-
-  // Track last visited page for "Resume Last Session" on Dashboard
-  // ... omitted for brevity ...
-  useEffect(() => {
-    // ...
   }, [location.pathname]);
 
   // Adjust content margin based on sidebar state (desktop only)

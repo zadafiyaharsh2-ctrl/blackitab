@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { FaHome, FaUsers, FaRobot, FaChartBar, FaUser, FaListAlt, FaSignOutAlt, FaBars, FaBook, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaBell, FaSearch, FaCalendarDay, FaBuilding, FaUserTie, FaUserGraduate, FaFileAlt, FaClipboardCheck, FaUserPlus, FaSitemap } from 'react-icons/fa';
+import { FaHome, FaUsers, FaRobot, FaChartBar, FaUser, FaListAlt, FaSignOutAlt, FaBars, FaBook, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaBell, FaSearch, FaCalendarDay, FaBuilding, FaUserTie, FaUserGraduate, FaFileAlt, FaClipboardCheck, FaUserPlus, FaSitemap, FaClipboardList, FaCommentDots, FaPenFancy } from 'react-icons/fa';
 import { MdReportProblem } from 'react-icons/md';
 import { useTheme } from '../context/ThemeContext';
 import Logo from './Logo';
@@ -79,13 +79,15 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       { path: '/teacher/assignments', label: 'Assignments', icon: <FaClipboardList className="text-yellow-400" /> },
       { path: '/question-management', label: 'Question Bank', icon: <FaListUl className="text-cyan-400" /> },
       { path: '/teacher/tests', label: 'Tests', icon: <FaListAlt className="text-green-400" /> },
+      { path: '/teacher/content', label: 'Theory Content', icon: <FaPenFancy className="text-pink-400" /> },
+      { path: '/teacher/feedback', label: 'Feedback', icon: <FaCommentDots className="text-rose-400" /> },
       { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
     ] : []),
 
     { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
     { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
     { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy className="text-yellow-400" /> },
-    { path: '/notifications', label: 'Notifications', icon: <FaBell className="text-red-400" />, mobileOnly: true },
+    { path: '/notifications', label: 'Notifications', icon: <FaBell className="text-red-400" /> },
     { path: '/theory', label: 'Theory', icon: <FaBook /> },
   ];
 
