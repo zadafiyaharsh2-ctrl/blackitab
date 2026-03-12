@@ -6,6 +6,11 @@ const path = require('path');
 const { Server } = require('socket.io');
 require('dotenv').config();
 
+// Security Middlewares
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const rateLimit = require('express-rate-limit');
+
 const connectDB = require('./config/database');
 const User = require('./models/User');
 const { startCronJobs } = require('./services/cronService');
@@ -66,11 +71,38 @@ const allowedOrigins = [
   'http://127.0.0.1:5173',
   'https://blackitab.netlify.app'
 ];
+// Helmet for security headers
+app.use(helmet());
+
 app.use(cors({
   origin: allowedOrigins,
   credentials: true
 }));
+
+// Apply Rate Limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 500, // Limit each IP to 500 requests per `window` (here, per 15 minutes)
+  message: { success: false, message: 'Too many requests from this IP, please try again in 15 minutes.' },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+app.use('/api', apiLimiter);
+
 app.use(express.json());
+
+// Sanitize MongoDB data to prevent NoSQL injection
+// In Express 5, req.query is a getter, so the default middleware crashes.
+// We manually sanitize body, params, and headers instead.
+app.use((req, res, next) => {
+  ['body', 'params', 'headers'].forEach((k) => {
+    if (req[k]) {
+      req[k] = mongoSanitize.sanitize(req[k], { replaceWith: '_' });
+    }
+  });
+  next();
+});
+
 app.use((req, res, next) => {
   req.io = io;
   next();
