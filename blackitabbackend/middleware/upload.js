@@ -2,6 +2,9 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadDir = 'uploads/banners';
@@ -12,7 +15,8 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'banner-' + uniqueSuffix + path.extname(file.originalname));
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, 'banner-' + uniqueSuffix + ext);
   }
 });
 
@@ -20,10 +24,14 @@ const bannerUpload = multer({
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const isExtAllowed = allowedExtensions.includes(ext);
+    const isMimeAllowed = allowedMimeTypes.includes(file.mimetype);
+
+    if (isExtAllowed && isMimeAllowed) {
       cb(null, true);
     } else {
-      cb(new Error('Not an image! Please upload an image.'), false);
+      cb(new Error('Invalid file type! Only JPG, PNG, and WEBP images are allowed.'), false);
     }
   }
 });
