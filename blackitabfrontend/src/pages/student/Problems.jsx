@@ -139,16 +139,16 @@ const Problems = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-black">
         <div className="animate-spin h-12 w-12 border-b-2 border-purple-600 rounded-full"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors">
+    <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors">
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-gray-100 to-blue-50 dark:from-purple-900/20 dark:via-gray-900/50 dark:to-blue-900/20 border-b border-gray-200 dark:border-gray-800">
+      <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-gray-100 to-blue-50 dark:from-purple-900/20 dark:via-black/50 dark:to-blue-900/20 border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-full mb-6">
@@ -183,7 +183,7 @@ const Problems = () => {
         </div>
 
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-50 dark:from-gray-900 via-transparent to-transparent pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-50 dark:from-black via-transparent to-transparent pointer-events-none"></div>
       </div>
 
       {/* Exam Categories Section */}
@@ -265,7 +265,7 @@ const Problems = () => {
             <p className="text-gray-600 dark:text-gray-400 mb-6">Try our General Problem Solving section with diverse topics</p>
             <button
               onClick={() => handleExamClick('general')}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-gray-900 dark:text-white font-semibold rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50"
+              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50"
             >
               Explore All Problems
             </button>
