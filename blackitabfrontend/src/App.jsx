@@ -793,7 +793,7 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
   const contentMarginClass = sidebarOpen ? 'md:ml-[280px]' : 'md:ml-[80px]';
 
   return (
-    <div className="min-h-screen flex bg-[#05000a] text-white transition-colors duration-300">
+    <div className="min-h-screen flex bg-white dark:bg-[#05000a] text-gray-900 dark:text-white transition-colors duration-300">
       {/* Sidebar Overlay (Mobile Only) */}
       {sidebarOpen && (
         <div 
@@ -812,12 +812,12 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
         className={`flex-1 transition-all duration-300 w-full min-h-screen ${location.pathname.startsWith('/messages') ? '' : 'p-4 md:p-8'} ${contentMarginClass}`}
       >
         {/* Mobile Hamburger Header */}
-        <div className="md:hidden flex items-center justify-between mb-4 sticky top-0 z-30 bg-black/80 backdrop-blur-md p-4 -mx-4 -mt-4 border-b border-white/10">
+        <div className="md:hidden flex items-center justify-between mb-4 sticky top-0 z-30 bg-white/80 dark:bg-black/80 backdrop-blur-md p-4 -mx-4 -mt-4 border-b border-gray-200 dark:border-white/10">
             <div className="flex items-center gap-3">
-               <button onClick={() => setSidebarOpen(true)} className="p-2 bg-white/5 rounded-xl border border-white/10 text-white">
+               <button onClick={() => setSidebarOpen(true)} className="p-2 bg-gray-100 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
                  <FaBars />
                </button>
-               <span className="font-bold text-lg text-white tracking-wide">Blackitab</span>
+               <span className="font-bold text-lg text-gray-900 dark:text-white tracking-wide">Blackitab</span>
             </div>
         </div>
 
