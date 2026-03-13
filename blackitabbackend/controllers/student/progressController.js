@@ -207,11 +207,11 @@ exports.getSubjectProgress = async (req, res) => {
 exports.getProgressStats = async (req, res) => {
     try {
         const userId = req.query.userId || req.user._id;
-        const User = require('../models/User');
+        const User = require('../../models/User');
 
         // 1. Per-subject completion stats
         const subjectStats = await UserProgress.aggregate([
-            { $match: { userId: new require('mongoose').Types.ObjectId(userId), completed: true } },
+            { $match: { userId: new (require('mongoose')).Types.ObjectId(userId), completed: true } },
             { $group: { _id: '$subjectId', totalCompleted: { $sum: 1 }, lastCompleted: { $max: '$completedAt' } } }
         ]);
 
@@ -219,17 +219,17 @@ exports.getProgressStats = async (req, res) => {
         const totalCompleted = await UserProgress.countDocuments({ userId, completed: true });
 
         // 3. Recent activity (last 5 completions + last 5 attempts, merged and sorted by date)
-        const recentCompletions = await UserProgress.find({ userId: new require('mongoose').Types.ObjectId(userId), completed: true })
+        const recentCompletions = await UserProgress.find({ userId: new (require('mongoose')).Types.ObjectId(userId), completed: true })
             .sort({ completedAt: -1 })
             .limit(5)
             .populate('subjectId', 'name')
             .populate('topicId', 'title')
             .lean();
 
-        const Attempt = require('../models/Attempt');
-        const ExamQuestion = require('../models/ExamQuestion');
+        const Attempt = require('../../models/Attempt');
+        const ExamQuestion = require('../../models/ExamQuestion');
         
-        const recentAttempts = await Attempt.find({ userId: new require('mongoose').Types.ObjectId(userId) })
+        const recentAttempts = await Attempt.find({ userId: new (require('mongoose')).Types.ObjectId(userId) })
             .sort({ createdAt: -1 })
             .limit(5)
             .lean();
@@ -330,7 +330,7 @@ exports.getActivityHeatmap = async (req, res) => {
         const userId = req.query.userId || req.user._id;
         const mongoose = require('mongoose');
         const userObjectId = new mongoose.Types.ObjectId(userId);
-        const ProblemProgress = require('../models/ProblemProgress');
+        const ProblemProgress = require('../../models/ProblemProgress');
 
         const topicActivity = await UserProgress.aggregate([
             { $match: { userId: userObjectId, completed: true, completedAt: { $exists: true } } },
@@ -342,7 +342,7 @@ exports.getActivityHeatmap = async (req, res) => {
             { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$completedAt" } }, count: { $sum: 1 } } }
         ]);
 
-        const Attempt = require('../../models/Attempt');
+        const Attempt = require('../../models/Attempt');  // path is correct (2 levels up)
         const examActivity = await Attempt.aggregate([
             { $match: { userId: userObjectId, attemptedAt: { $exists: true } } },
             { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$attemptedAt" } }, count: { $sum: 1 } } }
