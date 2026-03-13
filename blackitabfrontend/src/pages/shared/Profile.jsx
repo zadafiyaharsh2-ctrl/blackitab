@@ -12,7 +12,7 @@ import EditProfileModal from '../../components/shared/EditProfileModal';
 import StudyContentCard from '../../components/student/StudyContentCard';
 import PlaylistCard from '../../components/student/PlaylistCard';
 import CreatePlaylistModal from '../../components/student/CreatePlaylistModal';
-import ActivityHeatmap from '../components/ActivityHeatmap';
+import ActivityHeatmap from '../../components/student/ActivityHeatmap.jsx';
 import { useSocketContext } from '../../context/SocketContext';
 
 

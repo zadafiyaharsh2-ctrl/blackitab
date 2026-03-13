@@ -65,6 +65,7 @@ import TeacherTests from './pages/TeacherTests';
 import TeacherTestDetail from './pages/TeacherTestDetail';
 import TeacherContent from './pages/TeacherContent';
 import TeacherFeedback from './pages/TeacherFeedback';
+import TeacherBatches from './pages/teacher/TeacherBatchDetail';
 
 // Imported Institute Pages
 import InstituteDashboard from './pages/institute/InstituteDashboard';
