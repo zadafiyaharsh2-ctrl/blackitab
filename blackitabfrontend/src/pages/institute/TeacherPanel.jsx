@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 
 import {
@@ -12,6 +13,7 @@ import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import { CustomToast } from '../../utils/CustomToast';
 
 const TeacherPanel = () => {
+  const navigate = useNavigate();
   const userDataStr = localStorage.getItem('user');
   const user = userDataStr ? JSON.parse(userDataStr) : null;
   const [teachers, setTeachers] = useState([]);
@@ -147,7 +149,7 @@ const TeacherPanel = () => {
                 </tr>
               ) : (
                 teachers.map(t => (
-                  <tr key={t._id} className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                  <tr key={t._id} onClick={() => navigate(`/institute/teacher/${t._id}`)} className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer">
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-gray-900 dark:bg-white flex items-center justify-center text-white dark:text-gray-900 text-sm font-bold shrink-0">
