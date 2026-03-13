@@ -67,6 +67,12 @@ import TeacherContent from './pages/TeacherContent';
 import TeacherFeedback from './pages/TeacherFeedback';
 import TeacherBatches from './pages/teacher/TeacherBatchDetail';
 
+// HOD Department Pages
+import HodDepartmentTeachers from './pages/hod/HodDepartmentTeachers';
+import TeacherPerformance from './pages/hod/TeacherPerformance';
+import HodContentReview from './pages/hod/HodContentReview';
+import HodAttendanceView from './pages/hod/HodAttendanceView';
+
 // Imported Institute Pages
 import InstituteDashboard from './pages/institute/InstituteDashboard';
 import InstituteProfile from './pages/institute/InstituteProfile';
@@ -478,54 +484,6 @@ function App() {
               }
             />
 
-            {/* Teacher Batches / Classrooms Route */}
-            <Route
-              path="/teacher/batches"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <TeacherClasses />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Teacher Batch Detail / Classroom Management Route */}
-            <Route
-              path="/teacher/batch/:batchId"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <TeacherBatchDetail />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Teacher Attendance Route */}
-            <Route
-              path="/teacher/attendance"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <TeacherAttendance />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Teacher Attendance Route */}
-            <Route
-              path="/teacher/attendance"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <TeacherAttendance />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
             {/* Study Content Route */}
             <Route
               path="/study-content"
@@ -726,6 +684,25 @@ function App() {
             />
             <Route path="/institute/notifications"
               element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteNotifications /></MainLayout></ProtectedRoute>}
+            />
+
+            {/* ===== HOD DEPARTMENT ROUTES ===== */}
+            <Route path="/hod/teachers"
+              element={<ProtectedRoute requiredRoles={['hod', 'institute']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><HodDepartmentTeachers /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/hod/teacher/:teacherId"
+              element={<ProtectedRoute requiredRoles={['hod', 'institute']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TeacherPerformance /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/hod/content-review"
+              element={<ProtectedRoute requiredRoles={['hod', 'institute']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><HodContentReview /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/hod/attendance"
+              element={<ProtectedRoute requiredRoles={['hod', 'institute']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><HodAttendanceView /></MainLayout></ProtectedRoute>}
+            />
+
+            {/* Institute — Teacher Performance (reuses same component) */}
+            <Route path="/institute/teacher/:teacherId"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TeacherPerformance /></MainLayout></ProtectedRoute>}
             />
 
             {/* System Admin — separate layout (no sidebar) */}
