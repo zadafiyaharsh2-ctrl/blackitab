@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import axios from 'axios';
 import { motion } from 'framer-motion'
@@ -24,7 +24,11 @@ import API_URL from '../../config';
 const ExamQuestions = () => {
     const { examId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const { isDark } = useTheme();
+
+    // Detect institute mode from URL path
+    const isInstituteMode = location.pathname.endsWith('/institute');
 
     const [questions, setQuestions] = useState([]);
     const [selectedAnswers, setSelectedAnswers] = useState({});
@@ -231,9 +235,11 @@ const ExamQuestions = () => {
         const fetchQuestions = async () => {
             try {
                 setLoading(true);
-                const url = activeSubject === 'All'
-                    ? `${API_URL}/api/problems/exam/${examId}/questions`
-                    : `${API_URL}/api/problems/exam/${examId}/questions?subject=${activeSubject}`;
+                const sourceParam = isInstituteMode ? 'institute' : 'global';
+                const baseUrl = `${API_URL}/api/problems/exam/${examId}/questions`;
+                const params = new URLSearchParams({ source: sourceParam });
+                if (activeSubject !== 'All') params.append('subject', activeSubject);
+                const url = `${baseUrl}?${params.toString()}`;
                 
                 const token = localStorage.getItem('token');
                 const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
@@ -517,15 +523,15 @@ const ExamQuestions = () => {
                     className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors mb-4"
                 >
                     <ArrowLeft className="h-5 w-5" />
-                    Back to Exams
+                    {isInstituteMode ? 'Back to Institute Questions' : 'Back to Exams'}
                 </button>
 
                 <div className="flex items-center justify-between flex-wrap gap-4">
                     <div>
                         <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
                             {currentExam.name}{' '}
-                            <span className="bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-500 text-transparent bg-clip-text">
-                                Practice
+                            <span className={`bg-gradient-to-r ${isInstituteMode ? 'from-orange-500 to-amber-500 dark:from-orange-400 dark:to-amber-400' : 'from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-500'} text-transparent bg-clip-text`}>
+                                {isInstituteMode ? 'Institute Practice' : 'Practice'}
                             </span>
                         </h1>
                         <p className="text-gray-600 dark:text-gray-400 mt-2">

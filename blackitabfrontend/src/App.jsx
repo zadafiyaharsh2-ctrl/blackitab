@@ -35,7 +35,6 @@ import Dashboard from './pages/student/Dashboard';
 import Social from './pages/student/Social';
 // import AI from './pages/student/AI';
 import AskAI from './pages/student/AskAI';
-import Analytics from './pages/teacher/Analytics';
 import SchoolAnalytics from './pages/admin/SchoolAnalytics';
 import Problems from './pages/student/Problems';
 import Contest from './pages/student/Contest';
@@ -253,9 +252,7 @@ function App() {
               path="/analytics"
               element={
                 <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Analytics />
-                  </MainLayout>
+                  <Navigate to="/dashboard" replace />
                 </ProtectedRoute>
               }
             />
@@ -559,6 +556,15 @@ function App() {
                 </ProtectedRoute>
               }
 
+            />
+            <Route
+              path="/exam/:examId/institute" element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <ExamQuestions />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
             />
 
             {/* ===== ROLE-BASED ROUTES ===== */}

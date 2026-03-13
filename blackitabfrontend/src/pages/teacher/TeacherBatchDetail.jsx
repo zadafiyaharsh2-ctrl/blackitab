@@ -76,6 +76,11 @@ const TeacherBatchDetail = () => {
     } catch { toast.error('Failed to add student'); }
   };
 
+  const goToStudentProfile = (studentId) => {
+    if (!studentId) return;
+    navigate(`/profile/${studentId}`);
+  };
+
   useEffect(() => {
     if (activeTab !== 'add' || searchQuery.length < 2) { setSearchResults([]); return; }
     const t = setTimeout(async () => {
@@ -173,7 +178,11 @@ const TeacherBatchDetail = () => {
               const a = attendanceData[student._id];
               const pct = a ? Math.round(a.attendancePercentage) : null;
               return (
-                <div key={student._id} className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] flex items-center justify-between group">
+                <div
+                  key={student._id}
+                  onClick={() => goToStudentProfile(student._id)}
+                  className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] flex items-center justify-between group cursor-pointer hover:border-blue-300 dark:hover:border-blue-400/30 hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-colors"
+                >
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <div className="w-10 h-10 rounded-full bg-gray-900 dark:bg-white flex items-center justify-center text-white dark:text-gray-900 font-bold text-sm shrink-0">
@@ -194,7 +203,13 @@ const TeacherBatchDetail = () => {
                       ) : <p className="text-xs text-gray-400 mt-0.5">No attendance yet</p>}
                     </div>
                   </div>
-                  <button onClick={() => handleRemoveStudent(student._id)} className="opacity-0 group-hover:opacity-100 p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveStudent(student._id);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                  >
                     <FaTrash className="text-xs" />
                   </button>
                 </div>
@@ -215,7 +230,11 @@ const TeacherBatchDetail = () => {
         requests.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {requests.map(req => (
-              <div key={req._id} className="border border-amber-200 dark:border-amber-500/20 rounded-xl p-4 bg-amber-50/60 dark:bg-amber-500/5">
+              <div
+                key={req._id}
+                onClick={() => goToStudentProfile(req.studentId?._id)}
+                className="border border-amber-200 dark:border-amber-500/20 rounded-xl p-4 bg-amber-50/60 dark:bg-amber-500/5 cursor-pointer hover:border-amber-300 dark:hover:border-amber-400/30 transition-colors"
+              >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-9 h-9 rounded-full bg-amber-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
                     {req.studentId?.name?.charAt(0).toUpperCase() || 'S'}
@@ -226,10 +245,22 @@ const TeacherBatchDetail = () => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => handleApproveRequest(req._id)} className="flex-1 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-xs font-semibold flex items-center justify-center gap-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleApproveRequest(req._id);
+                    }}
+                    className="flex-1 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-xs font-semibold flex items-center justify-center gap-1"
+                  >
                     <FaCheck /> Accept
                   </button>
-                  <button onClick={() => handleRejectRequest(req._id)} className="flex-1 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-xs font-semibold text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1 hover:bg-gray-50 dark:hover:bg-white/5">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRejectRequest(req._id);
+                    }}
+                    className="flex-1 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-xs font-semibold text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1 hover:bg-gray-50 dark:hover:bg-white/5"
+                  >
                     <FaTimes /> Reject
                   </button>
                 </div>
@@ -270,7 +301,11 @@ const TeacherBatchDetail = () => {
             ) : searchResults.length > 0 ? (
               <div className="space-y-2">
                 {searchResults.map(s => (
-                  <div key={s._id} className="flex items-center justify-between border border-gray-100 dark:border-white/5 rounded-lg p-3">
+                  <div
+                    key={s._id}
+                    onClick={() => goToStudentProfile(s._id)}
+                    className="flex items-center justify-between border border-gray-100 dark:border-white/5 rounded-lg p-3 cursor-pointer hover:border-blue-300 dark:hover:border-blue-400/30 hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-colors"
+                  >
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-sm font-bold text-gray-700 dark:text-gray-300">
                         {s.name?.charAt(0).toUpperCase()}
@@ -280,7 +315,13 @@ const TeacherBatchDetail = () => {
                         <p className="text-xs text-gray-400">{s.email}</p>
                       </div>
                     </div>
-                    <button onClick={() => handleAddManually(s._id)} className="px-3 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-xs font-semibold flex items-center gap-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddManually(s._id);
+                      }}
+                      className="px-3 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-xs font-semibold flex items-center gap-1"
+                    >
                       <FaUserPlus className="text-[10px]" /> Add
                     </button>
                   </div>

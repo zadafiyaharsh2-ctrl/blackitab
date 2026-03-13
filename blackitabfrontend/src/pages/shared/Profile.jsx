@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { FaCog, FaTh, FaBookmark, FaUserTag, FaPlus, FaSearch, FaBell, FaEnvelope, FaPen, FaHeart, FaComment, FaPlay, FaLock, FaGraduationCap, FaRupeeSign, FaListUl, FaArrowLeft, FaShareAlt, FaBuilding, FaSignInAlt, FaTimes, FaExternalLinkAlt, FaChartLine, FaFire, FaCheckCircle } from 'react-icons/fa';
+import { FaCog, FaTh, FaBookmark, FaUserTag, FaSearch, FaBell, FaEnvelope, FaPen, FaHeart, FaComment, FaPlay, FaLock, FaRupeeSign, FaArrowLeft, FaShareAlt, FaBuilding, FaSignInAlt, FaTimes, FaExternalLinkAlt, FaChartLine, FaFire, FaCheckCircle } from 'react-icons/fa';
 import API_URL from '../../config';
 import usePageTitle from '../../hooks/usePageTitle';
 import toast from 'react-hot-toast';
@@ -9,9 +9,7 @@ import toast from 'react-hot-toast';
 import { SearchModal, NotificationModal, UserListModal } from '../../components/student/SocialModals';
 import PostDetailModal from '../../components/student/PostDetailModal';
 import EditProfileModal from '../../components/shared/EditProfileModal';
-import StudyContentCard from '../../components/student/StudyContentCard';
-import PlaylistCard from '../../components/student/PlaylistCard';
-import CreatePlaylistModal from '../../components/student/CreatePlaylistModal';
+import StudentHomeContent from '../../components/student/StudentHomeContent';
 import ActivityHeatmap from '../../components/student/ActivityHeatmap.jsx';
 import { useSocketContext } from '../../context/SocketContext';
 
@@ -35,9 +33,6 @@ const Profile = () => {
 
   // State for Search
   const [searchQuery, setSearchQuery] = useState('');
-  const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
-  const [playlists, setPlaylists] = useState([]);
-  const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -69,6 +64,7 @@ const Profile = () => {
   const [stats, setStats] = useState(null);
   const [heatmapData, setHeatmapData] = useState([]);
   const [loadingStats, setLoadingStats] = useState(false);
+  const showHeatmap = user?.role === 'student';
 
   // Get online users from Socket Context
   const { onlineUsers } = useSocketContext();
@@ -145,12 +141,23 @@ const Profile = () => {
       const token = localStorage.getItem('token');
       try {
         setLoadingStats(true);
-        const [statsRes, heatmapRes] = await Promise.all([
-          axios.get(`${API_URL}/api/progress/stats?userId=${targetId}`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${API_URL}/api/progress/heatmap?userId=${targetId}`, { headers: { Authorization: `Bearer ${token}` } })
-        ]);
+        const requests = [
+          axios.get(`${API_URL}/api/progress/stats?userId=${targetId}`, { headers: { Authorization: `Bearer ${token}` } })
+        ];
+
+        if (showHeatmap) {
+          requests.push(
+            axios.get(`${API_URL}/api/progress/heatmap?userId=${targetId}`, { headers: { Authorization: `Bearer ${token}` } })
+          );
+        }
+
+        const [statsRes, heatmapRes] = await Promise.all(requests);
         if (statsRes.data?.success) setStats(statsRes.data.data);
-        if (heatmapRes.data?.success) setHeatmapData(heatmapRes.data.data);
+        if (showHeatmap && heatmapRes?.data?.success) {
+          setHeatmapData(heatmapRes.data.data);
+        } else {
+          setHeatmapData([]);
+        }
       } catch (err) {
         console.error('Failed to fetch stats:', err);
       } finally {
@@ -160,7 +167,7 @@ const Profile = () => {
     if (user) {
       fetchStats();
     }
-  }, [user?._id, user?.id]);
+  }, [showHeatmap, user?._id, user?.id]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -377,18 +384,8 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       fetchPosts();
-      fetchPlaylists();
     }
   }, [user?._id, user?.id]);
-
-  const fetchPlaylists = async () => {
-    // Playlist API not built yet, setting empty to avoid 404 error
-    setPlaylists([]);
-  };
-
-  const handleDeletePlaylist = (deletedId) => {
-    setPlaylists(prev => prev.filter(p => p._id !== deletedId));
-  };
 
   const fetchPosts = async () => {
     const targetId = user?._id || user?.id;
@@ -458,10 +455,10 @@ const Profile = () => {
         {!isMyProfile && (
           <button
             onClick={() => navigate('/profile')}
-            className="p-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white hover:bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white transition-colors border border-gray-300 dark:border-gray-700 hover:border-gray-500 group flex-shrink-0"
+            className="p-3 rounded-full bg-white border border-gray-300 dark:bg-white/5 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 transition-colors group flex-shrink-0 shadow-sm"
             title="Back to My Profile"
           >
-            <FaArrowLeft className="text-gray-600 dark:text-gray-400 group-hover:text-white" size={18} />
+            <FaArrowLeft className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" size={18} />
           </button>
         )}
 
@@ -561,9 +558,15 @@ const Profile = () => {
           {/* Profile Info Section */}
           <div className="flex-1 text-center md:text-left space-y-6 w-full">
 
-            <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-4">
-              <div className="text-center md:text-left">
-                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">{user.name}</h1>
+            <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-4 w-full">
+              <div className="text-center md:text-left flex-1 min-w-0">
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white mb-2 break-words">{user.name}</h1>
+                {!isMyProfile && user.institute?.name && (
+                  <div className="mb-3 flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-300 md:justify-start">
+                    <FaBuilding className="text-xs text-orange-500" />
+                    <span>Joined to {user.institute.name}</span>
+                  </div>
+                )}
                 {user.bio && (
                   <p className="text-gray-700 dark:text-gray-300 max-w-lg text-sm leading-relaxed mb-4">{user.bio}</p>
                 )}
@@ -593,29 +596,29 @@ const Profile = () => {
 
               {/* Follow Actions (For Visitors) */}
               {!isMyProfile && (
-                <div className="flex flex-wrap justify-center md:justify-start items-center gap-3">
+                <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 shrink-0">
                   <button
                     onClick={() => navigate(`/messages/${user._id}`)}
-                    className="bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white hover:bg-gray-200 dark:hover:bg-gray-700 text-white p-3 rounded-xl border border-gray-300 dark:border-gray-700 transition-all shadow-lg"
+                    className="bg-white dark:bg-white/5 backdrop-blur-md border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 p-3 rounded-xl transition-all shadow-sm"
                     title="Message">
-                    <FaEnvelope size={18} />
+                    <FaEnvelope size={18} className="text-gray-700 dark:text-gray-300" />
                   </button>
                   {user.isFollowing ? (
                     <button
                       onClick={() => handleUnfollowRequest(user._id)}
-                      className="bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white border border-gray-600 hover:border-red-500 hover:text-red-500 text-gray-700 dark:text-gray-300 px-8 py-2.5 rounded-xl font-semibold transition-all shadow-lg">
+                      className="bg-white dark:bg-white/5 backdrop-blur-md border border-gray-300 dark:border-gray-700 hover:border-red-300 dark:hover:border-red-500/40 hover:text-red-600 dark:hover:text-red-400 text-gray-700 dark:text-gray-300 px-8 py-2.5 rounded-xl font-semibold transition-all shadow-sm">
                       Following
                     </button>
                   ) : user.isRequested ? (
                     <button
                       disabled
-                      className="bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white border border-gray-600 text-gray-600 dark:text-gray-400 px-8 py-2.5 rounded-xl font-semibold transition-all shadow-lg cursor-not-allowed">
+                      className="bg-white dark:bg-white/5 backdrop-blur-md border border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 px-8 py-2.5 rounded-xl font-semibold transition-all shadow-sm cursor-not-allowed">
                       Requested
                     </button>
                   ) : (
                     <button
                       onClick={() => handleFollowRequest(user._id)}
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-8 py-2.5 rounded-full font-bold shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] transition-all scale-100 hover:scale-[1.02] active:scale-95">
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-xl font-semibold shadow-sm transition-colors">
                       Follow
                     </button>
                   )}
@@ -691,19 +694,6 @@ const Profile = () => {
           >
             <FaTh size={12} /> Posts
           </button>
-          <button
-            onClick={() => setActiveTab('study-content')}
-            className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'study-content' ? 'text-gray-900 border-gray-900 dark:text-white border-t dark:border-white -mt-[1px]' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
-          >
-            <FaGraduationCap size={12} /> Study Content
-          </button>
-
-          <button
-            onClick={() => setActiveTab('playlists')}
-            className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'playlists' ? 'text-gray-900 border-gray-900 dark:text-white border-t dark:border-white -mt-[1px]' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
-          >
-            <FaListUl size={12} /> Playlists
-          </button>
         </div>
 
         {activeTab === 'overview' && (
@@ -732,11 +722,12 @@ const Profile = () => {
                    </div>
                 </div>
                 
-                {/* Heatmap */}
-                <div className="bg-white dark:bg-[#080808] border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
-                   <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Activity Heatmap</h3>
-                   <ActivityHeatmap data={heatmapData} />
-                </div>
+                {showHeatmap && (
+                  <div className="bg-white dark:bg-[#080808] border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Activity Heatmap</h3>
+                    <ActivityHeatmap data={heatmapData} />
+                  </div>
+                )}
 
                 {/* Recent Activity */}
                 {stats?.recentActivity?.length > 0 && (
@@ -757,103 +748,59 @@ const Profile = () => {
                     </div>
                   </div>
                 )}
+
+                {isMyProfile && user?.role === 'student' && (
+                  <div className="space-y-4">
+                    <div className="pt-2">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">Student Workspace</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Your previous dashboard content now lives inside your profile.</p>
+                    </div>
+                    <StudentHomeContent embedded />
+                  </div>
+                )}
               </>
             )}
           </div>
         )}
 
-        {activeTab === 'playlists' ? (
-          // PLAYLISTS TAB
-          loadingPlaylists ? (
-            <div className="text-center py-10 text-gray-600 dark:text-gray-400">Loading playlists...</div>
-          ) : playlists.length > 0 ? (
-            <>
-              {isMyProfile && (
-                <div className="mb-6">
-                  <button
-                    onClick={() => setShowCreatePlaylist(true)}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors"
-                  >
-                    <FaPlus /> Create Playlist
-                  </button>
-                </div>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {playlists.map(playlist => (
-                  <PlaylistCard
-                    key={playlist._id}
-                    playlist={playlist}
-                    onDelete={handleDeletePlaylist}
-                  />
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-20">
-              <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No Playlists Yet</div>
-              <div className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
-                {isMyProfile ? 'Create your first playlist to organize your videos' : 'This user has no playlists'}
-              </div>
-              {isMyProfile && (
-                <button
-                  onClick={() => setShowCreatePlaylist(true)}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg inline-flex items-center gap-2 transition-colors"
-                >
-                  <FaPlus /> Create Playlist
-                </button>
-              )}
-            </div>
-          )
-        ) : loadingPosts ? (
-          <div className="text-center py-10 text-gray-600 dark:text-gray-400">Loading {activeTab === 'posts' ? 'posts' : 'study content'}...</div>
-        ) : posts.filter(p => {
-          if (activeTab === 'posts') return p.contentType === 'post' || !p.contentType;
-          if (activeTab === 'study-content') return p.contentType === 'study-content';
-          return false;
-        }).length > 0 ? (
-          <div className={`grid gap-4 ${activeTab === 'posts' ? 'grid-cols-3 gap-1 md:gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}`}>
+        {loadingPosts ? (
+          <div className="text-center py-10 text-gray-600 dark:text-gray-400">Loading posts...</div>
+        ) : posts.filter(p => p.contentType === 'post' || !p.contentType).length > 0 ? (
+          <div className="grid gap-4 grid-cols-3 gap-1 md:gap-4">
             {posts
-              .filter(p => {
-                if (activeTab === 'posts') return p.contentType === 'post' || !p.contentType;
-                if (activeTab === 'study-content') return p.contentType === 'study-content';
-                return false;
-              })
+              .filter(p => p.contentType === 'post' || !p.contentType)
               .map(post => (
-                activeTab === 'study-content' ? (
-                  <StudyContentCard key={post._id} content={post} />
-                ) : (
-                  <div
-                    key={post._id}
-                    onClick={() => setSelectedPost(post)}
-                    className="relative aspect-square group cursor-pointer bg-white dark:bg-gray-900 overflow-hidden"
-                  >
-                    {/* Media Thumbnail */}
-                    {post.mediaType === 'video' ? (
-                      <video src={post.mediaUrl} className="w-full h-full object-cover" />
-                    ) : (
-                      <img src={post.mediaUrl} alt="Post" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    )}
+                <div
+                  key={post._id}
+                  onClick={() => setSelectedPost(post)}
+                  className="relative aspect-square group cursor-pointer bg-white dark:bg-gray-900 overflow-hidden"
+                >
+                  {/* Media Thumbnail */}
+                  {post.mediaType === 'video' ? (
+                    <video src={post.mediaUrl} className="w-full h-full object-cover" />
+                  ) : (
+                    <img src={post.mediaUrl} alt="Post" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                  )}
 
-                    {/* Video Indicator */}
-                    {post.mediaType === 'video' && (
-                      <div className="absolute top-2 right-2 text-white drop-shadow-md">
-                        <FaPlay size={16} />
-                      </div>
-                    )}
+                  {/* Video Indicator */}
+                  {post.mediaType === 'video' && (
+                    <div className="absolute top-2 right-2 text-white drop-shadow-md">
+                      <FaPlay size={16} />
+                    </div>
+                  )}
 
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-6 md:gap-8 backdrop-blur-[2px]">
-                      <div className="flex items-center gap-2 text-white font-bold text-lg">
-                        <FaHeart />
-                        <span>{post.likes?.length || 0}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-white font-bold text-lg">
-                        <FaComment />
-                        <span>{post.comments?.length || 0}</span>
-                      </div>
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-6 md:gap-8 backdrop-blur-[2px]">
+                    <div className="flex items-center gap-2 text-white font-bold text-lg">
+                      <FaHeart />
+                      <span>{post.likes?.length || 0}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-white font-bold text-lg">
+                      <FaComment />
+                      <span>{post.comments?.length || 0}</span>
                     </div>
                   </div>
-                )
+                </div>
               ))}
           </div>
         ) : showPrivateMessage ? (
@@ -885,16 +832,6 @@ const Profile = () => {
           onPostDeleted={(postId) => {
             setPosts(prev => prev.filter(p => p._id !== postId));
             setSelectedPost(null);
-          }}
-        />
-      )}
-
-      {showCreatePlaylist && (
-        <CreatePlaylistModal
-          isOpen={showCreatePlaylist}
-          onClose={() => setShowCreatePlaylist(false)}
-          onPlaylistCreated={(newPlaylist) => {
-            setPlaylists(prev => [newPlaylist, ...prev]);
           }}
         />
       )}

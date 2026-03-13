@@ -234,13 +234,29 @@ exports.searchStudyContent = async (req, res) => {
 };
 
 
-// GET /api/problems/exam/:examId/questions
+// GET /api/problems/exam/:examId/questions?source=global|institute&subject=Physics
 exports.getExamQuestions = async (req, res) => {
     try {
         const { examId } = req.params;
-        const { subject } = req.query;
+        const { subject, source } = req.query;
         const filter = { exam: examId, isProblem: true };
         if (subject) filter.subject = subject;
+
+        if (source === 'institute') {
+            // Institute mode: show only questions from the student's institute
+            if (!req.user || !req.user.instituteId) {
+                return res.status(403).json({ success: false, message: 'You must be part of an institute to view institute questions' });
+            }
+            filter.instituteId = req.user.instituteId;
+        } else {
+            // Global mode (default): show only admin-approved questions
+            filter.approvalStatus = 'approved';
+            // Exclude institute-only questions from global view
+            filter.$or = [
+                { instituteId: null },
+                { visibility: 'public' }
+            ];
+        }
 
         const questions = await ExamQuestion.find(filter)
             .select('-correctAnswer -explanation')
@@ -281,6 +297,24 @@ exports.getExamQuestions = async (req, res) => {
         
         res.status(500).json({ success: false, message: 'Server Error' });
 
+    }
+};
+
+// GET /api/problems/institute-subjects — distinct exam types for the student's institute
+exports.getInstituteExamSubjects = async (req, res) => {
+    try {
+        if (!req.user || !req.user.instituteId) {
+            return res.status(403).json({ success: false, message: 'You must be part of an institute' });
+        }
+
+        const exams = await ExamQuestion.distinct('exam', {
+            instituteId: req.user.instituteId,
+            isProblem: true
+        });
+
+        res.json({ success: true, data: exams });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
 

@@ -19,6 +19,7 @@ const {
     getProblemById,
     updateProblemStatus,
     getExamQuestions,
+    getInstituteExamSubjects,
     checkExamAnswer,
     generateExamQuestions,
     startAiTutor,
@@ -111,6 +112,8 @@ router.route('/:id/status')
     .post(protect, updateProblemStatus);
 
 
+
+router.get('/institute-subjects', protect, getInstituteExamSubjects);
 
 router.get('/exam/:examId/questions', optionalProtect, getExamQuestions);
 router.post('/exam/:examId/check-answer', protect, checkExamAnswer);

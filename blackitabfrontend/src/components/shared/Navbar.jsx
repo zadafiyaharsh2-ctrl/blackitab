@@ -6,7 +6,6 @@ const Navbar = () => {
   const navItems = [
     { name: 'SOCIAL', path: '/social' },
     { name: 'DASHBOARD', path: '/dashboard' },
-    { name: 'ANALYTICS', path: '/analytics' },
     { name: 'PROBLEMS', path: '/problems' },
     { name: 'PROFILE', path: '/profile' }
   ];

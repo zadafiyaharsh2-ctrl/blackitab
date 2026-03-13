@@ -470,6 +470,59 @@ exports.deleteQuestion = async (req, res) => {
     }
 };
 
+// PUT /api/admin/questions/:id — Admin edits any question (full CRUD)
+exports.updateQuestion = async (req, res) => {
+    try {
+        const question = await GeneratedQuestion.findById(req.params.id);
+        if (!question) {
+            return res.status(404).json({ success: false, message: 'Question not found' });
+        }
+
+        const updates = req.body;
+        if (updates.correctAnswer !== undefined) updates.correctAnswer = parseInt(updates.correctAnswer);
+
+        const wasProblem = question.isProblem;
+        const willBeProblem = updates.isProblem !== undefined ? updates.isProblem : wasProblem;
+
+        const updated = await GeneratedQuestion.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+
+        // Sync with ExamQuestion
+        if (!wasProblem && willBeProblem) {
+            // Copy to ExamQuestion
+            const existing = await ExamQuestion.findOne({ sourceQuestionId: updated._id });
+            if (!existing) {
+                await ExamQuestion.create({
+                    exam: updated.exam, subject: updated.subject, question: updated.question,
+                    options: updated.options, correctAnswer: updated.correctAnswer,
+                    difficulty: updated.difficulty, explanation: updated.explanation,
+                    isAiGenerated: updated.isAiGenerated, topicId: updated.topicId,
+                    tags: updated.tags, createdBy: updated.createdBy,
+                    instituteId: updated.instituteId, isPublic: updated.isPublic,
+                    visibility: updated.visibility, approvalStatus: 'approved',
+                    isProblem: true, sourceQuestionId: updated._id,
+                    approvedBy: req.admin._id
+                });
+            }
+        } else if (wasProblem && !willBeProblem) {
+            await ExamQuestion.deleteOne({ sourceQuestionId: req.params.id });
+        } else if (wasProblem && willBeProblem) {
+            await ExamQuestion.findOneAndUpdate(
+                { sourceQuestionId: updated._id },
+                {
+                    question: updated.question, options: updated.options,
+                    correctAnswer: updated.correctAnswer, explanation: updated.explanation,
+                    subject: updated.subject, difficulty: updated.difficulty,
+                    exam: updated.exam, tags: updated.tags
+                }
+            );
+        }
+
+        res.json({ success: true, message: 'Question updated', data: updated });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
 // ══════════════════════════════════════════════════════════════
 // PHASE 11: COMPREHENSIVE ADMIN CONTROL PANEL (SUPER ADMIN)
 // ══════════════════════════════════════════════════════════════

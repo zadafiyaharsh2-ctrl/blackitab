@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { FaHome, FaUsers, FaRobot, FaChartBar, FaUser, FaListAlt, FaSignOutAlt, FaBars, FaBook, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaBell, FaSearch, FaCalendarDay, FaBuilding, FaUserTie, FaUserGraduate, FaFileAlt, FaClipboardCheck, FaUserPlus, FaSitemap, FaClipboardList, FaCommentDots, FaPenFancy } from 'react-icons/fa';
+import { FaHome, FaUsers, FaRobot, FaUser, FaListAlt, FaSignOutAlt, FaBars, FaBook, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaBell, FaSearch, FaCalendarDay, FaBuilding, FaUserTie, FaUserGraduate, FaFileAlt, FaClipboardCheck, FaUserPlus, FaSitemap, FaClipboardList, FaCommentDots, FaPenFancy } from 'react-icons/fa';
 import { MdReportProblem } from 'react-icons/md';
 import { useTheme } from '../../context/ThemeContext';
 import Logo from './Logo';
@@ -85,7 +85,6 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
     ] : []),
     ...( !canAccessInstitute ? [
-      { path: '/analytics', label: 'Analytics', icon: <FaChartBar /> },
       { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
       { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
       { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy /> },
