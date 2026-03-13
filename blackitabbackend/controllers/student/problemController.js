@@ -180,7 +180,19 @@ exports.searchStudyContent = async (req, res) => {
                 { title: { $regex: query, $options: 'i' } },
                 { description: { $regex: query, $options: 'i' } }
             ]
-        }).populate('subjectId', 'name').select('title description subjectId').lean();
+        }).populate('subjectId', 'name').select('title description subjectId').limit(5).lean();
+
+        // Search exam questions
+        const ExamQuestion = require('../models/ExamQuestion');
+        const questions = await ExamQuestion.find({
+            question: { $regex: query, $options: 'i' }
+        }).select('question subject difficulty exam').limit(5).lean();
+
+        // Search users
+        const User = require('../models/User');
+        const users = await User.find({
+            name: { $regex: query, $options: 'i' }
+        }).select('name role').limit(5).lean();
 
         // Normalize data for the frontend
         const normalizedSubjects = subjects.map(s => ({
@@ -198,7 +210,22 @@ exports.searchStudyContent = async (req, res) => {
             subjectId: c.subjectId?._id
         }));
 
-        const results = [...normalizedSubjects, ...normalizedChapters];
+        const normalizedQuestions = questions.map(q => ({
+            _id: q._id,
+            name: q.question && q.question.length > 50 ? q.question.substring(0, 50) + '...' : (q.question || 'Question'),
+            type: 'question',
+            description: `${q.subject || 'Mixed Subject'} • ${q.difficulty || 'Medium'}`,
+            examId: q.exam // useful for navigation
+        }));
+
+        const normalizedUsers = users.map(u => ({
+            _id: u._id,
+            name: u.name,
+            type: 'user',
+            description: `Role: ${u.role === 'institute_admin' ? 'Institute Admin' : u.role === 'hod' ? 'HOD' : u.role === 'teacher' ? 'Teacher' : 'Student'}`
+        }));
+
+        const results = [...normalizedSubjects, ...normalizedChapters, ...normalizedQuestions, ...normalizedUsers];
 
         res.json({ success: true, data: results });
     } catch (err) {
@@ -219,7 +246,37 @@ exports.getExamQuestions = async (req, res) => {
             .select('-correctAnswer -explanation')
             .sort({ createdAt: -1 });
 
-        res.json({ success: true, data: questions });
+        let questionsWithAttempts = questions.map(q => q.toObject());
+
+        // Merge User Attempts if available
+        if (req.user) {
+            const Attempt = require('../models/Attempt');
+            const questionIds = questions.map(q => q._id);
+            const userAttempts = await Attempt.find({
+                userId: req.user._id,
+                questionId: { $in: questionIds }
+            }).sort({ attemptedAt: -1 }); // Get latest attempts first
+
+            // Map the latest attempt for each question
+            const attemptMap = {};
+            userAttempts.forEach(attempt => {
+                if (!attemptMap[attempt.questionId]) {
+                    // Only store the latest attempt for O(1) lookup
+                    attemptMap[attempt.questionId] = {
+                        isCorrect: attempt.isCorrect,
+                        selectedOption: attempt.selectedOption,
+                        attemptedAt: attempt.attemptedAt
+                    };
+                }
+            });
+
+            questionsWithAttempts = questionsWithAttempts.map(q => ({
+                ...q,
+                userAttempt: attemptMap[q._id] || null
+            }));
+        }
+
+        res.json({ success: true, data: questionsWithAttempts });
     } catch (err) {
         
         res.status(500).json({ success: false, message: 'Server Error' });

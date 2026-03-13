@@ -206,29 +206,73 @@ exports.getSubjectProgress = async (req, res) => {
 // ═════════════════════════════════════════════════════════════════════════════
 exports.getProgressStats = async (req, res) => {
     try {
-        const userId = req.user._id;
-        const User = require('../../models/User');
+        const userId = req.query.userId || req.user._id;
+        const User = require('../models/User');
 
         // 1. Per-subject completion stats
         const subjectStats = await UserProgress.aggregate([
-            { $match: { userId: userId, completed: true } },
+            { $match: { userId: new require('mongoose').Types.ObjectId(userId), completed: true } },
             { $group: { _id: '$subjectId', totalCompleted: { $sum: 1 }, lastCompleted: { $max: '$completedAt' } } }
         ]);
 
         // 2. Total completed count
         const totalCompleted = await UserProgress.countDocuments({ userId, completed: true });
 
-        // 3. Recent activity (last 5)
-        const recentActivity = await UserProgress.find({ userId, completed: true })
+        // 3. Recent activity (last 5 completions + last 5 attempts, merged and sorted by date)
+        const recentCompletions = await UserProgress.find({ userId: new require('mongoose').Types.ObjectId(userId), completed: true })
             .sort({ completedAt: -1 })
             .limit(5)
+            .populate('subjectId', 'name')
+            .populate('topicId', 'title')
             .lean();
+
+        const Attempt = require('../models/Attempt');
+        const ExamQuestion = require('../models/ExamQuestion');
+        
+        const recentAttempts = await Attempt.find({ userId: new require('mongoose').Types.ObjectId(userId) })
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .lean();
+
+        // Populate question details manually or via populate if ref is set in model
+        // Assume Attempt has questionId ref to ExamQuestion, but we can fetch manually
+        const attemptQIds = recentAttempts.map(a => a.questionId).filter(Boolean);
+        const questions = await ExamQuestion.find({ _id: { $in: attemptQIds } }).select('question subject difficulty').lean();
+        const qMap = {};
+        questions.forEach(q => {
+            if (q && q._id) qMap[q._id.toString()] = q;
+        });
+
+        const formattedAttempts = recentAttempts.map(act => {
+            const q = act.questionId ? qMap[act.questionId.toString()] : null;
+            return {
+                type: 'attempt',
+                completed: act.isCorrect,
+                title: q && q.question ? (q.question.length > 50 ? q.question.substring(0, 50) + '...' : q.question) : 'Question Attempt',
+                subjectId: { name: q && q.subject ? q.subject : 'Mixed' },
+                completedAt: act.createdAt
+            };
+        });
+
+        const formattedCompletions = recentCompletions.map(act => ({
+            type: 'completed',
+            completed: true,
+            title: act.topicId ? act.topicId.title : 'Topic',
+            subjectId: act.subjectId,
+            completedAt: act.completedAt
+        }));
+
+        let recentActivity = [...formattedCompletions, ...formattedAttempts];
+        recentActivity.sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+        recentActivity = recentActivity.slice(0, 5);
 
         // 4. Compute TRUE streak from activity data (not from stored User.streak)
         const streakData = await computeStreakFromActivity(userId);
 
         // 5. Get user's current points and xp
         const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        
         const currentPoints = user.points || 0;
         const currentXP = user.xp || 0;
 
@@ -273,7 +317,7 @@ exports.getProgressStats = async (req, res) => {
                 percentile}
         });
     } catch (error) {
-        
+        console.error('Error fetching progress stats:', error);
         res.status(500).json({ success: false, message: 'Error fetching statistics' });
     }
 };
@@ -283,22 +327,24 @@ exports.getProgressStats = async (req, res) => {
 // ═════════════════════════════════════════════════════════════════════════════
 exports.getActivityHeatmap = async (req, res) => {
     try {
-        const userId = req.user._id;
-        const ProblemProgress = require('../../models/ProblemProgress');
+        const userId = req.query.userId || req.user._id;
+        const mongoose = require('mongoose');
+        const userObjectId = new mongoose.Types.ObjectId(userId);
+        const ProblemProgress = require('../models/ProblemProgress');
 
         const topicActivity = await UserProgress.aggregate([
-            { $match: { userId, completed: true, completedAt: { $exists: true } } },
+            { $match: { userId: userObjectId, completed: true, completedAt: { $exists: true } } },
             { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$completedAt" } }, count: { $sum: 1 } } }
         ]);
 
         const problemActivity = await ProblemProgress.aggregate([
-            { $match: { userId, status: 'completed', completedAt: { $exists: true } } },
+            { $match: { userId: userObjectId, status: 'completed', completedAt: { $exists: true } } },
             { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$completedAt" } }, count: { $sum: 1 } } }
         ]);
 
         const Attempt = require('../../models/Attempt');
         const examActivity = await Attempt.aggregate([
-            { $match: { userId, attemptedAt: { $exists: true } } },
+            { $match: { userId: userObjectId, attemptedAt: { $exists: true } } },
             { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$attemptedAt" } }, count: { $sum: 1 } } }
         ]);
 

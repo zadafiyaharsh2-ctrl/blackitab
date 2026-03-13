@@ -65,9 +65,20 @@ exports.submitAttempt = async (req, res) => {
         };
 
         if (isCorrect) {
-            const XP_BY_DIFFICULTY = { 'Easy': 5, 'Medium': 15, 'Hard': 30 };
-            const pointsGain = XP_BY_DIFFICULTY[question.difficulty] || 10;
-            updateData.$inc = { points: pointsGain, xp: 10 };
+            // Check if user has already solved this question correctly before
+            // We must exclude the attempt we just created
+            const previousSuccess = await Attempt.findOne({
+                userId,
+                questionId,
+                isCorrect: true,
+                _id: { $ne: attempt._id }
+            });
+
+            if (!previousSuccess) {
+                const XP_BY_DIFFICULTY = { 'Easy': 5, 'Medium': 15, 'Hard': 30 };
+                const pointsGain = XP_BY_DIFFICULTY[question.difficulty] || 10;
+                updateData.$inc = { points: pointsGain, xp: 10 };
+            }
         }
 
         await User.findByIdAndUpdate(userId, updateData);
@@ -150,7 +161,7 @@ exports.getDashboardAnalytics = async (req, res) => {
         // Recent activity
         const recentActivity = allAttempts.slice(0, 5).map(a => ({
             type: a.isCorrect ? 'completed' : 'attempted',
-            title: a.questionId?.content?.substring(0, 30) + '...' || 'Unknown Question',
+            title: a.questionId?.question ? (a.questionId.question.substring(0, 30) + '...') : 'Unknown Question',
             time: new Date(a.attemptedAt).toLocaleDateString(),
             difficulty: a.questionId?.difficulty || 'Medium'
         }));

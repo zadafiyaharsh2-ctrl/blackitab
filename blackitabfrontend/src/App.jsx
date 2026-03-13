@@ -15,6 +15,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { FaBars } from 'react-icons/fa';
 
 // Import centralized configuration (API URL)
 import API_URL from './config';
@@ -58,6 +59,12 @@ import ManageQuestions from './pages/teacher/ManageQuestions';
 import TeacherClasses from './pages/teacher/TeacherClasses';
 import TeacherBatchDetail from './pages/teacher/TeacherBatchDetail';
 import StudentClasses from './pages/student/StudentClasses';
+import TeacherAssignments from './pages/TeacherAssignments';
+import TeacherAssignmentDetail from './pages/TeacherAssignmentDetail';
+import TeacherTests from './pages/TeacherTests';
+import TeacherTestDetail from './pages/TeacherTestDetail';
+import TeacherContent from './pages/TeacherContent';
+import TeacherFeedback from './pages/TeacherFeedback';
 
 // Imported Institute Pages
 import InstituteDashboard from './pages/institute/InstituteDashboard';
@@ -153,7 +160,6 @@ function App() {
           },
         }}
       />
-      {/* BrowserRouter enables URL-based routing */}
       {/* BrowserRouter enables URL-based routing */}
       <SocketContextProvider authUser={user}>
         <BrowserRouter>
@@ -294,9 +300,7 @@ function App() {
               path="/leaderboard"
               element={
                 <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Leaderboard />
-                  </MainLayout>
+                  <Leaderboard />
                 </ProtectedRoute>
               }
             />
@@ -573,6 +577,114 @@ function App() {
             {/* (Old Routes Removed: CreateExamQuestion and MyQuestions) */}
 
 
+            {/* Teacher Classes & Batches */}
+            <Route
+              path="/teacher/batches"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherBatches />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Batch Detail / Classroom Management */}
+            <Route
+              path="/teacher/batch/:batchId"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherBatchDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Attendance */}
+            <Route
+              path="/teacher/attendance"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherAttendance />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Assignments */}
+            <Route
+              path="/teacher/assignments"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherAssignments />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Assignment Detail / Grading */}
+            <Route
+              path="/teacher/assignment/:id"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherAssignmentDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Tests / Exams */}
+            <Route
+              path="/teacher/tests"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherTests />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Test Detail / Results */}
+            <Route
+              path="/teacher/test/:id"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherTestDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Content Creation */}
+            <Route
+              path="/teacher/content"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherContent />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Feedback & Complaints */}
+            <Route
+              path="/teacher/feedback"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherFeedback />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
             {/* Institute Profile — accessible to all authenticated users (students see read-only) */}
             <Route
               path="/institute-view"
@@ -675,20 +787,39 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
     }
   }, [location.pathname]);
 
-  const activeSidebarWidth = sidebarOpen ? '16rem' : '4rem';
+  // Adjust content margin based on sidebar state (desktop only)
+  // On mobile, the sidebar sits OVER the content, so margin is 0.
+  const contentMarginClass = sidebarOpen ? 'md:ml-[280px]' : 'md:ml-[80px]';
 
   return (
-    <div className="min-h-screen flex bg-gray-50 dark:bg-black text-gray-900 dark:text-white transition-colors duration-300">
-      {/* Main Sidebar — Always present */}
-      <div className="z-50">
+    <div className="min-h-screen flex bg-[#05000a] text-white transition-colors duration-300">
+      {/* Sidebar Overlay (Mobile Only) */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Main Sidebar */}
+      <div className="z-50 relative">
         <Sidebar onLogout={onLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       </div>
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 transition-all duration-300 ${location.pathname.startsWith('/messages') ? '' : 'p-6'}`}
-        style={{ marginLeft: activeSidebarWidth }}
+        className={`flex-1 transition-all duration-300 w-full min-h-screen ${location.pathname.startsWith('/messages') ? '' : 'p-4 md:p-8'} ${contentMarginClass}`}
       >
+        {/* Mobile Hamburger Header */}
+        <div className="md:hidden flex items-center justify-between mb-4 sticky top-0 z-30 bg-black/80 backdrop-blur-md p-4 -mx-4 -mt-4 border-b border-white/10">
+            <div className="flex items-center gap-3">
+               <button onClick={() => setSidebarOpen(true)} className="p-2 bg-white/5 rounded-xl border border-white/10 text-white">
+                 <FaBars />
+               </button>
+               <span className="font-bold text-lg text-white tracking-wide">Blackitab</span>
+            </div>
+        </div>
+
         {children}
       </div>
 
