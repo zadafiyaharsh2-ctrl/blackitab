@@ -90,6 +90,7 @@ import Sidebar from './components/shared/Sidebar';
 import ProtectedRoute from './components/auth/ProtectedRoute'; // Wrapper that checks if user is logged in
 import PublicRoute from './components/auth/PublicRoute';     // Wrapper for pages accessible only when logged out (like Login)
 
+const SIDEBAR_BREAKPOINT = 768;
 
 function App() {
   // ============================================================================
@@ -97,7 +98,9 @@ function App() {
   // ============================================================================
   const [user, setUser] = useState(null);         // Stores current user data
   const [loading, setLoading] = useState(true);   // Loading state while checking localStorage
-  const [sidebarOpen, setSidebarOpen] = useState(true); // Toggles sidebar open/close
+  const [sidebarOpen, setSidebarOpen] = useState(() => (
+    typeof window === 'undefined' ? true : window.innerWidth >= SIDEBAR_BREAKPOINT
+  )); // Expanded on desktop, hidden on mobile
 
   // ============================================================================
   // INITIALIZATION
@@ -842,6 +845,12 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
       }
     }
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < SIDEBAR_BREAKPOINT) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname, setSidebarOpen]);
 
   // Adjust content margin based on sidebar state (desktop only)
   // On mobile, the sidebar sits OVER the content, so margin is 0.

@@ -106,15 +106,22 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     { path: '/institute/profile', label: 'Institute Profile', icon: <FaSchool /> },
   ] : [];
 
-  const sidebarWidth = isOpen ? 280 : 80;
+  const handleNavClick = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setIsOpen(false);
+    }
+  };
 
   return (
     <>
       <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
 
       <div
-        style={{ width: sidebarWidth }}
-        className="fixed left-0 top-0 h-screen z-50 flex flex-col glass-panel !rounded-none border-r border-gray-200 dark:border-white/10 shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_30px_-5px_rgba(255,255,255,0.02)] bg-white/95 dark:bg-[#000000]/80 backdrop-blur-xl overflow-hidden"
+        className={`fixed left-0 top-0 h-screen z-50 flex flex-col glass-panel !rounded-none border-r border-gray-200 dark:border-white/10 shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_30px_-5px_rgba(255,255,255,0.02)] bg-white/95 dark:bg-[#000000]/80 backdrop-blur-xl overflow-hidden w-[280px] transition-[transform,width,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform ${
+          isOpen
+            ? 'translate-x-0 opacity-100 md:w-[280px]'
+            : '-translate-x-full opacity-100 pointer-events-none md:pointer-events-auto md:translate-x-0 md:w-[80px]'
+        }`}
       >
         <div className="h-20 border-b border-gray-200/50 dark:border-white/10 flex items-center justify-between px-4 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-white/10 dark:bg-white/5 pointer-events-none" />
@@ -164,7 +171,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
               const isActive = location.pathname === item.path || (location.pathname.startsWith(item.path) && item.path !== '/');
               return (
                 <li key={item.path}>
-                  <Link to={item.path}>
+                  <Link to={item.path} onClick={handleNavClick}>
                     <div className={`relative flex items-center ${isOpen ? 'px-4 py-3' : 'px-0 py-3 justify-center'} rounded-xl text-sm font-semibold overflow-hidden group ${
                       isActive
                         ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm font-bold'
@@ -194,9 +201,9 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
               {!isOpen && <li className="border-t border-gray-200 dark:border-white/10 mx-2 my-2" />}
               {instituteNavItems.map((item) => {
                 const isActive = location.pathname === item.path || (location.pathname.startsWith(item.path) && item.path !== '/');
-                return (
-                  <li key={item.path}>
-                    <Link to={item.path}>
+              return (
+                <li key={item.path}>
+                    <Link to={item.path} onClick={handleNavClick}>
                       <div className={`relative flex items-center ${isOpen ? 'px-4 py-3' : 'px-0 py-3 justify-center'} rounded-xl text-sm font-semibold overflow-hidden group ${
                         isActive
                           ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm font-bold'
