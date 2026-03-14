@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   FaUsers, FaSchool, FaChartLine, FaSignOutAlt, FaSearch, FaShieldAlt,
   FaTrophy, FaEye, FaExclamationTriangle, FaChevronLeft, FaChevronRight, FaQuestion, FaNewspaper,
@@ -11,15 +11,6 @@ import axios from 'axios';
 import API_URL from '../../config';
 import DeleteConfirmationModal from '../../components/shared/DeleteConfirmationModal';
 
-// ── Animation Variants ─────────────────────────────────────────────────────
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.06 } }
-};
-const itemVariants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 120, damping: 14 } }
-};
 
 // ── Component ──────────────────────────────────────────────────────────────
 const AdminDashboard = () => {
@@ -85,13 +76,14 @@ const AdminDashboard = () => {
     fetchInstitutes(adminToken);
     fetchGlobalAnalytics(adminToken);
     fetchTeacherAnalytics(adminToken);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const getToken = () => localStorage.getItem('adminToken');
-  const headers = () => ({ Authorization: `Bearer ${getToken()}` });
+  function getToken() { return localStorage.getItem('adminToken'); }
+  function headers() { return { Authorization: `Bearer ${getToken()}` }; }
 
   // ── Fetch Functions ──
-  const fetchStats = async (token) => {
+  async function fetchStats(token) {
     try {
       const res = await axios.get(`${API_URL}/api/admin/stats`, { headers: { Authorization: `Bearer ${token}` } });
       if (res.data.success) setStats(res.data.data);
@@ -99,7 +91,7 @@ const AdminDashboard = () => {
     setLoading(false);
   };
 
-  const fetchUsers = async (token, page, search = '') => {
+  async function fetchUsers(token, page, search = '') {
     try {
       const res = await axios.get(`${API_URL}/api/admin/users?page=${page}&limit=15&search=${search}`, {
         headers: { Authorization: `Bearer ${token || getToken()}` }
@@ -108,14 +100,14 @@ const AdminDashboard = () => {
     } catch { /* fallback */ }
   };
 
-  const fetchInstitutes = async (token) => {
+  async function fetchInstitutes(token) {
     try {
       const res = await axios.get(`${API_URL}/api/admin/institutes`, { headers: { Authorization: `Bearer ${token || getToken()}` } });
       if (res.data.success) setInstitutes(res.data.data);
     } catch { /* fallback */ }
   };
 
-  const fetchInstituteMembers = async (instituteId) => {
+  async function fetchInstituteMembers(instituteId) {
     setInstituteMembersLoading(true);
     try {
       const res = await axios.get(`${API_URL}/api/admin/institutes/${instituteId}/members`, { headers: headers() });
@@ -124,35 +116,35 @@ const AdminDashboard = () => {
     setInstituteMembersLoading(false);
   };
 
-  const fetchQuestions = async (status = 'pending', page = 1) => {
+  async function fetchQuestions(status = 'pending', page = 1) {
     try {
       const res = await axios.get(`${API_URL}/api/admin/questions?status=${status}&page=${page}&limit=15`, { headers: headers() });
       if (res.data.success) { setQuestions(res.data.data); setQuestionPagination(res.data.pagination); }
     } catch { setQuestions([]); }
   };
 
-  const fetchGlobalAnalytics = async (token) => {
+  async function fetchGlobalAnalytics(token) {
     try {
       const res = await axios.get(`${API_URL}/api/admin/analytics`, { headers: { Authorization: `Bearer ${token || getToken()}` } });
       if (res.data.success) setGlobalAnalytics(res.data.data);
     } catch { /* fallback */ }
   };
 
-  const fetchTeacherAnalytics = async (token) => {
+  async function fetchTeacherAnalytics(token) {
     try {
       const res = await axios.get(`${API_URL}/api/admin/teachers`, { headers: { Authorization: `Bearer ${token || getToken()}` } });
       if (res.data.success) setTeacherAnalytics(res.data.data);
     } catch { /* fallback */ }
   };
 
-  const fetchPosts = async (page = 1) => {
+  async function fetchPosts(page = 1) {
     try {
       const res = await axios.get(`${API_URL}/api/admin/posts?page=${page}&limit=15`, { headers: headers() });
       if (res.data.success) { setPosts(res.data.data); setPostPagination(res.data.pagination); }
     } catch { setPosts([]); }
   };
 
-  const fetchContests = async () => {
+  async function fetchContests() {
     try {
       const res = await axios.get(`${API_URL}/api/admin/contests`, { headers: headers() });
       if (res.data.success) setContests(res.data.data);
@@ -170,9 +162,9 @@ const AdminDashboard = () => {
 
   const handleBan = async (userId) => {
     try {
-      const res = await axios.put(`${API_URL}/api/admin/users/${userId}/ban`, {}, { headers: headers() });
+      await axios.put(`${API_URL}/api/admin/users/${userId}/ban`, {}, { headers: headers() });
       fetchUsers(null, userPage, userSearch);
-      CustomToast.success(res.data.message);
+      CustomToast.success('User banned and logged out');
     } catch { CustomToast.error('Failed'); }
   };
 
@@ -308,7 +300,7 @@ const AdminDashboard = () => {
   const handleEditUser = async () => {
     if (!editUserModal) return;
     try {
-      const res = await axios.put(`${API_URL}/api/admin/users/full/${editUserModal._id}`, editUserModal, { headers: headers() });
+      await axios.put(`${API_URL}/api/admin/users/full/${editUserModal._id}`, editUserModal, { headers: headers() });
       CustomToast.success('Super Admin: User fully updated');
       fetchUsers(null, userPage, userSearch);
       fetchStats(getToken());
@@ -374,10 +366,12 @@ const AdminDashboard = () => {
     if (activeTab === 'questions') fetchQuestions(questionFilter, 1);
     if (activeTab === 'posts') fetchPosts(1);
     if (activeTab === 'contests') fetchContests();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   useEffect(() => {
     if (activeTab === 'questions') { setQuestionPage(1); fetchQuestions(questionFilter, 1); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questionFilter]);
 
   // ── Layout Data ──
@@ -422,10 +416,8 @@ const AdminDashboard = () => {
     <div className="admin-theme app-mobile-type min-h-screen bg-slate-50 dark:bg-[#0a0a0a] text-slate-900 dark:text-white">
       {/* Ambient BG Orbs */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <motion.div animate={{ x: [-15, 15, -15], y: [-10, 10, -10] }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-          className="hidden dark:block absolute top-[-10%] left-[5%] w-[500px] h-[500px] bg-red-600/20 rounded-full blur-[120px] mix-blend-screen" />
-        <motion.div animate={{ x: [10, -10, 10], y: [15, -15, 15] }} transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-          className="hidden dark:block absolute bottom-[-5%] right-[5%] w-[450px] h-[450px] bg-orange-600/15 rounded-full blur-[120px] mix-blend-screen" />
+        <div className="hidden dark:block absolute top-[-10%] left-[5%] w-[500px] h-[500px] bg-red-600/20 rounded-full blur-[120px] mix-blend-screen" />
+        <div className="hidden dark:block absolute bottom-[-5%] right-[5%] w-[450px] h-[450px] bg-orange-600/15 rounded-full blur-[120px] mix-blend-screen" />
       </div>
 
       {/* Admin Top Bar */}
@@ -462,10 +454,10 @@ const AdminDashboard = () => {
 
         {/* ── OVERVIEW TAB ── */}
         {activeTab === 'overview' && (
-          <motion.div variants={containerVariants} initial="hidden" animate="visible">
-            <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          <div>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               {statCards.map((s, i) => (
-                <motion.div key={i} whileHover={{ y: -3 }} className="glass-panel p-6 border border-white/5 flex items-center justify-between rounded-2xl">
+                <div key={i} className="glass-panel p-6 border border-white/5 flex items-center justify-between rounded-2xl">
                   <div>
                     <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">{s.label}</p>
                     <p className={`text-3xl font-bold ${s.color}`}>{loading ? '...' : s.value?.toLocaleString?.() ?? 0}</p>
@@ -473,13 +465,13 @@ const AdminDashboard = () => {
                   <div className={`p-3 rounded-2xl bg-gradient-to-br ${s.bg} border border-white/5`}>
                     <s.icon className={`text-xl ${s.color}`} />
                   </div>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
 
             {/* Role Distribution */}
             {stats?.roleCounts && (
-              <motion.div variants={itemVariants} className="glass-panel p-6 border border-white/10 rounded-2xl mb-8">
+              <div className="glass-panel p-6 border border-white/10 rounded-2xl mb-8">
                 <h3 className="font-bold text-white mb-6 text-lg">Role Distribution</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {Object.entries(stats.roleCounts).map(([role, count]) => {
@@ -498,11 +490,11 @@ const AdminDashboard = () => {
                     );
                   })}
                 </div>
-              </motion.div>
+              </div>
             )}
 
             {/* Hierarchy Visualization */}
-            <motion.div variants={itemVariants} className="glass-panel p-6 border border-white/10 rounded-2xl">
+            <div className="glass-panel p-6 border border-white/10 rounded-2xl">
               <h3 className="font-bold text-white mb-6 text-lg">Platform Hierarchy</h3>
               <div className="flex flex-col items-center gap-3">
                 {[
@@ -525,13 +517,13 @@ const AdminDashboard = () => {
                   </React.Fragment>
                 ))}
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
 
         {/* ── USERS TAB ── */}
         {activeTab === 'users' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <div >
             <div className="flex gap-3 mb-4">
               <div className="relative flex-1">
                 <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
@@ -579,8 +571,8 @@ const AdminDashboard = () => {
             {/* Comprehensive Edit User Modal */}
             <AnimatePresence>
             {editUserModal && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="glass-panel w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+              <div  exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                <div  exit={{ scale: 0.95 }} className="glass-panel w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
                   
                   {/* Header */}
                   <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
@@ -730,8 +722,8 @@ const AdminDashboard = () => {
                     <button onClick={() => setEditUserModal(null)} className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
                     <button onClick={handleEditUser} className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-500/20 transition-all">Save Changes</button>
                   </div>
-                </motion.div>
-              </motion.div>
+                </div>
+              </div>
             )}
             </AnimatePresence>
 
@@ -799,12 +791,12 @@ const AdminDashboard = () => {
               </table>
               <Pagination pagination={userPagination} current={userPage} onPageChange={p => { setUserPage(p); fetchUsers(null, p, userSearch); }} />
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* ── INSTITUTES TAB ── */}
         {activeTab === 'institutes' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <div >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-white">Registered Institutes ({institutes.length})</h2>
               <button onClick={() => setShowCreateInstitute(true)}
@@ -841,7 +833,7 @@ const AdminDashboard = () => {
             )}
 
             {selectedInstitute ? (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-panel p-6 border border-white/10 rounded-2xl relative">
+              <div  className="glass-panel p-6 border border-white/10 rounded-2xl relative">
                  <button onClick={() => setSelectedInstitute(null)} className="absolute top-4 right-4 text-gray-400 hover:text-white flex items-center gap-2 text-sm font-bold bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
                     <FaChevronLeft /> Back to List
                  </button>
@@ -889,14 +881,14 @@ const AdminDashboard = () => {
                        ))}
                     </div>
                  )}
-              </motion.div>
+              </div>
             ) : (
               <>
                 {/* Comprehensive Edit Institute Modal */}
                 <AnimatePresence>
                 {editInstituteModal && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="glass-panel w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+                  <div  exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                <div  exit={{ scale: 0.95 }} className="glass-panel w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
                   
                   {/* Header */}
                   <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
@@ -1004,14 +996,14 @@ const AdminDashboard = () => {
                     <button onClick={() => setEditInstituteModal(null)} className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
                     <button onClick={handleEditInstitute} className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all">Save Changes</button>
                   </div>
-                </motion.div>
-              </motion.div>
+                </div>
+              </div>
             )}
             </AnimatePresence>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                  {institutes.map(inst => (
-                   <motion.div key={inst._id} onClick={() => { setSelectedInstitute(inst); fetchInstituteMembers(inst._id); }} whileHover={{ y: -3 }} className="glass-panel p-6 border border-white/10 rounded-2xl group relative cursor-pointer hover:border-emerald-500/30 transition-colors">
+                   <div key={inst._id} onClick={() => { setSelectedInstitute(inst); fetchInstituteMembers(inst._id); }} className="glass-panel p-6 border border-white/10 rounded-2xl group relative cursor-pointer hover:border-emerald-500/30 transition-colors">
                    <button onClick={(e) => { e.stopPropagation(); openDeleteModal(inst._id, inst.name, 'Institute', 'All associated teachers, students, and classes will be unlinked.', 'institute'); }}
                      className="absolute top-3 right-3 p-1.5 rounded-lg bg-red-500/10 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 z-10">
                      <FaTrash className="text-xs" />
@@ -1038,7 +1030,7 @@ const AdminDashboard = () => {
                        'bg-gray-500/10 text-gray-400'
                      }`}>{inst.subscriptionPlan}</span>
                    </div>
-                 </motion.div>
+                 </div>
                ))}
                {institutes.length === 0 && (
                  <div className="col-span-full text-center py-16 text-gray-500">
@@ -1049,12 +1041,12 @@ const AdminDashboard = () => {
               </div>
               </>
             )}
-          </motion.div>
+          </div>
         )}
 
         {/* ── QUESTIONS TAB (NEW) ── */}
         {activeTab === 'questions' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <div >
             <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
               <h2 className="text-xl font-bold text-white">Question Approval</h2>
               <div className="flex items-center gap-3">
@@ -1128,7 +1120,7 @@ const AdminDashboard = () => {
 
             <div className="space-y-3">
               {questions.map(q => (
-                <motion.div key={q._id} layout className="glass-panel p-5 border border-white/10 rounded-2xl">
+                <div key={q._id} className="glass-panel p-5 border border-white/10 rounded-2xl">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-2">
@@ -1178,7 +1170,7 @@ const AdminDashboard = () => {
                       </button>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
               {questions.length === 0 && (
                 <div className="text-center py-16 text-gray-500">
@@ -1188,12 +1180,12 @@ const AdminDashboard = () => {
               )}
             </div>
             <Pagination pagination={questionPagination} current={questionPage} onPageChange={p => { setQuestionPage(p); fetchQuestions(questionFilter, p); }} />
-          </motion.div>
+          </div>
         )}
 
         {/* ── POSTS TAB (NEW) ── */}
         {activeTab === 'posts' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <div >
             <h2 className="text-xl font-bold text-white mb-6">Content Moderation — Posts ({postPagination.total})</h2>
             <div className="space-y-3">
               {posts.map(p => (
@@ -1229,12 +1221,12 @@ const AdminDashboard = () => {
               )}
             </div>
             <Pagination pagination={postPagination} current={postPage} onPageChange={p => { setPostPage(p); fetchPosts(p); }} />
-          </motion.div>
+          </div>
         )}
 
         {/* ── CONTESTS TAB (NEW) ── */}
         {activeTab === 'contests' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <div >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-white">Contest Management ({contests.length})</h2>
               <button onClick={() => setShowCreateContest(true)}
@@ -1273,7 +1265,7 @@ const AdminDashboard = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {contests.map(c => (
-                <motion.div key={c._id} whileHover={{ y: -3 }} className="glass-panel p-6 border border-white/10 rounded-2xl group relative">
+                <div key={c._id} className="glass-panel p-6 border border-white/10 rounded-2xl group relative">
                   <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button onClick={() => setEditContestModal({ _id: c._id, title: c.title, description: c.description || '', startTime: c.startTime?.slice(0,16) || '', endTime: c.endTime?.slice(0,16) || '', difficultyLevel: c.difficultyLevel || 'Intermediate', isActive: c.isActive || false })}
                       className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20">
@@ -1297,7 +1289,7 @@ const AdminDashboard = () => {
                       'bg-blue-500/10 text-blue-400'
                     }`}>{c.status || 'draft'}</span>
                   </div>
-                </motion.div>
+                </div>
               ))}
               {contests.length === 0 && (
                 <div className="col-span-full text-center py-16 text-gray-500">
@@ -1306,12 +1298,12 @@ const AdminDashboard = () => {
                 </div>
               )}
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* ── ANALYTICS TAB (NEW - GLOBAL PARITY) ── */}
         {activeTab === 'analytics' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <div >
             <h2 className="text-xl font-bold text-white mb-6">Global Platform Analytics</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -1401,17 +1393,17 @@ const AdminDashboard = () => {
                 </tbody>
               </table>
             </div>
-          </motion.div>
+          </div>
         )}
       </div>
 
       {/* ── REJECT MODAL ── */}
       <AnimatePresence>
         {rejectModal.open && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          <div  exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
             onClick={() => setRejectModal({ open: false, questionId: null, note: '' })}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+            <div  exit={{ scale: 0.9, opacity: 0 }}
               className="glass-panel p-6 border border-white/10 rounded-2xl w-full max-w-md"
               onClick={e => e.stopPropagation()}>
               <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
@@ -1434,18 +1426,18 @@ const AdminDashboard = () => {
                   <FaBan /> Reject Question
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
       </AnimatePresence>
 
       {/* ── QUESTION PREVIEW MODAL ── */}
       <AnimatePresence>
         {questionPreview && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          <div  exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
             onClick={() => setQuestionPreview(null)}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+            <div  exit={{ scale: 0.9, opacity: 0 }}
               className="glass-panel p-6 border border-white/10 rounded-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto"
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
@@ -1485,18 +1477,18 @@ const AdminDashboard = () => {
                 {questionPreview.instituteId && <p>Institute: {questionPreview.instituteId.name}</p>}
                 <p>Created: {new Date(questionPreview.createdAt).toLocaleString()}</p>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
       </AnimatePresence>
 
       {/* ── EDIT USER MODAL ── */}
       <AnimatePresence>
         {editUserModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          <div  exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
             onClick={() => setEditUserModal(null)}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+            <div  exit={{ scale: 0.9, opacity: 0 }}
               className="glass-panel p-6 border border-white/10 rounded-2xl w-full max-w-lg"
               onClick={e => e.stopPropagation()}>
               <h3 className="text-white font-bold text-lg mb-4">Edit User</h3>
@@ -1541,18 +1533,18 @@ const AdminDashboard = () => {
                 <button onClick={() => setEditUserModal(null)} className="px-4 py-2 text-sm font-bold text-gray-400 hover:text-white">Cancel</button>
                 <button onClick={handleEditUser} className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-colors">Save Changes</button>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
       </AnimatePresence>
 
       {/* ── EDIT CONTEST MODAL ── */}
       <AnimatePresence>
         {editContestModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          <div  exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
             onClick={() => setEditContestModal(null)}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+            <div  exit={{ scale: 0.9, opacity: 0 }}
               className="glass-panel p-6 border border-white/10 rounded-2xl w-full max-w-lg"
               onClick={e => e.stopPropagation()}>
               <h3 className="text-white font-bold text-lg mb-4">Edit Contest</h3>
@@ -1596,8 +1588,8 @@ const AdminDashboard = () => {
                 <button onClick={() => setEditContestModal(null)} className="px-4 py-2 text-sm font-bold text-gray-400 hover:text-white">Cancel</button>
                 <button onClick={handleEditContest} className="px-5 py-2.5 rounded-xl bg-yellow-600 hover:bg-yellow-500 text-white text-sm font-bold transition-colors">Save Changes</button>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
       </AnimatePresence>
 
@@ -1629,6 +1621,7 @@ const AdminTeacherFeedbackModal = ({ isOpen, onClose, teacher, adminToken }) => 
 
   useEffect(() => {
     if (isOpen && teacher) fetchFeedback();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, teacher]);
 
   const fetchFeedback = async () => {
@@ -1651,9 +1644,9 @@ const AdminTeacherFeedbackModal = ({ isOpen, onClose, teacher, adminToken }) => 
 
   return (
     <AnimatePresence>
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+    <div  exit={{ opacity: 0 }}
       className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+      <div  exit={{ scale: 0.95, opacity: 0 }}
         className="glass-panel w-full max-w-4xl bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
         
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0 bg-white/[0.02]">
@@ -1723,8 +1716,8 @@ const AdminTeacherFeedbackModal = ({ isOpen, onClose, teacher, adminToken }) => 
              </div>
           )}
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
     </AnimatePresence>
   );
 };

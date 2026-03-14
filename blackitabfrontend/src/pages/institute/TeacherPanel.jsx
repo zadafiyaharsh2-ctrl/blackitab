@@ -6,13 +6,15 @@ import {
   TrashIcon,
   PencilIcon,
   PlusIcon,
-  XMarkIcon,
   ChatBubbleBottomCenterTextIcon
 } from '@heroicons/react/24/outline';
-import { FaStar, FaUserGraduate, FaSpinner } from 'react-icons/fa';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import { CustomToast } from '../../utils/CustomToast';
 import SimpleConfirmationModal from '../../components/shared/SimpleConfirmationModal';
+
+import TeacherFeedbackModal from '../../components/institute/modals/TeacherFeedbackModal';
+import AddTeacherModal from '../../components/institute/modals/AddTeacherModal';
+import EditTeacherModal from '../../components/institute/modals/EditTeacherModal';
 
 const TeacherPanel = () => {
   const userDataStr = localStorage.getItem('user');
@@ -59,7 +61,7 @@ const TeacherPanel = () => {
       if (instRes.data.success) {
         setInstitute(instRes.data.data);
       }
-    } catch (error) {
+    } catch {
       CustomToast.error('Failed to load teachers');
     } finally {
       setLoading(false);
@@ -103,7 +105,7 @@ const TeacherPanel = () => {
     try {
       const res = await api.delete(`/institute/members/${id}`);
       if (res.data.success) { CustomToast.success(res.data.message); fetchData(); }
-    } catch (error) {
+    } catch {
       CustomToast.error('Failed to remove teacher');
     }
   };
@@ -238,100 +240,26 @@ const TeacherPanel = () => {
         </div>
       </div>
 
-      {/* Add Teacher Modal */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-xl w-full max-w-md shadow-xl">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/5">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Add New Teacher</h3>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-white">
-                <XMarkIcon className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={handleAddSubmit} className="p-5 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
-                <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className={inputCls} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className={inputCls} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
-                <input type="password" required minLength="6" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className={inputCls} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
-                <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className={inputCls}>
-                  <option value="teacher">Teacher</option>
-                  <option value="hod">HOD</option>
-                </select>
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-gray-600 dark:text-gray-400">Cancel</button>
-                <button type="submit" className="flex-1 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold">Add Teacher</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AddTeacherModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onSubmit={handleAddSubmit} 
+        formData={formData} 
+        setFormData={setFormData} 
+        inputCls={inputCls} 
+      />
 
-      {/* Edit Teacher Modal */}
-      {isEditModalOpen && editTeacher && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-xl w-full max-w-md shadow-xl flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/5 shrink-0">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Edit Teacher</h3>
-              <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-white">
-                <XMarkIcon className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-5 overflow-y-auto">
-              <form id="editTeacherForm" onSubmit={handleEditSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
-                  <select
-                    value={editTeacher.role}
-                    onChange={e => setEditTeacher({...editTeacher, role: e.target.value})}
-                    className={inputCls}
-                  >
-                    <option value="teacher">Teacher</option>
-                    <option value="hod">HOD</option>
-                  </select>
-                </div>
+      <EditTeacherModal 
+        isOpen={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)} 
+        onSubmit={handleEditSubmit} 
+        editTeacher={editTeacher} 
+        setEditTeacher={setEditTeacher} 
+        institute={institute} 
+        toggleDepartment={toggleDepartment} 
+        inputCls={inputCls} 
+      />
 
-                <div className="pt-3 border-t border-gray-100 dark:border-white/5">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Assign Departments</label>
-                  <div className="space-y-2">
-                    {institute?.departments?.length > 0 ? (
-                      institute.departments.map(dept => (
-                        <label key={dept} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 cursor-pointer hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
-                          <input
-                            type="checkbox"
-                            className="w-4 h-4 rounded border-gray-300 dark:border-gray-600"
-                            checked={(editTeacher.departments || []).includes(dept)}
-                            onChange={() => toggleDepartment(dept)}
-                          />
-                          <span className="text-sm text-gray-700 dark:text-gray-200">{dept}</span>
-                        </label>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-400 italic">No departments created in Institute Profile yet.</p>
-                    )}
-                  </div>
-                </div>
-              </form>
-            </div>
-            <div className="px-5 py-4 border-t border-gray-100 dark:border-white/5 shrink-0 flex gap-3">
-              <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-gray-600 dark:text-gray-400">Cancel</button>
-              <button type="submit" form="editTeacherForm" className="flex-1 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold">Save Changes</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* View Feedback Modal */}
       {isFeedbackModalOpen && selectedTeacherForFeedback && (
         <TeacherFeedbackModal 
           isOpen={isFeedbackModalOpen} 
@@ -354,92 +282,6 @@ const TeacherPanel = () => {
         confirmText="Confirm"
         isDanger={true}
       />
-    </div>
-  );
-};
-
-const TeacherFeedbackModal = ({ isOpen, onClose, teacher }) => {
-  const [feedbacks, setFeedbacks] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (isOpen && teacher) {
-      fetchFeedback();
-    }
-  }, [isOpen, teacher]);
-
-  const fetchFeedback = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get(`/feedback/institute/teacher/${teacher._id}`);
-      if (res.data.success) {
-        setFeedbacks(res.data.data);
-      }
-    } catch (error) {
-      CustomToast.error('Failed to load feedback');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-xl w-full max-w-4xl max-h-[90vh] shadow-xl flex flex-col">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/5 shrink-0">
-          <h3 className="font-semibold text-gray-900 dark:text-white">
-            Student Feedback for {teacher?.name}
-          </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-white">
-            <XMarkIcon className="w-5 h-5" />
-          </button>
-        </div>
-        
-        <div className="p-5 overflow-y-auto bg-gray-50 dark:bg-[#000000] flex-1">
-          {loading ? (
-             <div className="flex justify-center py-10"><FaSpinner className="animate-spin text-2xl text-blue-500" /></div>
-          ) : feedbacks.length === 0 ? (
-             <div className="text-center py-10 text-gray-500">No feedback found for this teacher.</div>
-          ) : (
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               {feedbacks.map(fb => (
-                  <div key={fb._id} className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <div className="flex justify-between items-start mb-3">
-                       <div className="flex items-center gap-3">
-                          {fb.studentId?.profileImage ? (
-                            <img src={fb.studentId.profileImage} alt="" className="w-10 h-10 rounded-full object-cover border border-gray-200 dark:border-gray-700" />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400"><FaUserGraduate className="text-sm" /></div>
-                          )}
-                          <div>
-                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{fb.studentId?.name || 'Anonymous Student'}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {fb.studentId?.email ? `${fb.studentId.email} • ` : ''}
-                                {new Date(fb.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                       </div>
-                       <div className="flex gap-0.5">
-                         {[1,2,3,4,5].map(s => <FaStar key={s} className={`text-sm ${s <= fb.rating ? 'text-yellow-400' : 'text-gray-200 dark:text-gray-600'}`} />)}
-                       </div>
-                    </div>
-                    {fb.batchId && (
-                       <div className="mb-3">
-                         <span className="text-xs font-semibold bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-2 py-1 rounded inline-block">
-                           Batch: {fb.batchId.name} {fb.batchId.classCode ? `(${fb.batchId.classCode})` : ''}
-                         </span>
-                       </div>
-                    )}
-                    <p className="text-sm text-gray-700 dark:text-gray-300 italic bg-gray-50 dark:bg-white/5 p-3 rounded-lg border border-gray-100 dark:border-white/5">
-                      "{fb.comment || "No comment provided."}"
-                    </p>
-                  </div>
-               ))}
-             </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 };
