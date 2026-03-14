@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { motion, AnimatePresence } from 'framer-motion';
 import { FaListAlt, FaPlus, FaTrash, FaChevronRight, FaTimes, FaCalendarAlt, FaSearch, FaUsers, FaClock } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import API_URL from '../config';
+import SimpleConfirmationModal from '../components/shared/SimpleConfirmationModal';
 
 const TeacherTests = () => {
   const navigate = useNavigate();
@@ -22,6 +22,7 @@ const TeacherTests = () => {
     totalMarks: 100
   });
   const [searchQuery, setSearchQuery] = useState('');
+  const [deleteModalState, setDeleteModalState] = useState({ isOpen: false, examId: null, examTitle: '' });
 
   useEffect(() => {
     fetchData();
@@ -68,6 +69,26 @@ const TeacherTests = () => {
     }
   };
 
+  const openDeleteModal = (exam, e) => {
+    e.stopPropagation();
+    setDeleteModalState({ isOpen: true, examId: exam._id, examTitle: exam.title });
+  };
+
+  const executeDeleteExam = async () => {
+    if (!deleteModalState.examId) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_URL}/api/teacher/exam/${deleteModalState.examId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setExams(prev => prev.filter(ex => ex._id !== deleteModalState.examId));
+      toast.success('Test deleted successfully');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete test');
+    } finally {
+      setDeleteModalState({ isOpen: false, examId: null, examTitle: '' });
+    }
+  };
 
   const filteredExams = exams.filter(e => 
     e.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -123,11 +144,8 @@ const TeacherTests = () => {
           </div>
         ) : filteredExams.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredExams.map((exam, index) => (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+            {filteredExams.map((exam) => (
+              <div
                 key={exam._id}
                 onClick={() => navigate(`/teacher/test/${exam._id}`)}
                 className="group relative bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm hover:shadow-xl dark:hover:border-green-500/50 cursor-pointer overflow-hidden transition-all duration-300 transform hover:-translate-y-1"
@@ -177,7 +195,7 @@ const TeacherTests = () => {
                     <FaChevronRight className="transform group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         ) : (
@@ -197,18 +215,13 @@ const TeacherTests = () => {
       </div>
 
       {/* CREATE MODAL */}
-      <AnimatePresence>
         {showCreateModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            <div
               onClick={() => setShowCreateModal(false)}
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            <div
               className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden"
             >
               <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-white/5">
@@ -296,19 +309,19 @@ const TeacherTests = () => {
                   </button>
                 </div>
               </form>
-            </motion.div>
+            </div>
           </div>
         )}
-      </AnimatePresence>
-      
+
       {/* Delete Confirmation Modal */}
-      <DeleteConfirmationModal
+      <SimpleConfirmationModal
         isOpen={deleteModalState.isOpen}
         onClose={() => setDeleteModalState({ isOpen: false, examId: null, examTitle: '' })}
         onConfirm={executeDeleteExam}
-        itemName={deleteModalState.examTitle}
-        itemType="Test"
-        warningText="All student submissions, grades, and analytics for this test will be permanently lost."
+        title="Delete Test"
+        message={`Are you sure you want to delete "${deleteModalState.examTitle}"? All student submissions and grades will be permanently lost.`}
+        confirmText="Delete"
+        isDanger={true}
       />
     </div>
   );

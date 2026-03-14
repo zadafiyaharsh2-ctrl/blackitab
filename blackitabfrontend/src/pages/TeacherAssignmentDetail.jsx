@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { motion, AnimatePresence } from 'framer-motion';
 import { FaArrowLeft, FaCheckCircle, FaTimes, FaUserGraduate, FaCalendarAlt, FaStar, FaEdit, FaClipboardList } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import API_URL from '../config';
@@ -153,11 +152,8 @@ const TeacherAssignmentDetail = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {submissions.map((sub, idx) => (
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
+              {submissions.map((sub) => (
+                <div
                   key={sub._id}
                   className="bg-white/5 backdrop-blur-md border border-white/10 hover:border-yellow-500/30 rounded-2xl p-5 transition-all shadow-lg flex flex-col justify-between"
                 >
@@ -209,7 +205,7 @@ const TeacherAssignmentDetail = () => {
                       <FaEdit /> {sub.gradedAt ? 'Edit Grade' : 'Grade Now'}
                     </button>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           )}
@@ -217,18 +213,13 @@ const TeacherAssignmentDetail = () => {
       </div>
 
       {/* GRADING MODAL */}
-      <AnimatePresence>
         {showGradeModal && activeSubmission && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            <div
               onClick={() => setShowGradeModal(false)}
               className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            <div
               className="relative w-full max-w-md bg-[#0a0510] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
             >
               <div className="bg-gradient-to-r from-yellow-600/20 to-orange-600/20 p-6 border-b border-white/10 flex justify-between items-center">
@@ -279,10 +270,9 @@ const TeacherAssignmentDetail = () => {
                   </button>
                 </div>
               </form>
-            </motion.div>
+            </div>
           </div>
         )}
-      </AnimatePresence>
     </div>
   );
 };

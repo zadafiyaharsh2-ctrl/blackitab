@@ -32,9 +32,9 @@ const AdminTeacherFeedbackModal = ({ isOpen, onClose, teacher, adminToken }) => 
 
   return (
     <>
-    <div}}}
+    <div
       className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div}}}
+      <div
         className="glass-panel w-full max-w-4xl bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
         
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0 bg-white/[0.02]">

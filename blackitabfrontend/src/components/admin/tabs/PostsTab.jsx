@@ -1,9 +1,9 @@
-﻿import React from 'react';
+import React from 'react';
 import { FaTrash, FaNewspaper } from 'react-icons/fa';
 
 const PostsTab = ({ posts, handleDeletePost, postPagination, postPage, setPostPage, Pagination, fetchPosts }) => {
   return (
-    <div}}>
+    <div>
       <h2 className="text-xl font-bold text-white mb-6">Content Moderation — Posts ({postPagination.total})</h2>
       <div className="space-y-3">
         {posts.map(p => (

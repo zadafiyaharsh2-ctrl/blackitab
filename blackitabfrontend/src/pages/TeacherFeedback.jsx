@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { motion } from 'framer-motion';
-import { FaCommentDots, FaStar, FaUserGraduate, FaQuestionCircle, FaSearch, FaFilter } from 'react-icons/fa';
-import toast from 'react-hot-toast';
+import { FaCommentDots, FaStar, FaUserGraduate, FaQuestionCircle, FaSearch } from 'react-icons/fa';
 import API_URL from '../config';
 
 const TeacherFeedback = () => {
@@ -146,12 +144,9 @@ const TeacherFeedback = () => {
           </div>
         ) : filteredFeedbacks.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredFeedbacks.map((item, index) => (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                key={item._id || index}
+            {filteredFeedbacks.map((item) => (
+              <div
+                key={item._id || Math.random()}
                 className="group relative bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm hover:shadow-xl dark:hover:border-rose-500/50 transition-all duration-300 transform hover:-translate-y-1"
               >
                 <div className="flex justify-between items-start mb-4">
@@ -194,7 +189,7 @@ const TeacherFeedback = () => {
                     </span>
                   )}
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         ) : (

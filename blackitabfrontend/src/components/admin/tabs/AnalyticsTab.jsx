@@ -1,9 +1,9 @@
-﻿import React from 'react';
+import React from 'react';
 import { FaExclamationTriangle, FaCheck } from 'react-icons/fa';
 
 const AnalyticsTab = ({ globalAnalytics, teacherAnalytics }) => {
   return (
-    <div}}>
+    <div>
       <h2 className="text-xl font-bold text-white mb-6">Global Platform Analytics</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

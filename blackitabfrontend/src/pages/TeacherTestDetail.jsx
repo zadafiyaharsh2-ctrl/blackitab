@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { motion } from 'framer-motion';
 import { FaArrowLeft, FaFileAlt, FaUserGraduate, FaCalendarAlt, FaClock } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import API_URL from '../config';
@@ -131,12 +130,9 @@ const TeacherTestDetail = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {results.map((res, idx) => (
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  key={res._id || idx}
+              {results.map((res) => (
+                <div
+                  key={res._id || Math.random()}
                   className="bg-white/5 backdrop-blur-md border border-white/10 hover:border-emerald-500/30 rounded-2xl p-5 transition-all shadow-lg flex flex-col justify-between relative overflow-hidden"
                 >
                   {/* Rank indicator (if any) */}
@@ -169,7 +165,7 @@ const TeacherTestDetail = () => {
                       </div>
                     )}
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           )}

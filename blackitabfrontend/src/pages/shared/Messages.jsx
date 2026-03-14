@@ -18,12 +18,8 @@ const Messages = () => {
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
     const messagesEndRef = useRef(null);
-    const [downloadingMsgId, setDownloadingMsgId] = useState(null);
     
     const { socket, onlineUsers } = useSocketContext();
-
-    // Helper to get user ID (handles both _id and id)
-    const getUserId = (user) => user?._id || user?.id;
 
     // Debug: Log onlineUsers whenever it changes
 
@@ -374,10 +370,7 @@ const Messages = () => {
                                 messages.map((msg, index) => {
                                     const isMe = msg.sender._id === myId || msg.sender === myId;
                                     return (
-                                        <motion.div 
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ duration: 0.3 }}
+                                        <div
                                             key={index} 
                                             className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}
                                         >
@@ -393,7 +386,7 @@ const Messages = () => {
                                                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </p>
                                             </div>
-                                        </motion.div>
+                                        </div>
                                     );
                                 })
                             )}
@@ -412,29 +405,24 @@ const Messages = () => {
                                     placeholder="Type a message..."
                                     className="flex-1 bg-transparent text-gray-900 dark:text-white focus:outline-none placeholder-gray-500 h-full text-sm"
                                 />
-                                <motion.button 
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                <button 
                                     type="submit" 
                                     disabled={!newMessage.trim() || sending}
                                     className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg shadow-blue-900/30 ${sending ? 'bg-gray-600' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400'} text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed`}
                                 >
                                     {sending ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <FaPaperPlane className="ml-0.5" size={14} />}
-                                </motion.button>
+                                </button>
                             </div>
                         </form>
                     </>
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-black/40">
-                        <motion.div 
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ duration: 0.5 }}
+                        <div 
                             className="w-32 h-32 bg-gray-100 dark:bg-white/5 rounded-full flex items-center justify-center mb-8 border border-gray-300 dark:border-white/10 shadow-2xl relative overflow-hidden"
                         >
                             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 animate-pulse"></div>
                             <FaPaperPlane className="text-4xl text-gray-900 dark:text-white/40 relative z-10" />
-                        </motion.div>
+                        </div>
                         <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Messages</h2>
                         <p className="text-gray-600 dark:text-gray-400 max-w-md">Select a conversation from the sidebar to start chatting with your network.</p>
                     </div>

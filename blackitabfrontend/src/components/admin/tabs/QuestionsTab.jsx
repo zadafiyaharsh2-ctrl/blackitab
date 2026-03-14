@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { FaPlus, FaTimes, FaQuestion, FaExclamationTriangle, FaEye, FaCheck, FaBan, FaTrash } from 'react-icons/fa';
 
 const QuestionsTab = ({
@@ -8,7 +8,7 @@ const QuestionsTab = ({
   Pagination, questionPagination, questionPage, setQuestionPage, fetchQuestions
 }) => {
   return (
-    <div}}>
+    <div>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h2 className="text-xl font-bold text-white">Question Approval</h2>
         <div className="flex items-center gap-3">

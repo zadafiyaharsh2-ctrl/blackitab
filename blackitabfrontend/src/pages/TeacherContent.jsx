@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FaPenFancy, FaPlus, FaTrash, FaBookOpen, FaTimes, FaSearch, FaTags, FaVideo, FaLink, FaFileAlt } from 'react-icons/fa';
+import { FaPenFancy, FaPlus, FaTrash, FaBookOpen, FaTimes, FaSearch, FaVideo, FaLink, FaFileAlt } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import API_URL from '../config';
 import SimpleConfirmationModal from '../components/shared/SimpleConfirmationModal';
 
 const TeacherContent = () => {
-  const navigate = useNavigate();
   const [contents, setContents] = useState([]);
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -168,11 +165,8 @@ const TeacherContent = () => {
           </div>
         ) : filteredContents.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredContents.map((item, index) => (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+            {filteredContents.map((item) => (
+              <div
                 key={item._id}
                 className="group relative bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm hover:shadow-xl dark:hover:border-pink-500/50 overflow-hidden transition-all duration-300 transform hover:-translate-y-1"
               >
@@ -209,7 +203,7 @@ const TeacherContent = () => {
                     Posted on {new Date(item.createdAt).toLocaleDateString()}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         ) : (
@@ -229,18 +223,13 @@ const TeacherContent = () => {
       </div>
 
       {/* CREATE MODAL */}
-      <AnimatePresence>
         {showCreateModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            <div
               onClick={() => setShowCreateModal(false)}
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            <div
               className="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden my-8"
             >
               <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-white/5 sticky top-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md z-10">
@@ -335,10 +324,9 @@ const TeacherContent = () => {
                   </button>
                 </div>
               </form>
-            </motion.div>
+            </div>
           </div>
         )}
-      </AnimatePresence>
 
       <SimpleConfirmationModal 
         isOpen={deleteModalState.isOpen}

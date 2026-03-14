@@ -36,6 +36,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import API_URL from "../../config";
 
 
+
 const Theory = () => {
   // ============================================================================
   // ROUTING
@@ -362,7 +363,7 @@ const Theory = () => {
         // ========================================
         // Renders tables with headers, rows, and optional captions
         // Block structure: { type: "table", headers: [...], rows: [[...], [...]], caption: "..." }
-        case "table":
+        case "table": {
           // Check if table is too wide (more than 5 columns)
           const shouldSplit = block.headers && block.headers.length > 5;
 
@@ -471,6 +472,7 @@ const Theory = () => {
               )}
             </div>
           );
+        }
 
         // ========================================
         // DEFAULT CASE
@@ -494,6 +496,28 @@ const Theory = () => {
   const isTopicCompleted = (topicId) => {
     if (!selectedSubject || !topicId) return false;
     return completedTopics[selectedSubject._id]?.[topicId] === true;
+  };
+
+  /**
+   * Silently mark a topic as complete (auto-called when topic content loads)
+   */
+  const markTopicAsComplete = async (topicId) => {
+    if (!selectedSubject || !topicId) return;
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      await axios.post(
+        `${API_URL}/api/progress/mark-complete`,
+        { subjectId: selectedSubject._id, topicId },
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      setCompletedTopics(prev => ({
+        ...prev,
+        [selectedSubject._id]: { ...(prev[selectedSubject._id] || {}), [topicId]: true }
+      }));
+    } catch {
+      // Silently fail - non-critical
+    }
   };
 
   /**
