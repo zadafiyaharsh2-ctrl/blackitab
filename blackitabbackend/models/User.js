@@ -58,12 +58,14 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     enum: ['student', 'teacher', 'hod', 'institute'],
-    default: 'student'
+    default: 'student',
+    index: true
   },
   instituteId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Institute',
-    default: null
+    default: null,
+    index: true
   },
   instituteCode: {
     type: String,

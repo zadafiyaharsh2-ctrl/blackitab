@@ -1,5 +1,3 @@
-const axios = require('axios');
-const GeneratedQuestion = require('../../models/GeneratedQuestion');
 const ExamQuestion = require('../../models/ExamQuestion');
 const { ROLE_HIERARCHY } = require('../../middleware/roleMiddleware');
 
@@ -23,50 +21,7 @@ function canModify(question, user) {
     return false;
 }
 
-// ── Helper: Copy a GeneratedQuestion doc to ExamQuestion ──
-async function _copyToExamQuestion(q) {
-    const existing = await ExamQuestion.findOne({ sourceQuestionId: q._id });
-    if (existing) return existing;
 
-    return ExamQuestion.create({
-        exam: q.exam,
-        subject: q.subject,
-        question: q.question,
-        options: q.options,
-        correctAnswer: q.correctAnswer,
-        difficulty: q.difficulty,
-        explanation: q.explanation,
-        isAiGenerated: q.isAiGenerated,
-        topicId: q.topicId,
-        tags: q.tags,
-        createdBy: q.createdBy,
-        instituteId: q.instituteId,
-        isPublic: q.isPublic,
-        visibility: q.visibility,
-        approvalStatus: 'approved',
-        isProblem: true,
-        sourceQuestionId: q._id,
-        designatedFor: q.designatedFor
-    });
-}
-
-// ── Helper: Sync content edits to the ExamQuestion copy ──
-async function _syncExamQuestion(q) {
-    await ExamQuestion.findOneAndUpdate(
-        { sourceQuestionId: q._id },
-        {
-            question: q.question,
-            options: q.options,
-            correctAnswer: q.correctAnswer,
-            explanation: q.explanation,
-            subject: q.subject,
-            difficulty: q.difficulty,
-            exam: q.exam,
-            tags: q.tags,
-            designatedFor: q.designatedFor
-        }
-    );
-}
 
 // ══════════════════════════════════════════════════════════════
 // LIST QUESTIONS
@@ -85,8 +40,8 @@ exports.listMyQuestions = async (req, res) => {
 
         const skip = (parseInt(page) - 1) * parseInt(limit);
         const [questions, total] = await Promise.all([
-            GeneratedQuestion.find(filter).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
-            GeneratedQuestion.countDocuments(filter)
+            ExamQuestion.find(filter).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
+            ExamQuestion.countDocuments(filter)
         ]);
 
         res.json({
@@ -112,7 +67,7 @@ exports.createQuestion = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Missing required fields: exam, subject, question, 4 options, correctAnswer' });
         }
 
-        const newQuestion = await GeneratedQuestion.create({
+        const newQuestion = await ExamQuestion.create({
             exam,
             subject,
             question,
@@ -245,8 +200,8 @@ exports.generateQuestions = async (req, res) => {
             }
         });
 
-        // Save to GeneratedQuestion (My Bank)
-        const savedQuestions = await GeneratedQuestion.insertMany(
+        // Save to ExamQuestion (My Bank)
+        const savedQuestions = await ExamQuestion.insertMany(
             validatedQuestions.map(q => ({
                 exam,
                 subject: topic.trim(),
@@ -287,7 +242,7 @@ exports.generateQuestions = async (req, res) => {
 // GET /api/questions/:id
 exports.getQuestion = async (req, res) => {
     try {
-        const question = await GeneratedQuestion.findById(req.params.id)
+        const question = await ExamQuestion.findById(req.params.id)
             .populate('createdBy', 'name email role');
         if (!question) {
             return res.status(404).json({ success: false, message: 'Question not found' });
@@ -317,7 +272,7 @@ exports.getQuestion = async (req, res) => {
 // PUT /api/questions/:id
 exports.updateQuestion = async (req, res) => {
     try {
-        const question = await GeneratedQuestion.findById(req.params.id);
+        const question = await ExamQuestion.findById(req.params.id);
         if (!question) {
             return res.status(404).json({ success: false, message: 'Question not found' });
         }
@@ -332,16 +287,13 @@ exports.updateQuestion = async (req, res) => {
         const wasProblem = question.isProblem;
         const willBeProblem = updates.isProblem !== undefined ? updates.isProblem : wasProblem;
 
-        const updated = await GeneratedQuestion.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
-
-        // Copy-on-approve flow
-        if (!wasProblem && willBeProblem) {
-            await _copyToExamQuestion(updated);
-        } else if (wasProblem && !willBeProblem) {
-            await ExamQuestion.deleteOne({ sourceQuestionId: req.params.id });
-        } else if (wasProblem && willBeProblem) {
-            await _syncExamQuestion(updated);
+        // If it's being added to problems, it might also want auto-approval in the future, 
+        // but for now we just change the flags on the main model.
+        if (willBeProblem !== wasProblem) {
+            updates.isProblem = willBeProblem;
         }
+
+        const updated = await ExamQuestion.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
 
         res.json({ success: true, data: updated });
     } catch (error) {
@@ -356,21 +308,7 @@ exports.updateQuestion = async (req, res) => {
 // DELETE /api/questions/:id
 exports.deleteQuestion = async (req, res) => {
     try {
-        const question = await GeneratedQuestion.findById(req.params.id);
-        if (!question) {
-            return res.status(404).json({ success: false, message: 'Question not found' });
-        }
-
-        if (!canModify(question, req.user)) {
-            return res.status(403).json({ success: false, message: 'Not authorized to delete this question' });
-        }
-
-        // Also remove from ExamQuestion if it was in Problems
-        if (question.isProblem) {
-            await ExamQuestion.deleteOne({ sourceQuestionId: req.params.id });
-        }
-
-        await GeneratedQuestion.findByIdAndDelete(req.params.id);
+        await ExamQuestion.findByIdAndDelete(req.params.id);
         res.json({ success: true, message: 'Question deleted' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
@@ -389,7 +327,7 @@ exports.changeVisibility = async (req, res) => {
             return res.status(400).json({ success: false, message: 'visibility must be: private, institute, or public' });
         }
 
-        const question = await GeneratedQuestion.findById(req.params.id);
+        const question = await ExamQuestion.findById(req.params.id);
         if (!question) {
             return res.status(404).json({ success: false, message: 'Question not found' });
         }
@@ -428,11 +366,11 @@ exports.listInstituteQuestions = async (req, res) => {
 
         const skip = (parseInt(page) - 1) * parseInt(limit);
         const [questions, total] = await Promise.all([
-            GeneratedQuestion.find(filter)
+            ExamQuestion.find(filter)
                 .populate('createdBy', 'name email role')
                 .sort({ createdAt: -1 })
                 .skip(skip).limit(parseInt(limit)),
-            GeneratedQuestion.countDocuments(filter)
+            ExamQuestion.countDocuments(filter)
         ]);
 
         res.json({
@@ -452,7 +390,7 @@ exports.listPendingQuestions = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Not linked to an institute' });
         }
 
-        const questions = await GeneratedQuestion.find({
+        const questions = await ExamQuestion.find({
             instituteId: req.user.instituteId,
             approvalStatus: 'pending'
         })

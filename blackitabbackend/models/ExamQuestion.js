@@ -85,12 +85,14 @@ const examQuestionSchema = new mongoose.Schema({
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        default: null
+        default: null,
+        index: true
     },
     instituteId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Institute',
-        default: null
+        default: null,
+        index: true
     },
     isPublic: {
         type: Boolean,
@@ -121,14 +123,10 @@ const examQuestionSchema = new mongoose.Schema({
     // Sent to Problems Tab
     isProblem: {
         type: Boolean,
-        default: false
+        default: false,
+        index: true
     },
-    // Link back to the source GeneratedQuestion document
-    sourceQuestionId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'GeneratedQuestion',
-        default: null
-    },
+
     createdAt: {
         type: Date,
         default: Date.now
