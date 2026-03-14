@@ -885,7 +885,9 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
             </div>
         </div>
 
-        {children}
+        <div className="app-mobile-type">
+          {children}
+        </div>
       </div>
 
       {/* Floating Social Button — Bottom Right */}

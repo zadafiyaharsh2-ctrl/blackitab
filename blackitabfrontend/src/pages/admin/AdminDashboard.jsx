@@ -419,7 +419,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="admin-theme min-h-screen bg-slate-50 dark:bg-[#0a0a0a] text-slate-900 dark:text-white">
+    <div className="admin-theme app-mobile-type min-h-screen bg-slate-50 dark:bg-[#0a0a0a] text-slate-900 dark:text-white">
       {/* Ambient BG Orbs */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <motion.div animate={{ x: [-15, 15, -15], y: [-10, 10, -10] }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}

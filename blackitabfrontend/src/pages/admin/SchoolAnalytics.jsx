@@ -63,7 +63,7 @@ export default function SchoolAnalytics() {
   const tabs = ['overview', 'students', 'trends'];
 
   return (
-    <div className="admin-theme max-w-5xl mx-auto px-4 py-8 space-y-6">
+    <div className="admin-theme app-mobile-type max-w-5xl mx-auto px-4 py-8 space-y-6">
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

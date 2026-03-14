@@ -235,6 +235,38 @@ html.dark::-webkit-scrollbar-thumb:hover {
 }
 
 @layer components {
+  @media (max-width: 767px) {
+    .app-mobile-type .text-4xl {
+      font-size: 2rem;
+      line-height: 2.35rem;
+    }
+
+    .app-mobile-type .text-3xl {
+      font-size: 1.75rem;
+      line-height: 2.1rem;
+    }
+
+    .app-mobile-type .text-2xl {
+      font-size: 1.375rem;
+      line-height: 1.85rem;
+    }
+
+    .app-mobile-type .text-xl {
+      font-size: 1.125rem;
+      line-height: 1.6rem;
+    }
+
+    .app-mobile-type .text-lg {
+      font-size: 1rem;
+      line-height: 1.5rem;
+    }
+
+    .app-mobile-type .text-base {
+      font-size: 0.95rem;
+      line-height: 1.45rem;
+    }
+  }
+
   .admin-theme {
     color: rgb(15 23 42);
   }

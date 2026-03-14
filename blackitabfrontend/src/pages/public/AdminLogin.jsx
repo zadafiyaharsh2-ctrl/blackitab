@@ -40,7 +40,7 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="admin-theme min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0a0a0a] text-slate-900 dark:text-white relative overflow-hidden p-4">
+    <div className="admin-theme app-mobile-type min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0a0a0a] text-slate-900 dark:text-white relative overflow-hidden p-4">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(15,23,42,0.05)_1px,transparent_1px)] dark:bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
       <motion.div
         animate={{ y: [0, -15, 0] }}
