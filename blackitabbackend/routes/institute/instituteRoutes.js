@@ -59,4 +59,10 @@ router.get('/join-requests', requireRole('institute', 'hod'), instituteControlle
 router.post('/join-requests/:id/approve', requireRole('institute', 'hod'), instituteController.approveJoinRequest);
 router.post('/join-requests/:id/reject', requireRole('institute', 'hod'), instituteController.rejectJoinRequest);
 
+// ── Class Materials (Institute-level) ──
+router.get('/materials', requireRole('institute', 'hod'), instituteController.getInstituteMaterials);
+router.post('/batch/:batchId/materials', requireRole('institute', 'hod'), instituteController.createInstituteMaterial);
+router.put('/material/:id', requireRole('institute', 'hod'), instituteController.updateInstituteMaterial);
+router.delete('/material/:id', requireRole('institute', 'hod'), instituteController.deleteInstituteMaterial);
+
 module.exports = router;

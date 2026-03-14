@@ -60,8 +60,8 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  const userRole = (() => {
-    try { return JSON.parse(localStorage.getItem('user') || '{}').role || 'student'; } catch { return 'student'; }
+  const { role: userRole = 'student', instituteId = null } = (() => {
+    try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
   })();
 
   const canAccessTeacher = ['teacher', 'hod'].includes(userRole);
@@ -81,7 +81,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
     ] : !canAccessInstitute ? [
       { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
-      { path: '/classes', label: 'My Classes', icon: <FaUsers /> },
+      ...(instituteId ? [{ path: '/classes', label: 'My Classes', icon: <FaUsers /> }] : []),
       { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
     ] : []),
     ...( !canAccessInstitute ? [

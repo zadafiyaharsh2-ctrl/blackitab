@@ -5,6 +5,7 @@ import API_URL from '../../config';
 import { FaArrowLeft, FaHeart, FaComment, FaShare, FaUser, FaRegHeart, FaPaperPlane, FaEllipsisH, FaBookmark, FaTrash } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import AddToPlaylistModal from '../../components/student/AddToPlaylistModal';
+import SimpleConfirmationModal from '../../components/shared/SimpleConfirmationModal';
 import toast from 'react-hot-toast';
 
 const ContentDetail = () => {
@@ -25,6 +26,15 @@ const ContentDetail = () => {
     const [isFollowing, setIsFollowing] = useState(false);
     const [relatedFilter, setRelatedFilter] = useState('all');
     const commentInputRef = useRef(null);
+
+    // Generic Confirmation Modal State
+    const [confirmState, setConfirmState] = useState({
+      isOpen: false,
+      action: null,
+      id: null,
+      title: '',
+      message: ''
+    });
 
 
     useEffect(() => {
@@ -205,18 +215,26 @@ const ContentDetail = () => {
         }
     };
 
-    const handleDelete = async () => {
-        if (window.confirm('Are you sure you want to delete this content?')) {
-            try {
-                const token = localStorage.getItem('token');
-                await axios.delete(`${API_URL}/api/posts/${contentId}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                navigate(-1);
-            } catch (error) {
-                console.error('Delete error:', error);
-            }
+    const executeDelete = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(`${API_URL}/api/posts/${contentId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            navigate(-1);
+        } catch (error) {
+            console.error('Delete error:', error);
         }
+    };
+
+    const handleDelete = () => {
+        setConfirmState({
+            isOpen: true,
+            action: executeDelete,
+            id: contentId,
+            title: 'Delete Content',
+            message: 'Are you sure you want to delete this content?'
+        });
     };
 
     const isOwner = currentUser && content && (currentUser.id === content.user?._id || currentUser._id === content.user?._id);
@@ -512,6 +530,21 @@ const ContentDetail = () => {
                     contentId={contentId}
                 />
             )}
+
+            <SimpleConfirmationModal 
+                isOpen={confirmState.isOpen}
+                onClose={() => setConfirmState({ ...confirmState, isOpen: false, id: null, action: null })}
+                onConfirm={() => {
+                if (confirmState.action && confirmState.id) {
+                    confirmState.action(confirmState.id);
+                }
+                setConfirmState({ ...confirmState, isOpen: false, id: null, action: null });
+                }}
+                title={confirmState.title}
+                message={confirmState.message}
+                confirmText="Confirm"
+                isDanger={true}
+            />
         </div>
     );
 };

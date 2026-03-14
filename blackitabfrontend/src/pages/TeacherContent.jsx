@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaPenFancy, FaPlus, FaTrash, FaBookOpen, FaTimes, FaSearch, FaTags, FaVideo, FaLink, FaFileAlt } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import API_URL from '../config';
+import SimpleConfirmationModal from '../components/shared/SimpleConfirmationModal';
 
 const TeacherContent = () => {
   const navigate = useNavigate();
@@ -22,6 +23,12 @@ const TeacherContent = () => {
     batches: []
   });
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Deletion Modal State
+  const [deleteModalState, setDeleteModalState] = useState({
+    isOpen: false,
+    contentId: null
+  });
 
   useEffect(() => {
     fetchData();
@@ -76,19 +83,24 @@ const TeacherContent = () => {
     }
   };
 
-  const handleDeleteContent = async (id, e) => {
+  const openDeleteModal = (id, e) => {
     e.stopPropagation();
-    if (!window.confirm('Are you sure you want to delete this content?')) return;
+    setDeleteModalState({ isOpen: true, contentId: id });
+  };
+
+  const executeDeleteContent = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/api/teacher/content/${id}`, {
+      await axios.delete(`${API_URL}/api/teacher/content/${deleteModalState.contentId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Content deleted');
-      setContents(contents.filter(c => c._id !== id));
+      setContents(contents.filter(c => c._id !== deleteModalState.contentId));
+      setDeleteModalState({ isOpen: false, contentId: null });
     } catch (err) {
       // Offline fallback deletion
-      setContents(contents.filter(c => c._id !== id));
+      setContents(contents.filter(c => c._id !== deleteModalState.contentId));
+      setDeleteModalState({ isOpen: false, contentId: null });
       toast.success('Content deleted (Offline Mode)');
     }
   };
@@ -181,7 +193,7 @@ const TeacherContent = () => {
                     </div>
                   </div>
                   <button 
-                    onClick={(e) => handleDeleteContent(item._id, e)}
+                    onClick={(e) => openDeleteModal(item._id, e)}
                     className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/20 rounded-lg transition-colors"
                   >
                     <FaTrash size={14} />
@@ -327,6 +339,16 @@ const TeacherContent = () => {
           </div>
         )}
       </AnimatePresence>
+
+      <SimpleConfirmationModal 
+        isOpen={deleteModalState.isOpen}
+        onClose={() => setDeleteModalState({ isOpen: false, contentId: null })}
+        onConfirm={executeDeleteContent}
+        title="Delete Content"
+        message="Are you sure you want to delete this content? This action cannot be undone."
+        confirmText="Delete"
+        isDanger={true}
+      />
     </div>
   );
 };

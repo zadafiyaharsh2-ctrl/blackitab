@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import { CustomToast } from '../../utils/CustomToast';
+import SimpleConfirmationModal from '../../components/shared/SimpleConfirmationModal';
 
 const TheoryChecking = () => {
   const userDataStr = localStorage.getItem('user');
@@ -30,6 +31,15 @@ const TheoryChecking = () => {
     department: '',
     fileUrl: '',
     content: ''
+  });
+
+  // Generic Confirmation Modal State
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    action: null,
+    id: null,
+    title: '',
+    message: ''
   });
 
   useEffect(() => {
@@ -91,8 +101,7 @@ const TheoryChecking = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this material?')) return;
+  const executeDelete = async (id) => {
     try {
       const res = await api.delete(`/institute/theory/${id}`);
       if (res.data.success) {
@@ -102,6 +111,16 @@ const TheoryChecking = () => {
     } catch (error) {
       CustomToast.error('Failed to delete material');
     }
+  };
+
+  const handleDelete = (id) => {
+    setConfirmState({
+      isOpen: true,
+      action: executeDelete,
+      id: id,
+      title: 'Delete Material',
+      message: 'Are you sure you want to delete this material?'
+    });
   };
 
   const canEdit = (theoryOwnerId) => {
@@ -274,6 +293,20 @@ const TheoryChecking = () => {
         </div>
       )}
 
+      <SimpleConfirmationModal 
+        isOpen={confirmState.isOpen}
+        onClose={() => setConfirmState({ ...confirmState, isOpen: false, id: null, action: null })}
+        onConfirm={() => {
+        if (confirmState.action && confirmState.id) {
+            confirmState.action(confirmState.id);
+        }
+        setConfirmState({ ...confirmState, isOpen: false, id: null, action: null });
+        }}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText="Confirm"
+        isDanger={true}
+      />
     </div>
   );
 };

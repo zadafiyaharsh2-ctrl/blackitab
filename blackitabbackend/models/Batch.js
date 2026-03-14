@@ -56,6 +56,5 @@ const batchSchema = new mongoose.Schema({
 batchSchema.index({ teacherIds: 1 });
 batchSchema.index({ studentIds: 1 });
 batchSchema.index({ instituteId: 1, year: 1 });
-batchSchema.index({ classCode: 1 });
 
 module.exports = mongoose.model('Batch', batchSchema);

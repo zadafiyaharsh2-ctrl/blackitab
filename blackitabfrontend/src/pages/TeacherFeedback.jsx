@@ -19,7 +19,7 @@ const TeacherFeedback = () => {
     try {
       const token = localStorage.getItem('token');
       // Replace with actual endpoint to get teacher's feedbacks
-      const res = await axios.get(`${API_URL}/api/teacher/feedbacks`, {
+      const res = await axios.get(`${API_URL}/api/feedback/teacher`, {
         headers: { Authorization: `Bearer ${token}` }
       }).catch(() => ({ data: { success: true, data: [] } }));
       
@@ -51,7 +51,11 @@ const TeacherFeedback = () => {
 
   const renderStars = (rating) => {
     return [...Array(5)].map((_, i) => (
-      <FaStar key={i} className={i < rating ? "text-yellow-400" : "text-gray-600"} size={14} />
+      <FaStar
+        key={i}
+        className={i < rating ? 'text-yellow-400' : 'text-slate-300 dark:text-gray-600'}
+        size={14}
+      />
     ));
   };
 
@@ -59,6 +63,7 @@ const TeacherFeedback = () => {
     switch(type) {
       case 'quiz_end': return 'Quiz Feedback';
       case 'realtime': return 'Live Feedback';
+      case 'class': return 'Class Feedback';
       default: return 'General';
     }
   };
@@ -89,15 +94,15 @@ const TeacherFeedback = () => {
 
           <div className="glass-panel p-6 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm flex items-center justify-around">
             <div className="text-center">
-              <div className="text-3xl font-black text-white flex items-center justify-center gap-1">
+              <div className="text-3xl font-black text-slate-900 dark:text-white flex items-center justify-center gap-1">
                 {stats.avg} <FaStar className="text-yellow-400 text-xl" />
               </div>
-              <div className="text-xs text-gray-400 uppercase tracking-widest font-bold mt-1">Avg Rating</div>
+              <div className="text-xs text-slate-500 dark:text-gray-400 uppercase tracking-widest font-bold mt-1">Avg Rating</div>
             </div>
-            <div className="w-px h-12 bg-white/10"></div>
+            <div className="w-px h-12 bg-slate-200 dark:bg-white/10"></div>
             <div className="text-center">
-              <div className="text-3xl font-black text-white">{stats.total}</div>
-              <div className="text-xs text-gray-400 uppercase tracking-widest font-bold mt-1">Reviews</div>
+              <div className="text-3xl font-black text-slate-900 dark:text-white">{stats.total}</div>
+              <div className="text-xs text-slate-500 dark:text-gray-400 uppercase tracking-widest font-bold mt-1">Reviews</div>
             </div>
           </div>
         </div>
@@ -117,15 +122,15 @@ const TeacherFeedback = () => {
             />
           </div>
           
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 snap-x">
-            {['all', 'general', 'quiz_end', 'realtime'].map(type => (
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 snap-x custom-scrollbar">
+            {['all', 'general', 'quiz_end', 'realtime', 'class'].map(type => (
               <button
                 key={type}
                 onClick={() => setFilterType(type)}
                 className={`snap-center px-6 py-4 rounded-xl text-sm font-bold whitespace-nowrap transition-all border ${
                   filterType === type 
                     ? 'bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-500/20' 
-                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:bg-white/5 dark:border-white/10 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-white'
                 }`}
               >
                 {type === 'all' ? 'All Feedback' : getTypeLabel(type)}
@@ -151,34 +156,40 @@ const TeacherFeedback = () => {
               >
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-sm font-bold shadow-inner border border-white/10">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-sm font-bold text-white shadow-inner border border-white/10">
                       {item.studentId?.name ? item.studentId.name[0].toUpperCase() : 'S'}
                     </div>
                     <div>
-                      <h4 className="font-bold text-white text-sm">{item.studentId?.name || 'Anonymous Student'}</h4>
-                      <div className="text-xs text-gray-500 font-mono mt-0.5">
+                      <h4 className="font-bold text-slate-900 dark:text-white text-sm">{item.studentId?.name || 'Anonymous Student'}</h4>
+                      <div className="text-xs text-slate-500 dark:text-gray-500 font-mono mt-0.5">
+                        {item.studentId?.email ? `${item.studentId.email} • ` : ''}
                         {new Date(item.createdAt).toLocaleDateString()}
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-1 bg-black/40 px-2 py-1 rounded-lg border border-white/5">
+                   
+                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-black/40 px-2 py-1 rounded-lg border border-slate-200 dark:border-white/5">
                     {renderStars(item.rating)}
                   </div>
                 </div>
 
                 <div className="mb-4">
-                  <p className="text-sm text-gray-300 italic">
+                  <p className="text-sm text-slate-700 dark:text-gray-300 italic">
                     "{item.comment || 'No written feedback provided.'}"
                   </p>
                 </div>
 
-                <div className="mt-auto pt-4 border-t border-white/10 flex flex-wrap gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-rose-500/20 text-rose-400 border border-rose-500/20">
+                <div className="mt-auto pt-4 border-t border-slate-200 dark:border-white/10 flex flex-wrap gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/20">
                     {getTypeLabel(item.feedbackType)}
                   </span>
+                  {item.batchId && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                      Batch: {item.batchId.name} {item.batchId.classCode ? `(${item.batchId.classCode})` : ''}
+                    </span>
+                  )}
                   {item.questionId && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-blue-500/20 text-blue-400 border border-blue-500/20 flex items-center gap-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-500/20 flex items-center gap-1">
                       <FaQuestionCircle /> Question Ref
                     </span>
                   )}

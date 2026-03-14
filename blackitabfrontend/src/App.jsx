@@ -58,6 +58,8 @@ import ManageQuestions from './pages/teacher/ManageQuestions';
 import TeacherClasses from './pages/teacher/TeacherClasses';
 import TeacherBatchDetail from './pages/teacher/TeacherBatchDetail';
 import StudentClasses from './pages/student/StudentClasses';
+import StudentClassDetail from './pages/student/StudentClassDetail';
+import StudentMaterialDetail from './pages/student/StudentMaterialDetail';
 import TeacherAssignments from './pages/TeacherAssignments';
 import TeacherAssignmentDetail from './pages/TeacherAssignmentDetail';
 import TeacherTests from './pages/TeacherTests';
@@ -65,6 +67,7 @@ import TeacherTestDetail from './pages/TeacherTestDetail';
 import TeacherContent from './pages/TeacherContent';
 import TeacherFeedback from './pages/TeacherFeedback';
 import TeacherBatches from './pages/teacher/TeacherBatchDetail';
+import TeacherBatchMaterialForm from './pages/teacher/TeacherBatchMaterialForm';
 
 // Imported Institute Pages
 import InstituteDashboard from './pages/institute/InstituteDashboard';
@@ -475,6 +478,30 @@ function App() {
               }
             />
 
+            {/* Student Class Detail View */}
+            <Route
+              path="/classes/:classId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <StudentClassDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Student Material Detail View */}
+            <Route
+              path="/classes/:classId/material/:materialId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <StudentMaterialDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
             {/* Teacher Batches / Classrooms Route */}
             <Route
               path="/teacher/batches"
@@ -603,6 +630,28 @@ function App() {
                 <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherBatchDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Class Material Form (New & Edit) */}
+            <Route
+              path="/teacher/batch/:batchId/materials/new"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherBatchMaterialForm />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teacher/batch/:batchId/materials/edit/:materialId"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherBatchMaterialForm />
                   </MainLayout>
                 </ProtectedRoute>
               }

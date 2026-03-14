@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaClipboardList, FaPlus, FaTrash, FaChevronRight, FaTimes, FaCalendarAlt, FaSearch, FaUsers } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import API_URL from '../config';
+import DeleteConfirmationModal from '../components/shared/DeleteConfirmationModal';
 
 const TeacherAssignments = () => {
   const navigate = useNavigate();
@@ -21,6 +22,13 @@ const TeacherAssignments = () => {
     totalMarks: 100
   });
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Deletion Modal State
+  const [deleteModalState, setDeleteModalState] = useState({
+    isOpen: false,
+    assignmentId: null,
+    assignmentTitle: ''
+  });
 
   useEffect(() => {
     fetchData();
@@ -67,16 +75,24 @@ const TeacherAssignments = () => {
     }
   };
 
-  const handleDeleteAssignment = async (id, e) => {
+  const openDeleteModal = (assignment, e) => {
     e.stopPropagation();
-    if (!window.confirm('Are you sure you want to delete this assignment?')) return;
+    setDeleteModalState({
+      isOpen: true,
+      assignmentId: assignment._id,
+      assignmentTitle: assignment.title
+    });
+  };
+
+  const executeDeleteAssignment = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/api/teacher/assignment/${id}`, {
+      await axios.delete(`${API_URL}/api/teacher/assignment/${deleteModalState.assignmentId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Assignment deleted');
-      setAssignments(assignments.filter(a => a._id !== id));
+      setAssignments(assignments.filter(a => a._id !== deleteModalState.assignmentId));
+      setDeleteModalState({ isOpen: false, assignmentId: null, assignmentTitle: '' });
     } catch (err) {
       toast.error('Failed to delete assignment');
     }
@@ -155,7 +171,7 @@ const TeacherAssignments = () => {
                     </div>
                   </div>
                   <button 
-                    onClick={(e) => handleDeleteAssignment(assignment._id, e)}
+                    onClick={(e) => openDeleteModal(assignment, e)}
                     className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/20 rounded-lg transition-colors"
                   >
                     <FaTrash size={14} />
@@ -295,6 +311,16 @@ const TeacherAssignments = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModalState.isOpen}
+        onClose={() => setDeleteModalState({ isOpen: false, assignmentId: null, assignmentTitle: '' })}
+        onConfirm={executeDeleteAssignment}
+        itemName={deleteModalState.assignmentTitle}
+        itemType="Assignment"
+        warningText="All student submissions, grades, and associated files for this assignment will be permanently lost."
+      />
     </div>
   );
 };

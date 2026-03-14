@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaUsers, FaSchool, FaChartLine, FaSignOutAlt, FaSearch, FaShieldAlt,
-  FaPlus, FaTrash, FaTimes, FaCheck, FaBan, FaQuestion, FaNewspaper,
-  FaTrophy, FaEye, FaExclamationTriangle, FaChevronLeft, FaChevronRight
+  FaTrophy, FaEye, FaExclamationTriangle, FaChevronLeft, FaChevronRight, FaQuestion, FaNewspaper,
+  FaStar, FaUserGraduate, FaSpinner, FaComments, FaPlus, FaTimes, FaTrash, FaCheck, FaBan
 } from 'react-icons/fa';
 import { CustomToast } from '../../utils/CustomToast';
 import axios from 'axios';
 import API_URL from '../../config';
+import DeleteConfirmationModal from '../../components/shared/DeleteConfirmationModal';
 
 // ── Animation Variants ─────────────────────────────────────────────────────
 const containerVariants = {
@@ -49,6 +50,8 @@ const AdminDashboard = () => {
   const [instituteMembersLoading, setInstituteMembersLoading] = useState(false);
   
   const [rejectModal, setRejectModal] = useState({ open: false, questionId: null, note: '' });
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [selectedTeacherForFeedback, setSelectedTeacherForFeedback] = useState(null);
   const [questionPreview, setQuestionPreview] = useState(null);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'student', instituteCode: '' });
@@ -61,6 +64,16 @@ const AdminDashboard = () => {
   const [editUserTab, setEditUserTab] = useState('general');
   const [editInstituteModal, setEditInstituteModal] = useState(null);
   const [editInstituteTab, setEditInstituteTab] = useState('general');
+  
+  // Deletion Modal State
+  const [deleteModalState, setDeleteModalState] = useState({
+    isOpen: false,
+    itemId: null,
+    itemName: '',
+    itemType: '',
+    warningText: '',
+    onConfirm: null
+  });
 
   useEffect(() => {
     const adminData = localStorage.getItem('admin');
@@ -180,8 +193,22 @@ const AdminDashboard = () => {
     setNewUser({ name: '', email: '', password: '', role: 'student', instituteCode: '' });
   };
 
-  const handleDeleteUser = async (userId) => {
-    if (!confirm('Are you sure you want to permanently delete this user and all their data?')) return;
+  const openDeleteModal = (id, name, type, warningText, deleteActionType) => {
+    setDeleteModalState({
+      isOpen: true,
+      itemId: id,
+      itemName: name,
+      itemType: type,
+      warningText,
+      onConfirm: async () => {
+        setDeleteModalState(prev => ({ ...prev, isOpen: false }));
+        if (deleteActionType === 'user') await executeDeleteUser(id);
+        if (deleteActionType === 'institute') await executeDeleteInstitute(id);
+      }
+    });
+  };
+
+  const executeDeleteUser = async (userId) => {
     try {
       await axios.delete(`${API_URL}/api/admin/users/${userId}`, { headers: headers() });
       fetchUsers(null, userPage, userSearch);
@@ -207,8 +234,7 @@ const AdminDashboard = () => {
     setNewInstitute({ name: '', instituteCode: '', subscriptionPlan: 'free' });
   };
 
-  const handleDeleteInstitute = async (id) => {
-    if (!confirm('Delete this institute? All members will be unlinked.')) return;
+  const executeDeleteInstitute = async (id) => {
     try {
       await axios.delete(`${API_URL}/api/admin/institutes/${id}`, { headers: headers() });
       fetchInstitutes();
@@ -393,25 +419,25 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="admin-theme min-h-screen bg-slate-50 dark:bg-[#0a0a0a] text-slate-900 dark:text-white">
       {/* Ambient BG Orbs */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <motion.div animate={{ x: [-15, 15, -15], y: [-10, 10, -10] }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-          className="absolute top-[-10%] left-[5%] w-[500px] h-[500px] bg-red-600/20 rounded-full blur-[120px] mix-blend-screen" />
+          className="hidden dark:block absolute top-[-10%] left-[5%] w-[500px] h-[500px] bg-red-600/20 rounded-full blur-[120px] mix-blend-screen" />
         <motion.div animate={{ x: [10, -10, 10], y: [15, -15, 15] }} transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-          className="absolute bottom-[-5%] right-[5%] w-[450px] h-[450px] bg-orange-600/15 rounded-full blur-[120px] mix-blend-screen" />
+          className="hidden dark:block absolute bottom-[-5%] right-[5%] w-[450px] h-[450px] bg-orange-600/15 rounded-full blur-[120px] mix-blend-screen" />
       </div>
 
       {/* Admin Top Bar */}
-      <div className="bg-black/50 border-b border-white/5 px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md">
+      <div className="bg-white/90 dark:bg-black/50 border-b border-gray-200 dark:border-white/5 px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <FaShieldAlt className="text-red-500 text-xl" />
           <span className="font-bold text-lg">Blackitab Admin</span>
-          <span className="text-xs bg-red-500/10 text-red-400 px-2 py-0.5 rounded-full font-bold">SYSTEM</span>
+          <span className="text-xs bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 px-2 py-0.5 rounded-full font-bold">SYSTEM</span>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-gray-400 text-sm">{admin?.username || 'admin'}</span>
-          <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 text-sm font-bold transition-colors">
+          <span className="text-slate-500 dark:text-gray-400 text-sm">{admin?.username || 'admin'}</span>
+          <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 text-sm font-bold transition-colors">
             <FaSignOutAlt /> Logout
           </button>
         </div>
@@ -419,10 +445,10 @@ const AdminDashboard = () => {
 
       <div className="max-w-7xl mx-auto p-6 md:p-10 relative z-10">
         {/* Tabs */}
-        <div className="flex gap-1 mb-8 bg-white/5 p-1 rounded-xl w-fit flex-wrap">
+        <div className="flex gap-1 mb-8 bg-white border border-slate-200 shadow-sm dark:bg-white/5 dark:border-white/10 p-1 rounded-xl w-fit flex-wrap">
           {tabs.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
-              className={`px-4 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 relative ${activeTab === t.id ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'}`}>
+              className={`px-4 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 relative ${activeTab === t.id ? 'bg-slate-900 text-white dark:bg-white dark:text-gray-900' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/10'}`}>
               <t.icon className="text-xs" />
               {t.label}
               {t.badge > 0 && (
@@ -752,7 +778,13 @@ const AdminDashboard = () => {
                             className="px-3 py-1 rounded-lg text-xs font-bold bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors">
                             Edit
                           </button>
-                          <button onClick={() => handleDeleteUser(u._id)}
+                          {['teacher', 'hod'].includes(u.role) && (
+                            <button onClick={() => { setSelectedTeacherForFeedback(u); setIsFeedbackModalOpen(true); }}
+                              className="px-3 py-1 rounded-lg text-xs font-bold bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors" title="View Feedback">
+                              Feedback
+                            </button>
+                          )}
+                          <button onClick={() => openDeleteModal(u._id, u.email, 'User', 'All their data, XP, submissions, and history will be permanently deleted.', 'user')}
                             className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors" title="Delete user">
                             <FaTrash className="text-xs" />
                           </button>
@@ -980,7 +1012,7 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                  {institutes.map(inst => (
                    <motion.div key={inst._id} onClick={() => { setSelectedInstitute(inst); fetchInstituteMembers(inst._id); }} whileHover={{ y: -3 }} className="glass-panel p-6 border border-white/10 rounded-2xl group relative cursor-pointer hover:border-emerald-500/30 transition-colors">
-                   <button onClick={(e) => { e.stopPropagation(); handleDeleteInstitute(inst._id); }}
+                   <button onClick={(e) => { e.stopPropagation(); openDeleteModal(inst._id, inst.name, 'Institute', 'All associated teachers, students, and classes will be unlinked.', 'institute'); }}
                      className="absolute top-3 right-3 p-1.5 rounded-lg bg-red-500/10 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 z-10">
                      <FaTrash className="text-xs" />
                    </button>
@@ -1568,7 +1600,132 @@ const AdminDashboard = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModalState.isOpen}
+        onClose={() => setDeleteModalState({ isOpen: false, itemId: null, itemName: '', itemType: '', warningText: '', onConfirm: null })}
+        onConfirm={deleteModalState.onConfirm}
+        itemName={deleteModalState.itemName}
+        itemType={deleteModalState.itemType}
+        warningText={deleteModalState.warningText}
+      />
+
+      {/* Admin Teacher Feedback View Modal */}
+      <AdminTeacherFeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={() => { setIsFeedbackModalOpen(false); setSelectedTeacherForFeedback(null); }}
+        teacher={selectedTeacherForFeedback}
+        adminToken={getToken()}
+      />
     </div>
+  );
+};
+
+// ── Admin Feedback Modal Component ──
+const AdminTeacherFeedbackModal = ({ isOpen, onClose, teacher, adminToken }) => {
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (isOpen && teacher) fetchFeedback();
+  }, [isOpen, teacher]);
+
+  const fetchFeedback = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_URL}/api/feedback/admin/teacher/${teacher._id}`, {
+        headers: { Authorization: `Bearer ${adminToken}` }
+      });
+      if (res.data.success) {
+        setFeedbacks(res.data.data);
+      }
+    } catch {
+      CustomToast.error('Failed to load feedback');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+      <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+        className="glass-panel w-full max-w-4xl bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+        
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0 bg-white/[0.02]">
+          <div>
+             <h3 className="font-bold text-white text-lg">Feedback: {teacher?.name}</h3>
+             <p className="text-xs text-gray-400">Viewing unfiltered feedback records</p>
+          </div>
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-white rounded-lg transition-colors"><FaTimes /></button>
+        </div>
+        
+        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+          {loading ? (
+             <div className="flex justify-center items-center py-20"><FaSpinner className="animate-spin text-3xl text-purple-500" /></div>
+          ) : feedbacks.length === 0 ? (
+             <div className="text-center py-20 bg-white/[0.02] rounded-xl border border-white/5 border-dashed">
+                <FaComments className="text-4xl text-gray-600 mx-auto mb-3" />
+                <p className="text-gray-400 font-medium">No feedback entries found for this teacher.</p>
+             </div>
+          ) : (
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               {feedbacks.map(fb => (
+                  <div key={fb._id} className="bg-white/[0.04] p-5 rounded-xl border border-white/10 relative group hover:border-purple-500/30 transition-colors">
+                    {fb.isAnonymous && (
+                       <div className="absolute top-4 right-4 text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/20">
+                         ANONYMOUS SUBMISSION
+                       </div>
+                    )}
+                    <div className="flex gap-3 mb-4">
+                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                          {fb.studentId?.profileImage ? (
+                             <img src={fb.studentId.profileImage} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                             <FaUserGraduate className="text-gray-400" />
+                          )}
+                       </div>
+                       <div>
+                          <p className="text-sm font-bold text-white">
+                             {fb.studentId?.name || 'Unknown Student'}
+                             {fb.isAnonymous && <span className="text-gray-500 font-normal ml-1">(Hidden from Teacher)</span>}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                             {fb.studentId?.email ? `${fb.studentId.email} • ` : ''}
+                             {new Date(fb.createdAt).toLocaleDateString()}
+                          </p>
+                       </div>
+                    </div>
+                    
+                    <div className="flex gap-1 mb-3">
+                       {[1,2,3,4,5].map(s => <FaStar key={s} className={`text-sm ${s <= fb.rating ? 'text-yellow-400' : 'text-gray-700'}`} />)}
+                    </div>
+                    
+                    {fb.batchId && (
+                       <div className="mb-3">
+                         <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-400 px-2 py-1 rounded border border-blue-500/20">
+                           Batch: {fb.batchId.name} {fb.batchId.classCode ? `(${fb.batchId.classCode})` : ''}
+                         </span>
+                       </div>
+                    )}
+                    
+                    <div className="bg-black/40 rounded-lg p-3 border border-white/5">
+                       <p className="text-sm text-gray-300 italic">
+                         "{fb.comment || "No text feedback provided."}"
+                       </p>
+                    </div>
+                  </div>
+               ))}
+             </div>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+    </AnimatePresence>
   );
 };
 

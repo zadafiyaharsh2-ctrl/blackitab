@@ -895,3 +895,99 @@ exports.rejectJoinRequest = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+// ══════════════════════════════════════════════════════════════
+// CLASS MATERIALS MANAGEMENT (Institute-level)
+// ══════════════════════════════════════════════════════════════
+const ClassMaterial = require('../../models/ClassMaterial');
+const Batch = require('../../models/Batch');
+
+// GET /api/institute/materials — list all materials across all batches in the institute
+exports.getInstituteMaterials = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+
+        const materials = await ClassMaterial.find({ instituteId: instId })
+            .populate('teacherId', 'name email')
+            .populate('batchId', 'name year section')
+            .sort({ createdAt: -1 });
+
+        res.json({ success: true, data: materials });
+    } catch (error) {
+        console.error('Get Institute Materials Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// POST /api/institute/batch/:batchId/materials — create material for any batch in institute
+exports.createInstituteMaterial = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+
+        const batch = await Batch.findOne({ _id: req.params.batchId, instituteId: instId });
+        if (!batch) return res.status(404).json({ success: false, message: 'Batch not found in your institute' });
+
+        const { title, description, content, links, files } = req.body;
+        if (!title) return res.status(400).json({ success: false, message: 'Title is required' });
+
+        const material = await ClassMaterial.create({
+            title,
+            description: description || '',
+            content: content || '',
+            links: Array.isArray(links) ? links : [],
+            files: Array.isArray(files) ? files : [],
+            batchId: batch._id,
+            teacherId: req.user._id,
+            instituteId: instId
+        });
+
+        res.status(201).json({ success: true, data: material });
+    } catch (error) {
+        console.error('Create Institute Material Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// PUT /api/institute/material/:id — update any material in the institute
+exports.updateInstituteMaterial = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        const material = await ClassMaterial.findById(req.params.id);
+        if (!material || !material.instituteId || material.instituteId.toString() !== instId.toString()) {
+            return res.status(404).json({ success: false, message: 'Material not found in your institute' });
+        }
+
+        const { title, description, content, links, files } = req.body;
+        if (title) material.title = title;
+        if (description !== undefined) material.description = description;
+        if (content !== undefined) material.content = content;
+        if (Array.isArray(links)) material.links = links;
+        if (Array.isArray(files)) material.files = files;
+        material.updatedAt = new Date();
+        await material.save();
+
+        res.json({ success: true, data: material });
+    } catch (error) {
+        console.error('Update Institute Material Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// DELETE /api/institute/material/:id — delete any material in the institute
+exports.deleteInstituteMaterial = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        const material = await ClassMaterial.findById(req.params.id);
+        if (!material || !material.instituteId || material.instituteId.toString() !== instId.toString()) {
+            return res.status(404).json({ success: false, message: 'Material not found in your institute' });
+        }
+
+        await ClassMaterial.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: 'Material deleted' });
+    } catch (error) {
+        console.error('Delete Institute Material Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};

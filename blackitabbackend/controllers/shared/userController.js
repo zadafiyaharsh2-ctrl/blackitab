@@ -3,6 +3,7 @@ const Attempt = require('../../models/Attempt');
 const Batch = require('../../models/Batch');
 const BatchJoinRequest = require('../../models/BatchJoinRequest');
 const Attendance = require('../../models/Attendance');
+const ClassMaterial = require('../../models/ClassMaterial');
 
 exports.updateProfile = async (req, res) => {
     try {
@@ -215,6 +216,30 @@ exports.getMyBatches = async (req, res) => {
 };
 
 /**
+ * GET /api/user/batches/:batchId
+ * Returns details of a single batch the student is enrolled in.
+ */
+exports.getMyBatch = async (req, res) => {
+    try {
+        const { batchId } = req.params;
+        const studentId = req.user._id;
+
+        const batch = await Batch.findOne({ _id: batchId, studentIds: studentId })
+            .populate('teacherIds', 'name email profileImage')
+            .lean();
+        
+        if (!batch) {
+            return res.status(403).json({ success: false, message: 'You are not enrolled in this class or it does not exist' });
+        }
+
+        res.json({ success: true, data: batch });
+    } catch (error) {
+        console.error('getMyBatch Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+/**
  * GET /api/user/batches/:batchId/attendance
  * Returns the authenticated student's attendance for a specific batch.
  */
@@ -254,6 +279,29 @@ exports.getMyAttendanceForBatch = async (req, res) => {
         });
     } catch (error) {
         console.error('getMyAttendanceForBatch Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+/**
+ * GET /api/user/batches/:batchId/materials
+ * Returns class materials for a batch the student is enrolled in.
+ */
+exports.getClassMaterials = async (req, res) => {
+    try {
+        const { batchId } = req.params;
+        const studentId = req.user._id;
+
+        const batch = await Batch.findOne({ _id: batchId, studentIds: studentId });
+        if (!batch) return res.status(403).json({ success: false, message: 'You are not enrolled in this class' });
+
+        const materials = await ClassMaterial.find({ batchId: batch._id })
+            .populate('teacherId', 'name email')
+            .sort({ createdAt: -1 });
+
+        res.json({ success: true, data: materials });
+    } catch (error) {
+        console.error('getClassMaterials Error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { FaArrowLeft, FaEnvelope } from 'react-icons/fa';
 import API_URL from '../../config';
+import SimpleConfirmationModal from '../../components/shared/SimpleConfirmationModal';
 
 const SocialListPage = () => {
   const { userId, type } = useParams(); // type should be 'followers' or 'following'
@@ -13,6 +14,15 @@ const SocialListPage = () => {
   
   // Get current user from local storage for "Am I following them?" logic
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+  // Generic Confirmation Modal State
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    action: null,
+    id: null,
+    title: '',
+    message: ''
+  });
 
   useEffect(() => {
     fetchList();
@@ -55,8 +65,7 @@ const SocialListPage = () => {
     }
   };
 
-  const handleUnfollow = async (targetId) => {
-    if(!window.confirm("Unfollow this user?")) return;
+  const executeUnfollow = async (targetId) => {
     try {
       const token = localStorage.getItem('token');
       await axios.post(`${API_URL}/api/social/unfollow/${targetId}`, {}, {
@@ -67,6 +76,16 @@ const SocialListPage = () => {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleUnfollow = (targetId) => {
+    setConfirmState({
+      isOpen: true,
+      action: executeUnfollow,
+      id: targetId,
+      title: 'Unfollow User',
+      message: 'Are you sure you want to unfollow this user?'
+    });
   };
 
   return (
@@ -144,6 +163,21 @@ const SocialListPage = () => {
           )}
         </div>
       </div>
+
+      <SimpleConfirmationModal 
+        isOpen={confirmState.isOpen}
+        onClose={() => setConfirmState({ ...confirmState, isOpen: false, id: null, action: null })}
+        onConfirm={() => {
+          if (confirmState.action && confirmState.id) {
+            confirmState.action(confirmState.id);
+          }
+          setConfirmState({ ...confirmState, isOpen: false, id: null, action: null });
+        }}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText="Confirm"
+        isDanger={true}
+      />
     </div>
   );
 };

@@ -6,10 +6,13 @@ import {
   TrashIcon,
   PencilIcon,
   PlusIcon,
-  XMarkIcon
+  XMarkIcon,
+  ChatBubbleBottomCenterTextIcon
 } from '@heroicons/react/24/outline';
+import { FaStar, FaUserGraduate, FaSpinner } from 'react-icons/fa';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import { CustomToast } from '../../utils/CustomToast';
+import SimpleConfirmationModal from '../../components/shared/SimpleConfirmationModal';
 
 const TeacherPanel = () => {
   const userDataStr = localStorage.getItem('user');
@@ -22,11 +25,23 @@ const TeacherPanel = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editTeacher, setEditTeacher] = useState(null);
 
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [selectedTeacherForFeedback, setSelectedTeacherForFeedback] = useState(null);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     role: 'teacher'
+  });
+
+  // Generic Confirmation Modal State
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    action: null,
+    id: null,
+    title: '',
+    message: ''
   });
 
   useEffect(() => { fetchData(); }, []);
@@ -84,14 +99,23 @@ const TeacherPanel = () => {
     }
   };
 
-  const handleRemove = async (id) => {
-    if (!window.confirm('Are you sure you want to remove this teacher from the institute?')) return;
+  const executeRemove = async (id) => {
     try {
       const res = await api.delete(`/institute/members/${id}`);
       if (res.data.success) { CustomToast.success(res.data.message); fetchData(); }
     } catch (error) {
       CustomToast.error('Failed to remove teacher');
     }
+  };
+
+  const handleRemove = (id) => {
+    setConfirmState({
+      isOpen: true,
+      action: executeRemove,
+      id: id,
+      title: 'Remove Teacher',
+      message: 'Are you sure you want to remove this teacher from the institute?'
+    });
   };
 
   const toggleDepartment = (dept) => {
@@ -182,6 +206,13 @@ const TeacherPanel = () => {
                     <td className="px-5 py-3 text-right">
                       {user?.role === 'institute' && (
                         <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => { setSelectedTeacherForFeedback(t); setIsFeedbackModalOpen(true); }}
+                            className="p-1.5 rounded-lg border border-blue-200 dark:border-blue-500/30 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors"
+                            title="View Feedback"
+                          >
+                            <ChatBubbleBottomCenterTextIcon className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => { setEditTeacher(t); setIsEditModalOpen(true); }}
                             className="p-1.5 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 hover:text-blue-600 hover:border-blue-200 dark:hover:border-blue-500/30 transition-colors"
@@ -299,6 +330,116 @@ const TeacherPanel = () => {
           </div>
         </div>
       )}
+
+      {/* View Feedback Modal */}
+      {isFeedbackModalOpen && selectedTeacherForFeedback && (
+        <TeacherFeedbackModal 
+          isOpen={isFeedbackModalOpen} 
+          onClose={() => { setIsFeedbackModalOpen(false); setSelectedTeacherForFeedback(null); }} 
+          teacher={selectedTeacherForFeedback} 
+        />
+      )}
+
+      <SimpleConfirmationModal 
+        isOpen={confirmState.isOpen}
+        onClose={() => setConfirmState({ ...confirmState, isOpen: false, id: null, action: null })}
+        onConfirm={() => {
+        if (confirmState.action && confirmState.id) {
+            confirmState.action(confirmState.id);
+        }
+        setConfirmState({ ...confirmState, isOpen: false, id: null, action: null });
+        }}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText="Confirm"
+        isDanger={true}
+      />
+    </div>
+  );
+};
+
+const TeacherFeedbackModal = ({ isOpen, onClose, teacher }) => {
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (isOpen && teacher) {
+      fetchFeedback();
+    }
+  }, [isOpen, teacher]);
+
+  const fetchFeedback = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get(`/feedback/institute/teacher/${teacher._id}`);
+      if (res.data.success) {
+        setFeedbacks(res.data.data);
+      }
+    } catch (error) {
+      CustomToast.error('Failed to load feedback');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-xl w-full max-w-4xl max-h-[90vh] shadow-xl flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/5 shrink-0">
+          <h3 className="font-semibold text-gray-900 dark:text-white">
+            Student Feedback for {teacher?.name}
+          </h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-white">
+            <XMarkIcon className="w-5 h-5" />
+          </button>
+        </div>
+        
+        <div className="p-5 overflow-y-auto bg-gray-50 dark:bg-[#000000] flex-1">
+          {loading ? (
+             <div className="flex justify-center py-10"><FaSpinner className="animate-spin text-2xl text-blue-500" /></div>
+          ) : feedbacks.length === 0 ? (
+             <div className="text-center py-10 text-gray-500">No feedback found for this teacher.</div>
+          ) : (
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               {feedbacks.map(fb => (
+                  <div key={fb._id} className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <div className="flex justify-between items-start mb-3">
+                       <div className="flex items-center gap-3">
+                          {fb.studentId?.profileImage ? (
+                            <img src={fb.studentId.profileImage} alt="" className="w-10 h-10 rounded-full object-cover border border-gray-200 dark:border-gray-700" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400"><FaUserGraduate className="text-sm" /></div>
+                          )}
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{fb.studentId?.name || 'Anonymous Student'}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {fb.studentId?.email ? `${fb.studentId.email} • ` : ''}
+                                {new Date(fb.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                       </div>
+                       <div className="flex gap-0.5">
+                         {[1,2,3,4,5].map(s => <FaStar key={s} className={`text-sm ${s <= fb.rating ? 'text-yellow-400' : 'text-gray-200 dark:text-gray-600'}`} />)}
+                       </div>
+                    </div>
+                    {fb.batchId && (
+                       <div className="mb-3">
+                         <span className="text-xs font-semibold bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-2 py-1 rounded inline-block">
+                           Batch: {fb.batchId.name} {fb.batchId.classCode ? `(${fb.batchId.classCode})` : ''}
+                         </span>
+                       </div>
+                    )}
+                    <p className="text-sm text-gray-700 dark:text-gray-300 italic bg-gray-50 dark:bg-white/5 p-3 rounded-lg border border-gray-100 dark:border-white/5">
+                      "{fb.comment || "No comment provided."}"
+                    </p>
+                  </div>
+               ))}
+             </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

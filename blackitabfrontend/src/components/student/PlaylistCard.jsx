@@ -3,11 +3,21 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { FaPlay, FaListUl, FaEllipsisH, FaTrash } from 'react-icons/fa';
 import API_URL from '../../config';
+import SimpleConfirmationModal from '../shared/SimpleConfirmationModal';
 
 const PlaylistCard = ({ playlist, onDelete }) => {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = React.useState(false);
   const [isOwner, setIsOwner] = React.useState(false);
+
+  // Generic Confirmation Modal State
+  const [confirmState, setConfirmState] = React.useState({
+    isOpen: false,
+    action: null,
+    id: null,
+    title: '',
+    message: ''
+  });
 
   React.useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
@@ -16,9 +26,7 @@ const PlaylistCard = ({ playlist, onDelete }) => {
     }
   }, [playlist.user]);
 
-  const handleDelete = async (e) => {
-    e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this playlist?')) {
+  const executeDelete = async () => {
         try {
             const token = localStorage.getItem('token');
             const response = await fetch(`${API_URL}/api/playlists/${playlist._id}`, {
@@ -33,7 +41,17 @@ const PlaylistCard = ({ playlist, onDelete }) => {
         } catch (error) {
             console.error('Error deleting playlist:', error);
         }
-    }
+  };
+
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    setConfirmState({
+      isOpen: true,
+      action: executeDelete,
+      id: playlist._id,
+      title: 'Delete Playlist',
+      message: 'Are you sure you want to delete this playlist?'
+    });
     setShowMenu(false);
   };
 
@@ -110,6 +128,21 @@ const PlaylistCard = ({ playlist, onDelete }) => {
              </span>
         </div>
       </div>
+
+      <SimpleConfirmationModal 
+        isOpen={confirmState.isOpen}
+        onClose={() => setConfirmState({ ...confirmState, isOpen: false, id: null, action: null })}
+        onConfirm={() => {
+        if (confirmState.action && confirmState.id) {
+            confirmState.action(confirmState.id);
+        }
+        setConfirmState({ ...confirmState, isOpen: false, id: null, action: null });
+        }}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText="Confirm"
+        isDanger={true}
+      />
     </motion.div>
   );
 };

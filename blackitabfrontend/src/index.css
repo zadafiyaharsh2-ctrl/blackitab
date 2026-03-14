@@ -233,3 +233,114 @@ html.dark::-webkit-scrollbar-thumb:hover {
   .diff-medium { @apply bg-yellow-500/15 text-yellow-400 border-yellow-500/30; }
   .diff-hard   { @apply bg-red-500/15 text-red-400 border-red-500/30; }
 }
+
+@layer components {
+  .admin-theme {
+    color: rgb(15 23 42);
+  }
+
+  .dark .admin-theme {
+    color: rgb(255 255 255);
+  }
+
+  .admin-theme .glass-panel {
+    background-color: rgb(255 255 255 / 0.96);
+    border-color: rgb(226 232 240);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+    backdrop-filter: none;
+  }
+
+  .dark .admin-theme .glass-panel {
+    background-color: rgb(255 255 255 / 0.02);
+    border-color: rgb(255 255 255 / 0.1);
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(18px);
+  }
+
+  .admin-theme :is(h1, h2, h3, h4, h5, h6, p, span, td, th, label).text-white:not([class*='bg-']) {
+    color: rgb(15 23 42);
+  }
+
+  .dark .admin-theme :is(h1, h2, h3, h4, h5, h6, p, span, td, th, label).text-white:not([class*='bg-']) {
+    color: rgb(255 255 255);
+  }
+
+  .admin-theme .text-gray-500,
+  .admin-theme .text-gray-400 {
+    color: rgb(100 116 139);
+  }
+
+  .dark .admin-theme .text-gray-500,
+  .dark .admin-theme .text-gray-400 {
+    color: rgb(156 163 175);
+  }
+
+  .admin-theme .text-gray-300 {
+    color: rgb(51 65 85);
+  }
+
+  .dark .admin-theme .text-gray-300 {
+    color: rgb(209 213 219);
+  }
+
+  .admin-theme :is(button, a).hover\:text-white:hover {
+    color: rgb(15 23 42);
+  }
+
+  .dark .admin-theme :is(button, a).hover\:text-white:hover {
+    color: rgb(255 255 255);
+  }
+
+  .admin-theme :is(input, textarea, select) {
+    background-color: rgb(255 255 255);
+    border-color: rgb(226 232 240);
+    color: rgb(15 23 42);
+  }
+
+  .dark .admin-theme :is(input, textarea, select) {
+    background-color: rgb(255 255 255 / 0.05);
+    border-color: rgb(255 255 255 / 0.1);
+    color: rgb(255 255 255);
+  }
+
+  .admin-theme :is(input, textarea, select)::placeholder {
+    color: rgb(148 163 184);
+    opacity: 1;
+  }
+
+  .dark .admin-theme :is(input, textarea, select)::placeholder {
+    color: rgb(75 85 99);
+  }
+
+  .admin-theme [class*='border-white/10'],
+  .admin-theme [class*='border-white/5'] {
+    border-color: rgb(226 232 240);
+  }
+
+  .dark .admin-theme [class*='border-white/10'],
+  .dark .admin-theme [class*='border-white/5'] {
+    border-color: rgb(255 255 255 / 0.1);
+  }
+
+  .admin-theme :is(div, section, article, aside, form)[class*='bg-white/5'],
+  .admin-theme :is(div, section, article, aside, form)[class*='bg-white/[0.02]'],
+  .admin-theme :is(div, section, article, aside, form)[class*='bg-white/[0.04]'],
+  .admin-theme :is(div, section, article, aside, form)[class*='bg-black/40'] {
+    background-color: rgb(255 255 255 / 0.96);
+  }
+
+  .dark .admin-theme :is(div, section, article, aside, form)[class*='bg-white/5'],
+  .dark .admin-theme :is(div, section, article, aside, form)[class*='bg-white/[0.02]'],
+  .dark .admin-theme :is(div, section, article, aside, form)[class*='bg-white/[0.04]'],
+  .dark .admin-theme :is(div, section, article, aside, form)[class*='bg-black/40'] {
+    background-color: initial;
+  }
+
+  .admin-theme [class*='backdrop-blur'] {
+    backdrop-filter: blur(0);
+  }
+
+  .dark .admin-theme [class*='backdrop-blur'] {
+    backdrop-filter: blur(12px);
+  }
+}

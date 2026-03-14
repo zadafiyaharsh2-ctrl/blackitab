@@ -5,6 +5,8 @@ import { FaUsers, FaPlus, FaTrash, FaChevronRight, FaTimes, FaGraduationCap, FaS
 import toast from 'react-hot-toast';
 import API_URL from '../../config';
 
+import DeleteConfirmationModal from '../../components/shared/DeleteConfirmationModal';
+
 const TeacherClasses = () => {
   const navigate = useNavigate();
   const [batches, setBatches] = useState([]);
@@ -12,6 +14,13 @@ const TeacherClasses = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formData, setFormData] = useState({ name: '', year: '', section: '' });
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Deletion Modal State
+  const [deleteModalState, setDeleteModalState] = useState({
+    isOpen: false,
+    batchId: null,
+    batchName: ''
+  });
 
   useEffect(() => { fetchBatches(); }, []);
 
@@ -47,16 +56,24 @@ const TeacherClasses = () => {
     }
   };
 
-  const handleDeleteBatch = async (id, e) => {
+  const openDeleteModal = (batch, e) => {
     e.stopPropagation();
-    if (!window.confirm('Delete this class? This cannot be undone.')) return;
+    setDeleteModalState({
+      isOpen: true,
+      batchId: batch._id,
+      batchName: batch.name
+    });
+  };
+
+  const executeDeleteBatch = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/api/teacher/batch/${id}`, {
+      await axios.delete(`${API_URL}/api/teacher/batch/${deleteModalState.batchId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Class deleted');
-      setBatches(batches.filter(b => b._id !== id));
+      setBatches(batches.filter(b => b._id !== deleteModalState.batchId));
+      setDeleteModalState({ isOpen: false, batchId: null, batchName: '' });
     } catch {
       toast.error('Failed to delete class');
     }
@@ -138,7 +155,7 @@ const TeacherClasses = () => {
                   </p>
                 </div>
                 <button
-                  onClick={(e) => handleDeleteBatch(batch._id, e)}
+                  onClick={(e) => openDeleteModal(batch, e)}
                   className="p-1.5 text-gray-300 dark:text-gray-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg"
                 >
                   <FaTrash className="text-xs" />
@@ -211,6 +228,15 @@ const TeacherClasses = () => {
           </div>
         </div>
       )}
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModalState.isOpen}
+        onClose={() => setDeleteModalState({ isOpen: false, batchId: null, batchName: '' })}
+        onConfirm={executeDeleteBatch}
+        itemName={deleteModalState.batchName}
+        itemType="Class"
+        warningText="This will permanently delete the class, removing all enrolled students, assignments, and attendance records."
+      />
     </div>
   );
 };

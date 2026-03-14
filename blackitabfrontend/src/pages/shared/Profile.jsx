@@ -11,6 +11,7 @@ import PostDetailModal from '../../components/student/PostDetailModal';
 import EditProfileModal from '../../components/shared/EditProfileModal';
 import StudentHomeContent from '../../components/student/StudentHomeContent';
 import ActivityHeatmap from '../../components/student/ActivityHeatmap.jsx';
+import SimpleConfirmationModal from '../../components/shared/SimpleConfirmationModal';
 import { useSocketContext } from '../../context/SocketContext';
 
 
@@ -60,11 +61,21 @@ const Profile = () => {
   const [userList, setUserList] = useState([]);
   const [isLoadingList, setIsLoadingList] = useState(false);
 
+  // Generic Confirmation Modal State
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    action: null,
+    id: null,
+    title: '',
+    message: ''
+  });
+
   // Stats and Heatmap for Overview Tab
   const [stats, setStats] = useState(null);
   const [heatmapData, setHeatmapData] = useState([]);
   const [loadingStats, setLoadingStats] = useState(false);
-  const showHeatmap = user?.role === 'student';
+  const showStudentProgress = user?.role === 'student';
+  const showHeatmap = showStudentProgress;
 
   // Get online users from Socket Context
   const { onlineUsers } = useSocketContext();
@@ -194,8 +205,7 @@ const Profile = () => {
     navigate(`/network/${targetId}/following`);
   };
 
-  const handleUnfollowRequest = async (targetId) => {
-    if (!window.confirm('Are you sure you want to unfollow?')) return;
+  const executeUnfollowRequest = async (targetId) => {
     try {
       const token = localStorage.getItem('token');
       await axios.post(`${API_URL}/api/social/unfollow/${targetId}`, {}, {
@@ -222,6 +232,16 @@ const Profile = () => {
     } catch (err) {
       console.error('Unfollow error:', err);
     }
+  };
+
+  const handleUnfollowRequest = (targetId) => {
+    setConfirmState({
+      isOpen: true,
+      action: executeUnfollowRequest,
+      id: targetId,
+      title: 'Unfollow User',
+      message: 'Are you sure you want to unfollow?'
+    });
   };
 
   // Search Logic (Debounce could be added here for better perf)
@@ -449,14 +469,29 @@ const Profile = () => {
         onFollowBack={handleFollowRequest}
       />
 
+      <SimpleConfirmationModal 
+        isOpen={confirmState.isOpen}
+        onClose={() => setConfirmState({ ...confirmState, isOpen: false, id: null, action: null })}
+        onConfirm={() => {
+          if (confirmState.action && confirmState.id) {
+            confirmState.action(confirmState.id);
+          }
+          setConfirmState({ ...confirmState, isOpen: false, id: null, action: null });
+        }}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText="Confirm"
+        isDanger={true}
+      />
+
       {/* TOP NAVIGATION BAR */}
       <div className="flex flex-col md:flex-row items-center justify-between mb-8 md:mb-12 gap-4 md:gap-6 w-full z-20">
 
         {!isMyProfile && (
           <button
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate(-1)}
             className="p-3 rounded-full bg-white border border-gray-300 dark:bg-white/5 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 transition-colors group flex-shrink-0 shadow-sm"
-            title="Back to My Profile"
+            title="Go Back"
           >
             <FaArrowLeft className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" size={18} />
           </button>
@@ -703,24 +738,26 @@ const Profile = () => {
             ) : (
               <>
                 {/* Stats row */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                   <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
-                     <div className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-1">Rank</div>
-                     <div className="text-2xl font-black text-gray-900 dark:text-white">{stats?.rank || 'Unranked'}</div>
+                 {showStudentProgress && (
+                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
+                        <div className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-1">Rank</div>
+                        <div className="text-2xl font-black text-gray-900 dark:text-white">{stats?.rank || 'Unranked'}</div>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
+                        <div className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-1">Total XP</div>
+                        <div className="text-2xl font-black text-blue-500 dark:text-blue-400">{stats?.totalPoints || 0}</div>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
+                        <div className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-1">Current Streak</div>
+                        <div className="text-2xl font-black text-orange-500 dark:text-orange-400">{stats?.streak || 0} <FaFire className="inline" /></div>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
+                        <div className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-1">Solved</div>
+                        <div className="text-2xl font-black text-emerald-500 dark:text-emerald-400">{stats?.totalCompleted || 0}</div>
+                      </div>
                    </div>
-                   <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
-                     <div className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-1">Total XP</div>
-                     <div className="text-2xl font-black text-blue-500 dark:text-blue-400">{stats?.totalPoints || 0}</div>
-                   </div>
-                   <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
-                     <div className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-1">Current Streak</div>
-                     <div className="text-2xl font-black text-orange-500 dark:text-orange-400">{stats?.streak || 0} <FaFire className="inline" /></div>
-                   </div>
-                   <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
-                     <div className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-1">Solved</div>
-                     <div className="text-2xl font-black text-emerald-500 dark:text-emerald-400">{stats?.totalCompleted || 0}</div>
-                   </div>
-                </div>
+                 )}
                 
                 {showHeatmap && (
                   <div className="bg-white dark:bg-[#080808] border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">

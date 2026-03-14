@@ -970,3 +970,59 @@ exports.getGlobalAnalytics = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+// ══════════════════════════════════════════════════════════════
+// CLASS MATERIALS MANAGEMENT (Global Admin)
+// ══════════════════════════════════════════════════════════════
+const ClassMaterial = require('../../models/ClassMaterial');
+
+// GET /api/admin/materials — list all materials system-wide
+exports.getAllMaterials = async (req, res) => {
+    try {
+        const materials = await ClassMaterial.find()
+            .populate('teacherId', 'name email')
+            .populate('batchId', 'name year section')
+            .populate('instituteId', 'name instituteCode')
+            .sort({ createdAt: -1 });
+
+        res.json({ success: true, data: materials });
+    } catch (error) {
+        console.error('Get All Materials Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// PUT /api/admin/material/:id — update any material system-wide
+exports.updateMaterial = async (req, res) => {
+    try {
+        const material = await ClassMaterial.findById(req.params.id);
+        if (!material) return res.status(404).json({ success: false, message: 'Material not found' });
+
+        const { title, description, content, links, files } = req.body;
+        if (title) material.title = title;
+        if (description !== undefined) material.description = description;
+        if (content !== undefined) material.content = content;
+        if (Array.isArray(links)) material.links = links;
+        if (Array.isArray(files)) material.files = files;
+        material.updatedAt = new Date();
+        await material.save();
+
+        res.json({ success: true, data: material });
+    } catch (error) {
+        console.error('Update Admin Material Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// DELETE /api/admin/material/:id — delete any material system-wide
+exports.deleteMaterial = async (req, res) => {
+    try {
+        const material = await ClassMaterial.findByIdAndDelete(req.params.id);
+        if (!material) return res.status(404).json({ success: false, message: 'Material not found' });
+
+        res.json({ success: true, message: 'Material deleted' });
+    } catch (error) {
+        console.error('Delete Admin Material Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};

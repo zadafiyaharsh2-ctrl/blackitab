@@ -61,4 +61,9 @@ router.get('/teachers', adminController.getAllTeachersRatings);
 // ── Global Analytics ──
 router.get('/analytics', adminController.getGlobalAnalytics);
 
+// ── Class Materials (Global) ──
+router.get('/materials', adminController.getAllMaterials);
+router.put('/material/:id', adminController.updateMaterial);
+router.delete('/material/:id', adminController.deleteMaterial);
+
 module.exports = router;

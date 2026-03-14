@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import { CustomToast } from '../../utils/CustomToast';
+import SimpleConfirmationModal from '../../components/shared/SimpleConfirmationModal';
 
 const StudentPanel = () => {
   const userDataStr = localStorage.getItem('user');
@@ -33,6 +34,15 @@ const StudentPanel = () => {
     departments: ''
   });
   const [saving, setSaving] = useState(false);
+
+  // Generic Confirmation Modal State
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    action: null,
+    id: null,
+    title: '',
+    message: ''
+  });
 
   useEffect(() => { fetchStudents(); }, []);
 
@@ -62,14 +72,23 @@ const StudentPanel = () => {
     ));
   }, [searchQuery, students]);
 
-  const handleRemove = async (id) => {
-    if (!window.confirm('Are you sure you want to remove this student from the institute?')) return;
+  const executeRemove = async (id) => {
     try {
       const res = await api.delete(`/institute/members/${id}`);
       if (res.data.success) { CustomToast.success(res.data.message); fetchStudents(); }
     } catch (error) {
       CustomToast.error('Failed to remove student');
     }
+  };
+
+  const handleRemove = (id) => {
+    setConfirmState({
+      isOpen: true,
+      action: executeRemove,
+      id: id,
+      title: 'Remove Student',
+      message: 'Are you sure you want to remove this student from the institute?'
+    });
   };
 
   const handleAddSubmit = async (e) => {
@@ -386,6 +405,21 @@ const StudentPanel = () => {
           </div>
         </div>
       )}
+
+      <SimpleConfirmationModal 
+        isOpen={confirmState.isOpen}
+        onClose={() => setConfirmState({ ...confirmState, isOpen: false, id: null, action: null })}
+        onConfirm={() => {
+        if (confirmState.action && confirmState.id) {
+            confirmState.action(confirmState.id);
+        }
+        setConfirmState({ ...confirmState, isOpen: false, id: null, action: null });
+        }}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText="Confirm"
+        isDanger={true}
+      />
     </div>
   );
 };

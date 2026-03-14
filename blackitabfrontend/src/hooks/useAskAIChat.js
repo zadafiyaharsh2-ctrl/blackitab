@@ -237,8 +237,6 @@ const useAskAIChat = ({ subjectContext, topicContext, loadHistory = true } = {})
     };
 
     const clearAllHistory = async () => {
-        if (!window.confirm('Are you sure you want to clear all history?')) return;
-
         try {
             await fetch(`${API_URL}/api/ai/history/clear`, {
                 method: 'DELETE',

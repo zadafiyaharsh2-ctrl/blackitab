@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import useAskAIChat from '../../hooks/useAskAIChat';
 import usePageTitle from '../../hooks/usePageTitle';
@@ -11,6 +11,7 @@ import {
   FaTrash, FaSpinner, FaExclamationCircle, FaLightbulb,
   FaTimes, FaComment, FaPlus
 } from 'react-icons/fa';
+import SimpleConfirmationModal from '../../components/shared/SimpleConfirmationModal';
 
 const AskAI = () => {
   usePageTitle('Ask AI');
@@ -24,7 +25,25 @@ const AskAI = () => {
     deleteChatSession, clearAllHistory,
   } = useAskAIChat({ loadHistory: true });
 
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    action: null,
+    id: null,
+    title: '',
+    message: ''
+  });
+
   useEffect(() => { inputRef.current?.focus(); }, []);
+
+  const handleClearHistory = () => {
+    setConfirmState({
+      isOpen: true,
+      action: clearAllHistory,
+      id: 'clear',
+      title: 'Clear All History',
+      message: 'Are you sure you want to clear all chat history?'
+    });
+  };
 
   const sampleQuestions = [
     "What is a database?",
@@ -201,7 +220,7 @@ const AskAI = () => {
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Your Chats</h3>
               <div className="flex items-center gap-2">
                 {chatList.length > 0 && (
-                  <button onClick={clearAllHistory} className="text-xs text-red-500 hover:underline">Clear all</button>
+                  <button onClick={handleClearHistory} className="text-xs text-red-500 hover:underline">Clear all</button>
                 )}
                 <button onClick={() => setShowHistory(false)} className="md:hidden text-gray-400"><FaTimes /></button>
               </div>
@@ -250,6 +269,21 @@ const AskAI = () => {
           </div>
         )}
       </div>
+
+      <SimpleConfirmationModal 
+        isOpen={confirmState.isOpen}
+        onClose={() => setConfirmState({ ...confirmState, isOpen: false, id: null, action: null })}
+        onConfirm={() => {
+        if (confirmState.action) {
+            confirmState.action();
+        }
+        setConfirmState({ ...confirmState, isOpen: false, id: null, action: null });
+        }}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText="Confirm"
+        isDanger={true}
+      />
     </div>
   );
 };

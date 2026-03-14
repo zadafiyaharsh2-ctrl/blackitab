@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FaHeart, FaComment, FaShare, FaEllipsisH, FaTrash } from 'react-icons/fa';
 import API_URL from '../../config';
 import axios from 'axios';
+import SimpleConfirmationModal from '../shared/SimpleConfirmationModal';
 
 const Post = ({ post, onPostDeleted }) => {
   const [liked, setLiked] = useState(false); // Placeholder for local state
@@ -11,11 +12,18 @@ const Post = ({ post, onPostDeleted }) => {
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const isOwner = currentUser.id === post?.user?._id || currentUser._id === post?.user?._id;
 
+  // Generic Confirmation Modal State
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    action: null,
+    id: null,
+    title: '',
+    message: ''
+  });
+
   if (!post) return null;
 
-  const handleDelete = async () => {
-      if (!window.confirm("Are you sure you want to delete this post?")) return;
-      
+  const executeDelete = async () => {
       try {
           const token = localStorage.getItem('token');
           await axios.delete(`${API_URL}/api/posts/${post._id}`, {
@@ -29,6 +37,16 @@ const Post = ({ post, onPostDeleted }) => {
           console.error("Delete error:", err);
           alert("Failed to delete post");
       }
+  };
+
+  const handleDelete = () => {
+    setConfirmState({
+      isOpen: true,
+      action: executeDelete,
+      id: post._id,
+      title: 'Delete Post',
+      message: 'Are you sure you want to delete this post?'
+    });
   };
 
   return (
@@ -120,6 +138,21 @@ const Post = ({ post, onPostDeleted }) => {
           <span>Share</span>
         </button>
       </div>
+
+      <SimpleConfirmationModal 
+        isOpen={confirmState.isOpen}
+        onClose={() => setConfirmState({ ...confirmState, isOpen: false, id: null, action: null })}
+        onConfirm={() => {
+        if (confirmState.action && confirmState.id) {
+            confirmState.action(confirmState.id);
+        }
+        setConfirmState({ ...confirmState, isOpen: false, id: null, action: null });
+        }}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText="Confirm"
+        isDanger={true}
+      />
     </div>
   );
 };

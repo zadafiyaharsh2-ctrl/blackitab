@@ -11,6 +11,7 @@ const TeacherScore = require('../../models/TeacherScore');
 const TeacherFeedback = require('../../models/TeacherFeedback');
 const ExamQuestion = require('../../models/ExamQuestion');
 const Attendance = require('../../models/Attendance');
+const ClassMaterial = require('../../models/ClassMaterial');
 const { ROLE_HIERARCHY } = require('../../middleware/roleMiddleware');
 
 // ══════════════════════════════════════════════════════════════
@@ -187,6 +188,8 @@ exports.deleteBatch = async (req, res) => {
             return res.status(403).json({ success: false, message: 'Not authorized' });
         }
 
+        // Cascade delete: remove all materials belonging to this batch
+        await ClassMaterial.deleteMany({ batchId: batch._id });
         await Batch.findByIdAndDelete(req.params.id);
         res.json({ success: true, message: 'Batch deleted' });
     } catch (error) {
@@ -1094,5 +1097,98 @@ exports.getAttendanceAnalytics = async (req, res) => {
     } catch (error) {
          console.error('Get Attendance Analytics Error:', error);
          res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
+// PHASE 11: CLASS MATERIALS
+// ══════════════════════════════════════════════════════════════
+
+// POST /api/teacher/batch/:batchId/materials
+exports.createClassMaterial = async (req, res) => {
+    try {
+        const { title, description, content, links, files } = req.body;
+        if (!title) return res.status(400).json({ success: false, message: 'Title is required' });
+        if (!req.user.instituteId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+
+        const batch = await Batch.findById(req.params.batchId);
+        if (!batch) return res.status(404).json({ success: false, message: 'Batch not found' });
+        if (!canManage(batch, req.user) && !batch.teacherIds.some(t => t.toString() === req.user._id.toString())) {
+            return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+
+        const material = await ClassMaterial.create({
+            title,
+            description: description || '',
+            content: content || '',
+            links: Array.isArray(links) ? links : [],
+            files: Array.isArray(files) ? files : [],
+            batchId: batch._id,
+            teacherId: req.user._id,
+            instituteId: req.user.instituteId
+        });
+
+        res.status(201).json({ success: true, data: material });
+    } catch (error) {
+        console.error('Create Class Material Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// GET /api/teacher/batch/:batchId/materials
+exports.getClassMaterials = async (req, res) => {
+    try {
+        const batch = await Batch.findById(req.params.batchId);
+        if (!batch) return res.status(404).json({ success: false, message: 'Batch not found' });
+        if (!canManage(batch, req.user) && !batch.teacherIds.some(t => t.toString() === req.user._id.toString())) {
+            return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+
+        const materials = await ClassMaterial.find({ batchId: batch._id })
+            .populate('teacherId', 'name email')
+            .sort({ createdAt: -1 });
+
+        res.json({ success: true, data: materials });
+    } catch (error) {
+        console.error('Get Class Materials Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// PUT /api/teacher/material/:id
+exports.updateClassMaterial = async (req, res) => {
+    try {
+        const material = await ClassMaterial.findById(req.params.id);
+        if (!material) return res.status(404).json({ success: false, message: 'Material not found' });
+        if (!canManage(material, req.user)) return res.status(403).json({ success: false, message: 'Not authorized' });
+
+        const { title, description, content, links, files } = req.body;
+        if (title) material.title = title;
+        if (description !== undefined) material.description = description;
+        if (content !== undefined) material.content = content;
+        if (Array.isArray(links)) material.links = links;
+        if (Array.isArray(files)) material.files = files;
+        material.updatedAt = new Date();
+        await material.save();
+
+        res.json({ success: true, data: material });
+    } catch (error) {
+        console.error('Update Class Material Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// DELETE /api/teacher/material/:id
+exports.deleteClassMaterial = async (req, res) => {
+    try {
+        const material = await ClassMaterial.findById(req.params.id);
+        if (!material) return res.status(404).json({ success: false, message: 'Material not found' });
+        if (!canManage(material, req.user)) return res.status(403).json({ success: false, message: 'Not authorized' });
+
+        await ClassMaterial.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: 'Material deleted' });
+    } catch (error) {
+        console.error('Delete Class Material Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 };

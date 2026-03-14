@@ -74,4 +74,10 @@ router.post('/attendance', teacherController.submitAttendance);
 router.get('/attendance/:classId', teacherController.getAttendanceHistory);
 router.get('/attendance/:classId/analytics', teacherController.getAttendanceAnalytics);
 
+// ── Phase 11: Class Materials ──
+router.post('/batch/:batchId/materials', teacherController.createClassMaterial);
+router.get('/batch/:batchId/materials', teacherController.getClassMaterials);
+router.put('/material/:id', teacherController.updateClassMaterial);
+router.delete('/material/:id', teacherController.deleteClassMaterial);
+
 module.exports = router;

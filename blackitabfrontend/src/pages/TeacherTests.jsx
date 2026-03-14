@@ -68,20 +68,6 @@ const TeacherTests = () => {
     }
   };
 
-  const handleDeleteExam = async (id, e) => {
-    e.stopPropagation();
-    if (!window.confirm('Are you sure you want to delete this test?')) return;
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/api/teacher/exam/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      toast.success('Test deleted');
-      setExams(exams.filter(e => e._id !== id));
-    } catch (err) {
-      toast.error('Failed to delete test');
-    }
-  };
 
   const filteredExams = exams.filter(e => 
     e.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -160,7 +146,7 @@ const TeacherTests = () => {
                     </div>
                   </div>
                   <button 
-                    onClick={(e) => handleDeleteExam(exam._id, e)}
+                    onClick={(e) => openDeleteModal(exam, e)}
                     className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/20 rounded-lg transition-colors"
                   >
                     <FaTrash size={14} />
@@ -314,6 +300,16 @@ const TeacherTests = () => {
           </div>
         )}
       </AnimatePresence>
+      
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModalState.isOpen}
+        onClose={() => setDeleteModalState({ isOpen: false, examId: null, examTitle: '' })}
+        onConfirm={executeDeleteExam}
+        itemName={deleteModalState.examTitle}
+        itemType="Test"
+        warningText="All student submissions, grades, and analytics for this test will be permanently lost."
+      />
     </div>
   );
 };

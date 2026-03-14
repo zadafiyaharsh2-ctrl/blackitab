@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaUserPlus, FaUserCheck, FaUserTimes, FaCalendarDay, FaSpinner, FaArrowLeft, FaCheck, FaTimes, FaSearch, FaTrash, FaGraduationCap } from 'react-icons/fa';
+import { FaUserPlus, FaUserCheck, FaUserTimes, FaCalendarDay, FaSpinner, FaArrowLeft, FaCheck, FaTimes, FaSearch, FaTrash, FaGraduationCap, FaBookOpen, FaPlus, FaLink, FaFileAlt, FaEdit } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import API_URL from '../../config';
+import SimpleConfirmationModal from '../../components/shared/SimpleConfirmationModal';
 
 const TeacherBatchDetail = () => {
   const { batchId } = useParams();
@@ -13,10 +14,20 @@ const TeacherBatchDetail = () => {
   const [batch, setBatch] = useState(null);
   const [students, setStudents] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [materials, setMaterials] = useState([]);
   const [attendanceData, setAttendanceData] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  
+  // Generic Confirmation Modal State
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    action: null,
+    id: null,
+    title: '',
+    message: ''
+  });
 
   useEffect(() => { fetchBatchData(); }, [batchId]);
 
@@ -25,14 +36,16 @@ const TeacherBatchDetail = () => {
     try {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
-      const [batchRes, studentsRes, requestsRes] = await Promise.all([
+      const [batchRes, studentsRes, requestsRes, materialsRes] = await Promise.all([
         axios.get(`${API_URL}/api/teacher/batch/${batchId}`, { headers }),
         axios.get(`${API_URL}/api/teacher/batch/${batchId}/students`, { headers }),
         axios.get(`${API_URL}/api/teacher/batch/${batchId}/requests`, { headers }),
+        axios.get(`${API_URL}/api/teacher/batch/${batchId}/materials`, { headers }),
       ]);
       setBatch(batchRes.data.data);
       setStudents(studentsRes.data.data);
       setRequests(requestsRes.data.data);
+      setMaterials(materialsRes.data.data);
       const analyticsRes = await axios.get(`${API_URL}/api/teacher/attendance/${batchId}/analytics`, { headers }).catch(() => ({ data: { data: [] } }));
       const map = {};
       analyticsRes.data.data.forEach(m => { map[m._id] = m; });
@@ -49,8 +62,7 @@ const TeacherBatchDetail = () => {
     } catch { toast.error('Failed to approve request'); }
   };
 
-  const handleRejectRequest = async (reqId) => {
-    if (!window.confirm('Reject this request?')) return;
+  const executeRejectRequest = async (reqId) => {
     try {
       await axios.put(`${API_URL}/api/teacher/batch/${batchId}/requests/${reqId}/reject`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       toast.success('Request rejected');
@@ -58,13 +70,32 @@ const TeacherBatchDetail = () => {
     } catch { toast.error('Failed to reject request'); }
   };
 
-  const handleRemoveStudent = async (studentId) => {
-    if (!window.confirm('Remove this student?')) return;
+  const handleRejectRequest = (reqId) => {
+    setConfirmState({
+      isOpen: true,
+      action: executeRejectRequest,
+      id: reqId,
+      title: 'Reject Request',
+      message: 'Are you sure you want to reject this join request?'
+    });
+  };
+
+  const executeRemoveStudent = async (studentId) => {
     try {
       await axios.delete(`${API_URL}/api/teacher/batch/${batchId}/students/${studentId}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       toast.success('Student removed');
       setStudents(students.filter(s => s._id !== studentId));
     } catch (err) { toast.error(err.response?.data?.message || 'Failed to remove student'); }
+  };
+
+  const handleRemoveStudent = (studentId) => {
+    setConfirmState({
+      isOpen: true,
+      action: executeRemoveStudent,
+      id: studentId,
+      title: 'Remove Student',
+      message: 'Are you sure you want to remove this student from the class?'
+    });
   };
 
   const handleAddManually = async (studentId) => {
@@ -112,6 +143,7 @@ const TeacherBatchDetail = () => {
 
   const tabs = [
     { key: 'students', label: `Enrolled (${students.length})` },
+    { key: 'materials', label: `Materials (${materials.length})` },
     { key: 'requests', label: `Join Requests ${requests.length > 0 ? `(${requests.length})` : ''}` },
     { key: 'add', label: 'Add Students' },
   ];
@@ -225,6 +257,74 @@ const TeacherBatchDetail = () => {
         )
       )}
 
+      {/* Materials Tab */}
+      {activeTab === 'materials' && (
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <button
+              onClick={() => navigate(`/teacher/batch/${batchId}/materials/new`)}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+            >
+              <FaPlus /> Add Material
+            </button>
+          </div>
+
+          {materials.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {materials.map(material => (
+                <div key={material._id} className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] hover:border-blue-300 dark:hover:border-blue-400/30 transition-colors">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500 shrink-0">
+                        <FaBookOpen />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-1">{material.title}</h3>
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wide">
+                          {material.links?.length || 0} Links • {material.files?.length || 0} Files
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => navigate(`/teacher/batch/${batchId}/materials/edit/${material._id}`)} className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-colors">
+                        <FaEdit />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {material.description && <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{material.description}</p>}
+                  
+                  {material.content && (
+                    <div className="text-sm text-gray-800 dark:text-gray-200 mb-4 bg-gray-50 dark:bg-white/5 p-3 rounded-lg whitespace-pre-wrap border border-gray-100 dark:border-white/5">
+                      {material.content}
+                    </div>
+                  )}
+                  
+                  <div className="space-y-2 mt-4">
+                    {material.links?.map((link, idx) => (
+                      <a key={`link-${idx}`} href={link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 w-full py-2 px-3 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 dark:text-blue-400 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 rounded-lg transition-colors overflow-hidden text-ellipsis whitespace-nowrap">
+                        <FaLink className="shrink-0" /> {link}
+                      </a>
+                    ))}
+                    {material.files?.map((file, idx) => (
+                      <a key={`file-${idx}`} href={file} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 w-full py-2 px-3 text-sm font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 rounded-lg transition-colors overflow-hidden text-ellipsis whitespace-nowrap">
+                        <FaFileAlt className="shrink-0" /> View Document {idx + 1}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="border border-dashed border-gray-200 dark:border-white/10 rounded-xl p-10 text-center text-gray-400">
+              <FaBookOpen className="text-3xl mx-auto mb-3 opacity-30" />
+              <p className="font-semibold text-gray-700 dark:text-gray-300">No materials yet</p>
+              <p className="text-sm mt-1">Share notes, links, or documents with your class.</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Requests Tab */}
       {activeTab === 'requests' && (
         requests.length > 0 ? (
@@ -333,6 +433,22 @@ const TeacherBatchDetail = () => {
           </div>
         </div>
       )}
+
+      {/* Generic Confirmation Modal */}
+      <SimpleConfirmationModal 
+        isOpen={confirmState.isOpen}
+        onClose={() => setConfirmState({ ...confirmState, isOpen: false, id: null, action: null })}
+        onConfirm={() => {
+          if (confirmState.action && confirmState.id) {
+            confirmState.action(confirmState.id);
+          }
+          setConfirmState({ ...confirmState, isOpen: false, id: null, action: null });
+        }}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText="Confirm"
+        isDanger={true}
+      />
     </div>
   );
 };
