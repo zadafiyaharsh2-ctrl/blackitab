@@ -25,6 +25,8 @@ const TeacherTests = () => {
   const [deleteModalState, setDeleteModalState] = useState({ isOpen: false, examId: null, examTitle: '' });
 
   useEffect(() => {
+    console.log('Admin Dashboard Frontend Route: /admin/dashboard');
+    console.log('Admin Dashboard Backend Route: /api/admin which includes /stats and other management endpoints');
     fetchData();
   }, []);
 

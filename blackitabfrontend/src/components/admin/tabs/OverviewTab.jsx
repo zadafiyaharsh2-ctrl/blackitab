@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -14,7 +14,7 @@ const OverviewTab = ({ stats, loading, statCards }) => {
     <div initial="hidden" animate="visible">
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {statCards.map((s, i) => (
-          <div key={i} className="glass-panel p-6 border border-white/5 flex items-center justify-between rounded-2xl">
+          <div key={i} className="glass-panel p-6 border-white/5 flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">{s.label}</p>
               <p className={`text-3xl font-bold ${s.color}`}>{loading ? '...' : s.value?.toLocaleString?.() ?? 0}</p>
@@ -28,7 +28,7 @@ const OverviewTab = ({ stats, loading, statCards }) => {
 
       {/* Role Distribution */}
       {stats?.roleCounts && (
-        <div className="glass-panel p-6 border border-white/10 rounded-2xl mb-8">
+        <div className="glass-panel p-6 mb-8">
           <h3 className="font-bold text-white mb-6 text-lg">Role Distribution</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {Object.entries(stats.roleCounts).map(([role, count]) => {
@@ -51,7 +51,7 @@ const OverviewTab = ({ stats, loading, statCards }) => {
       )}
 
       {/* Hierarchy Visualization */}
-      <div className="glass-panel p-6 border border-white/10 rounded-2xl">
+      <div className="glass-panel p-6">
         <h3 className="font-bold text-white mb-6 text-lg">Platform Hierarchy</h3>
         <div className="flex flex-col items-center gap-3">
           {[

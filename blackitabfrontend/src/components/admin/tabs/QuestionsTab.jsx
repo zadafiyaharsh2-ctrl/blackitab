@@ -31,7 +31,7 @@ const QuestionsTab = ({
 
       {/* Create Question Form */}
       {showCreateQuestion && (
-        <div className="glass-panel p-6 border border-emerald-500/20 rounded-2xl mb-6">
+        <div className="glass-panel p-6 border-emerald-500/20 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-white">Create Question (Auto-Approved)</h3>
             <button onClick={() => setShowCreateQuestion(false)} className="text-gray-500 hover:text-white"><FaTimes /></button>
@@ -72,7 +72,7 @@ const QuestionsTab = ({
       )}
 
       {/* Info Box */}
-      <div className="glass-panel p-4 border border-blue-500/20 rounded-xl mb-6 flex items-start gap-3">
+      <div className="glass-panel p-4 border-blue-500/20 rounded-xl mb-6 flex items-start gap-3">
         <FaExclamationTriangle className="text-blue-400 mt-0.5 shrink-0" />
         <div className="text-xs text-gray-400">
           <strong className="text-blue-400">Approval System:</strong> Teachers create questions → they appear here as <strong>Pending</strong>.
@@ -82,7 +82,7 @@ const QuestionsTab = ({
 
       <div className="space-y-3">
         {questions.map(q => (
-          <div key={q._id} layout className="glass-panel p-5 border border-white/10 rounded-2xl">
+          <div key={q._id} layout className="glass-panel p-5">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-2">

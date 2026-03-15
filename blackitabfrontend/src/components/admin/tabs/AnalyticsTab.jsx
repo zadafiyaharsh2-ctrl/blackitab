@@ -7,7 +7,7 @@ const AnalyticsTab = ({ globalAnalytics, teacherAnalytics }) => {
       <h2 className="text-xl font-bold text-white mb-6">Global Platform Analytics</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="glass-panel p-6 border border-white/10 rounded-2xl">
+        <div className="glass-panel p-6">
           <h3 className="font-bold text-white mb-4">Engagement Overview</h3>
           {globalAnalytics ? (
             <div className="grid grid-cols-2 gap-4">
@@ -23,7 +23,7 @@ const AnalyticsTab = ({ globalAnalytics, teacherAnalytics }) => {
           ) : <p className="text-gray-500">Loading analytics...</p>}
         </div>
 
-        <div className="glass-panel p-6 border border-white/10 rounded-2xl">
+        <div className="glass-panel p-6">
           <h3 className="font-bold text-white mb-4">Latest Signups</h3>
           {globalAnalytics?.recentSignups ? (
             <div className="space-y-3">
@@ -39,7 +39,7 @@ const AnalyticsTab = ({ globalAnalytics, teacherAnalytics }) => {
       </div>
 
       <h3 className="font-bold text-white mb-4 text-lg">Global Teacher Feedback</h3>
-      <div className="glass-panel border border-white/10 rounded-2xl overflow-hidden">
+      <div className="glass-panel overflow-hidden">
         <table className="w-full">
           <thead className="bg-white/[0.02] border-b border-white/5">
             <tr className="text-xs text-gray-500 uppercase tracking-wider text-left">

@@ -48,6 +48,15 @@ router.get('/batches/:batchId/attendance', protect, userController.getMyAttendan
 // GET /api/user/batches/:batchId/materials — student's class materials for a batch
 router.get('/batches/:batchId/materials', protect, userController.getClassMaterials);
 
+// GET /api/user/batches/:batchId/assignments — student's class assignments for a batch
+router.get('/batches/:batchId/assignments', protect, userController.getClassAssignments);
+
+// GET /api/user/assignments/:id — details of assignment and submission
+router.get('/assignments/:id', protect, userController.getAssignmentDetail);
+
+// POST /api/user/assignments/:id/submit — submit an assignment
+router.post('/assignments/:id/submit', protect, userController.submitAssignment);
+
 // GET /api/user/leaderboard — XP-ranked with streak bonus
 router.get('/leaderboard', protect, userController.getLeaderboard);
 

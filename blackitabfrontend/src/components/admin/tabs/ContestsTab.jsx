@@ -17,7 +17,7 @@ const ContestsTab = ({
 
       {/* Create Contest Form */}
       {showCreateContest && (
-        <div className="glass-panel p-6 border border-yellow-500/20 rounded-2xl mb-6">
+        <div className="glass-panel p-6 border-yellow-500/20 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-white">New Contest</h3>
             <button onClick={() => setShowCreateContest(false)} className="text-gray-500 hover:text-white"><FaTimes /></button>
@@ -45,7 +45,7 @@ const ContestsTab = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {contests.map(c => (
-          <div key={c._id} className="glass-panel p-6 border border-white/10 rounded-2xl group relative">
+          <div key={c._id} className="glass-panel p-6 group relative">
             <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button onClick={() => setEditContestModal({ _id: c._id, title: c.title, description: c.description || '', startTime: c.startTime?.slice(0,16) || '', endTime: c.endTime?.slice(0,16) || '', difficultyLevel: c.difficultyLevel || 'Intermediate', isActive: c.isActive || false })}
                 className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20">

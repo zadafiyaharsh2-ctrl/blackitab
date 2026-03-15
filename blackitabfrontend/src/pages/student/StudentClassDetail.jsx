@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   FaChalkboardTeacher, FaCalendarAlt, FaCheckCircle,
   FaTimesCircle, FaClock, FaSpinner,
-  FaBookOpen, FaLink, FaFileAlt, FaArrowLeft, FaStar
+  FaBookOpen, FaLink, FaFileAlt, FaArrowLeft, FaStar, FaClipboardList
 } from 'react-icons/fa';
 import { AcademicCapIcon } from '@heroicons/react/24/outline';
 import API_URL from '../../config';
@@ -317,6 +317,7 @@ const StudentClassDetail = () => {
   const [batch, setBatch] = useState(null);
   const [attendance, setAttendance] = useState(null);
   const [materials, setMaterials] = useState(null);
+  const [assignments, setAssignments] = useState(null);
 
   useEffect(() => {
     fetchClassData();
@@ -328,15 +329,17 @@ const StudentClassDetail = () => {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       
-      const [batchRes, attRes, matRes] = await Promise.all([
+      const [batchRes, attRes, matRes, assignRes] = await Promise.all([
         axios.get(`${API_URL}/api/user/batches/${classId}`, { headers }),
         axios.get(`${API_URL}/api/user/batches/${classId}/attendance`, { headers }),
-        axios.get(`${API_URL}/api/user/batches/${classId}/materials`, { headers }).catch(() => ({ data: { data: [] } }))
+        axios.get(`${API_URL}/api/user/batches/${classId}/materials`, { headers }).catch(() => ({ data: { data: [] } })),
+        axios.get(`${API_URL}/api/user/batches/${classId}/assignments`, { headers }).catch(() => ({ data: { data: [] } }))
       ]);
       
       if (batchRes.data.success) setBatch(batchRes.data.data);
       if (attRes.data.success) setAttendance(attRes.data.data);
       if (matRes.data.success) setMaterials(matRes.data.data);
+      if (assignRes.data.success) setAssignments(assignRes.data.data);
     } catch (err) {
       console.error(err);
       toast.error('Failed to load class details');
@@ -450,6 +453,16 @@ const StudentClassDetail = () => {
           >
             <FaBookOpen /> Course Materials ({materials?.length || 0})
           </button>
+          <button
+            onClick={() => setActiveTab('assignments')}
+            className={`flex-1 py-4 text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'assignments'
+                ? 'text-blue-600 bg-white border-b-2 border-blue-600 dark:bg-white/[0.05] dark:text-blue-400 dark:border-blue-400 shadow-[0_4px_0_0_transparent]'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-white/[0.02]'
+            }`}
+          >
+            <FaClipboardList /> Assignments ({assignments?.length || 0})
+          </button>
         </div>
 
         {/* Tab Content */}
@@ -506,6 +519,48 @@ const StudentClassDetail = () => {
                   <FaBookOpen className="text-4xl text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                   <p className="font-semibold text-gray-700 dark:text-gray-300">No class materials yet</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Teachers haven't added any study materials for this class.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Assignments View */}
+          {activeTab === 'assignments' && (
+            <div className="p-6">
+              {assignments?.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {assignments.map(assignment => (
+                    <div 
+                      key={assignment._id} 
+                      onClick={() => navigate(`/classes/${classId}/assignment/${assignment._id}`)}
+                      className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-500/50 transition-all group cursor-pointer flex flex-col h-full"
+                    >
+                      <div className="flex items-start gap-4 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center text-orange-600 dark:text-orange-400 shrink-0 group-hover:scale-105 transition-transform">
+                          <FaClipboardList />
+                        </div>
+                        <div className="flex-1 min-w-0 pt-1">
+                          <h3 className="font-bold text-gray-900 dark:text-white text-base truncate group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">{assignment.title}</h3>
+                          <div className="flex gap-3 text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
+                            <span>Total Marks: {assignment.totalMarks}</span>
+                            <span>Due: {assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : 'None'}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {assignment.description && <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2 leading-relaxed flex-grow">{assignment.description}</p>}
+                      
+                      <div className="mt-auto pt-3 border-t border-gray-100 dark:border-white/5 flex justify-end">
+                        <span className="text-xs font-semibold text-orange-600 dark:text-orange-400 group-hover:underline">View Assignment &rarr;</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-gray-200 dark:border-white/10 rounded-2xl py-16 text-center">
+                  <FaClipboardList className="text-4xl text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                  <p className="font-semibold text-gray-700 dark:text-gray-300">No assignments yet</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Teachers haven't added any assignments for this class.</p>
                 </div>
               )}
             </div>

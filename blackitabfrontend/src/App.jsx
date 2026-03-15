@@ -60,7 +60,7 @@ import TeacherBatchDetail from './pages/teacher/TeacherBatchDetail';
 import StudentClasses from './pages/student/StudentClasses';
 import StudentClassDetail from './pages/student/StudentClassDetail';
 import StudentMaterialDetail from './pages/student/StudentMaterialDetail';
-import TeacherAssignments from './pages/TeacherAssignments';
+import StudentAssignmentDetail from './pages/student/StudentAssignmentDetail';
 import TeacherAssignmentDetail from './pages/TeacherAssignmentDetail';
 import TeacherTests from './pages/TeacherTests';
 import TeacherTestDetail from './pages/TeacherTestDetail';
@@ -68,6 +68,7 @@ import TeacherContent from './pages/TeacherContent';
 import TeacherFeedback from './pages/TeacherFeedback';
 import TeacherBatches from './pages/teacher/TeacherBatchDetail';
 import TeacherBatchMaterialForm from './pages/teacher/TeacherBatchMaterialForm';
+import TeacherBatchAssignmentForm from './pages/teacher/TeacherBatchAssignmentForm';
 
 // Imported Institute Pages
 import InstituteDashboard from './pages/institute/InstituteDashboard';
@@ -505,6 +506,18 @@ function App() {
               }
             />
 
+            {/* Student Assignment Detail View */}
+            <Route
+              path="/classes/:classId/assignment/:assignmentId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <StudentAssignmentDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
             {/* Teacher Batches / Classrooms Route */}
             <Route
               path="/teacher/batches"
@@ -660,6 +673,28 @@ function App() {
               }
             />
 
+            {/* Teacher Class Assignment Form (New & Edit) */}
+            <Route
+              path="/teacher/batch/:batchId/assignments/new"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherBatchAssignmentForm />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teacher/batch/:batchId/assignments/edit/:assignmentId"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherBatchAssignmentForm />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
             {/* Teacher Attendance */}
             <Route
               path="/teacher/attendance"
@@ -667,18 +702,6 @@ function App() {
                 <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherAttendance />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Teacher Assignments */}
-            <Route
-              path="/teacher/assignments"
-              element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <TeacherAssignments />
                   </MainLayout>
                 </ProtectedRoute>
               }

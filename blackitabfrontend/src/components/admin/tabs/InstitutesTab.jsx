@@ -19,7 +19,7 @@ const InstitutesTab = ({
 
       {/* Create Institute Modal */}
       {showCreateInstitute && (
-        <div className="glass-panel p-6 border border-white/10 rounded-2xl mb-6">
+        <div className="glass-panel p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-white">New Institute</h3>
             <button onClick={() => setShowCreateInstitute(false)} className="text-gray-500 hover:text-white"><FaTimes /></button>
@@ -45,7 +45,7 @@ const InstitutesTab = ({
       )}
 
       {selectedInstitute ? (
-        <div className="glass-panel p-6 border border-white/10 rounded-2xl relative">
+        <div className="glass-panel p-6 relative">
             <button onClick={() => setSelectedInstitute(null)} className="absolute top-4 right-4 text-gray-400 hover:text-white flex items-center gap-2 text-sm font-bold bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
               <FaChevronLeft /> Back to List
             </button>
@@ -100,7 +100,7 @@ const InstitutesTab = ({
           <>
           {editInstituteModal && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="glass-panel w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+          <div className="glass-panel w-full max-w-2xl bg-[#0a0a0a] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
             
             {/* Header */}
             <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
@@ -215,7 +215,7 @@ const InstitutesTab = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {institutes.map(inst => (
-              <div key={inst._id} onClick={() => { setSelectedInstitute(inst); fetchInstituteMembers(inst._id); }} className="glass-panel p-6 border border-white/10 rounded-2xl group relative cursor-pointer hover:border-emerald-500/30 transition-colors">
+              <div key={inst._id} onClick={() => { setSelectedInstitute(inst); fetchInstituteMembers(inst._id); }} className="glass-panel p-6 group relative cursor-pointer hover:border-emerald-500/30 transition-colors">
               <button onClick={(e) => { e.stopPropagation(); openDeleteModal(inst._id, inst.name, 'Institute', 'All associated teachers, students, and classes will be unlinked.', 'institute'); }}
                 className="absolute top-3 right-3 p-1.5 rounded-lg bg-red-500/10 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 z-10">
                 <FaTrash className="text-xs" />

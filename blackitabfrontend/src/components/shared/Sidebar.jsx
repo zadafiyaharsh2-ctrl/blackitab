@@ -72,7 +72,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       { path: '/teacher-dashboard', label: 'Teacher Dashboard', icon: <FaSchool /> },
       { path: '/teacher/batches', label: 'Classes & Batches', icon: <FaUsers /> },
       { path: '/teacher/attendance', label: 'Attendance', icon: <FaCalendarDay /> },
-      { path: '/teacher/assignments', label: 'Assignments', icon: <FaClipboardList className="text-yellow-400" /> },
+
       { path: '/question-management', label: 'Question Bank', icon: <FaListUl /> },
       { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
       { path: '/teacher/tests', label: 'Tests', icon: <FaListAlt /> },
@@ -81,7 +81,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
     ] : !canAccessInstitute ? [
       { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
-      ...(instituteId ? [{ path: '/classes', label: 'My Classes', icon: <FaUsers /> }] : []),
+      { path: '/classes', label: 'My Classes', icon: <FaUsers /> },
       { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
     ] : []),
     ...( !canAccessInstitute ? [

@@ -11,6 +11,18 @@ const assignmentSchema = new mongoose.Schema({
         trim: true,
         default: ''
     },
+    content: {
+        type: String,
+        default: ''
+    },
+    links: [{
+        type: String,
+        trim: true
+    }],
+    files: [{
+        type: String,
+        trim: true
+    }],
     teacherId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

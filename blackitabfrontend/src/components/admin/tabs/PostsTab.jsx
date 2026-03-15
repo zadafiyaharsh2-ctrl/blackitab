@@ -7,7 +7,7 @@ const PostsTab = ({ posts, handleDeletePost, postPagination, postPage, setPostPa
       <h2 className="text-xl font-bold text-white mb-6">Content Moderation — Posts ({postPagination.total})</h2>
       <div className="space-y-3">
         {posts.map(p => (
-          <div key={p._id} className="glass-panel p-5 border border-white/10 rounded-2xl flex items-start justify-between gap-4">
+          <div key={p._id} className="glass-panel p-5 flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold shrink-0">

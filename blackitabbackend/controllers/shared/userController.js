@@ -4,6 +4,8 @@ const Batch = require('../../models/Batch');
 const BatchJoinRequest = require('../../models/BatchJoinRequest');
 const Attendance = require('../../models/Attendance');
 const ClassMaterial = require('../../models/ClassMaterial');
+const Assignment = require('../../models/Assignment');
+const AssignmentSubmission = require('../../models/AssignmentSubmission');
 
 exports.updateProfile = async (req, res) => {
     try {
@@ -302,6 +304,100 @@ exports.getClassMaterials = async (req, res) => {
         res.json({ success: true, data: materials });
     } catch (error) {
         console.error('getClassMaterials Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+/**
+ * GET /api/user/batches/:batchId/assignments
+ * Returns assignments for a batch the student is enrolled in.
+ */
+exports.getClassAssignments = async (req, res) => {
+    try {
+        const { batchId } = req.params;
+        const studentId = req.user._id;
+
+        const batch = await Batch.findOne({ _id: batchId, studentIds: studentId });
+        if (!batch) return res.status(403).json({ success: false, message: 'You are not enrolled in this class' });
+
+        const assignments = await Assignment.find({ batchId: batch._id, status: { $ne: 'draft' } })
+            .populate('teacherId', 'name email')
+            .sort({ createdAt: -1 });
+
+        res.json({ success: true, data: assignments });
+    } catch (error) {
+        console.error('getClassAssignments Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+/**
+ * GET /api/user/assignments/:id
+ * Returns details of an assignment and the student's submission.
+ */
+exports.getAssignmentDetail = async (req, res) => {
+    try {
+        const assignmentId = req.params.id;
+        const studentId = req.user._id;
+
+        const assignment = await Assignment.findById(assignmentId)
+            .populate('teacherId', 'name email profileImage')
+            .populate('batchId', 'name year section');
+
+        if (!assignment) return res.status(404).json({ success: false, message: 'Assignment not found' });
+
+        // Ensure student is in the batch
+        const batch = await Batch.findOne({ _id: assignment.batchId._id, studentIds: studentId });
+        if (!batch) return res.status(403).json({ success: false, message: 'You are not enrolled in this class' });
+
+        const submission = await AssignmentSubmission.findOne({ assignmentId: assignment._id, studentId });
+
+        res.json({ success: true, data: { assignment, submission } });
+    } catch (error) {
+        console.error('getAssignmentDetail Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+/**
+ * POST /api/user/assignments/:id/submit
+ * Submits an assignment (content, links, files)
+ */
+exports.submitAssignment = async (req, res) => {
+    try {
+        const assignmentId = req.params.id;
+        const studentId = req.user._id;
+        const { content, links, files } = req.body;
+
+        const assignment = await Assignment.findById(assignmentId);
+        if (!assignment) return res.status(404).json({ success: false, message: 'Assignment not found' });
+
+        const batch = await Batch.findOne({ _id: assignment.batchId, studentIds: studentId });
+        if (!batch) return res.status(403).json({ success: false, message: 'You are not enrolled in this class' });
+
+        let submission = await AssignmentSubmission.findOne({ assignmentId, studentId });
+
+        if (submission) {
+            // Update existing submission
+            submission.content = content !== undefined ? content : submission.content;
+            submission.links = links !== undefined ? links : submission.links;
+            submission.files = files !== undefined ? files : submission.files;
+            submission.submittedAt = Date.now();
+            await submission.save();
+        } else {
+            // Create new submission
+            submission = await AssignmentSubmission.create({
+                assignmentId,
+                studentId,
+                content: content || '',
+                links: links || [],
+                files: files || []
+            });
+        }
+
+        res.json({ success: true, message: 'Assignment submitted successfully', data: submission });
+    } catch (error) {
+        console.error('submitAssignment Error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

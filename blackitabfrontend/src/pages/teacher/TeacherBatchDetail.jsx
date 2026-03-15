@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaUserPlus, FaUserCheck, FaUserTimes, FaCalendarDay, FaSpinner, FaArrowLeft, FaCheck, FaTimes, FaSearch, FaTrash, FaGraduationCap, FaBookOpen, FaPlus, FaLink, FaFileAlt, FaEdit } from 'react-icons/fa';
+import { FaUserPlus, FaUserCheck, FaUserTimes, FaCalendarDay, FaSpinner, FaArrowLeft, FaCheck, FaTimes, FaSearch, FaTrash, FaGraduationCap, FaBookOpen, FaPlus, FaLink, FaFileAlt, FaEdit, FaClipboardList } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import API_URL from '../../config';
 import SimpleConfirmationModal from '../../components/shared/SimpleConfirmationModal';
@@ -15,6 +15,7 @@ const TeacherBatchDetail = () => {
   const [students, setStudents] = useState([]);
   const [requests, setRequests] = useState([]);
   const [materials, setMaterials] = useState([]);
+  const [assignments, setAssignments] = useState([]);
   const [attendanceData, setAttendanceData] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -36,16 +37,18 @@ const TeacherBatchDetail = () => {
     try {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
-      const [batchRes, studentsRes, requestsRes, materialsRes] = await Promise.all([
+      const [batchRes, studentsRes, requestsRes, materialsRes, assignmentsRes] = await Promise.all([
         axios.get(`${API_URL}/api/teacher/batch/${batchId}`, { headers }),
         axios.get(`${API_URL}/api/teacher/batch/${batchId}/students`, { headers }),
         axios.get(`${API_URL}/api/teacher/batch/${batchId}/requests`, { headers }),
         axios.get(`${API_URL}/api/teacher/batch/${batchId}/materials`, { headers }),
+        axios.get(`${API_URL}/api/teacher/assignments?batchId=${batchId}`, { headers })
       ]);
       setBatch(batchRes.data.data);
       setStudents(studentsRes.data.data);
       setRequests(requestsRes.data.data);
       setMaterials(materialsRes.data.data);
+      setAssignments(assignmentsRes.data.data);
       const analyticsRes = await axios.get(`${API_URL}/api/teacher/attendance/${batchId}/analytics`, { headers }).catch(() => ({ data: { data: [] } }));
       const map = {};
       analyticsRes.data.data.forEach(m => { map[m._id] = m; });
@@ -144,6 +147,7 @@ const TeacherBatchDetail = () => {
   const tabs = [
     { key: 'students', label: `Enrolled (${students.length})` },
     { key: 'materials', label: `Materials (${materials.length})` },
+    { key: 'assignments', label: `Assignments (${assignments.length})` },
     { key: 'requests', label: `Join Requests ${requests.length > 0 ? `(${requests.length})` : ''}` },
     { key: 'add', label: 'Add Students' },
   ];
@@ -320,6 +324,66 @@ const TeacherBatchDetail = () => {
               <FaBookOpen className="text-3xl mx-auto mb-3 opacity-30" />
               <p className="font-semibold text-gray-700 dark:text-gray-300">No materials yet</p>
               <p className="text-sm mt-1">Share notes, links, or documents with your class.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Assignments Tab */}
+      {activeTab === 'assignments' && (
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <button
+              onClick={() => navigate(`/teacher/batch/${batchId}/assignments/new`)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
+            >
+              <FaPlus /> Create Assignment
+            </button>
+          </div>
+
+          {assignments.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {assignments.map(assignment => (
+                <div key={assignment._id} onClick={() => navigate(`/teacher/assignment/${assignment._id}`)} className="cursor-pointer group border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] hover:border-yellow-400/50 dark:hover:border-yellow-500/50 transition-colors relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-yellow-400 to-orange-500 opacity-50 group-hover:opacity-100 transition-opacity" />
+                  <div className="flex items-start justify-between mb-3 pl-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-500/10 flex items-center justify-center text-yellow-600 dark:text-yellow-500 shrink-0">
+                        <FaClipboardList />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-1">{assignment.title}</h3>
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wide">
+                          Total Marks: {assignment.totalMarks} • Due: {assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : 'No Due Date'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/teacher/batch/${batchId}/assignments/edit/${assignment._id}`);
+                        }} 
+                        className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-500/10 rounded-lg transition-colors relative z-10"
+                      >
+                        <FaEdit />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {assignment.description && <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 pl-2 relative z-10">{assignment.description}</p>}
+                  
+                  <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 pl-2 relative z-10">
+                     <p className="text-xs font-semibold text-yellow-600 dark:text-yellow-500 group-hover:text-yellow-700 dark:group-hover:text-yellow-400 transition-colors">View Submissions & Grade &rarr;</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="border border-dashed border-gray-200 dark:border-white/10 rounded-xl p-10 text-center text-gray-400">
+              <FaClipboardList className="text-3xl mx-auto mb-3 opacity-30" />
+              <p className="font-semibold text-gray-700 dark:text-gray-300">No assignments yet</p>
+              <p className="text-sm mt-1">Create an assignment to evaluate your class.</p>
             </div>
           )}
         </div>

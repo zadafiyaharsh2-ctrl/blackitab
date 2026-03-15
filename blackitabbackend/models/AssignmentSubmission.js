@@ -21,6 +21,18 @@ const assignmentSubmissionSchema = new mongoose.Schema({
         selectedOption: Number,
         isCorrect: Boolean
     }],
+    content: {
+        type: String,
+        default: ''
+    },
+    links: [{
+        type: String,
+        trim: true
+    }],
+    files: [{
+        type: String,
+        trim: true
+    }],
     score: {
         type: Number,
         default: 0
