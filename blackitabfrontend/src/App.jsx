@@ -311,7 +311,9 @@ function App() {
               path="/leaderboard"
               element={
                 <ProtectedRoute>
-                  <Leaderboard />
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <Leaderboard />
+                  </MainLayout>
                 </ProtectedRoute>
               }
             />
@@ -872,7 +874,7 @@ function App() {
 import FloatingSocialButton from './components/student/FloatingSocialButton';
 import NotificationBell from './components/shared/NotificationBell';
 
-function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
+function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout }) {
   const location = useLocation();
 
   // Track last visited page for "Resume Last Session" on Dashboard

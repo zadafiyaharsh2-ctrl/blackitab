@@ -31,4 +31,7 @@ router.post('/unsubscribe/:id', socialController.unsubscribeUser);
 router.get('/followers/:userId', socialController.getFollowers);
 router.get('/following/:userId', socialController.getFollowing);
 
+// Remove Follower
+router.post('/remove-follower/:userId', socialController.removeFollower);
+
 module.exports = router;

@@ -93,9 +93,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
       { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
       { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy /> },
-      { path: '/notifications', label: 'Notifications', icon: <FaBell className="text-red-400" /> },
       { path: '/theory', label: 'Theory', icon: <FaBook /> },
-      { path: '/social', label: 'Community', icon: <FaUsers /> },
     ] : [])
   ];
 
@@ -113,7 +111,6 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     { path: '/institute/theory', label: 'Theory Checking', icon: <FaFileAlt /> },
     { path: '/institute/questions', label: 'Question Checker', icon: <FaClipboardCheck /> },
     { path: '/institute/join-requests', label: 'Join Requests', icon: <FaUserPlus />, badge: pendingJoinRequests },
-    { path: '/institute/notifications', label: 'Notifications', icon: <FaBell /> },
     { path: '/institute/departments', label: 'Departments', icon: <FaSitemap /> },
     { path: '/institute/profile', label: 'Institute Profile', icon: <FaSchool /> },
   ] : [];

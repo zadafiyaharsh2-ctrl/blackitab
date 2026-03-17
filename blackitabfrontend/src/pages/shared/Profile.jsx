@@ -160,22 +160,13 @@ const Profile = () => {
   }, [showHeatmap, user?._id, user?.id]);
 
   // List Navigation Handlers
-  const fetchFollowers = () => {
+  const fetchConnections = () => {
     const targetId = user._id || user.id;
     if (!targetId) {
       toast.error('User ID missing. Please refresh.');
       return;
     }
     navigate(`/network/${targetId}/followers`);
-  };
-
-  const fetchFollowing = () => {
-    const targetId = user._id || user.id;
-    if (!targetId) {
-      toast.error('User ID missing. Please refresh.');
-      return;
-    }
-    navigate(`/network/${targetId}/following`);
   };
 
   const executeUnfollowRequest = async (targetId) => {
@@ -357,8 +348,11 @@ const Profile = () => {
 
 
 
+  const visiblePosts = posts.filter(p => p.contentType === 'post' || !p.contentType);
+  const connectionsCount = (user?.followingCount || 0) + (user?.followerCount || 0);
+
   // Logic to handle Private Account Display
-  const showPrivateMessage = posts.length === 0 && !loadingPosts && !isMyProfile && user?.isPrivate && !user?.isFollowing;
+  const showPrivateMessage = visiblePosts.length === 0 && !loadingPosts && !isMyProfile && user?.isPrivate && !user?.isFollowing;
 
 
 
@@ -443,22 +437,38 @@ const Profile = () => {
                 searchResults.map(result => (
                   <div
                     key={result._id}
-                    className="flex items-center gap-3 p-3 hover:bg-white/10 cursor-pointer transition-colors border-b border-gray-200 dark:border-gray-800 last:border-0"
+                    className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-white/10 cursor-pointer transition-colors border-b border-gray-200 dark:border-gray-800 last:border-0"
                     onClick={() => {
                       navigate(`/profile/${result._id}`);
                       setShowDropdown(false);
                       setSearchQuery('');
                     }}
                   >
-                    <div className="w-10 h-10 rounded-full bg-gray-700 border border-gray-600 flex items-center justify-center overflow-hidden flex-shrink-0">
-                      <span className="font-bold text-gray-700 dark:text-gray-300">{result.name?.charAt(0).toUpperCase()}</span>
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 border border-gray-300 dark:border-gray-600 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {result.profileImage ? (
+                        <img src={result.profileImage} alt={result.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="font-bold text-white text-sm">{result.name?.charAt(0).toUpperCase()}</span>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-gray-900 dark:text-white truncate">{result.name}</div>
-                      <div className="text-xs text-blue-400 truncate">@user</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{result.followerCount || 0} followers{result.bio ? ` · ${result.bio.substring(0, 30)}` : ''}</div>
                     </div>
-                    {!result.isFollowing && String(result._id) !== String(user._id || user.id) && (
-                      <span className="text-xs bg-blue-600 px-2 py-1 rounded text-white">Follow</span>
+                    {String(result._id) !== String(user._id || user.id) && (
+                      result.isFollowing ? (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleUnfollowRequest(result._id); }}
+                          className="text-xs bg-gray-100 dark:bg-white/10 border border-gray-300 dark:border-gray-600 hover:border-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 px-3 py-1.5 rounded-lg text-gray-600 dark:text-gray-300 font-semibold transition-all flex-shrink-0"
+                        >Following</button>
+                      ) : result.isRequested ? (
+                        <span className="text-xs bg-gray-100 dark:bg-white/10 px-3 py-1.5 rounded-lg text-gray-400 dark:text-gray-500 font-semibold flex-shrink-0">Requested</span>
+                      ) : (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleFollowRequest(result._id); }}
+                          className="text-xs bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg text-white font-semibold transition-all flex-shrink-0 shadow-sm"
+                        >Follow</button>
+                      )
                     )}
                   </div>
                 ))
@@ -620,14 +630,10 @@ const Profile = () => {
 
             {/* Stats Grid */}
             <div className="flex flex-wrap justify-center md:justify-start items-center gap-6 sm:gap-10 md:gap-14 pt-6 border-t border-gray-200 dark:border-white/5 mt-2">
-              <div onClick={fetchFollowing} className="cursor-pointer group text-center md:text-left transition-all hover:-translate-y-1">
-                <span className="block text-3xl font-black text-gray-900 dark:text-white group-hover:text-glow group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-all">{user.followingCount || 0}</span>
-                <span className="text-xs text-gray-500 font-bold uppercase tracking-wider group-hover:text-gray-700 dark:text-gray-300 transition-colors">Following</span>
-              </div>
-              <div className="w-px h-10 bg-white/10 hidden md:block"></div>
-              <div onClick={fetchFollowers} className="cursor-pointer group text-center md:text-left transition-all hover:-translate-y-1">
-                <span className="block text-3xl font-black text-gray-900 dark:text-white group-hover:text-glow group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-all">{user.followerCount || 0}</span>
-                <span className="text-xs text-gray-500 font-bold uppercase tracking-wider group-hover:text-gray-700 dark:text-gray-300 transition-colors">Followers</span>
+              <div onClick={fetchConnections} className="cursor-pointer group text-center md:text-left transition-all hover:-translate-y-1">
+                <span className="block text-3xl font-black text-gray-900 dark:text-white group-hover:text-glow group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-all">{connectionsCount}</span>
+                <span className="text-xs text-gray-500 font-bold uppercase tracking-wider group-hover:text-gray-700 dark:text-gray-300 transition-colors">Connections</span>
+                <span className="text-[11px] text-gray-500 dark:text-gray-400 block mt-1">{user.followerCount || 0} followers · {user.followingCount || 0} following</span>
               </div>
             </div>
 
@@ -637,7 +643,8 @@ const Profile = () => {
 
       {/* POSTS SECTION */}
       <div className="mt-8 border-t border-gray-200 dark:border-white/5 pt-8">
-        <div className="flex items-center justify-start md:justify-center gap-6 md:gap-12 border-b border-gray-200 dark:border-gray-800 pb-0 mb-6 overflow-x-auto w-full hide-scrollbar">
+        <div className="flex items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-0 mb-6">
+          <div className="flex items-center justify-start md:justify-center gap-6 md:gap-12 overflow-x-auto w-full hide-scrollbar">
           <button
             onClick={() => setActiveTab('overview')}
             className={`pb-4 text-xs font-semibold uppercase tracking-widest flex items-center gap-2 transition-colors relative ${activeTab === 'overview' ? 'text-gray-900 border-gray-900 dark:text-white border-t dark:border-white -mt-[1px]' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
@@ -650,6 +657,15 @@ const Profile = () => {
           >
             <FaTh size={12} /> Posts
           </button>
+          </div>
+          {isMyProfile && activeTab === 'posts' && (
+            <button
+              onClick={() => navigate('/create-post')}
+              className="mb-3 shrink-0 text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold transition-colors"
+            >
+              {visiblePosts.length > 0 ? 'Share another post' : 'Share first post'}
+            </button>
+          )}
         </div>
 
         {activeTab === 'overview' && (
@@ -721,64 +737,64 @@ const Profile = () => {
           </div>
         )}
 
-        {loadingPosts ? (
-          <div className="text-center py-10 text-gray-600 dark:text-gray-400">Loading posts...</div>
-        ) : posts.filter(p => p.contentType === 'post' || !p.contentType).length > 0 ? (
-          <div className="grid gap-4 grid-cols-3 gap-1 md:gap-4">
-            {posts
-              .filter(p => p.contentType === 'post' || !p.contentType)
-              .map(post => (
-                <div
-                  key={post._id}
-                  onClick={() => setSelectedPost(post)}
-                  className="relative aspect-square group cursor-pointer bg-white dark:bg-gray-900 overflow-hidden"
-                >
-                  {/* Media Thumbnail */}
-                  {post.mediaType === 'video' ? (
-                    <video src={post.mediaUrl} className="w-full h-full object-cover" />
-                  ) : (
-                    <img src={post.mediaUrl} alt="Post" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                  )}
+        {activeTab === 'posts' && (
+          loadingPosts ? (
+            <div className="text-center py-10 text-gray-600 dark:text-gray-400">Loading posts...</div>
+          ) : visiblePosts.length > 0 ? (
+            <div className="grid grid-cols-3 gap-1 md:gap-4">
+              {visiblePosts.map(post => (
+                  <div
+                    key={post._id}
+                    onClick={() => setSelectedPost(post)}
+                    className="relative aspect-square group cursor-pointer bg-white dark:bg-gray-900 overflow-hidden"
+                  >
+                    {/* Media Thumbnail */}
+                    {post.mediaType === 'video' ? (
+                      <video src={post.mediaUrl} className="w-full h-full object-cover" />
+                    ) : (
+                      <img src={post.mediaUrl} alt="Post" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    )}
 
-                  {/* Video Indicator */}
-                  {post.mediaType === 'video' && (
-                    <div className="absolute top-2 right-2 text-white drop-shadow-md">
-                      <FaPlay size={16} />
-                    </div>
-                  )}
+                    {/* Video Indicator */}
+                    {post.mediaType === 'video' && (
+                      <div className="absolute top-2 right-2 text-white drop-shadow-md">
+                        <FaPlay size={16} />
+                      </div>
+                    )}
 
-                  {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-6 md:gap-8 backdrop-blur-[2px]">
-                    <div className="flex items-center gap-2 text-white font-bold text-lg">
-                      <FaHeart />
-                      <span>{post.likes?.length || 0}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-white font-bold text-lg">
-                      <FaComment />
-                      <span>{post.comments?.length || 0}</span>
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-6 md:gap-8 backdrop-blur-[2px]">
+                      <div className="flex items-center gap-2 text-white font-bold text-lg">
+                        <FaHeart />
+                        <span>{post.likes?.length || 0}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-white font-bold text-lg">
+                        <FaComment />
+                        <span>{post.comments?.length || 0}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-          </div>
-        ) : showPrivateMessage ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-300">
-            <div className="w-24 h-24 rounded-full border-4 border-gray-300 dark:border-white/10 flex items-center justify-center mb-6 bg-gray-100 dark:bg-white/5">
-              <FaLock size={40} className="text-white/50" />
+                ))}
             </div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">This Account is Private</h3>
-            <p className="text-gray-600 dark:text-gray-400 max-w-sm">Follow this account to see their photos and videos.</p>
-          </div>
-        ) : (
-          <div className="text-center py-20">
-            <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Share Photos</div>
-            <div className="text-gray-600 dark:text-gray-400 mb-6 text-sm">When you share photos, they will appear on your profile.</div>
-            {isMyProfile && (
-              <button onClick={() => navigate('/create-post')} className="text-blue-400 font-semibold text-sm hover:text-white transition-colors">
-                Share your first photo
-              </button>
-            )}
-          </div>
+          ) : showPrivateMessage ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-300">
+              <div className="w-24 h-24 rounded-full border-4 border-gray-300 dark:border-white/10 flex items-center justify-center mb-6 bg-gray-100 dark:bg-white/5">
+                <FaLock size={40} className="text-white/50" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">This Account is Private</h3>
+              <p className="text-gray-600 dark:text-gray-400 max-w-sm">Follow this account to see their photos and videos.</p>
+            </div>
+          ) : (
+            <div className="text-center py-20">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Share Photos</div>
+              <div className="text-gray-600 dark:text-gray-400 mb-6 text-sm">When you share photos, they will appear on your profile.</div>
+              {isMyProfile && (
+                <button onClick={() => navigate('/create-post')} className="text-blue-400 font-semibold text-sm hover:text-white transition-colors">
+                  Share your first post
+                </button>
+              )}
+            </div>
+          )
         )}
       </div>
 
