@@ -1,15 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import {
-  FaUsers, FaSchool, FaChartLine, FaSignOutAlt, FaSearch, FaShieldAlt,
-  FaTrophy, FaEye, FaExclamationTriangle, FaChevronLeft, FaChevronRight, FaQuestion, FaNewspaper,
-  FaStar, FaUserGraduate, FaSpinner, FaComments, FaPlus, FaTimes, FaTrash, FaCheck, FaBan
+  FaUsers, FaSchool, FaChartLine, FaSignOutAlt, FaShieldAlt,
+  FaTrophy, FaExclamationTriangle, FaChevronLeft, FaChevronRight, FaQuestion, FaNewspaper,
+  FaStar, FaUserGraduate, FaSpinner, FaComments, FaTimes, FaCheck, FaBan
 } from 'react-icons/fa';
 import { CustomToast } from '../../utils/CustomToast';
 import axios from 'axios';
 import API_URL from '../../config';
 import DeleteConfirmationModal from '../../components/shared/DeleteConfirmationModal';
+
+// ── Lazy-loaded Tab Components ──────────────────────────────────────────────
+const OverviewTab   = lazy(() => import('../../components/admin/tabs/OverviewTab'));
+const UsersTab      = lazy(() => import('../../components/admin/tabs/UsersTab'));
+const InstitutesTab = lazy(() => import('../../components/admin/tabs/InstitutesTab'));
+const QuestionsTab  = lazy(() => import('../../components/admin/tabs/QuestionsTab'));
+const PostsTab      = lazy(() => import('../../components/admin/tabs/PostsTab'));
+const ContestsTab   = lazy(() => import('../../components/admin/tabs/ContestsTab'));
+const AnalyticsTab  = lazy(() => import('../../components/admin/tabs/AnalyticsTab'));
 
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -452,949 +461,96 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        {/* ── OVERVIEW TAB ── */}
-        {activeTab === 'overview' && (
-          <div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {statCards.map((s, i) => (
-                <div key={i} className="glass-panel p-6 border border-white/5 flex items-center justify-between rounded-2xl">
-                  <div>
-                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">{s.label}</p>
-                    <p className={`text-3xl font-bold ${s.color}`}>{loading ? '...' : s.value?.toLocaleString?.() ?? 0}</p>
-                  </div>
-                  <div className={`p-3 rounded-2xl bg-gradient-to-br ${s.bg} border border-white/5`}>
-                    <s.icon className={`text-xl ${s.color}`} />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Role Distribution */}
-            {stats?.roleCounts && (
-              <div className="glass-panel p-6 border border-white/10 rounded-2xl mb-8">
-                <h3 className="font-bold text-white mb-6 text-lg">Role Distribution</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {Object.entries(stats.roleCounts).map(([role, count]) => {
-                    const colors = { student: 'from-blue-500 to-cyan-500', teacher: 'from-emerald-500 to-teal-500', hod: 'from-purple-500 to-pink-500', institute: 'from-orange-500 to-red-500' };
-                    const total = Object.values(stats.roleCounts).reduce((a, b) => a + b, 0);
-                    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                    return (
-                      <div key={role} className="bg-white/[0.03] rounded-xl p-4 border border-white/5">
-                        <p className="text-2xl font-bold text-white mb-1">{count}</p>
-                        <p className="text-xs text-gray-500 capitalize mb-3">{role.replace('_', ' ')}</p>
-                        <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
-                          <div className={`h-full rounded-full bg-gradient-to-r ${colors[role] || 'from-gray-500 to-gray-400'}`} style={{ width: `${pct}%` }} />
-                        </div>
-                        <p className="text-[10px] text-gray-600 mt-1">{pct}%</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Hierarchy Visualization */}
-            <div className="glass-panel p-6 border border-white/10 rounded-2xl">
-              <h3 className="font-bold text-white mb-6 text-lg">Platform Hierarchy</h3>
-              <div className="flex flex-col items-center gap-3">
-                {[
-                  { role: 'System Admin', desc: 'Full platform control — users, institutes, question approval, posts, contests', color: 'from-red-500 to-orange-500', count: 1 },
-                  { role: 'Institute Admin', desc: 'Manage institute members, assign roles', color: 'from-orange-500 to-yellow-500', count: stats?.roleCounts?.institute || 0 },
-                  { role: 'HOD', desc: 'Department oversight, teacher management', color: 'from-purple-500 to-pink-500', count: stats?.roleCounts?.hod || 0 },
-                  { role: 'Teacher', desc: 'Create questions (require approval for global), view analytics', color: 'from-emerald-500 to-teal-500', count: stats?.roleCounts?.teacher || 0 },
-                  { role: 'Student', desc: 'Learn, practice, compete', color: 'from-blue-500 to-cyan-500', count: stats?.roleCounts?.student || 0 },
-                ].map((level, i) => (
-                  <React.Fragment key={level.role}>
-                    {i > 0 && <div className="w-0.5 h-4 bg-white/10" />}
-                    <div className={`w-full max-w-lg p-4 rounded-xl border border-white/10 flex items-center justify-between`}
-                      style={{ background: `linear-gradient(135deg, rgba(0,0,0,0.4), rgba(0,0,0,0.6))`, borderLeft: `3px solid` }}>
-                      <div>
-                        <p className="font-bold text-white text-sm">{level.role}</p>
-                        <p className="text-xs text-gray-400">{level.desc}</p>
-                      </div>
-                      <span className={`text-lg font-bold bg-gradient-to-r ${level.color} bg-clip-text text-transparent`}>{level.count}</span>
-                    </div>
-                  </React.Fragment>
-                ))}
-              </div>
-            </div>
+        {/* ── TAB CONTENT — lazy loaded ── */}
+        <Suspense fallback={
+          <div className="flex items-center justify-center py-24">
+            <FaSpinner className="animate-spin text-3xl text-blue-500 opacity-60" />
           </div>
-        )}
+        }>
+          {activeTab === 'overview' && (
+            <OverviewTab stats={stats} loading={loading} statCards={statCards} />
+          )}
 
-        {/* ── USERS TAB ── */}
-        {activeTab === 'users' && (
-          <div >
-            <div className="flex gap-3 mb-4">
-              <div className="relative flex-1">
-                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                <input value={userSearch} onChange={e => { setUserSearch(e.target.value); fetchUsers(null, 1, e.target.value); }}
-                  placeholder="Search by name or email..."
-                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-blue-500/50" />
-              </div>
-              <button onClick={() => setShowCreateUser(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-bold hover:bg-blue-500/20 transition-colors whitespace-nowrap">
-                <FaPlus /> Create User
-              </button>
-            </div>
+          {activeTab === 'users' && (
+            <UsersTab
+              userSearch={userSearch} setUserSearch={setUserSearch} fetchUsers={fetchUsers}
+              showCreateUser={showCreateUser} setShowCreateUser={setShowCreateUser}
+              newUser={newUser} setNewUser={setNewUser} handleCreateUser={handleCreateUser}
+              editUserModal={editUserModal} setEditUserModal={setEditUserModal}
+              editUserTab={editUserTab} setEditUserTab={setEditUserTab} handleEditUser={handleEditUser}
+              filteredUsers={filteredUsers}
+              handleRoleChange={handleRoleChange} handleBan={handleBan}
+              setSelectedTeacherForFeedback={setSelectedTeacherForFeedback}
+              setIsFeedbackModalOpen={setIsFeedbackModalOpen}
+              openDeleteModal={openDeleteModal}
+              Pagination={Pagination}
+              userPagination={userPagination} userPage={userPage} setUserPage={setUserPage}
+            />
+          )}
 
-            {/* Create User Form */}
-            {showCreateUser && (
-              <div className="glass-panel p-6 border border-blue-500/20 rounded-2xl mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-white">Create New User</h3>
-                  <button onClick={() => setShowCreateUser(false)} className="text-gray-500 hover:text-white"><FaTimes /></button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                  <input value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })}
-                    placeholder="Full Name" className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none" />
-                  <input value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })}
-                    placeholder="Email" type="email" className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none" />
-                  <input value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })}
-                    placeholder="Password (min 6 chars)" type="text" className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none" />
-                  <select value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}
-                    className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none">
-                    <option value="student" className="bg-gray-900">Student</option>
-                    <option value="teacher" className="bg-gray-900">Teacher</option>
-                    <option value="hod" className="bg-gray-900">HOD</option>
-                    <option value="institute" className="bg-gray-900">Institute Admin</option>
-                  </select>
-                  <input value={newUser.instituteCode} onChange={e => setNewUser({ ...newUser, instituteCode: e.target.value.toUpperCase() })}
-                    placeholder="Institute Code (optional)" className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none uppercase" />
-                </div>
-                <button onClick={handleCreateUser}
-                  className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm transition-colors">
-                  Create User
-                </button>
-              </div>
-            )}
+          {activeTab === 'institutes' && (
+            <InstitutesTab
+              institutes={institutes}
+              showCreateInstitute={showCreateInstitute} setShowCreateInstitute={setShowCreateInstitute}
+              newInstitute={newInstitute} setNewInstitute={setNewInstitute}
+              handleCreateInstitute={handleCreateInstitute}
+              selectedInstitute={selectedInstitute} setSelectedInstitute={setSelectedInstitute}
+              instituteMembers={instituteMembers} instituteMembersLoading={instituteMembersLoading}
+              editInstituteModal={editInstituteModal} setEditInstituteModal={setEditInstituteModal}
+              editInstituteTab={editInstituteTab} setEditInstituteTab={setEditInstituteTab}
+              handleEditInstitute={handleEditInstitute}
+              openDeleteModal={openDeleteModal} fetchInstituteMembers={fetchInstituteMembers}
+            />
+          )}
 
-            {/* Comprehensive Edit User Modal */}
-            <AnimatePresence>
-            {editUserModal && (
-              <div  exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                <div  exit={{ scale: 0.95 }} className="glass-panel w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-                  
-                  {/* Header */}
-                  <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
-                        {editUserModal.name?.[0]?.toUpperCase()}
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-white text-lg leading-tight">Edit Profile: {editUserModal.name}</h3>
-                        <p className="text-xs text-gray-500 font-mono">{editUserModal._id}</p>
-                      </div>
-                    </div>
-                    <button onClick={() => setEditUserModal(null)} className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"><FaTimes /></button>
-                  </div>
+          {activeTab === 'questions' && (
+            <QuestionsTab
+              questions={questions}
+              showCreateQuestion={showCreateQuestion} setShowCreateQuestion={setShowCreateQuestion}
+              newQuestion={newQuestion} setNewQuestion={setNewQuestion}
+              handleCreateQuestion={handleCreateQuestion}
+              questionFilter={questionFilter} setQuestionFilter={setQuestionFilter}
+              questionPreview={questionPreview} setQuestionPreview={setQuestionPreview}
+              rejectModal={rejectModal} setRejectModal={setRejectModal}
+              handleApprove={handleApprove} handleReject={handleReject}
+              handleDeleteQuestion={handleDeleteQuestion}
+              Pagination={Pagination}
+              questionPagination={questionPagination} questionPage={questionPage} setQuestionPage={setQuestionPage}
+              fetchQuestions={fetchQuestions}
+            />
+          )}
 
-                  {/* Tabs */}
-                  <div className="flex px-5 border-b border-white/5 bg-white/[0.01]">
-                    {['general', 'academic', 'profile', 'metrics'].map(tab => (
-                      <button key={tab} onClick={() => setEditUserTab(tab)}
-                        className={`px-4 py-3 text-sm font-bold capitalize transition-colors border-b-2 ${editUserTab === tab ? 'border-blue-500 text-blue-400 bg-blue-500/5' : 'border-transparent text-gray-500 hover:text-gray-300'}`}>
-                        {tab}
-                      </button>
-                    ))}
-                  </div>
+          {activeTab === 'posts' && (
+            <PostsTab
+              posts={posts}
+              handleDeletePost={handleDeletePost}
+              Pagination={Pagination}
+              postPagination={postPagination} postPage={postPage} setPostPage={setPostPage}
+              fetchPosts={fetchPosts}
+            />
+          )}
 
-                  {/* Content Body */}
-                  <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
-                    
-                    {editUserTab === 'general' && (
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Full Name</label>
-                            <input value={editUserModal.name || ''} onChange={e => setEditUserModal({ ...editUserModal, name: e.target.value })}
-                              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-blue-500/50" />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Email (Login ID)</label>
-                            <input value={editUserModal.email || ''} onChange={e => setEditUserModal({ ...editUserModal, email: e.target.value })} type="email"
-                              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-blue-500/50" />
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-6 pt-4 border-t border-white/5">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" checked={editUserModal.isVerified || false} onChange={e => setEditUserModal({ ...editUserModal, isVerified: e.target.checked })} 
-                              className="w-4 h-4 rounded bg-white/5 border-white/10 text-emerald-500 focus:ring-emerald-500" />
-                            <span className="text-sm font-medium text-gray-300">Account Verified</span>
-                          </label>
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" checked={editUserModal.isBanned || false} onChange={e => setEditUserModal({ ...editUserModal, isBanned: e.target.checked })} 
-                              className="w-4 h-4 rounded bg-white/5 border-white/10 text-red-500 focus:ring-red-500" />
-                            <span className="text-sm font-medium text-red-400">Account Banned</span>
-                          </label>
-                        </div>
-                      </div>
-                    )}
+          {activeTab === 'contests' && (
+            <ContestsTab
+              contests={contests}
+              showCreateContest={showCreateContest} setShowCreateContest={setShowCreateContest}
+              newContest={newContest} setNewContest={setNewContest}
+              handleCreateContest={handleCreateContest}
+              setEditContestModal={setEditContestModal}
+              handleDeleteContest={handleDeleteContest}
+            />
+          )}
 
-                    {editUserTab === 'academic' && (
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Role</label>
-                            <select value={editUserModal.role || 'student'} onChange={e => setEditUserModal({ ...editUserModal, role: e.target.value })}
-                              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-blue-500/50">
-                              <option value="student" className="bg-gray-900">Student</option>
-                              <option value="teacher" className="bg-gray-900">Teacher</option>
-                              <option value="hod" className="bg-gray-900">HOD</option>
-                              <option value="institute" className="bg-gray-900">Institute Admin</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Institute Code</label>
-                            <input value={editUserModal.instituteCode || ''} onChange={e => setEditUserModal({ ...editUserModal, instituteCode: e.target.value.toUpperCase() })} 
-                              placeholder="Leave blank to unbind"
-                              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none uppercase font-mono focus:border-blue-500/50" />
-                          </div>
-                        </div>
-                        {['student'].includes(editUserModal.role) && (
-                          <div className="grid grid-cols-2 gap-4 pt-2">
-                             <div>
-                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Batch Year</label>
-                                <input value={editUserModal.batchYear || ''} onChange={e => setEditUserModal({ ...editUserModal, batchYear: e.target.value })} 
-                                   placeholder="e.g. 2026" className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-blue-500/50" />
-                             </div>
-                             <div>
-                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Division</label>
-                                <input value={editUserModal.division || ''} onChange={e => setEditUserModal({ ...editUserModal, division: e.target.value })} 
-                                   placeholder="e.g. A" className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-blue-500/50" />
-                             </div>
-                          </div>
-                        )}
-                        {['teacher', 'hod'].includes(editUserModal.role) && (
-                          <div className="pt-2">
-                             <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Specialization (Optional)</label>
-                             <input value={editUserModal.specialization || ''} onChange={e => setEditUserModal({ ...editUserModal, specialization: e.target.value })} 
-                                placeholder="e.g. Advanced Physics" className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-blue-500/50" />
-                          </div>
-                        )}
-                      </div>
-                    )}
+          {activeTab === 'analytics' && (
+            <AnalyticsTab
+              globalAnalytics={globalAnalytics}
+              teacherAnalytics={teacherAnalytics}
+            />
+          )}
+        </Suspense>
 
-                    {editUserTab === 'profile' && (
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Bio (Max 160 chars)</label>
-                          <textarea value={editUserModal.bio || ''} onChange={e => setEditUserModal({ ...editUserModal, bio: e.target.value })}
-                            rows={3} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none resize-none focus:border-blue-500/50" />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Profile Image URL</label>
-                          <input value={editUserModal.profileImage || ''} onChange={e => setEditUserModal({ ...editUserModal, profileImage: e.target.value })}
-                            placeholder="https://..." className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-blue-500/50" />
-                        </div>
-                        <div className="pt-4 border-t border-white/5">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" checked={editUserModal.isPrivate || false} onChange={e => setEditUserModal({ ...editUserModal, isPrivate: e.target.checked })} 
-                              className="w-4 h-4 rounded bg-white/5 border-white/10 text-blue-500 focus:ring-blue-500" />
-                            <span className="text-sm font-medium text-gray-300">Private Profile View</span>
-                          </label>
-                        </div>
-                      </div>
-                    )}
 
-                    {editUserTab === 'metrics' && (
-                      <div className="grid grid-cols-3 gap-4">
-                         <div>
-                            <label className="block text-xs font-bold text-yellow-500/80 uppercase mb-1">Level Points</label>
-                            <input type="number" value={editUserModal.points || 0} onChange={e => setEditUserModal({ ...editUserModal, points: Number(e.target.value) })}
-                              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-yellow-400 font-bold outline-none focus:border-yellow-500/50" />
-                         </div>
-                         <div>
-                            <label className="block text-xs font-bold text-cyan-500/80 uppercase mb-1">Experience (XP)</label>
-                            <input type="number" value={editUserModal.xp || 0} onChange={e => setEditUserModal({ ...editUserModal, xp: Number(e.target.value) })}
-                              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-cyan-400 font-bold outline-none focus:border-cyan-500/50" />
-                         </div>
-                         <div>
-                            <label className="block text-xs font-bold text-orange-500/80 uppercase mb-1">Active Streak</label>
-                            <input type="number" value={editUserModal.streak || 0} onChange={e => setEditUserModal({ ...editUserModal, streak: Number(e.target.value) })}
-                              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-orange-400 font-bold outline-none focus:border-orange-500/50" />
-                         </div>
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Footer */}
-                  <div className="p-5 border-t border-white/5 bg-white/[0.02] flex items-center justify-end gap-3 rounded-b-2xl">
-                    <button onClick={() => setEditUserModal(null)} className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
-                    <button onClick={handleEditUser} className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-500/20 transition-all">Save Changes</button>
-                  </div>
-                </div>
-              </div>
-            )}
-            </AnimatePresence>
-
-            <div className="glass-panel border border-white/10 rounded-2xl overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-white/[0.02] border-b border-white/5">
-                  <tr className="text-xs text-gray-500 uppercase tracking-wider">
-                    <th className="text-left px-4 py-3">User</th>
-                    <th className="text-left px-4 py-3">Role</th>
-                    <th className="text-left px-4 py-3">Institute</th>
-                    <th className="text-left px-4 py-3">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {filteredUsers.map(u => (
-                    <tr key={u._id} className="hover:bg-white/[0.02]">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                            {u.name?.[0]?.toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="text-white text-sm font-medium">{u.name} {u.isBanned && <span className="text-red-400 text-[10px] ml-1">BANNED</span>}</p>
-                            <p className="text-gray-500 text-xs">{u.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <select value={u.role} onChange={e => handleRoleChange(u._id, e.target.value)}
-                          className="px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-300 outline-none capitalize cursor-pointer">
-                          {['student', 'teacher', 'hod', 'institute'].map(r => (
-                            <option key={r} value={r} className="bg-gray-900 capitalize">{r.replace('_', ' ')}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-4 py-3 text-gray-400 text-xs">{u.instituteId?.name || '— Independent —'}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => handleBan(u._id)}
-                            className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${u.isBanned ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' : 'bg-red-500/10 text-red-400 hover:bg-red-500/20'}`}>
-                            {u.isBanned ? 'Unban' : 'Ban'}
-                          </button>
-                          <button onClick={() => setEditUserModal(u)}
-                            className="px-3 py-1 rounded-lg text-xs font-bold bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors">
-                            Edit
-                          </button>
-                          {['teacher', 'hod'].includes(u.role) && (
-                            <button onClick={() => { setSelectedTeacherForFeedback(u); setIsFeedbackModalOpen(true); }}
-                              className="px-3 py-1 rounded-lg text-xs font-bold bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors" title="View Feedback">
-                              Feedback
-                            </button>
-                          )}
-                          <button onClick={() => openDeleteModal(u._id, u.email, 'User', 'All their data, XP, submissions, and history will be permanently deleted.', 'user')}
-                            className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors" title="Delete user">
-                            <FaTrash className="text-xs" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredUsers.length === 0 && (
-                    <tr><td colSpan={4} className="text-center py-12 text-gray-500">No users found</td></tr>
-                  )}
-                </tbody>
-              </table>
-              <Pagination pagination={userPagination} current={userPage} onPageChange={p => { setUserPage(p); fetchUsers(null, p, userSearch); }} />
-            </div>
-          </div>
-        )}
-
-        {/* ── INSTITUTES TAB ── */}
-        {activeTab === 'institutes' && (
-          <div >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Registered Institutes ({institutes.length})</h2>
-              <button onClick={() => setShowCreateInstitute(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold hover:bg-emerald-500/20 transition-colors">
-                <FaPlus /> Add Institute
-              </button>
-            </div>
-
-            {/* Create Institute Modal */}
-            {showCreateInstitute && (
-              <div className="glass-panel p-6 border border-white/10 rounded-2xl mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-white">New Institute</h3>
-                  <button onClick={() => setShowCreateInstitute(false)} className="text-gray-500 hover:text-white"><FaTimes /></button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <input value={newInstitute.name} onChange={e => setNewInstitute({ ...newInstitute, name: e.target.value })}
-                    placeholder="Institute Name" className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none" />
-                  <input value={newInstitute.instituteCode} onChange={e => setNewInstitute({ ...newInstitute, instituteCode: e.target.value.toUpperCase() })}
-                    placeholder="Code (e.g. PICT2024)" className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none uppercase" />
-                  <select value={newInstitute.subscriptionPlan} onChange={e => setNewInstitute({ ...newInstitute, subscriptionPlan: e.target.value })}
-                    className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none">
-                    <option value="free" className="bg-gray-900">Free</option>
-                    <option value="basic" className="bg-gray-900">Basic</option>
-                    <option value="premium" className="bg-gray-900">Premium</option>
-                    <option value="enterprise" className="bg-gray-900">Enterprise</option>
-                  </select>
-                </div>
-                <button onClick={handleCreateInstitute}
-                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm transition-colors">
-                  Create Institute
-                </button>
-              </div>
-            )}
-
-            {selectedInstitute ? (
-              <div  className="glass-panel p-6 border border-white/10 rounded-2xl relative">
-                 <button onClick={() => setSelectedInstitute(null)} className="absolute top-4 right-4 text-gray-400 hover:text-white flex items-center gap-2 text-sm font-bold bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
-                    <FaChevronLeft /> Back to List
-                 </button>
-                 
-                 <div className="flex items-center gap-4 mb-6">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white text-xl font-black shadow-lg">
-                       {selectedInstitute.name[0]}
-                    </div>
-                    <div>
-                       <h3 className="text-2xl font-black text-white leading-tight">{selectedInstitute.name}</h3>
-                       <div className="flex items-center gap-3 mt-1">
-                          <span className="text-emerald-400 font-mono text-sm uppercase px-2 py-0.5 bg-emerald-500/10 rounded border border-emerald-500/20">{selectedInstitute.instituteCode}</span>
-                          <span className="text-gray-400 text-sm capitalize px-2 py-0.5 bg-white/5 rounded border border-white/10">{selectedInstitute.subscriptionPlan} Plan</span>
-                       </div>
-                    </div>
-                 </div>
-
-                 <h4 className="text-white font-bold mb-4 flex items-center gap-2"><FaUsers className="text-emerald-400" /> Institute Roster ({instituteMembers.length})</h4>
-                 
-                 {instituteMembersLoading ? (
-                    <div className="py-12 flex justify-center"><div className="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin"></div></div>
-                 ) : instituteMembers.length === 0 ? (
-                    <div className="text-center py-10 bg-white/5 rounded-xl border border-white/10 text-gray-500">No members found in this institute.</div>
-                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                       {instituteMembers.map(m => (
-                          <div key={m._id} className="p-3 bg-white/5 border border-white/5 rounded-xl flex flex-col justify-between">
-                             <div className="flex justify-between items-start mb-2">
-                                <div>
-                                   <p className="text-sm font-bold text-white leading-tight break-words">{m.name}</p>
-                                   <p className="text-[10px] text-gray-500 truncate">{m.email}</p>
-                                </div>
-                                <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wide shrink-0 ${
-                                   m.role === 'institute' ? 'bg-orange-500/20 text-orange-400' :
-                                   m.role === 'hod' ? 'bg-purple-500/20 text-purple-400' :
-                                   m.role === 'teacher' ? 'bg-emerald-500/20 text-emerald-400' :
-                                   'bg-blue-500/20 text-blue-400'
-                                }`}>{m.role}</span>
-                             </div>
-                             <div className="flex items-center justify-between text-[10px] text-gray-400 pt-2 border-t border-white/5 mt-auto">
-                                <span title="Points / XP">⭐ {m.points || 0} / ⚡ {m.xp || 0}</span>
-                                <span>Streak: {m.streak || 0}🔥</span>
-                             </div>
-                          </div>
-                       ))}
-                    </div>
-                 )}
-              </div>
-            ) : (
-              <>
-                {/* Comprehensive Edit Institute Modal */}
-                <AnimatePresence>
-                {editInstituteModal && (
-                  <div  exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                <div  exit={{ scale: 0.95 }} className="glass-panel w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-                  
-                  {/* Header */}
-                  <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold">
-                        {editInstituteModal.name?.[0]?.toUpperCase()}
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-white text-lg leading-tight">Edit Institute: {editInstituteModal.name}</h3>
-                        <p className="text-xs text-gray-500 font-mono">{editInstituteModal.instituteCode}</p>
-                      </div>
-                    </div>
-                    <button onClick={() => setEditInstituteModal(null)} className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"><FaTimes /></button>
-                  </div>
-
-                  {/* Tabs */}
-                  <div className="flex px-5 border-b border-white/5 bg-white/[0.01]">
-                    {['general', 'details', 'metadata'].map(tab => (
-                      <button key={tab} onClick={() => setEditInstituteTab(tab)}
-                        className={`px-4 py-3 text-sm font-bold capitalize transition-colors border-b-2 ${editInstituteTab === tab ? 'border-emerald-500 text-emerald-400 bg-emerald-500/5' : 'border-transparent text-gray-500 hover:text-gray-300'}`}>
-                        {tab}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Content Body */}
-                  <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
-                    
-                    {editInstituteTab === 'general' && (
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="col-span-2">
-                            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Institute Name</label>
-                            <input value={editInstituteModal.name || ''} onChange={e => setEditInstituteModal({ ...editInstituteModal, name: e.target.value })}
-                              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50" />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Institute Code</label>
-                            <input value={editInstituteModal.instituteCode || ''} onChange={e => setEditInstituteModal({ ...editInstituteModal, instituteCode: e.target.value.toUpperCase() })} 
-                              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none uppercase font-mono focus:border-emerald-500/50" />
-                          </div>
-                          <div>
-                             <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Subscription Plan</label>
-                             <select value={editInstituteModal.subscriptionPlan || 'free'} onChange={e => setEditInstituteModal({ ...editInstituteModal, subscriptionPlan: e.target.value })}
-                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50 capitalize">
-                                <option value="free" className="bg-gray-900">Free</option>
-                                <option value="basic" className="bg-gray-900">Basic</option>
-                                <option value="premium" className="bg-gray-900">Premium</option>
-                                <option value="enterprise" className="bg-gray-900">Enterprise</option>
-                             </select>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {editInstituteTab === 'details' && (
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Description</label>
-                          <textarea value={editInstituteModal.description || ''} onChange={e => setEditInstituteModal({ ...editInstituteModal, description: e.target.value })}
-                            rows={3} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none resize-none focus:border-emerald-500/50" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Contact Phone</label>
-                            <input value={editInstituteModal.contactPhone || ''} onChange={e => setEditInstituteModal({ ...editInstituteModal, contactPhone: e.target.value })}
-                              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50" />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Banner Image URL</label>
-                            <input value={editInstituteModal.bannerImage || ''} onChange={e => setEditInstituteModal({ ...editInstituteModal, bannerImage: e.target.value })}
-                              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50" />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Address</label>
-                          <input value={editInstituteModal.address || ''} onChange={e => setEditInstituteModal({ ...editInstituteModal, address: e.target.value })}
-                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50" />
-                        </div>
-                      </div>
-                    )}
-
-                    {editInstituteTab === 'metadata' && (
-                      <div className="space-y-4">
-                         <div>
-                            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Departments (Comma separated)</label>
-                            <input value={editInstituteModal.departments || ''} onChange={e => setEditInstituteModal({ ...editInstituteModal, departments: e.target.value })}
-                              placeholder="e.g. Computer Science, Mechanical, IT"
-                              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50" />
-                            <p className="text-[10px] text-gray-500 mt-1">These will be split into an array upon saving.</p>
-                         </div>
-                         <div>
-                            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Admin Emails (Comma separated)</label>
-                            <input value={editInstituteModal.adminEmails || ''} onChange={e => setEditInstituteModal({ ...editInstituteModal, adminEmails: e.target.value })}
-                              placeholder="e.g. admin1@school.edu, principal@school.edu"
-                              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50" />
-                            <p className="text-[10px] text-gray-500 mt-1">Super Admin level access for these emails.</p>
-                         </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Footer */}
-                  <div className="p-5 border-t border-white/5 bg-white/[0.02] flex items-center justify-end gap-3 rounded-b-2xl">
-                    <button onClick={() => setEditInstituteModal(null)} className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
-                    <button onClick={handleEditInstitute} className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all">Save Changes</button>
-                  </div>
-                </div>
-              </div>
-            )}
-            </AnimatePresence>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                 {institutes.map(inst => (
-                   <div key={inst._id} onClick={() => { setSelectedInstitute(inst); fetchInstituteMembers(inst._id); }} className="glass-panel p-6 border border-white/10 rounded-2xl group relative cursor-pointer hover:border-emerald-500/30 transition-colors">
-                   <button onClick={(e) => { e.stopPropagation(); openDeleteModal(inst._id, inst.name, 'Institute', 'All associated teachers, students, and classes will be unlinked.', 'institute'); }}
-                     className="absolute top-3 right-3 p-1.5 rounded-lg bg-red-500/10 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 z-10">
-                     <FaTrash className="text-xs" />
-                   </button>
-                   <button onClick={(e) => { 
-                       e.stopPropagation(); 
-                       setEditInstituteModal({
-                           ...inst, 
-                           departments: inst.departments?.join(', ') || '', 
-                           adminEmails: inst.adminEmails?.join(', ') || ''
-                       }); 
-                   }}
-                     className="absolute top-3 right-10 p-1.5 rounded-lg bg-blue-500/10 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-500/20 z-10">
-                     Edit
-                   </button>
-                   <h3 className="text-white font-bold mb-1 pr-16">{inst.name}</h3>
-                   <p className="text-orange-400 text-xs font-mono mb-3">{inst.instituteCode}</p>
-                   <div className="flex items-center justify-between text-sm">
-                     <span className="text-gray-400"><FaUsers className="inline mr-1" /> {inst.memberCount} members</span>
-                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                       inst.subscriptionPlan === 'premium' ? 'bg-yellow-500/10 text-yellow-400' :
-                       inst.subscriptionPlan === 'enterprise' ? 'bg-purple-500/10 text-purple-400' :
-                       inst.subscriptionPlan === 'basic' ? 'bg-blue-500/10 text-blue-400' :
-                       'bg-gray-500/10 text-gray-400'
-                     }`}>{inst.subscriptionPlan}</span>
-                   </div>
-                 </div>
-               ))}
-               {institutes.length === 0 && (
-                 <div className="col-span-full text-center py-16 text-gray-500">
-                   <FaSchool className="text-4xl mx-auto mb-3 opacity-30" />
-                   <p>No institutes registered</p>
-                 </div>
-               )}
-              </div>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* ── QUESTIONS TAB (NEW) ── */}
-        {activeTab === 'questions' && (
-          <div >
-            <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-              <h2 className="text-xl font-bold text-white">Question Approval</h2>
-              <div className="flex items-center gap-3">
-                <button onClick={() => setShowCreateQuestion(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold hover:bg-emerald-500/20 transition-colors">
-                  <FaPlus /> Create Question
-                </button>
-                <div className="flex gap-1 bg-white/5 p-1 rounded-xl">
-                {['pending', 'approved', 'rejected'].map(s => (
-                  <button key={s} onClick={() => setQuestionFilter(s)}
-                    className={`px-4 py-2 rounded-lg text-xs font-bold capitalize transition-all ${
-                      questionFilter === s ? `text-white ${s === 'pending' ? 'bg-yellow-500/20' : s === 'approved' ? 'bg-emerald-500/20' : 'bg-red-500/20'}` : 'text-gray-500 hover:text-gray-300'
-                    }`}>
-                    {s}
-                  </button>
-                ))}
-              </div>
-              </div>
-            </div>
-
-            {/* Create Question Form */}
-            {showCreateQuestion && (
-              <div className="glass-panel p-6 border border-emerald-500/20 rounded-2xl mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-white">Create Question (Auto-Approved)</h3>
-                  <button onClick={() => setShowCreateQuestion(false)} className="text-gray-500 hover:text-white"><FaTimes /></button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <select value={newQuestion.exam} onChange={e => setNewQuestion({ ...newQuestion, exam: e.target.value })}
-                    className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none">
-                    {['jee', 'neet', 'gate', 'cat', 'upsc', 'other'].map(e => <option key={e} value={e} className="bg-gray-900 uppercase">{e.toUpperCase()}</option>)}
-                  </select>
-                  <input value={newQuestion.subject} onChange={e => setNewQuestion({ ...newQuestion, subject: e.target.value })}
-                    placeholder="Subject (e.g. Physics)" className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none" />
-                  <select value={newQuestion.difficulty} onChange={e => setNewQuestion({ ...newQuestion, difficulty: e.target.value })}
-                    className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none">
-                    {['Easy', 'Medium', 'Hard'].map(d => <option key={d} value={d} className="bg-gray-900">{d}</option>)}
-                  </select>
-                </div>
-                <textarea value={newQuestion.question} onChange={e => setNewQuestion({ ...newQuestion, question: e.target.value })}
-                  placeholder="Question text..." rows={2} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none resize-none mb-4" />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                  {newQuestion.options.map((opt, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                       <button onClick={() => setNewQuestion({ ...newQuestion, correctAnswer: i })}
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
-                             newQuestion.correctAnswer === i ? 'bg-emerald-500 text-white' : 'bg-white/5 border border-white/10 text-gray-500'
-                          }`}>{String.fromCharCode(65 + i)}</button>
-                       <input value={opt} onChange={e => { const opts = [...newQuestion.options]; opts[i] = e.target.value; setNewQuestion({ ...newQuestion, options: opts }); }}
-                          placeholder={`Option ${String.fromCharCode(65 + i)}`} className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none" />
-                    </div>
-                  ))}
-                </div>
-                <input value={newQuestion.explanation} onChange={e => setNewQuestion({ ...newQuestion, explanation: e.target.value })}
-                   placeholder="Explanation (optional)" className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none mb-4" />
-                <button onClick={handleCreateQuestion}
-                   className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm transition-colors">
-                   Create Question
-                </button>
-              </div>
-            )}
-
-            {/* Info Box */}
-            <div className="glass-panel p-4 border border-blue-500/20 rounded-xl mb-6 flex items-start gap-3">
-              <FaExclamationTriangle className="text-blue-400 mt-0.5 shrink-0" />
-              <div className="text-xs text-gray-400">
-                <strong className="text-blue-400">Approval System:</strong> Teachers create questions → they appear here as <strong>Pending</strong>.
-                Questions within the <strong>same institute</strong> are visible immediately. For <strong>global visibility</strong> (all students worldwide), you must <strong>Approve</strong> them manually.
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {questions.map(q => (
-                <div key={q._id} className="glass-panel p-5 border border-white/10 rounded-2xl">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-2">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-blue-500/10 text-blue-400">{q.exam}</span>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-400">{q.subject}</span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          q.difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-400' :
-                          q.difficulty === 'Hard' ? 'bg-red-500/10 text-red-400' :
-                          'bg-yellow-500/10 text-yellow-400'
-                        }`}>{q.difficulty}</span>
-                        {q.instituteId && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/10 text-orange-400">{q.instituteId.name}</span>}
-                      </div>
-                      <p className="text-white text-sm font-medium mb-1 line-clamp-2">{q.question}</p>
-                      <p className="text-gray-500 text-xs">
-                        By: {q.createdBy?.name || 'Unknown'} ({q.createdBy?.email || '—'}) · {new Date(q.createdAt).toLocaleDateString()}
-                      </p>
-                      {q.approvalNote && q.approvalStatus === 'rejected' && (
-                        <p className="text-red-400/80 text-xs mt-1 italic">Rejection note: {q.approvalNote}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button onClick={() => setQuestionPreview(q)}
-                        className="p-2 rounded-lg bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-colors" title="Preview">
-                        <FaEye />
-                      </button>
-                      {q.approvalStatus === 'pending' && (
-                        <>
-                          <button onClick={() => handleApprove(q._id)}
-                            className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-xs font-bold transition-colors flex items-center gap-1">
-                            <FaCheck /> Approve
-                          </button>
-                          <button onClick={() => setRejectModal({ open: true, questionId: q._id, note: '' })}
-                            className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-bold transition-colors flex items-center gap-1">
-                            <FaBan /> Reject
-                          </button>
-                        </>
-                      )}
-                      {q.approvalStatus === 'rejected' && (
-                        <button onClick={() => handleApprove(q._id)}
-                          className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-xs font-bold transition-colors flex items-center gap-1">
-                          <FaCheck /> Approve
-                        </button>
-                      )}
-                      <button onClick={() => handleDeleteQuestion(q._id)}
-                        className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors" title="Delete">
-                        <FaTrash className="text-xs" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {questions.length === 0 && (
-                <div className="text-center py-16 text-gray-500">
-                  <FaQuestion className="text-4xl mx-auto mb-3 opacity-30" />
-                  <p>No {questionFilter} questions</p>
-                </div>
-              )}
-            </div>
-            <Pagination pagination={questionPagination} current={questionPage} onPageChange={p => { setQuestionPage(p); fetchQuestions(questionFilter, p); }} />
-          </div>
-        )}
-
-        {/* ── POSTS TAB (NEW) ── */}
-        {activeTab === 'posts' && (
-          <div >
-            <h2 className="text-xl font-bold text-white mb-6">Content Moderation — Posts ({postPagination.total})</h2>
-            <div className="space-y-3">
-              {posts.map(p => (
-                <div key={p._id} className="glass-panel p-5 border border-white/10 rounded-2xl flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                        {p.userId?.name?.[0]?.toUpperCase() || '?'}
-                      </div>
-                      <div>
-                        <p className="text-white text-sm font-medium">{p.userId?.name || 'Unknown'}</p>
-                        <p className="text-gray-500 text-xs">{p.userId?.email || '—'} · {new Date(p.createdAt).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                    <p className="text-gray-300 text-sm line-clamp-3">{p.content || p.text || p.title || 'No content'}</p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                      <span>❤️ {p.likes?.length || 0}</span>
-                      <span>💬 {p.comments?.length || 0}</span>
-                      {p.type && <span className="px-2 py-0.5 bg-white/5 rounded-full">{p.type}</span>}
-                    </div>
-                  </div>
-                  <button onClick={() => handleDeletePost(p._id)}
-                    className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors shrink-0" title="Delete post">
-                    <FaTrash />
-                  </button>
-                </div>
-              ))}
-              {posts.length === 0 && (
-                <div className="text-center py-16 text-gray-500">
-                  <FaNewspaper className="text-4xl mx-auto mb-3 opacity-30" />
-                  <p>No posts yet</p>
-                </div>
-              )}
-            </div>
-            <Pagination pagination={postPagination} current={postPage} onPageChange={p => { setPostPage(p); fetchPosts(p); }} />
-          </div>
-        )}
-
-        {/* ── CONTESTS TAB (NEW) ── */}
-        {activeTab === 'contests' && (
-          <div >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Contest Management ({contests.length})</h2>
-              <button onClick={() => setShowCreateContest(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm font-bold hover:bg-yellow-500/20 transition-colors">
-                <FaPlus /> Create Contest
-              </button>
-            </div>
-
-            {/* Create Contest Form */}
-            {showCreateContest && (
-              <div className="glass-panel p-6 border border-yellow-500/20 rounded-2xl mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-white">New Contest</h3>
-                  <button onClick={() => setShowCreateContest(false)} className="text-gray-500 hover:text-white"><FaTimes /></button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                  <input value={newContest.title} onChange={e => setNewContest({ ...newContest, title: e.target.value })}
-                    placeholder="Contest Title" className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none" />
-                  <input value={newContest.startTime} onChange={e => setNewContest({ ...newContest, startTime: e.target.value })}
-                    type="datetime-local" className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none" />
-                  <input value={newContest.endTime} onChange={e => setNewContest({ ...newContest, endTime: e.target.value })}
-                    type="datetime-local" className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none" />
-                  <select value={newContest.difficultyLevel} onChange={e => setNewContest({ ...newContest, difficultyLevel: e.target.value })}
-                    className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none">
-                    {['Beginner', 'Intermediate', 'Advanced'].map(d => <option key={d} value={d} className="bg-gray-900">{d}</option>)}
-                  </select>
-                  <input value={newContest.description} onChange={e => setNewContest({ ...newContest, description: e.target.value })}
-                    placeholder="Description (optional)" className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none col-span-2" />
-                </div>
-                <button onClick={handleCreateContest}
-                  className="px-6 py-2.5 bg-yellow-600 hover:bg-yellow-500 text-white rounded-xl font-bold text-sm transition-colors">
-                  Create Contest
-                </button>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {contests.map(c => (
-                <div key={c._id} className="glass-panel p-6 border border-white/10 rounded-2xl group relative">
-                  <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => setEditContestModal({ _id: c._id, title: c.title, description: c.description || '', startTime: c.startTime?.slice(0,16) || '', endTime: c.endTime?.slice(0,16) || '', difficultyLevel: c.difficultyLevel || 'Intermediate', isActive: c.isActive || false })}
-                      className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20">
-                      <FaEye className="text-xs" />
-                    </button>
-                    <button onClick={() => handleDeleteContest(c._id)}
-                      className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20">
-                      <FaTrash className="text-xs" />
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <FaTrophy className="text-yellow-400" />
-                    <h3 className="text-white font-bold pr-8">{c.title || c.name || 'Contest'}</h3>
-                  </div>
-                  <p className="text-gray-400 text-xs mb-3 line-clamp-2">{c.description || 'No description'}</p>
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{c.startTime ? new Date(c.startTime).toLocaleDateString() : 'No date'}</span>
-                    <span className={`px-2 py-0.5 rounded-full font-bold ${
-                      c.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' :
-                      c.status === 'completed' ? 'bg-gray-500/10 text-gray-400' :
-                      'bg-blue-500/10 text-blue-400'
-                    }`}>{c.status || 'draft'}</span>
-                  </div>
-                </div>
-              ))}
-              {contests.length === 0 && (
-                <div className="col-span-full text-center py-16 text-gray-500">
-                  <FaTrophy className="text-4xl mx-auto mb-3 opacity-30" />
-                  <p>No contests</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ── ANALYTICS TAB (NEW - GLOBAL PARITY) ── */}
-        {activeTab === 'analytics' && (
-          <div >
-            <h2 className="text-xl font-bold text-white mb-6">Global Platform Analytics</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="glass-panel p-6 border border-white/10 rounded-2xl">
-                <h3 className="font-bold text-white mb-4">Engagement Overview</h3>
-                {globalAnalytics ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white/5 p-4 rounded-xl">
-                      <p className="text-gray-400 text-xs mb-1">Total Question Attempts</p>
-                      <p className="text-2xl font-bold text-blue-400">{globalAnalytics.overview.totalAttempts}</p>
-                    </div>
-                    <div className="bg-white/5 p-4 rounded-xl">
-                      <p className="text-gray-400 text-xs mb-1">Total Social Posts</p>
-                      <p className="text-2xl font-bold text-cyan-400">{globalAnalytics.overview.totalPosts}</p>
-                    </div>
-                  </div>
-                ) : <p className="text-gray-500">Loading analytics...</p>}
-              </div>
-
-              <div className="glass-panel p-6 border border-white/10 rounded-2xl">
-                <h3 className="font-bold text-white mb-4">Latest Signups</h3>
-                {globalAnalytics?.recentSignups ? (
-                  <div className="space-y-3">
-                    {globalAnalytics.recentSignups.map(user => (
-                      <div key={user._id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl text-sm">
-                        <span className="text-white font-medium">{user.name}</span>
-                        <span className="text-gray-400 text-xs uppercase">{user.role}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : <p className="text-gray-500">Loading signups...</p>}
-              </div>
-            </div>
-
-            <h3 className="font-bold text-white mb-4 text-lg">Global Teacher Feedback</h3>
-            <div className="glass-panel border border-white/10 rounded-2xl overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-white/[0.02] border-b border-white/5">
-                  <tr className="text-xs text-gray-500 uppercase tracking-wider text-left">
-                    <th className="px-4 py-3">Teacher</th>
-                    <th className="px-4 py-3">Institute</th>
-                    <th className="px-4 py-3">Rating</th>
-                    <th className="px-4 py-3">Reviews</th>
-                    <th className="px-4 py-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {teacherAnalytics.map(t => (
-                    <tr key={t._id} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${t.isFlagged ? 'bg-red-500/20 text-red-400' : 'bg-gradient-to-br from-emerald-500 to-teal-500'}`}>
-                            {t.name[0]?.toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="text-white text-sm font-medium">{t.name}</p>
-                            <p className="text-gray-500 text-xs">{t.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-gray-400 text-xs">{t.instituteName}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <span className={`text-lg font-bold ${t.avgRating >= 4 ? 'text-emerald-400' : t.avgRating >= 2.5 ? 'text-yellow-400' : 'text-red-400'}`}>
-                            {t.avgRating.toFixed(1)}
-                          </span>
-                          <span className="text-gray-500 text-xs">/ 5.0</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-gray-400 text-sm">{t.feedbackCount}</td>
-                      <td className="px-4 py-3">
-                        {t.isFlagged ? (
-                          <span className="px-2 py-1 bg-red-500/10 text-red-400 rounded-lg text-xs font-bold flex items-center gap-1 w-fit">
-                            <FaExclamationTriangle /> Flagged
-                          </span>
-                        ) : (
-                          <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-lg text-xs font-bold flex items-center gap-1 w-fit">
-                            <FaCheck /> Good Standing
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                  {teacherAnalytics.length === 0 && (
-                    <tr><td colSpan="5" className="text-center py-8 text-gray-500">No teachers found</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ── REJECT MODAL ── */}
