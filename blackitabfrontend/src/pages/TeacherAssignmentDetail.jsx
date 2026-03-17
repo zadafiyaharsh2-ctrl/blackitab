@@ -74,7 +74,7 @@ const TeacherAssignmentDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#05000a]">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#05000a]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
       </div>
     );
@@ -82,10 +82,10 @@ const TeacherAssignmentDetail = () => {
 
   if (!assignment) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#05000a] text-white">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-[#05000a] text-gray-900 dark:text-white">
         <FaClipboardList className="text-6xl text-slate-600 mb-4" />
         <h2 className="text-2xl font-bold">Assignment Not Found</h2>
-        <button onClick={() => navigate('/teacher/assignments')} className="mt-4 text-yellow-400 hover:underline">
+        <button onClick={() => navigate(-1)} className="mt-4 text-yellow-600 dark:text-yellow-400 hover:underline">
           Go back to Assignments
         </button>
       </div>
@@ -93,7 +93,7 @@ const TeacherAssignmentDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#05000a] text-white p-4 md:p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#05000a] text-gray-900 dark:text-white p-4 md:p-8 relative overflow-hidden">
       {/* Background Orbs */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-yellow-600/10 blur-[150px] mix-blend-screen" />
@@ -105,7 +105,7 @@ const TeacherAssignmentDetail = () => {
         {/* Back navigation & Header */}
         <div className="flex items-center gap-4">
           <button 
-            onClick={() => navigate('/teacher/assignments')}
+            onClick={() => navigate(-1)}
             className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-colors border border-white/10"
           >
             <FaArrowLeft />

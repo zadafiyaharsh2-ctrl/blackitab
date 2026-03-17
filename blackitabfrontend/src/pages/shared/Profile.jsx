@@ -14,7 +14,7 @@ import SimpleConfirmationModal from '../../components/shared/SimpleConfirmationM
 import JoinInstituteModal from '../../components/student/modals/JoinInstituteModal';
 import { useSocketContext } from '../../context/SocketContext';
 
-
+import EditProfileModal from '../../components/shared/EditProfileModal';
 const Profile = () => {
   usePageTitle('Profile');
   const { userId } = useParams(); // Get userId from URL parameters
