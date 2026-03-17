@@ -76,7 +76,7 @@ const AIGeneratorTab = ({ isDark }) => {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+    <div>
       {/* Input Form */}
       {!generatedData && !isGenerating && (
         <div className={`p-6 md:p-8 rounded-2xl space-y-6 ${isDark ? 'glass-panel border border-white/10' : 'bg-white border border-gray-200 shadow-sm'}`}>
@@ -251,7 +251,7 @@ const AIGeneratorTab = ({ isDark }) => {
           </div>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 };
 

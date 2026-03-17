@@ -82,7 +82,7 @@ const CreateTab = ({ isDark, setActiveTab }) => {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+    <div>
       {!preview ? (
         <div className={`p-4 sm:p-6 md:p-8 rounded-2xl space-y-6 overflow-hidden ${isDark ? 'glass-panel border border-white/10' : 'bg-white border border-gray-200 shadow-sm'}`}>
           {/* Exam & Subject */}
@@ -276,7 +276,7 @@ const CreateTab = ({ isDark, setActiveTab }) => {
           </button>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 };
 
