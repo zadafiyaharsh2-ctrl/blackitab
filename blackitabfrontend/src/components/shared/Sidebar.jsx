@@ -65,6 +65,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
   })();
 
   const canAccessTeacher = ['teacher', 'hod'].includes(userRole);
+  const canAccessHod = userRole === 'hod';
   const canAccessInstitute = userRole === 'institute';
 
   const navItems = [
@@ -89,10 +90,17 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
       { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy /> },
       { path: '/notifications', label: 'Notifications', icon: <FaBell className="text-red-400" /> },
-    { path: '/theory', label: 'Theory', icon: <FaBook /> },
+      { path: '/theory', label: 'Theory', icon: <FaBook /> },
       { path: '/social', label: 'Community', icon: <FaUsers /> },
     ] : [])
   ];
+
+  // HOD-only department management links
+  const hodNavItems = canAccessHod ? [
+    { path: '/hod/teachers', label: 'Dept. Teachers', icon: <FaUserTie /> },
+    { path: '/hod/content-review', label: 'Content Review', icon: <FaClipboardCheck /> },
+    { path: '/hod/attendance', label: 'Dept. Attendance', icon: <FaCalendarDay /> },
+  ] : [];
 
   const instituteNavItems = canAccessInstitute ? [
     { path: '/institute/dashboard', label: 'Dashboard', icon: <FaBuilding /> },
@@ -189,6 +197,39 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
               );
             })}
           </ul>
+
+          {/* HOD Department Section */}
+          {hodNavItems.length > 0 && (
+            <ul className="mt-4 space-y-1.5">
+              {isOpen && (
+                <li className="px-2 pt-2 pb-1">
+                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Department</span>
+                </li>
+              )}
+              {!isOpen && <li className="border-t border-gray-200 dark:border-white/10 mx-2 my-2" />}
+              {hodNavItems.map((item) => {
+                const isActive = location.pathname === item.path || (location.pathname.startsWith(item.path) && item.path !== '/');
+                return (
+                  <li key={item.path}>
+                    <Link to={item.path}>
+                      <div className={`relative flex items-center ${isOpen ? 'px-4 py-3' : 'px-0 py-3 justify-center'} rounded-xl text-sm font-semibold overflow-hidden group ${
+                        isActive
+                          ? 'bg-purple-600 dark:bg-purple-500 text-white shadow-sm font-bold'
+                          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-white/10'
+                      }`}>
+                        <span className={`relative z-10 text-lg ${isOpen ? 'mr-4' : ''} ${isActive ? 'text-white' : ''}`}>
+                          {item.icon}
+                        </span>
+                        {isOpen && (
+                          <span className="flex-1 whitespace-nowrap z-10">{item.label}</span>
+                        )}
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
 
           {/* Institute Section */}
           {instituteNavItems.length > 0 && (
