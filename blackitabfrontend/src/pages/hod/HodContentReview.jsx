@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { FaBookOpen, FaQuestionCircle, FaSearch, FaUser, FaClock, FaCheck, FaTimes } from 'react-icons/fa';
+import PageShimmer from '../../components/shared/PageShimmer';
 import toast from 'react-hot-toast';
 
 const HodContentReview = () => {
@@ -45,7 +46,7 @@ const HodContentReview = () => {
   const filteredT = theories.filter(t => (t.title||'').toLowerCase().includes(searchQuery.toLowerCase()));
   const filteredQ = questions.filter(q => (q.questionText||q.question||'').toLowerCase().includes(searchQuery.toLowerCase()));
 
-  if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><div className="animate-spin w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full" /></div>;
+  if (loading) return <PageShimmer variant="list" />;
 
   return (
     <div className="min-h-screen p-6 text-gray-900 dark:text-white relative overflow-hidden font-sans">

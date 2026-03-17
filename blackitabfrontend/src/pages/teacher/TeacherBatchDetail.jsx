@@ -5,6 +5,7 @@ import { FaUserPlus, FaUserCheck, FaUserTimes, FaCalendarDay, FaSpinner, FaArrow
 import toast from 'react-hot-toast';
 import API_URL from '../../config';
 import SimpleConfirmationModal from '../../components/shared/SimpleConfirmationModal';
+import PageShimmer from '../../components/shared/PageShimmer';
 
 const TeacherBatchDetail = () => {
   const { batchId } = useParams();
@@ -129,11 +130,7 @@ const TeacherBatchDetail = () => {
     return () => clearTimeout(t);
   }, [searchQuery, activeTab, students]);
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <FaSpinner className="animate-spin text-2xl text-gray-400" />
-    </div>
-  );
+  if (loading) return <PageShimmer variant="detail" />;
 
   if (!batch) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8">

@@ -6,6 +6,7 @@ import {
 } from 'react-icons/fa';
 import axios from 'axios';
 import API from '../../config';
+import PageShimmer from '../../components/shared/PageShimmer';
 
 export default function SchoolAnalytics() {
   const [schoolData, setSchoolData] = useState(null);
@@ -36,11 +37,7 @@ export default function SchoolAnalytics() {
     }
   };
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <FaSpinner className="animate-spin text-2xl text-gray-400" />
-    </div>
-  );
+  if (loading) return <PageShimmer variant="dashboard" />;
 
   if (error) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">

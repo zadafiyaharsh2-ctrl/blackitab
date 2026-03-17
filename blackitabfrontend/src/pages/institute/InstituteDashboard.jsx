@@ -11,7 +11,7 @@ import {
   EyeSlashIcon,
   UserPlusIcon
 } from '@heroicons/react/24/outline';
-import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import PageShimmer from '../../components/shared/PageShimmer';
 import { CustomToast } from '../../utils/CustomToast';
 
 const InstituteDashboard = () => {
@@ -42,7 +42,7 @@ const InstituteDashboard = () => {
     }
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <PageShimmer variant="dashboard" />;
 
   const statCards = [
     { 

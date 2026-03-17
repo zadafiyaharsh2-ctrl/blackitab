@@ -4,6 +4,7 @@ import API_URL from '../../config';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { FaArrowLeft, FaCamera, FaSpinner, FaSave } from 'react-icons/fa';
+import PageShimmer from '../../components/shared/PageShimmer';
 
 const ProfileSettings = () => {
     const navigate = useNavigate();
@@ -92,13 +93,7 @@ const ProfileSettings = () => {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-transparent flex justify-center items-center">
-                <FaSpinner className="animate-spin text-blue-500 text-3xl" />
-            </div>
-        );
-    }
+    if (loading) return <PageShimmer variant="form" />;
 
     return (
         <div className="min-h-screen bg-transparent p-4 md:p-8 relative overflow-hidden flex justify-center">

@@ -11,7 +11,7 @@ import {
   ExclamationTriangleIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
-import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import PageShimmer from '../../components/shared/PageShimmer';
 import { CustomToast } from '../../utils/CustomToast';
 
 const QuestionChecker = () => {
@@ -209,7 +209,7 @@ const QuestionChecker = () => {
     return acc;
   }, {});
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <PageShimmer variant="table" />;
 
   return (
     <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-6">

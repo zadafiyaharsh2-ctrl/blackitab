@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import api from '../../utils/api';
 import { FaArrowLeft, FaStar, FaBookOpen, FaQuestionCircle, FaUsers, FaCommentDots, FaCalendarCheck, FaChartLine, FaCheckCircle, FaClock } from 'react-icons/fa';
+import PageShimmer from '../../components/shared/PageShimmer';
 
 const TeacherPerformance = () => {
   const { teacherId } = useParams();
@@ -45,13 +46,7 @@ const TeacherPerformance = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full" />
-      </div>
-    );
-  }
+  if (loading) return <PageShimmer variant="detail" />;
 
   if (!teacher) {
     return (

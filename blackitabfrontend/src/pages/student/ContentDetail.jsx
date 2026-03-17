@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API_URL from '../../config';
+import PageShimmer from '../../components/shared/PageShimmer';
 import { FaArrowLeft, FaHeart, FaComment, FaShare, FaUser, FaRegHeart, FaPaperPlane, FaEllipsisH, FaBookmark, FaTrash } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import AddToPlaylistModal from '../../components/student/AddToPlaylistModal';
@@ -239,13 +240,7 @@ const ContentDetail = () => {
 
     const isOwner = currentUser && content && (currentUser.id === content.user?._id || currentUser._id === content.user?._id);
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center text-gray-900 dark:text-white">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-        );
-    }
+    if (loading) return <PageShimmer variant="detail" />;
 
     if (!content) {
         return (

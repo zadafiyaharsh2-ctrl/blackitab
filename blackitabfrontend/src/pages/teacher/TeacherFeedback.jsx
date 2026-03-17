@@ -3,6 +3,7 @@ import axios from 'axios';
 import { FaCommentDots, FaClock, FaStar, FaUserGraduate, FaSpinner } from 'react-icons/fa';
 import API_URL from '../../config';
 import toast from 'react-hot-toast';
+import PageShimmer from '../../components/shared/PageShimmer';
 
 const TeacherFeedback = () => {
   const [feedbacks, setFeedbacks] = useState([]);
@@ -29,13 +30,7 @@ const TeacherFeedback = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <FaSpinner className="animate-spin text-4xl text-blue-600 dark:text-blue-400" />
-      </div>
-    );
-  }
+  if (loading) return <PageShimmer variant="list" />;
 
   return (
     <div className="p-6 max-w-6xl mx-auto mt-16 space-y-6">

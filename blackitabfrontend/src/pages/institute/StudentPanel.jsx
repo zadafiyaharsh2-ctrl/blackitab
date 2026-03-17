@@ -8,7 +8,7 @@ import {
   PencilSquareIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
-import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import PageShimmer from '../../components/shared/PageShimmer';
 import { CustomToast } from '../../utils/CustomToast';
 import SimpleConfirmationModal from '../../components/shared/SimpleConfirmationModal';
 
@@ -131,7 +131,7 @@ const StudentPanel = () => {
     } finally { setSaving(false); }
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <PageShimmer variant="table" />;
 
   const groupedStudents = filteredStudents.reduce((acc, s) => {
     const batch = s.batchYear ? String(s.batchYear).trim() : '';

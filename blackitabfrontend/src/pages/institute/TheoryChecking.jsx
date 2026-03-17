@@ -9,7 +9,7 @@ import {
   XMarkIcon,
   LinkIcon
 } from '@heroicons/react/24/outline';
-import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import PageShimmer from '../../components/shared/PageShimmer';
 import { CustomToast } from '../../utils/CustomToast';
 import SimpleConfirmationModal from '../../components/shared/SimpleConfirmationModal';
 
@@ -129,7 +129,7 @@ const TheoryChecking = () => {
     return false;
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <PageShimmer variant="table" />;
 
   return (
     <div className="p-4 lg:p-8 max-w-6xl mx-auto space-y-6">

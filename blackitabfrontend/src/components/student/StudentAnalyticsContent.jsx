@@ -7,8 +7,29 @@ import {
   TrendingUp, Target, Flame, Clock, Award, CheckCircle,
   BookOpen, Brain, Zap, ArrowUp, ArrowDown, Minus,
   Trophy, Users, Activity, PieChart, Medal, Gauge, Timer, Gift, Code,
-  ArrowRight, X
+  ArrowRight, X, Lock, ChevronDown, ChevronUp, Sparkles
 } from 'lucide-react';
+
+/* ── Helpers ─────────────────────────────────────────────── */
+
+const timeAgo = (dateStr) => {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} min${mins > 1 ? 's' : ''} ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hour${hrs > 1 ? 's' : ''} ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
+
+const formatStudyTime = (hours, minutes) => {
+  if (hours >= 1) return `${hours}h`;
+  if (minutes > 0) return `${minutes} min${minutes !== 1 ? 's' : ''}`;
+  return '0 mins';
+};
 
 const difficultyColor = {
   Easy: 'text-emerald-500',
@@ -16,7 +37,10 @@ const difficultyColor = {
   Hard: 'text-red-500'
 };
 
+/* ── Stat Card ───────────────────────────────────────────── */
+
 const StatCard = ({ icon: Icon, title, value, change, suffix = '' }) => {
+  const displayValue = value === null || value === undefined ? '—' : value;
   const trend = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
   const TrendIcon = change > 0 ? ArrowUp : change < 0 ? ArrowDown : Minus;
   const trendCls = trend === 'positive' ? 'text-emerald-500' : trend === 'negative' ? 'text-red-500' : 'text-gray-400';
@@ -35,12 +59,145 @@ const StatCard = ({ icon: Icon, title, value, change, suffix = '' }) => {
       </div>
       <p className="text-xs text-gray-500 mb-1">{title}</p>
       <p className="text-2xl font-bold text-gray-900 dark:text-white">
-        {value}
-        {suffix}
+        {displayValue}
+        {displayValue !== '—' && suffix}
       </p>
     </div>
   );
 };
+
+/* ── Placeholder Radar Chart (blurred) ───────────────────── */
+
+const PlaceholderRadarChart = () => {
+  const points = 6;
+  const cx = 80, cy = 80, r = 55;
+  const angles = Array.from({ length: points }, (_, i) => (Math.PI * 2 * i) / points - Math.PI / 2);
+  const labels = ['DBMS', 'SQL', 'DSA', 'OS', 'Networks', 'Theory'];
+  const demoValues = [0.7, 0.5, 0.85, 0.4, 0.6, 0.55];
+
+  const axisLines = angles.map((a, i) => (
+    <line
+      key={`axis-${i}`}
+      x1={cx} y1={cy}
+      x2={cx + r * Math.cos(a)}
+      y2={cy + r * Math.sin(a)}
+      className="stroke-gray-200 dark:stroke-white/10"
+      strokeWidth="1"
+    />
+  ));
+
+  const rings = [0.33, 0.66, 1].map((scale, i) => {
+    const pts = angles.map(a => `${cx + r * scale * Math.cos(a)},${cy + r * scale * Math.sin(a)}`).join(' ');
+    return <polygon key={`ring-${i}`} points={pts} fill="none" className="stroke-gray-200 dark:stroke-white/10" strokeWidth="0.5" />;
+  });
+
+  const dataPts = angles.map((a, i) => `${cx + r * demoValues[i] * Math.cos(a)},${cy + r * demoValues[i] * Math.sin(a)}`).join(' ');
+
+  const labelEls = angles.map((a, i) => {
+    const lx = cx + (r + 18) * Math.cos(a);
+    const ly = cy + (r + 18) * Math.sin(a);
+    return (
+      <text key={`lbl-${i}`} x={lx} y={ly} textAnchor="middle" dominantBaseline="middle"
+        className="fill-gray-400 dark:fill-gray-500 text-[9px] font-medium"
+      >
+        {labels[i]}
+      </text>
+    );
+  });
+
+  return (
+    <div className="relative">
+      <div className="filter blur-[3px] opacity-50 pointer-events-none">
+        <svg viewBox="0 0 160 160" className="w-full max-w-[220px] mx-auto">
+          {rings}
+          {axisLines}
+          <polygon points={dataPts} className="fill-blue-500/20 stroke-blue-500" strokeWidth="1.5" />
+          {angles.map((a, i) => (
+            <circle key={`dot-${i}`} cx={cx + r * demoValues[i] * Math.cos(a)} cy={cy + r * demoValues[i] * Math.sin(a)} r="3" className="fill-blue-500" />
+          ))}
+          {labelEls}
+        </svg>
+      </div>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <Lock className="h-6 w-6 text-gray-400 dark:text-gray-500 mb-2" />
+        <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">Domain Mastery</p>
+        <Link to="/problems" className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 rounded-lg px-3 py-1.5 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors">
+          Start your first lesson to unlock
+          <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+/* ── Advanced Insights (shimmer) ─────────────────────────── */
+
+const INSIGHT_CARDS = [
+  { icon: PieChart, title: 'Difficulty Distribution' },
+  { icon: Timer, title: 'Speed Metrics' },
+  { icon: Gift, title: 'Quick Wins' },
+  { icon: Trophy, title: 'Global Rankings' },
+  { icon: Gauge, title: 'Consistency Score' },
+  { icon: Users, title: 'Peer Comparison' }
+];
+
+const AdvancedInsightsSection = ({ problemsSolved }) => {
+  const [expanded, setExpanded] = useState(false);
+  const threshold = 10;
+  const progress = Math.min(problemsSolved / threshold, 1);
+
+  return (
+    <div className="border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-white/[0.02] overflow-hidden">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-amber-500" />
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Advanced Insights</span>
+          {problemsSolved < threshold && (
+            <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
+              Unlocks after {threshold} problems
+            </span>
+          )}
+        </div>
+        {expanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
+      </button>
+
+      {expanded && (
+        <div className="px-5 pb-5">
+          {problemsSolved < threshold && (
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs text-gray-500">{problemsSolved}/{threshold} problems to unlock</span>
+                <span className="text-xs font-semibold text-gray-500">{Math.round(progress * 100)}%</span>
+              </div>
+              <div className="w-full h-1.5 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all" style={{ width: `${progress * 100}%` }} />
+              </div>
+            </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {INSIGHT_CARDS.map(({ icon: Icon, title }) => (
+              <div key={title} className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] text-center py-8 relative overflow-hidden">
+                <Icon className="h-6 w-6 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+                <p className="text-xs font-semibold text-gray-500">{title}</p>
+                {/* Shimmer skeleton lines */}
+                <div className="mt-3 space-y-2 px-4">
+                  <div className="h-2 shimmer-line w-full" />
+                  <div className="h-2 shimmer-line w-3/4 mx-auto" />
+                  <div className="h-2 shimmer-line w-1/2 mx-auto" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ── Main Component ──────────────────────────────────────── */
 
 const StudentAnalyticsContent = () => {
   const userName = (() => {
@@ -64,11 +221,12 @@ const StudentAnalyticsContent = () => {
     stats: {
       problemsSolved: 0,
       problemsChange: 0,
-      accuracy: 0,
+      accuracy: null,
       accuracyChange: 0,
       currentStreak: 0,
       streakChange: 0,
       studyHours: 0,
+      studyMinutes: 0,
       hoursChange: 0
     },
     subjectProgress: [],
@@ -146,13 +304,42 @@ const StudentAnalyticsContent = () => {
 
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-8 pt-20">
-        <div className="border border-gray-200 dark:border-white/10 rounded-xl p-10 bg-white dark:bg-white/[0.02] text-center text-gray-500">
-          Loading performance data...
+      <div className="max-w-5xl mx-auto px-4 py-8 pt-20 space-y-5">
+        {/* Shimmer loading skeleton */}
+        <div className="border border-gray-200 dark:border-white/10 rounded-xl p-6 bg-white dark:bg-white/[0.02]">
+          <div className="h-3 shimmer-line w-32 mb-3" />
+          <div className="h-6 shimmer-line w-48 mb-2" />
+          <div className="h-3 shimmer-line w-64" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[1,2,3,4].map(i => (
+            <div key={i} className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02]">
+              <div className="h-8 w-8 shimmer-line rounded-lg mb-3" />
+              <div className="h-3 shimmer-line w-20 mb-2" />
+              <div className="h-6 shimmer-line w-16" />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+            <div className="h-4 shimmer-line w-32 mb-4" />
+            <div className="h-16 shimmer-line w-full mb-3" />
+            <div className="h-8 shimmer-line w-28" />
+          </div>
+          <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+            <div className="h-4 shimmer-line w-24 mb-4" />
+            <div className="space-y-3">
+              {[1,2,3,4].map(i => <div key={i} className="h-10 shimmer-line w-full" />)}
+            </div>
+          </div>
         </div>
       </div>
     );
   }
+
+  // Format study time display
+  const studyTimeDisplay = formatStudyTime(stats.studyHours, stats.studyMinutes || 0);
+  const studyTimeSuffix = ''; // already included in formatted string
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 pt-20 space-y-5">
@@ -166,34 +353,57 @@ const StudentAnalyticsContent = () => {
         </p>
       </div>
 
+      {/* ── Stat Cards ─────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard icon={Target} title="Problems Solved" value={stats.problemsSolved} change={stats.problemsChange} />
-        <StatCard icon={TrendingUp} title="Accuracy" value={stats.accuracy} change={stats.accuracyChange} suffix="%" />
+        <StatCard
+          icon={TrendingUp}
+          title="Accuracy"
+          value={stats.problemsSolved === 0 ? null : stats.accuracy}
+          change={stats.accuracyChange}
+          suffix="%"
+        />
         <StatCard icon={Flame} title="Current Streak" value={stats.currentStreak} change={stats.streakChange} suffix=" days" />
-        <StatCard icon={Clock} title="Study Hours" value={stats.studyHours} change={stats.hoursChange} suffix="h" />
+        <StatCard icon={Clock} title="Study Time" value={studyTimeDisplay} change={stats.hoursChange} suffix={studyTimeSuffix} />
       </div>
 
+      {/* ── Daily Challenge (Interactive Card) + Quick Actions ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-              <Code className="h-3.5 w-3.5 text-emerald-500" /> Daily Challenge
-            </h3>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-              problemOfTheDay.difficulty === 'Easy'
-                ? 'text-emerald-600 border-emerald-200 bg-emerald-50 dark:text-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/10'
-                : problemOfTheDay.difficulty === 'Hard'
-                  ? 'text-red-600 border-red-200 bg-red-50 dark:text-red-400 dark:border-red-500/30 dark:bg-red-500/10'
-                  : 'text-amber-600 border-amber-200 bg-amber-50 dark:text-amber-400 dark:border-amber-500/30 dark:bg-amber-500/10'
-            }`}>
-              {problemOfTheDay.difficulty}
-            </span>
+        <div className="lg:col-span-2 group relative border-2 border-transparent rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-lg dark:hover:shadow-black/20"
+          style={{
+            background: 'linear-gradient(white, white) padding-box, linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899) border-box',
+          }}
+        >
+          {/* Dark mode gradient border override */}
+          <div className="absolute inset-0 rounded-xl border-2 border-transparent dark:block hidden pointer-events-none"
+            style={{
+              background: 'linear-gradient(rgb(0 0 0 / 0.95), rgb(0 0 0 / 0.95)) padding-box, linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899) border-box',
+            }}
+          />
+          <div className="relative p-5 bg-white dark:bg-transparent">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg">
+                  <Code className="h-4 w-4 text-white" />
+                </div>
+                <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Daily Challenge</h3>
+              </div>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                problemOfTheDay.difficulty === 'Easy'
+                  ? 'text-emerald-600 border-emerald-200 bg-emerald-50 dark:text-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/10'
+                  : problemOfTheDay.difficulty === 'Hard'
+                    ? 'text-red-600 border-red-200 bg-red-50 dark:text-red-400 dark:border-red-500/30 dark:bg-red-500/10'
+                    : 'text-amber-600 border-amber-200 bg-amber-50 dark:text-amber-400 dark:border-amber-500/30 dark:bg-amber-500/10'
+              }`}>
+                {problemOfTheDay.difficulty}
+              </span>
+            </div>
+            <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-4 leading-relaxed">{problemOfTheDay.title}</p>
+            <Link to={problemOfTheDay.link} className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg px-4 py-2.5 hover:from-blue-700 hover:to-purple-700 shadow-sm transition-all duration-200 group-hover:shadow-md">
+              Solve now
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
           </div>
-          <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 leading-snug">{problemOfTheDay.title}</p>
-          <Link to={problemOfTheDay.link} className="inline-flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-white/5">
-            Solve now
-            <ArrowRight className="h-4 w-4" />
-          </Link>
         </div>
 
         <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
@@ -228,6 +438,7 @@ const StudentAnalyticsContent = () => {
         </div>
       </div>
 
+      {/* ── Weekly Activity ────────────────────────────────── */}
       <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02]">
         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-3">
           <Activity className="h-3.5 w-3.5" /> Weekly Activity
@@ -252,6 +463,7 @@ const StudentAnalyticsContent = () => {
         )}
       </div>
 
+      {/* ── Domain Mastery ─────────────────────────────────── */}
       <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-4">
           <BookOpen className="h-3.5 w-3.5" /> Domain Mastery
@@ -293,13 +505,11 @@ const StudentAnalyticsContent = () => {
             })}
           </div>
         ) : (
-          <div className="text-center py-8 text-gray-400">
-            <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">Complete problems to see your domain mastery.</p>
-          </div>
+          <PlaceholderRadarChart />
         )}
       </div>
 
+      {/* ── Strengths / Weaknesses ─────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="border border-gray-200 dark:border-emerald-500/20 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-4">
@@ -338,6 +548,7 @@ const StudentAnalyticsContent = () => {
         </div>
       </div>
 
+      {/* ── Recent Activity ────────────────────────────────── */}
       <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
         <div className="px-5 py-3 border-b border-gray-100 dark:border-white/5">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
@@ -355,7 +566,7 @@ const StudentAnalyticsContent = () => {
                   <div className={`w-2 h-2 rounded-full shrink-0 ${isSuccess ? 'bg-emerald-500' : 'bg-red-400'}`} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{activity.title}</p>
-                    <p className="text-xs text-gray-400">{activity.time}</p>
+                    <p className="text-xs text-gray-400">{timeAgo(activity.time)}</p>
                   </div>
                   <div className="flex items-center gap-2 text-xs shrink-0">
                     <span className={`${difficultyCls} font-medium`}>{activity.difficulty || 'Medium'}</span>
@@ -373,23 +584,10 @@ const StudentAnalyticsContent = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[
-          { icon: PieChart, title: 'Difficulty Distribution' },
-          { icon: Timer, title: 'Speed Metrics' },
-          { icon: Gift, title: 'Quick Wins' },
-          { icon: Trophy, title: 'Global Rankings' },
-          { icon: Gauge, title: 'Consistency Score' },
-          { icon: Users, title: 'Peer Comparison' }
-        ].map(({ icon: Icon, title }) => (
-          <div key={title} className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] text-center py-8">
-            <Icon className="h-6 w-6 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-            <p className="text-xs font-semibold text-gray-500">{title}</p>
-            <p className="text-xs text-gray-400 mt-1">Coming soon</p>
-          </div>
-        ))}
-      </div>
+      {/* ── Advanced Insights (shimmer + toggle) ────────────── */}
+      <AdvancedInsightsSection problemsSolved={stats.problemsSolved} />
 
+      {/* ── Top Performing Topics ───────────────────────────── */}
       {subjectProgress.length > 0 && (
         <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-4">
@@ -414,6 +612,7 @@ const StudentAnalyticsContent = () => {
         </div>
       )}
 
+      {/* ── Join Class Modal ───────────────────────────────── */}
       {showJoinModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowJoinModal(false)} />
