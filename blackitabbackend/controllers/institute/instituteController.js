@@ -360,7 +360,15 @@ exports.updateInstituteQuestion = async (req, res) => {
     try {
         const instId = req.user.instituteId;
         const question = await ExamQuestion.findById(req.params.id);
-        if (!question || !question.instituteId || question.instituteId.toString() !== instId.toString() || question.status !== 'Published') {
+        
+        if (!question || !question.instituteId || question.instituteId?.toString() !== instId?.toString() || question.status !== 'Published') {
+            console.log('404 Debug:', {
+                questionExists: !!question,
+                questionInstId: question?.instituteId?.toString(),
+                userInstId: instId?.toString(),
+                questionStatus: question?.status,
+                userRole: req.user.role
+            });
             return res.status(404).json({ success: false, message: 'Published question not found in your institute' });
         }
         
@@ -372,8 +380,7 @@ exports.updateInstituteQuestion = async (req, res) => {
                 return res.status(403).json({ success: false, message: 'Question does not belong to your department(s)' });
             }
         }
-        
-        const allowedUpdates = ['question', 'options', 'correctAnswer', 'explanation', 'subject', 'difficulty', 'topicId'];
+        const allowedUpdates = ['question', 'options', 'correctAnswer', 'explanation', 'subject', 'difficulty', 'topicId', 'approvalStatus'];
         allowedUpdates.forEach(field => {
             if (req.body[field] !== undefined) {
                 question[field] = req.body[field];
@@ -388,6 +395,8 @@ exports.updateInstituteQuestion = async (req, res) => {
 
         res.json({ success: true, message: 'Question updated successfully', data: question });
     } catch (error) {
+        console.error('Update Institute Question Error:', error);
+        require('fs').writeFileSync('c:/Users/Deepesh/Desktop/blackitab/blackitabbackend/error.log', error.stack || error.toString());
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -397,7 +406,7 @@ exports.deleteInstituteQuestion = async (req, res) => {
     try {
         const instId = req.user.instituteId;
         const question = await ExamQuestion.findById(req.params.id);
-        if (!question || !question.instituteId || question.instituteId.toString() !== instId.toString()) {
+        if (!question || !question.instituteId || question.instituteId?.toString() !== instId?.toString()) {
             return res.status(404).json({ success: false, message: 'Question not found in your institute' });
         }
 

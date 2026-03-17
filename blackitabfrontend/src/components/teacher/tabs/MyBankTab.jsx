@@ -376,10 +376,15 @@ const MyBankTab = ({ isDark }) => {
                                 }`}>
                                 {q.status === 'Published' ? <><FaCheckCircle className="w-3 h-3" /> Published</> : <><FaCheckCircle className="w-3 h-3" /> Publish</>}
                               </button>
-                              <button onClick={() => openEditModal(q)} className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors border ${
-                                isDark ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border-blue-500/20' : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-200'
-                              }`}>
-                                <FaEdit className="w-3 h-3" /> Edit
+                              <button
+                                onClick={() => openEditModal(q)}
+                                disabled={q.isModerated}
+                                className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors border ${
+                                  q.isModerated
+                                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                                    : isDark ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border-blue-500/20' : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-200'
+                                }`}>
+                                <FaEdit className="w-3 h-3" /> {q.isModerated ? 'Locked by Admin' : 'Edit'}
                               </button>
                               <button onClick={() => promptDelete(q._id)} className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-xl text-sm font-medium transition-colors border border-red-200 dark:border-red-500/20">
                                 <FaTrash className="w-3 h-3" /> Delete

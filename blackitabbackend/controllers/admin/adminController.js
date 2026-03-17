@@ -452,7 +452,7 @@ exports.updateQuestion = async (req, res) => {
              updates.isProblem = updates.isProblem;
         }
 
-        const updated = await ExamQuestion.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+        const updated = await ExamQuestion.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true, context: 'query' });
 
         res.json({ success: true, message: 'Question updated', data: updated });
     } catch (error) {

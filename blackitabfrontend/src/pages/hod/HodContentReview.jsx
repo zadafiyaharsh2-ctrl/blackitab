@@ -26,15 +26,6 @@ const HodContentReview = () => {
     finally { setLoading(false); }
   };
 
-  const handleAction = async (type, id, status) => {
-    try {
-      const endpoint = type === 'theory' ? `/institute/theory/${id}` : `/institute/questions/${id}`;
-      await api.put(endpoint, { status });
-      if (type === 'theory') setTheories(prev => prev.map(t => t._id === id ? { ...t, status } : t));
-      else setQuestions(prev => prev.map(q => q._id === id ? { ...q, status } : q));
-      toast.success(`${type} ${status}!`);
-    } catch { toast.error(`Failed to ${status} ${type}`); }
-  };
 
   const getBadge = (s) => {
     const cls = s === 'approved' ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20'
@@ -62,7 +53,7 @@ const HodContentReview = () => {
             </div>
             <div>
               <h1 className="text-3xl font-black tracking-tight">Content Review</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Review, approve, or reject theories and questions</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Review theories and questions</p>
             </div>
           </div>
         </div>
@@ -113,12 +104,6 @@ const HodContentReview = () => {
                   <h4 className="font-bold text-base">{item.title||item.questionText||item.question||'Untitled'}</h4>
                   {item.description&&<p className="text-sm text-gray-500 mt-1 line-clamp-2">{item.description}</p>}
                 </div>
-                {(!item.status||item.status==='pending')&&(
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <button onClick={()=>handleAction(activeTab==='theories'?'theory':'question',item._id,'approved')} className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 hover:bg-emerald-200 transition-colors" title="Approve"><FaCheck/></button>
-                    <button onClick={()=>handleAction(activeTab==='theories'?'theory':'question',item._id,'rejected')} className="p-2.5 rounded-xl bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/20 hover:bg-red-200 transition-colors" title="Reject"><FaTimes/></button>
-                  </div>
-                )}
               </div>
             </div>
           ))}

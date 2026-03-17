@@ -120,12 +120,12 @@ const examQuestionSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
-    // Sent to Problems Tab
     isProblem: {
         type: Boolean,
         default: false,
         index: true
     },
+
 
     createdAt: {
         type: Date,

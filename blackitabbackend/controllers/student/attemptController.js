@@ -32,7 +32,7 @@ exports.submitAttempt = async (req, res) => {
                 totalAttempts: 1,
                 successfulAttempts: isCorrect ? 1 : 0
             }
-        });
+        }, { runValidators: true, context: 'query' });
 
         // 5. Update User Gamification — Difficulty-weighted Points & 10 XP per correct question
         const user = await User.findById(userId);
