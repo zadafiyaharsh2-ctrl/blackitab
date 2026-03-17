@@ -13,8 +13,7 @@ const MyBankTab = ({ isDark }) => {
   const [filterDifficulty, setFilterDifficulty] = useState('');
   const [filterSubject, setFilterSubject] = useState('');
   const [filterExam, setFilterExam] = useState('');
-  const [deleteModal, setDeleteModal] = useState(null); // { ids: [...], hasProblems: bool }
-  const [deleteFromProblems, setDeleteFromProblems] = useState(true);
+  const [deleteModal, setDeleteModal] = useState(null); // { ids: [...] }
   const [selected, setSelected] = useState(new Set());
 
   // Edit modal states
@@ -41,18 +40,14 @@ const MyBankTab = ({ isDark }) => {
 
   // Open delete confirmation — single question
   const promptDelete = (id) => {
-    const q = questions.find(q => q._id === id);
-    setDeleteFromProblems(true);
-    setDeleteModal({ ids: [id], hasProblems: q?.isProblem || false });
+    setDeleteModal({ ids: [id] });
   };
 
   // Open delete confirmation — bulk
   const promptBulkDelete = () => {
     if (selected.size === 0) return;
     const ids = [...selected];
-    const hasProblems = ids.some(id => questions.find(q => q._id === id)?.isProblem);
-    setDeleteFromProblems(true);
-    setDeleteModal({ ids, hasProblems });
+    setDeleteModal({ ids });
   };
 
   // Execute delete
@@ -61,15 +56,6 @@ const MyBankTab = ({ isDark }) => {
     const { ids } = deleteModal;
     try {
       const token = localStorage.getItem('token');
-      // If user chose to also remove from Problems, set isProblem: false first
-      if (deleteFromProblems) {
-        const problemIds = ids.filter(id => questions.find(q => q._id === id)?.isProblem);
-        if (problemIds.length > 0) {
-          await Promise.all(problemIds.map(id => 
-            axios.put(`${API_URL}/api/questions/${id}`, { isProblem: false }, { headers: { Authorization: `Bearer ${token}` } })
-          ));
-        }
-      }
       // Delete all
       await Promise.all(ids.map(id => axios.delete(`${API_URL}/api/questions/${id}`, { headers: { Authorization: `Bearer ${token}` } })));
       CustomToast.success(`${ids.length} question(s) deleted`);
@@ -87,39 +73,46 @@ const MyBankTab = ({ isDark }) => {
     }
   };
 
-  const handleToggleProblem = async (question) => {
+  const handlePublish = async (question) => {
+    if (question.status === 'Published') {
+      CustomToast.error('Question is already published');
+      return;
+    }
     try {
       const token = localStorage.getItem('token');
-      const newStatus = !question.isProblem;
-      const res = await axios.put(`${API_URL}/api/questions/${question._id}`, 
-        { isProblem: newStatus },
+      const res = await axios.put(`${API_URL}/api/exams/questions/${question._id}/publish`, 
+        {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
       if (res.data.success) {
-        setQuestions(prev => prev.map(q => q._id === question._id ? { ...q, isProblem: newStatus } : q));
-        CustomToast.success(newStatus ? 'Added to Problems' : 'Removed from Problems');
+        setQuestions(prev => prev.map(q => q._id === question._id ? { ...q, status: 'Published' } : q));
+        CustomToast.success('Question published to Institute successfully');
       }
     } catch (error) {
       console.error(error);
-      CustomToast.error("Failed to update problem status");
+      CustomToast.error(error.response?.data?.message || "Failed to publish question");
     }
   };
 
-  const handleBulkSendToProblems = async () => {
-    if (selected.size === 0) return;
+  const handleBulkPublish = async () => {
+    const drafts = [...selected].map(id => questions.find(q => q._id === id)).filter(q => q?.status === 'Draft');
+    if (drafts.length === 0) {
+      CustomToast.error('No draft questions selected to publish.');
+      return;
+    }
     try {
       const token = localStorage.getItem('token');
-      const promises = [...selected].map(id => 
-        axios.put(`${API_URL}/api/questions/${id}`, { isProblem: true }, { headers: { Authorization: `Bearer ${token}` } })
+      const promises = drafts.map(q => 
+        axios.put(`${API_URL}/api/exams/questions/${q._id}/publish`, {}, { headers: { Authorization: `Bearer ${token}` } })
       );
       await Promise.all(promises);
-      CustomToast.success(`${selected.size} question(s) sent to Problems`);
-      setQuestions(prev => prev.map(q => selected.has(q._id) ? { ...q, isProblem: true } : q));
+      CustomToast.success(`${drafts.length} question(s) published to Institute`);
+      setQuestions(prev => prev.map(q => selected.has(q._id) && q.status === 'Draft' ? { ...q, status: 'Published' } : q));
       setSelected(new Set());
     } catch (error) {
       console.error(error);
-      CustomToast.error('Failed to send questions to Problems');
+      CustomToast.error('Failed to publish questions');
     }
   };
 
@@ -255,8 +248,8 @@ const MyBankTab = ({ isDark }) => {
           <button onClick={promptBulkDelete} className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition-colors shadow-sm">
             <FaTrash className="w-3 h-3" /> Delete Selected
           </button>
-          <button onClick={handleBulkSendToProblems} className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-colors shadow-sm">
-            <FaCheckCircle className="w-3 h-3" /> Send to Problems
+          <button onClick={handleBulkPublish} className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-colors shadow-sm">
+            <FaCheckCircle className="w-3 h-3" /> Publish Selected
           </button>
           <button onClick={() => setSelected(new Set())} className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
             isDark ? 'bg-white/10 hover:bg-white/20 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
@@ -319,19 +312,24 @@ const MyBankTab = ({ isDark }) => {
                                     <FaRobot className="text-[10px]" /> AI
                                   </span>
                                 )}
-                                {q.designatedFor?.includes('digital') && (
+                                {q.format === 'Digital' && (
                                   <span className="px-2 py-0.5 rounded text-xs font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
                                     Digital
                                   </span>
                                 )}
-                                {q.designatedFor?.includes('paper') && (
+                                {q.format === 'Paper' && (
                                   <span className="px-2 py-0.5 rounded text-xs font-bold bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
                                     Paper
                                   </span>
                                 )}
-                                {q.isProblem && (
-                                  <span className="px-2 py-0.5 rounded text-xs font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                                    In Problems
+                                {q.status === 'Published' && (
+                                  <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                    Published
+                                  </span>
+                                )}
+                                {q.status === 'Draft' && (
+                                  <span className="px-2 py-0.5 rounded text-xs font-bold bg-gray-500/10 text-gray-600 dark:text-gray-400 border border-gray-500/20">
+                                    Draft
                                   </span>
                                 )}
                               </div>
@@ -369,13 +367,14 @@ const MyBankTab = ({ isDark }) => {
                             {/* Right: Action Buttons */}
                             <div className="flex flex-col sm:flex-row md:flex-col gap-2 shrink-0 w-full md:w-auto">
                               <button
-                                onClick={() => handleToggleProblem(q)}
+                                onClick={() => handlePublish(q)}
+                                disabled={q.status === 'Published'}
                                 className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors border ${
-                                  q.isProblem
-                                    ? 'bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-500/20'
-                                    : 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20'
+                                  q.status === 'Published'
+                                    ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20 opacity-50 cursor-not-allowed'
+                                    : 'bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/20'
                                 }`}>
-                                {q.isProblem ? <><FaTimes className="w-3 h-3" /> Remove</> : <><FaCheckCircle className="w-3 h-3" /> Approve</>}
+                                {q.status === 'Published' ? <><FaCheckCircle className="w-3 h-3" /> Published</> : <><FaCheckCircle className="w-3 h-3" /> Publish</>}
                               </button>
                               <button onClick={() => openEditModal(q)} className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors border ${
                                 isDark ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border-blue-500/20' : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-200'
@@ -417,22 +416,7 @@ const MyBankTab = ({ isDark }) => {
               </div>
             </div>
 
-            {deleteModal.hasProblems && (
-              <label className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer ${
-                isDark ? 'bg-amber-500/5 border border-amber-500/20' : 'bg-amber-50 border border-amber-200'
-              }`}>
-                <input 
-                  type="checkbox" 
-                  checked={deleteFromProblems}
-                  onChange={e => setDeleteFromProblems(e.target.checked)}
-                  className="w-4 h-4 mt-0.5 rounded border-amber-300 text-amber-500 focus:ring-amber-500"
-                />
-                <div>
-                  <span className={`text-sm font-medium ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>Also remove from Problems page</span>
-                  <p className={`text-xs mt-0.5 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>Some selected questions are currently listed on the Problems page for students.</p>
-                </div>
-              </label>
-            )}
+
 
             <div className="flex gap-3 pt-2">
               <button onClick={() => setDeleteModal(null)} className={`flex-1 px-4 py-2.5 rounded-xl font-medium transition-colors border ${

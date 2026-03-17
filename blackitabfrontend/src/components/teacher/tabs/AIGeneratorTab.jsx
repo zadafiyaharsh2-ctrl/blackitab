@@ -24,7 +24,7 @@ const AIGeneratorTab = ({ isDark }) => {
   const [topic, setTopic] = useState('');
   const [difficulty, setDifficulty] = useState('Medium');
   const [count, setCount] = useState(5);
-  const [designatedFor, setDesignatedFor] = useState(['digital']);
+  const [format, setFormat] = useState('Digital');
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [generatedData, setGeneratedData] = useState(null);
@@ -57,7 +57,7 @@ const AIGeneratorTab = ({ isDark }) => {
           difficulty, 
           count, 
           exam,
-          designatedFor: designatedFor.length > 0 ? designatedFor : ['digital']
+          format
         })
       });
 
@@ -126,30 +126,22 @@ const AIGeneratorTab = ({ isDark }) => {
               </div>
             </div>
 
-            {/* Question Type */}
+            {/* Question Format */}
             <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Question Type</label>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Question Format</label>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" 
-                    checked={designatedFor.includes('digital')}
-                    onChange={(e) => {
-                      setDesignatedFor(e.target.checked 
-                        ? [...designatedFor, 'digital'] 
-                        : designatedFor.filter(t => t !== 'digital'));
-                    }}
+                  <input type="radio" 
+                    checked={format === 'Digital'}
+                    onChange={() => setFormat('Digital')}
                     className="w-4 h-4 rounded border-gray-300 text-indigo-500 focus:ring-indigo-500" 
                   />
                   <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Digital</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" 
-                    checked={designatedFor.includes('paper')}
-                    onChange={(e) => {
-                      setDesignatedFor(e.target.checked 
-                        ? [...designatedFor, 'paper'] 
-                        : designatedFor.filter(t => t !== 'paper'));
-                    }}
+                  <input type="radio" 
+                    checked={format === 'Paper'}
+                    onChange={() => setFormat('Paper')}
                     className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500" 
                   />
                   <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Paper</span>

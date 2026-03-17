@@ -87,13 +87,13 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     ] : !canAccessInstitute ? [
       { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
       { path: '/classes', label: 'My Classes', icon: <FaUsers /> },
-      { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot className="text-violet-500" /> },
+      { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
     ] : []),
     ...( !canAccessInstitute ? [
       { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
       { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
       { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy /> },
-      { path: '/theory', label: 'Theory', icon: <FaBook className="text-emerald-500" /> },
+      { path: '/theory', label: 'Theory', icon: <FaBook /> },
     ] : [])
   ];
 

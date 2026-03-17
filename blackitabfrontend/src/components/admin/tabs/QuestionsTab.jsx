@@ -1,31 +1,21 @@
 import React from 'react';
-import { FaPlus, FaTimes, FaQuestion, FaExclamationTriangle, FaEye, FaCheck, FaBan, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaTimes, FaQuestion, FaExclamationTriangle, FaEye, FaGlobe, FaTrash, FaCopy } from 'react-icons/fa';
 
 const QuestionsTab = ({
-  questions, questionFilter, setQuestionFilter, showCreateQuestion, setShowCreateQuestion,
+  questions, showCreateQuestion, setShowCreateQuestion,
   newQuestion, setNewQuestion, handleCreateQuestion, setQuestionPreview,
-  handleApprove, setRejectModal, handleDeleteQuestion,
+  handleCloneGlobal, handleDeleteQuestion,
   Pagination, questionPagination, questionPage, setQuestionPage, fetchQuestions
 }) => {
   return (
     <div>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <h2 className="text-xl font-bold text-white">Question Approval</h2>
+        <h2 className="text-xl font-bold text-white">Question Management</h2>
         <div className="flex items-center gap-3">
           <button onClick={() => setShowCreateQuestion(true)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold hover:bg-emerald-500/20 transition-colors">
-            <FaPlus /> Create Question
+            <FaPlus /> Create Global Question
           </button>
-          <div className="flex gap-1 bg-white/5 p-1 rounded-xl">
-          {['pending', 'approved', 'rejected'].map(s => (
-            <button key={s} onClick={() => setQuestionFilter(s)}
-              className={`px-4 py-2 rounded-lg text-xs font-bold capitalize transition-all ${
-                questionFilter === s ? `text-white ${s === 'pending' ? 'bg-yellow-500/20' : s === 'approved' ? 'bg-emerald-500/20' : 'bg-red-500/20'}` : 'text-gray-500 hover:text-gray-300'
-              }`}>
-              {s}
-            </button>
-          ))}
-        </div>
         </div>
       </div>
 
@@ -75,8 +65,8 @@ const QuestionsTab = ({
       <div className="glass-panel p-4 border-blue-500/20 rounded-xl mb-6 flex items-start gap-3">
         <FaExclamationTriangle className="text-blue-400 mt-0.5 shrink-0" />
         <div className="text-xs text-gray-400">
-          <strong className="text-blue-400">Approval System:</strong> Teachers create questions → they appear here as <strong>Pending</strong>.
-          Questions within the <strong>same institute</strong> are visible immediately. For <strong>global visibility</strong> (all students worldwide), you must <strong>Approve</strong> them manually.
+          <strong className="text-blue-400">Post-Publish System:</strong> Teachers create questions and publish them to their Institute.
+          You can view all published questions here. Use <strong>Clone to Global</strong> to promote a high-quality institute question to the global data bank.
         </div>
       </div>
 
@@ -93,37 +83,23 @@ const QuestionsTab = ({
                     q.difficulty === 'Hard' ? 'bg-red-500/10 text-red-400' :
                     'bg-yellow-500/10 text-yellow-400'
                   }`}>{q.difficulty}</span>
-                  {q.instituteId && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/10 text-orange-400">{q.instituteId.name}</span>}
+                  {q.isGlobal && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-400"><FaGlobe className="inline mr-1"/>Global</span>}
+                  {q.instituteId && !q.isGlobal && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/10 text-orange-400">{q.instituteId.name}</span>}
                 </div>
                 <p className="text-white text-sm font-medium mb-1 line-clamp-2">{q.question}</p>
                 <p className="text-gray-500 text-xs">
-                  By: {q.createdBy?.name || 'Unknown'} ({q.createdBy?.email || '—'}) · {new Date(q.createdAt).toLocaleDateString()}
+                  By: {q.createdBy?.name || 'Admin'} ({q.createdBy?.email || '—'}) · {new Date(q.createdAt).toLocaleDateString()}
                 </p>
-                {q.approvalNote && q.approvalStatus === 'rejected' && (
-                  <p className="text-red-400/80 text-xs mt-1 italic">Rejection note: {q.approvalNote}</p>
-                )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button onClick={() => setQuestionPreview(q)}
                   className="p-2 rounded-lg bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-colors" title="Preview">
                   <FaEye />
                 </button>
-                {q.approvalStatus === 'pending' && (
-                  <>
-                    <button onClick={() => handleApprove(q._id)}
-                      className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-xs font-bold transition-colors flex items-center gap-1">
-                      <FaCheck /> Approve
-                    </button>
-                    <button onClick={() => setRejectModal({ open: true, questionId: q._id, note: '' })}
-                      className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-bold transition-colors flex items-center gap-1">
-                      <FaBan /> Reject
-                    </button>
-                  </>
-                )}
-                {q.approvalStatus === 'rejected' && (
-                  <button onClick={() => handleApprove(q._id)}
-                    className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-xs font-bold transition-colors flex items-center gap-1">
-                    <FaCheck /> Approve
+                {!q.isGlobal && (
+                  <button onClick={() => handleCloneGlobal(q._id)}
+                    className="px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 text-xs font-bold transition-colors flex items-center gap-1">
+                    <FaCopy /> Clone to Global
                   </button>
                 )}
                 <button onClick={() => handleDeleteQuestion(q._id)}
@@ -137,7 +113,7 @@ const QuestionsTab = ({
         {questions.length === 0 && (
           <div className="text-center py-16 text-gray-500">
             <FaQuestion className="text-4xl mx-auto mb-3 opacity-30" />
-            <p>No {questionFilter} questions</p>
+            <p>No questions found.</p>
           </div>
         )}
       </div>

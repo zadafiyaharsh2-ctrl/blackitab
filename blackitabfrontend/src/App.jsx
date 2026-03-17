@@ -600,20 +600,14 @@ function App() {
             <Route
               path="/exam/:examId" element={
                 <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <ExamQuestions />
-
-                  </MainLayout>
+                  <ExamQuestions />
                 </ProtectedRoute>
               }
-
             />
             <Route
               path="/exam/:examId/institute" element={
                 <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <ExamQuestions />
-                  </MainLayout>
+                  <ExamQuestions />
                 </ProtectedRoute>
               }
             />

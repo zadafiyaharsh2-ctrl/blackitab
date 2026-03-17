@@ -14,8 +14,8 @@ router.post('/', requireMinRole('teacher'), questionController.createQuestion);
 router.post('/generate', requireMinRole('teacher'), questionController.generateQuestions);
 
 // ── Institute-scoped views (HOD and above) ──
+// ── Institute-scoped views (HOD and above) ──
 router.get('/institute', requireMinRole('hod'), questionController.listInstituteQuestions);
-router.get('/institute/pending', requireMinRole('hod'), questionController.listPendingQuestions);
 
 // ── Question Paper (teacher and above) ──
 router.get('/paper/preview', requireMinRole('teacher'), pdfExportController.previewQuestions);
@@ -25,6 +25,6 @@ router.get('/paper/export-pdf', requireMinRole('teacher'), pdfExportController.e
 router.get('/:id', requireMinRole('teacher'), questionController.getQuestion);
 router.put('/:id', requireMinRole('teacher'), questionController.updateQuestion);
 router.delete('/:id', requireMinRole('teacher'), questionController.deleteQuestion);
-router.put('/:id/visibility', requireMinRole('teacher'), questionController.changeVisibility);
+router.put('/:id/publish', requireMinRole('teacher'), questionController.publishQuestion);
 
 module.exports = router;

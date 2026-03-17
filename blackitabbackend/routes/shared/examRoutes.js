@@ -27,6 +27,9 @@ router.get('/questions/institute', requireRole('hod', 'institute'), examControll
 // PUT /api/exams/questions/:id — Update a question
 router.put('/questions/:id', requireRole('teacher', 'hod', 'institute'), examController.updateQuestion);
 
+// PUT /api/exams/questions/:id/publish — Publish a draft question
+router.put('/questions/:id/publish', requireRole('teacher', 'hod', 'institute'), examController.publishQuestion);
+
 // DELETE /api/exams/questions/:id — Delete a question
 router.delete('/questions/:id', requireRole('teacher', 'hod', 'institute'), examController.deleteQuestion);
 

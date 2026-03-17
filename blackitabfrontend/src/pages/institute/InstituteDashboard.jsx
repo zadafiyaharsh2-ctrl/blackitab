@@ -67,8 +67,8 @@ const InstituteDashboard = () => {
       path: '/institute/departments' 
     },
     { 
-      title: 'Pending Questions', 
-      value: stats?.pendingQuestions || 0, 
+      title: 'Total Questions', 
+      value: stats?.questions || 0, 
       icon: CheckBadgeIcon, 
       color: 'orange', 
       path: '/institute/questions' 

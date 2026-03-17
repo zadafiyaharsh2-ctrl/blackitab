@@ -30,12 +30,13 @@ function canModify(question, user) {
 // GET /api/questions — List my questions (with filters)
 exports.listMyQuestions = async (req, res) => {
     try {
-        const { subject, difficulty, visibility, exam, page = 1, limit = 20 } = req.query;
+        const { subject, difficulty, status, format, exam, page = 1, limit = 20 } = req.query;
         const filter = { createdBy: req.user._id };
 
         if (subject) filter.subject = new RegExp(subject, 'i');
         if (difficulty) filter.difficulty = difficulty;
-        if (visibility) filter.visibility = visibility;
+        if (status) filter.status = status;
+        if (format) filter.format = format;
         if (exam) filter.exam = exam;
 
         const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -61,7 +62,7 @@ exports.listMyQuestions = async (req, res) => {
 // POST /api/questions — Create a question manually
 exports.createQuestion = async (req, res) => {
     try {
-        const { exam, subject, question, options, correctAnswer, difficulty, explanation, tags, visibility, designatedFor } = req.body;
+        const { exam, subject, question, options, correctAnswer, difficulty, explanation, tags, format } = req.body;
 
         if (!exam || !subject || !question || !options || options.length !== 4 || correctAnswer === undefined) {
             return res.status(400).json({ success: false, message: 'Missing required fields: exam, subject, question, 4 options, correctAnswer' });
@@ -76,10 +77,9 @@ exports.createQuestion = async (req, res) => {
             difficulty: difficulty || 'Medium',
             explanation: explanation || 'No explanation available',
             tags: tags || [],
-            visibility: visibility || 'public',
-            designatedFor: (designatedFor && designatedFor.length > 0) ? designatedFor : ['digital'],
-            isPublic: visibility !== 'private',
-            approvalStatus: 'pending',
+            format: format || 'Digital',
+            status: 'Draft',
+            isGlobal: false,
             createdBy: req.user._id,
             instituteId: req.user.instituteId || null
         });
@@ -97,7 +97,7 @@ exports.createQuestion = async (req, res) => {
 // POST /api/questions/generate — AI generates questions (teacher can edit after)
 exports.generateQuestions = async (req, res) => {
     try {
-        const { topic, difficulty = 'Medium', count = 5, exam = 'jee', visibility = 'public', designatedFor } = req.body;
+        const { topic, difficulty = 'Medium', count = 5, exam = 'jee', format = 'Digital' } = req.body;
 
         if (!topic || !topic.trim()) {
             return res.status(400).json({ success: false, message: 'Topic is required' });
@@ -211,12 +211,11 @@ exports.generateQuestions = async (req, res) => {
                 difficulty: validDifficulty,
                 explanation: q.explanation,
                 isAiGenerated: true,
-                visibility: visibility,
-                designatedFor: (designatedFor && designatedFor.length > 0) ? designatedFor : ['digital'],
-                isPublic: visibility !== 'private',
+                format: format,
+                status: 'Draft',
+                isGlobal: false,
                 createdBy: req.user._id,
-                instituteId: req.user.instituteId || null,
-                approvalStatus: 'pending'
+                instituteId: req.user.instituteId || null
             }))
         );
 
@@ -248,13 +247,14 @@ exports.getQuestion = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Question not found' });
         }
 
-        if (question.visibility === 'private' && !canModify(question, req.user)) {
-            return res.status(403).json({ success: false, message: 'This question is private' });
+        if (question.status === 'Draft' && !canModify(question, req.user)) {
+            return res.status(403).json({ success: false, message: 'This draft question is private' });
         }
 
-        if (question.visibility === 'institute') {
+        if (question.status === 'Published' && !question.isGlobal) {
             const sameInstitute = question.instituteId?.toString() === req.user.instituteId?.toString();
-            if (!sameInstitute) {
+            // Admins can view any published question, handled by higher level route checks or just allowing view
+            if (!sameInstitute && req.user.role !== 'system_admin') {
                 return res.status(403).json({ success: false, message: 'This question is restricted to institute members' });
             }
         }
@@ -315,29 +315,24 @@ exports.deleteQuestion = async (req, res) => {
     }
 };
 
-// ══════════════════════════════════════════════════════════════
-// VISIBILITY TOGGLE
-// ══════════════════════════════════════════════════════════════
-
-// PUT /api/questions/:id/visibility — Toggle private/institute/public
-exports.changeVisibility = async (req, res) => {
+// PUT /api/questions/:id/publish — Publish a draft question
+exports.publishQuestion = async (req, res) => {
     try {
-        const { visibility } = req.body;
-        if (!['private', 'institute', 'public'].includes(visibility)) {
-            return res.status(400).json({ success: false, message: 'visibility must be: private, institute, or public' });
-        }
-
         const question = await ExamQuestion.findById(req.params.id);
         if (!question) {
             return res.status(404).json({ success: false, message: 'Question not found' });
         }
 
-        if (!canModify(question, req.user)) {
-            return res.status(403).json({ success: false, message: 'Not authorized' });
+        // Only the creator can publish it initially, or HOD if it's already published to edit it
+        if (question.createdBy?.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ success: false, message: 'Not authorized to publish this question' });
+        }
+        
+        if (question.status === 'Published') {
+            return res.status(400).json({ success: false, message: 'Question is already published' });
         }
 
-        question.visibility = visibility;
-        question.isPublic = visibility !== 'private';
+        question.status = 'Published';
         await question.save();
 
         res.json({ success: true, data: question });
@@ -346,23 +341,19 @@ exports.changeVisibility = async (req, res) => {
     }
 };
 
-// ══════════════════════════════════════════════════════════════
-// INSTITUTE-SCOPED VIEWS
-// ══════════════════════════════════════════════════════════════
-
-// GET /api/questions/institute — All questions in my institute
+// GET /api/questions/institute — All published questions in my institute
 exports.listInstituteQuestions = async (req, res) => {
     try {
         if (!req.user.instituteId) {
             return res.status(400).json({ success: false, message: 'Not linked to an institute' });
         }
 
-        const { page = 1, limit = 20, subject, difficulty, status } = req.query;
-        const filter = { instituteId: req.user.instituteId };
+        const { page = 1, limit = 20, subject, difficulty } = req.query;
+        // HOD views exactly the published questions for their institute
+        const filter = { instituteId: req.user.instituteId, status: 'Published' };
 
         if (subject) filter.subject = new RegExp(subject, 'i');
         if (difficulty) filter.difficulty = difficulty;
-        if (status) filter.approvalStatus = status;
 
         const skip = (parseInt(page) - 1) * parseInt(limit);
         const [questions, total] = await Promise.all([
@@ -378,26 +369,6 @@ exports.listInstituteQuestions = async (req, res) => {
             data: questions,
             pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) }
         });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-};
-
-// GET /api/questions/institute/pending — Pending approval queue
-exports.listPendingQuestions = async (req, res) => {
-    try {
-        if (!req.user.instituteId) {
-            return res.status(400).json({ success: false, message: 'Not linked to an institute' });
-        }
-
-        const questions = await ExamQuestion.find({
-            instituteId: req.user.instituteId,
-            approvalStatus: 'pending'
-        })
-            .populate('createdBy', 'name email role')
-            .sort({ createdAt: -1 });
-
-        res.json({ success: true, data: questions });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
     }

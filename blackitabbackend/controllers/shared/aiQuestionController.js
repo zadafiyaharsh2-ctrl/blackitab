@@ -1,14 +1,13 @@
 const axios = require('axios');
 const ExamQuestion = require('../../models/ExamQuestion');
 
-const LANGCHAIN_API_URL = process.env.LANGCHAIN_API_URL || 'http://127.0.0.1:8000/query';
-
 const VALID_EXAMS = ['jee', 'neet', 'upsc', 'gate', 'cat'];
 
 // POST /api/ai-questions/generate — generate questions and save to ExamQuestion
 const generateQuestions = async (req, res) => {
     try {
-        const { topic, difficulty = 'Medium', count = 5, exam = 'jee' } = req.body;
+        const { topic, difficulty = 'Medium', count = 5, exam = 'jee', format = 'Digital' } = req.body;
+        const LANGCHAIN_API_URL = process.env.LANGCHAIN_API_URL || 'http://127.0.0.1:8000/query';
 
         if (!topic || !topic.trim()) {
             return res.status(400).json({ success: false, message: 'Topic is required' });
@@ -20,6 +19,7 @@ const generateQuestions = async (req, res) => {
 
         const questionCount = Math.min(Math.max(parseInt(count) || 5, 1), 20);
         const validDifficulty = ['Easy', 'Medium', 'Hard'].includes(difficulty) ? difficulty : 'Medium';
+        const validFormat = ['Digital', 'Paper'].includes(format) ? format : 'Digital';
 
 
         const prompt = `
@@ -49,7 +49,9 @@ const generateQuestions = async (req, res) => {
         7. The questions should be of ${validDifficulty} difficulty.
 
         Important:
-        The data for the topics of the questions should first be checked on the provided documents, if you find the related concepts then ask questions based on that, if you don't find the related concepts then ask questions based on your knowledge.
+        The data for the topics of the questions should first be checked on the provided documents. If you find the related concepts then ask questions based on that. 
+        If you DO NOT find the related concepts in the documents, YOU MUST USE YOUR GENERAL KNOWLEDGE to generate the JSON rather than returning an error.
+        DO NOT output any conversational text like "Here is the quiz" or "I could not find the information". OUTPUT ONLY THE JSON OBJECT.
         `;
 
         let quizData;
@@ -90,13 +92,14 @@ const generateQuestions = async (req, res) => {
             }
 
         } catch (apiError) {
-
+            console.error('Inner AI API/Parse Error:', apiError.message || apiError);
             if (apiError.response) {
-
+                console.error('Axios Response Data:', apiError.response.data);
             }
             return res.status(503).json({
                 success: false,
-                message: 'AI service unavailable or failed to generate valid JSON. Please try again.'
+                message: 'AI service unavailable or failed to generate valid JSON. Please try again.',
+                errorDetails: apiError.message
             });
         }
 
@@ -144,11 +147,14 @@ const generateQuestions = async (req, res) => {
                 difficulty: validDifficulty,
                 explanation: q.explanation,
                 isAiGenerated: true,
+                format: validFormat,
+                status: 'Draft',
+                isGlobal: false,
                 createdBy: req.user._id,
                 instituteId: req.user.instituteId || null,
-                visibility: 'public',
-                isPublic: true,
-                approvalStatus: 'approved' // Automatically auto-approve AI generations initially
+                departmentId: req.user.departmentId || null,
+                isModerated: false,
+                isActive: true
             }))
         );
 
@@ -164,8 +170,15 @@ const generateQuestions = async (req, res) => {
             }
         });
     } catch (error) {
-        
-        res.status(500).json({ success: false, message: 'Failed to generate questions' });
+        console.error('AI Generation Error:', error);
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({
+                success: false,
+                message: 'Unable to save generated questions. Please verify your profile setup and try again.',
+                error: error.message
+            });
+        }
+        res.status(500).json({ success: false, message: 'Failed to generate questions', error: error.message });
     }
 };
 

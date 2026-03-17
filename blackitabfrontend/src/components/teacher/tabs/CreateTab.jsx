@@ -32,8 +32,7 @@ const CreateTab = ({ isDark, setActiveTab }) => {
     difficulty: 'Medium',
     explanation: '',
     tags: '',
-    isPublic: true,
-    designatedFor: ['digital']
+    format: 'Digital'
   });
 
   const handleChange = (field, value) => {
@@ -64,9 +63,6 @@ const CreateTab = ({ isDark, setActiveTab }) => {
         tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
         correctAnswer: parseInt(form.correctAnswer),
       };
-      if (payload.designatedFor.length === 0) {
-        payload.designatedFor = ['digital']; // fallback
-      }
       const res = await axios.post(`${API_URL}/api/exams/questions`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -168,46 +164,28 @@ const CreateTab = ({ isDark, setActiveTab }) => {
               className={`w-full px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none ${isDark ? 'bg-white/5 border border-white/10 text-white placeholder-gray-600' : 'bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400'}`} />
           </div>
 
-          {/* Question Type & Visibility */}
+          {/* Question Format */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
             <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Question Type</label>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Question Format</label>
               <div className="flex flex-col sm:flex-row gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" 
-                    checked={form.designatedFor.includes('digital')}
-                    onChange={(e) => {
-                      const newTypes = e.target.checked 
-                        ? [...form.designatedFor, 'digital'] 
-                        : form.designatedFor.filter(t => t !== 'digital');
-                      handleChange('designatedFor', newTypes);
-                    }}
+                  <input type="radio" 
+                    checked={form.format === 'Digital'}
+                    onChange={() => handleChange('format', 'Digital')}
                     className="w-4 h-4 rounded border-gray-300 text-indigo-500 focus:ring-indigo-500" 
                   />
                   <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Digital</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" 
-                    checked={form.designatedFor.includes('paper')}
-                    onChange={(e) => {
-                      const newTypes = e.target.checked 
-                        ? [...form.designatedFor, 'paper'] 
-                        : form.designatedFor.filter(t => t !== 'paper');
-                      handleChange('designatedFor', newTypes);
-                    }}
+                  <input type="radio" 
+                    checked={form.format === 'Paper'}
+                    onChange={() => handleChange('format', 'Paper')}
                     className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500" 
                   />
                   <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Paper</span>
                 </label>
               </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <button type="button" onClick={() => handleChange('isPublic', !form.isPublic)}
-                className={`w-12 h-6 rounded-full transition-all relative ${form.isPublic ? 'bg-emerald-500' : (isDark ? 'bg-gray-700' : 'bg-gray-300')}`}>
-                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all shadow-sm ${form.isPublic ? 'left-6' : 'left-0.5'}`} />
-              </button>
-              <span className="text-sm font-medium text-gray-500">{form.isPublic ? 'Public (visible to all students)' : 'Institute only'}</span>
             </div>
           </div>
 
