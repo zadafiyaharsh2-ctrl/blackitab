@@ -319,6 +319,7 @@ const StudentClassDetail = () => {
   const [attendance, setAttendance] = useState(null);
   const [materials, setMaterials] = useState(null);
   const [assignments, setAssignments] = useState(null);
+  const [exams, setExams] = useState(null);
 
   useEffect(() => {
     fetchClassData();
@@ -330,17 +331,19 @@ const StudentClassDetail = () => {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       
-      const [batchRes, attRes, matRes, assignRes] = await Promise.all([
+      const [batchRes, attRes, matRes, assignRes, examRes] = await Promise.all([
         axios.get(`${API_URL}/api/user/batches/${classId}`, { headers }),
         axios.get(`${API_URL}/api/user/batches/${classId}/attendance`, { headers }),
         axios.get(`${API_URL}/api/user/batches/${classId}/materials`, { headers }).catch(() => ({ data: { data: [] } })),
-        axios.get(`${API_URL}/api/user/batches/${classId}/assignments`, { headers }).catch(() => ({ data: { data: [] } }))
+        axios.get(`${API_URL}/api/user/batches/${classId}/assignments`, { headers }).catch(() => ({ data: { data: [] } })),
+        axios.get(`${API_URL}/api/user/batches/${classId}/exams`, { headers }).catch(() => ({ data: { data: [] } }))
       ]);
       
       if (batchRes.data.success) setBatch(batchRes.data.data);
       if (attRes.data.success) setAttendance(attRes.data.data);
       if (matRes.data.success) setMaterials(matRes.data.data);
       if (assignRes.data.success) setAssignments(assignRes.data.data);
+      if (examRes.data.success) setExams(examRes.data.data);
     } catch (err) {
       console.error(err);
       toast.error('Failed to load class details');
@@ -454,6 +457,16 @@ const StudentClassDetail = () => {
           >
             <FaClipboardList /> Assignments ({assignments?.length || 0})
           </button>
+          <button
+            onClick={() => setActiveTab('exams')}
+            className={`flex-1 py-4 text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'exams'
+                ? 'text-blue-600 bg-white border-b-2 border-blue-600 dark:bg-white/[0.05] dark:text-blue-400 dark:border-blue-400 shadow-[0_4px_0_0_transparent]'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-white/[0.02]'
+            }`}
+          >
+            <FaFileAlt /> Exams ({exams?.length || 0})
+          </button>
         </div>
 
         {/* Tab Content */}
@@ -510,6 +523,49 @@ const StudentClassDetail = () => {
                   <FaBookOpen className="text-4xl text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                   <p className="font-semibold text-gray-700 dark:text-gray-300">No class materials yet</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Teachers haven't added any study materials for this class.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Exams View */}
+          {activeTab === 'exams' && (
+            <div className="p-6">
+              {exams?.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {exams.map(exam => (
+                    <div 
+                      key={exam._id} 
+                      onClick={() => navigate(`/classes/${classId}/exam/${exam._id}`)}
+                      className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-500/50 transition-all group cursor-pointer flex flex-col h-full"
+                    >
+                      <div className="flex items-start gap-4 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0 group-hover:scale-105 transition-transform">
+                          <FaFileAlt />
+                        </div>
+                        <div className="flex-1 min-w-0 pt-1">
+                          <h3 className="font-bold text-gray-900 dark:text-white text-base truncate group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">{exam.title}</h3>
+                          <div className="flex gap-3 text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
+                            <span>Points: {exam.totalMarks}</span>
+                            <span>Time: {exam.duration}m</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {exam.description && <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2 leading-relaxed flex-grow">{exam.description}</p>}
+                      
+                      <div className="mt-auto pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Scheduled: {exam.scheduledAt ? new Date(exam.scheduledAt).toLocaleString() : 'TBD'}</span>
+                        <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 group-hover:underline">View Exam &rarr;</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-gray-200 dark:border-white/10 rounded-2xl py-16 text-center">
+                  <FaFileAlt className="text-4xl text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                  <p className="font-semibold text-gray-700 dark:text-gray-300">No upcoming exams</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Teachers haven't scheduled any exams for this class.</p>
                 </div>
               )}
             </div>

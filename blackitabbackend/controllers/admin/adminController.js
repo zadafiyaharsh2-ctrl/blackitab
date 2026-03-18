@@ -9,6 +9,15 @@ const Contest = require('../../models/Contest');
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET;
+const ADMIN_ROLE_CHANGE_ERROR = 'Only teacher <-> hod role changes are allowed.';
+
+const normalizeRoleValue = (role) => String(role || '').trim().toLowerCase();
+
+const canAdminChangeRole = (currentRole, nextRole) => {
+    if (!nextRole) return false;
+    if (currentRole === nextRole) return true;
+    return (currentRole === 'teacher' && nextRole === 'hod') || (currentRole === 'hod' && nextRole === 'teacher');
+};
 
 // ══════════════════════════════════════════════════════════════
 // AUTH
@@ -164,23 +173,27 @@ exports.getUserById = async (req, res) => {
 // PUT /api/admin/users/:id/role
 exports.changeUserRole = async (req, res) => {
     try {
-        const { role } = req.body;
-        const validRoles = ['student', 'teacher', 'hod', 'institute'];
-        if (!validRoles.includes(role)) {
-            return res.status(400).json({ success: false, message: `Invalid role. Must be: ${validRoles.join(', ')}` });
+        const requestedRole = normalizeRoleValue(req.body.role);
+        if (!requestedRole) {
+            return res.status(400).json({ success: false, message: 'Role is required' });
         }
 
-        const user = await User.findByIdAndUpdate(
-            req.params.id,
-            { role },
-            { new: true, runValidators: true }
-        ).select('-password');
-
+        const user = await User.findById(req.params.id).select('-password');
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        res.json({ success: true, message: `Role updated to ${role}`, data: user });
+        const currentRole = normalizeRoleValue(user.role);
+        if (!canAdminChangeRole(currentRole, requestedRole)) {
+            return res.status(403).json({ success: false, message: ADMIN_ROLE_CHANGE_ERROR });
+        }
+
+        if (requestedRole !== currentRole) {
+            user.role = requestedRole;
+            await user.save();
+        }
+
+        res.json({ success: true, message: `Role updated to ${requestedRole}`, data: user });
     } catch (error) {
         
         res.status(500).json({ success: false, message: 'Server error' });
@@ -487,6 +500,20 @@ exports.editUserFull = async (req, res) => {
         const updates = { ...req.body };
         delete updates.password;
 
+        const existingUser = await User.findById(req.params.id);
+        if (!existingUser) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        if (updates.role !== undefined) {
+            const requestedRole = normalizeRoleValue(updates.role);
+            const currentRole = normalizeRoleValue(existingUser.role);
+            if (!canAdminChangeRole(currentRole, requestedRole)) {
+                return res.status(403).json({ success: false, message: ADMIN_ROLE_CHANGE_ERROR });
+            }
+            updates.role = requestedRole;
+        }
+
         // Handle institute mapping manually to ensure consistency
         if (updates.instituteCode !== undefined) {
             if (updates.instituteCode === '' || updates.instituteCode === null) {
@@ -507,10 +534,6 @@ exports.editUserFull = async (req, res) => {
             { $set: updates },
             { new: true, runValidators: true }
         ).select('-password');
-
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
 
         res.json({ success: true, message: 'System Admin: User entirely updated', data: user });
     } catch (error) {
@@ -652,10 +675,24 @@ exports.editUser = async (req, res) => {
         const allowedFields = ['name', 'email', 'role', 'bio', 'points', 'xp', 'streak', 'isVerified', 'isPrivate', 'batchYear', 'division'];
         const updates = {};
 
+        const existingUser = await User.findById(req.params.id);
+        if (!existingUser) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
         for (const field of allowedFields) {
             if (req.body[field] !== undefined) {
                 updates[field] = req.body[field];
             }
+        }
+
+        if (updates.role !== undefined) {
+            const requestedRole = normalizeRoleValue(updates.role);
+            const currentRole = normalizeRoleValue(existingUser.role);
+            if (!canAdminChangeRole(currentRole, requestedRole)) {
+                return res.status(403).json({ success: false, message: ADMIN_ROLE_CHANGE_ERROR });
+            }
+            updates.role = requestedRole;
         }
 
         // Handle institute code change
@@ -682,10 +719,6 @@ exports.editUser = async (req, res) => {
             { $set: updates },
             { new: true, runValidators: true }
         ).select('-password');
-
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
 
         res.json({ success: true, message: 'User updated', data: user });
     } catch (error) {
