@@ -82,7 +82,6 @@ import InstituteProfile from './pages/institute/InstituteProfile';
 import InstituteDepartments from './pages/institute/InstituteDepartments';
 import TeacherPanel from './pages/institute/TeacherPanel';
 import StudentPanel from './pages/institute/StudentPanel';
-import StudentProfileView from './pages/institute/StudentProfileView';
 import TheoryChecking from './pages/institute/TheoryChecking';
 import QuestionChecker from './pages/institute/QuestionChecker';
 import JoinRequestsPanel from './pages/institute/JoinRequestsPanel';
@@ -110,20 +109,101 @@ function App() {
     typeof window === 'undefined' ? true : window.innerWidth >= SIDEBAR_BREAKPOINT
   )); // Expanded on desktop, hidden on mobile
 
+  const parseStoredUser = () => {
+    try {
+      const raw = localStorage.getItem('user');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const normalizeUserShape = (serverUser, fallbackUser = {}) => {
+    const merged = { ...fallbackUser, ...(serverUser || {}) };
+    const resolvedId = serverUser?._id || serverUser?.id || fallbackUser?._id || fallbackUser?.id;
+    if (resolvedId) {
+      merged._id = resolvedId;
+      merged.id = resolvedId;
+    }
+    return merged;
+  };
+
   // ============================================================================
   // INITIALIZATION
   // ============================================================================
-  // Check for saved token on app load (runs once)
+  // Sync authenticated user from server so admin-side edits are reflected.
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
+    let isActive = true;
 
-    if (token && userData) {
-      // Restore user session if token exists
-      setUser(JSON.parse(userData));
-    }
-    // Finished loading check
-    setLoading(false);
+    const applyUser = (nextUser) => {
+      if (!isActive) return;
+      if (nextUser) {
+        localStorage.setItem('user', JSON.stringify(nextUser));
+        setUser(nextUser);
+      } else {
+        localStorage.removeItem('user');
+        setUser(null);
+      }
+    };
+
+    const syncCurrentUser = async ({ initial = false } = {}) => {
+      const token = localStorage.getItem('token');
+      const storedUser = parseStoredUser();
+
+      if (!token) {
+        applyUser(null);
+        if (initial && isActive) setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/api/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          applyUser(null);
+          if (initial && isActive) setLoading(false);
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(`Failed to sync user: ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const normalizedUser = normalizeUserShape(payload?.user, storedUser || {});
+        applyUser(normalizedUser);
+      } catch {
+        // Fallback to locally cached user if network issues occur.
+        if (storedUser) {
+          setUser(storedUser);
+        } else {
+          applyUser(null);
+        }
+      } finally {
+        if (initial && isActive) setLoading(false);
+      }
+    };
+
+    syncCurrentUser({ initial: true });
+
+    const onFocus = () => syncCurrentUser();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        syncCurrentUser();
+      }
+    };
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      isActive = false;
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   // Handlers to update state after login/signup
@@ -829,11 +909,6 @@ function App() {
             {/* Institute — Teacher Performance (reuses same component) */}
             <Route path="/institute/teacher/:teacherId"
               element={<ProtectedRoute requiredRoles={['institute', 'hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TeacherPerformance /></MainLayout></ProtectedRoute>}
-            />
-
-            {/* Institute — Student Profile */}
-            <Route path="/institute/student/:studentId"
-              element={<ProtectedRoute requiredRoles={['institute', 'hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><StudentProfileView /></MainLayout></ProtectedRoute>}
             />
 
             {/* System Admin — separate layout (no sidebar) */}

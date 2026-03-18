@@ -20,6 +20,7 @@ const StudentPanel = () => {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [institute, setInstitute] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -29,9 +30,8 @@ const StudentPanel = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: '',
     batchYear: '',
-    departments: ''
+    department: ''
   });
   const [saving, setSaving] = useState(false);
 
@@ -49,14 +49,20 @@ const StudentPanel = () => {
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/institute/members');
-      if (res.data.success) {
-        const studs = res.data.data.filter(m => m.role === 'student');
+      const [membersRes, instRes] = await Promise.all([
+        api.get('/institute/members'),
+        api.get('/institute/my')
+      ]);
+      if (membersRes.data.success) {
+        const studs = membersRes.data.data.filter(m => m.role === 'student');
         setStudents(studs);
         setFilteredStudents(studs);
       }
+      if (instRes.data.success) {
+        setInstitute(instRes.data.data);
+      }
     } catch (error) {
-      CustomToast.error('Failed to load students');
+      CustomToast.error('Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -93,15 +99,15 @@ const StudentPanel = () => {
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.password) return CustomToast.error('Name, email, and password are required');
+    if (!formData.name || !formData.email) return CustomToast.error('Name and email are required');
     setSaving(true);
     try {
-      const payload = { ...formData, role: 'student', departments: formData.departments.split(',').map(d => d.trim()).filter(d => d) };
+      const payload = { ...formData, role: 'student', departments: formData.department ? [formData.department] : [] };
       const res = await api.post('/institute/members', payload);
       if (res.data.success) {
         CustomToast.success(res.data.message);
         setIsAddModalOpen(false);
-        setFormData({ name: '', email: '', password: '', batchYear: '', departments: '' });
+        setFormData({ name: '', email: '', batchYear: '', department: '' });
         fetchStudents();
       }
     } catch (error) {
@@ -111,7 +117,7 @@ const StudentPanel = () => {
 
   const openEditModal = (student) => {
     setEditingStudent(student);
-    setFormData({ batchYear: student.batchYear || '', departments: student.departments ? student.departments.join(', ') : '' });
+    setFormData({ batchYear: student.batchYear || '', department: (student.departments && student.departments.length > 0) ? student.departments[0] : '' });
     setIsEditModalOpen(true);
   };
 
@@ -119,7 +125,7 @@ const StudentPanel = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      const payload = { batchYear: formData.batchYear, departments: formData.departments.split(',').map(d => d.trim()).filter(d => d) };
+      const payload = { batchYear: formData.batchYear, departments: formData.department ? [formData.department] : [] };
       const res = await api.put(`/institute/members/${editingStudent._id}/role`, payload);
       if (res.data.success) {
         CustomToast.success('Student updated successfully');
@@ -176,7 +182,7 @@ const StudentPanel = () => {
           </div>
           {user?.role === 'institute' && (
             <button
-              onClick={() => { setFormData({ name: '', email: '', password: '', batchYear: '', departments: '' }); setIsAddModalOpen(true); }}
+              onClick={() => { setFormData({ name: '', email: '', batchYear: '', department: '' }); setIsAddModalOpen(true); }}
               className="px-3 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold flex items-center gap-1.5 shrink-0"
             >
               <PlusIcon className="w-4 h-4" /> Add Student
@@ -294,24 +300,31 @@ const StudentPanel = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address *</label>
                 <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className={inputCls} placeholder="student@example.com" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Temporary Password *</label>
-                <input type="password" required value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className={inputCls} placeholder="Min 6 characters" />
-              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Batch Year</label>
-                  <input type="text" value={formData.batchYear} onChange={e => setFormData({...formData, batchYear: e.target.value})} className={inputCls} placeholder="2024" />
+                  <select value={formData.batchYear} onChange={e => setFormData({...formData, batchYear: e.target.value})} className={inputCls}>
+                    <option value="">Select Year</option>
+                    {Array.from({ length: 15 }, (_, i) => new Date().getFullYear() - 5 + i).map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Departments</label>
-                  <input type="text" value={formData.departments} onChange={e => setFormData({...formData, departments: e.target.value})} className={inputCls} placeholder="CS, IT" />
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Department</label>
+                  <select value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} className={inputCls}>
+                    <option value="">Select Department</option>
+                    {institute?.departments?.map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-gray-600 dark:text-gray-400">Cancel</button>
                 <button type="submit" disabled={saving} className="flex-1 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold disabled:opacity-50">
-                  {saving ? 'Creating...' : 'Create Student'}
+                  {saving ? 'Adding...' : 'Add Student'}
                 </button>
               </div>
             </form>
@@ -336,11 +349,21 @@ const StudentPanel = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Batch Year</label>
-                <input type="text" value={formData.batchYear} onChange={e => setFormData({...formData, batchYear: e.target.value})} className={inputCls} placeholder="2024" />
+                <select value={formData.batchYear} onChange={e => setFormData({...formData, batchYear: e.target.value})} className={inputCls}>
+                  <option value="">Select Year</option>
+                  {Array.from({ length: 15 }, (_, i) => new Date().getFullYear() - 5 + i).map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Departments (comma separated)</label>
-                <input type="text" value={formData.departments} onChange={e => setFormData({...formData, departments: e.target.value})} className={inputCls} placeholder="Computer Science, Mathematics" />
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Department</label>
+                <select value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} className={inputCls}>
+                  <option value="">Select Department</option>
+                  {institute?.departments?.map(dept => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-gray-600 dark:text-gray-400">Cancel</button>

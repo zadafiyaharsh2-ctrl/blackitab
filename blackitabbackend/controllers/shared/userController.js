@@ -6,6 +6,7 @@ const Attendance = require('../../models/Attendance');
 const ClassMaterial = require('../../models/ClassMaterial');
 const Assignment = require('../../models/Assignment');
 const AssignmentSubmission = require('../../models/AssignmentSubmission');
+const Exam = require('../../models/Exam');
 
 exports.updateProfile = async (req, res) => {
     try {
@@ -327,6 +328,89 @@ exports.getClassAssignments = async (req, res) => {
         res.json({ success: true, data: assignments });
     } catch (error) {
         console.error('getClassAssignments Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+/**
+ * GET /api/user/batches/:batchId/exams
+ * Returns scheduled exams for a batch the student is enrolled in.
+ */
+exports.getClassExams = async (req, res) => {
+    try {
+        const { batchId } = req.params;
+        const studentId = req.user._id;
+
+        const batch = await Batch.findOne({ _id: batchId, studentIds: studentId });
+        if (!batch) return res.status(403).json({ success: false, message: 'You are not enrolled in this class' });
+
+        const exams = await Exam.find({ batchId: batch._id, status: { $ne: 'draft' } })
+            .populate('teacherId', 'name email profileImage')
+            .sort({ scheduledAt: -1, createdAt: -1 });
+
+        res.json({ success: true, data: exams });
+    } catch (error) {
+        console.error('getClassExams Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+/**
+ * GET /api/user/upcoming-exams
+ * Returns upcoming exams for a student across all enrolled batches.
+ */
+exports.getUpcomingExams = async (req, res) => {
+    try {
+        const studentId = req.user._id;
+
+        // Find all batches the student is enrolled in
+        const batches = await Batch.find({ studentIds: studentId }).select('_id');
+        const batchIds = batches.map(b => b._id);
+
+        if (!batchIds.length) {
+            return res.json({ success: true, data: [] });
+        }
+
+        // Find upcoming exams for these batches
+        const now = new Date();
+        const exams = await Exam.find({ 
+            batchId: { $in: batchIds }, 
+            status: { $in: ['scheduled', 'ongoing'] },
+            scheduledAt: { $gte: now }
+        })
+        .populate('batchId', 'name classCode')
+        .populate('teacherId', 'name email profileImage')
+        .sort({ scheduledAt: 1 })
+        .limit(5); // Adjust limit as needed
+
+        res.json({ success: true, data: exams });
+    } catch (error) {
+        console.error('getUpcomingExams Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+/**
+ * GET /api/user/batches/:batchId/exams/:examId
+ * Returns the specific exam details and its batches/teachers
+ */
+exports.getClassExamDetail = async (req, res) => {
+    try {
+        const { batchId, examId } = req.params;
+        const studentId = req.user._id;
+
+        const batch = await Batch.findOne({ _id: batchId, studentIds: studentId });
+        if (!batch) return res.status(403).json({ success: false, message: 'You are not enrolled in this class' });
+
+        const exam = await Exam.findOne({ _id: examId, batchId: batch._id })
+            .populate('teacherId', 'name email profileImage')
+            .populate('batchId', 'name year section classCode');
+
+        if (!exam) return res.status(404).json({ success: false, message: 'Exam not found for this class' });
+
+        res.json({ success: true, data: exam });
+    } catch (error) {
+        console.error('getClassExamDetail Error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

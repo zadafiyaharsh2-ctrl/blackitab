@@ -8,6 +8,26 @@ const UsersTab = ({
   filteredUsers, handleRoleChange, handleBan, setSelectedTeacherForFeedback, setIsFeedbackModalOpen, openDeleteModal,
   Pagination, userPagination, userPage, setUserPage
 }) => {
+  const normalizeRole = (role) => String(role || '').trim().toLowerCase();
+
+  const formatRoleLabel = (role) => {
+    const normalized = normalizeRole(role);
+    if (normalized === 'hod') return 'HOD';
+    if (normalized === 'institute_admin') return 'Institute Admin';
+    if (normalized === 'institute') return 'Institute';
+    if (!normalized) return 'Unknown';
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  };
+
+  const getRoleOptions = (currentRole) => {
+    const normalized = normalizeRole(currentRole);
+    if (normalized === 'teacher') return ['teacher', 'hod'];
+    if (normalized === 'hod') return ['hod', 'teacher'];
+    return [normalized || 'student'];
+  };
+
+  const isRoleLocked = (currentRole) => !['teacher', 'hod'].includes(normalizeRole(currentRole));
+
   return (
     <div>
       <div className="flex gap-3 mb-4">
@@ -120,13 +140,19 @@ const UsersTab = ({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Role</label>
-                      <select value={editUserModal.role || 'student'} onChange={e => setEditUserModal({ ...editUserModal, role: e.target.value })}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-blue-500/50">
-                        <option value="student" className="bg-gray-900">Student</option>
-                        <option value="teacher" className="bg-gray-900">Teacher</option>
-                        <option value="hod" className="bg-gray-900">HOD</option>
-                        <option value="institute" className="bg-gray-900">Institute Admin</option>
+                      <select
+                        value={editUserModal.role || 'student'}
+                        disabled={isRoleLocked(editUserModal.role)}
+                        onChange={e => setEditUserModal({ ...editUserModal, role: e.target.value })}
+                        className={`w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none ${isRoleLocked(editUserModal.role) ? 'opacity-70 cursor-not-allowed' : 'focus:border-blue-500/50'}`}
+                      >
+                        {getRoleOptions(editUserModal.role).map(r => (
+                          <option key={r} value={r} className="bg-gray-900">{formatRoleLabel(r)}</option>
+                        ))}
                       </select>
+                      {isRoleLocked(editUserModal.role) && (
+                        <p className="text-[11px] text-amber-400 mt-1">Role locked. Only Teacher and HOD can be switched.</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Institute Code</label>
@@ -237,12 +263,19 @@ const UsersTab = ({
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <select value={u.role} onChange={e => handleRoleChange(u._id, e.target.value)}
-                    className="px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-300 outline-none capitalize cursor-pointer">
-                    {['student', 'teacher', 'hod', 'institute'].map(r => (
-                      <option key={r} value={r} className="bg-gray-900 capitalize">{r.replace('_', ' ')}</option>
+                  <select
+                    value={u.role}
+                    disabled={isRoleLocked(u.role)}
+                    onChange={e => handleRoleChange(u._id, e.target.value)}
+                    className={`px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-300 outline-none ${isRoleLocked(u.role) ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                  >
+                    {getRoleOptions(u.role).map(r => (
+                      <option key={r} value={r} className="bg-gray-900">{formatRoleLabel(r)}</option>
                     ))}
                   </select>
+                  {isRoleLocked(u.role) && (
+                    <p className="text-[10px] text-amber-400 mt-1">Locked</p>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-gray-400 text-xs">{u.instituteId?.name || '— Independent —'}</td>
                 <td className="px-4 py-3">

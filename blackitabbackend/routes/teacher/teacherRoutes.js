@@ -64,6 +64,7 @@ router.put('/content/:id/visibility', teacherController.changeContentVisibility)
 
 // ── Phase 9: HOD Department Monitoring (requireMinRole('hod') enforced in controller as extra check) ──
 router.get('/department/teachers', requireMinRole('hod'), teacherController.getDepartmentTeachers);
+router.get('/department/batches', requireMinRole('hod'), teacherController.getDepartmentBatches);
 router.get('/department/analytics', requireMinRole('hod'), teacherController.getDepartmentAnalytics);
 router.get('/department/teacher/:id/detail', requireMinRole('hod'), teacherController.getDepartmentTeacherDetail);
 router.get('/department/feedback', requireMinRole('hod'), teacherController.getDepartmentFeedback);

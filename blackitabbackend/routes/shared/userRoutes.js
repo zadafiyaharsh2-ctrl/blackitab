@@ -51,6 +51,15 @@ router.get('/batches/:batchId/materials', protect, userController.getClassMateri
 // GET /api/user/batches/:batchId/assignments — student's class assignments for a batch
 router.get('/batches/:batchId/assignments', protect, userController.getClassAssignments);
 
+// GET /api/user/batches/:batchId/exams — student's scheduled exams for a batch
+router.get('/batches/:batchId/exams', protect, userController.getClassExams);
+
+// GET /api/user/batches/:batchId/exams/:examId — student's specific exam detail
+router.get('/batches/:batchId/exams/:examId', protect, userController.getClassExamDetail);
+
+// GET /api/user/upcoming-exams - student's upcoming exams across all batches
+router.get('/upcoming-exams', protect, userController.getUpcomingExams);
+
 // GET /api/user/assignments/:id — details of assignment and submission
 router.get('/assignments/:id', protect, userController.getAssignmentDetail);
 

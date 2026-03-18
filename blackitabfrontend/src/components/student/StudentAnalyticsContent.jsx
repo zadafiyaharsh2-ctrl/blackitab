@@ -212,6 +212,7 @@ const StudentAnalyticsContent = () => {
   const [classCodeInput, setClassCodeInput] = useState('');
   const [joiningClass, setJoiningClass] = useState(false);
   const [joinedBatchCount, setJoinedBatchCount] = useState(0);
+  const [upcomingExams, setUpcomingExams] = useState([]);
   const [problemOfTheDay, setProblemOfTheDay] = useState({
     title: 'Find the second highest salary using SQL',
     difficulty: 'Medium',
@@ -266,6 +267,13 @@ const StudentAnalyticsContent = () => {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (batchesRes.data.success) setJoinedBatchCount(batchesRes.data.data.length);
+        } catch {}
+
+        try {
+          const examsRes = await axios.get(`${API_URL}/api/user/upcoming-exams`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (examsRes.data.success) setUpcomingExams(examsRes.data.data);
         } catch {}
       } catch {
       } finally {
@@ -366,6 +374,34 @@ const StudentAnalyticsContent = () => {
         <StatCard icon={Flame} title="Current Streak" value={stats.currentStreak} change={stats.streakChange} suffix=" days" />
         <StatCard icon={Clock} title="Study Time" value={studyTimeDisplay} change={stats.hoursChange} suffix={studyTimeSuffix} />
       </div>
+
+      {/* ── Upcoming Exams Announcement Widget ── */}
+      {upcomingExams.length > 0 && (
+        <div className="border border-blue-200 dark:border-blue-500/20 bg-blue-50/50 dark:bg-blue-500/5 rounded-xl p-5 mb-4 shadow-sm">
+           <div className="flex items-center justify-between mb-4">
+             <h3 className="text-sm font-bold text-blue-900 dark:text-blue-400 uppercase tracking-widest flex items-center gap-2">
+               <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+               Upcoming Scheduled Exams
+             </h3>
+           </div>
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {upcomingExams.map((exam) => (
+                 <Link key={exam._id} to={`/classes/${exam.batchId._id}/exam/${exam._id}`} className="block p-4 border border-blue-100 dark:border-blue-500/10 bg-white dark:bg-[#000000]/30 rounded-xl hover:shadow-md hover:border-blue-300 dark:hover:border-blue-500/40 transition-all group">
+                   <div className="flex items-start gap-4">
+                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white shrink-0 shadow-sm group-hover:scale-110 transition-transform">
+                       <Clock className="h-5 w-5" />
+                     </div>
+                     <div>
+                       <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-0.5 truncate max-w-[150px]">{exam.batchId?.name || 'Your Class'}</p>
+                       <h4 className="text-sm font-bold text-gray-900 dark:text-white capitalize group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate max-w-[150px]">{exam.title}</h4>
+                       <p className="text-xs text-gray-500 mt-1">{new Date(exam.scheduledAt).toLocaleString()}</p>
+                     </div>
+                   </div>
+                 </Link>
+              ))}
+           </div>
+        </div>
+      )}
 
       {/* ── Daily Challenge (Interactive Card) + Quick Actions ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
