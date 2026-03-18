@@ -798,17 +798,13 @@ exports.editContest = async (req, res) => {
 
         // Handle question IDs update
         if (req.body.questionIds !== undefined) {
-            updates.questions = req.body.questionIds;
-        }
-
-        if (Object.keys(updates).length === 0) {
-            return res.status(400).json({ success: false, message: 'No valid fields to update' });
+             updates.questions = req.body.questionIds;
         }
 
         const contest = await Contest.findByIdAndUpdate(
             req.params.id,
             { $set: updates },
-            { new: true }
+            { new: true, runValidators: true }
         );
 
         if (!contest) {
@@ -821,6 +817,7 @@ exports.editContest = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
 
 // ══════════════════════════════════════════════════════════════
 // PHASE E: GLOBAL PARITY (INSTITUTES & ANALYTICS)
@@ -990,5 +987,43 @@ exports.deleteMaterial = async (req, res) => {
     } catch (error) {
         console.error('Delete Admin Material Error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
+// BUG REPORT / TICKET MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+const BugReport = require('../../models/BugReport');
+
+// GET /api/admin/bugs
+exports.getAllBugs = async (req, res) => {
+    try {
+        const bugs = await BugReport.find()
+            .populate('user', 'name email role profileImage')
+            .sort({ status: 1, createdAt: -1 }); // Open bugs first, then newest
+        res.json({ success: true, data: bugs });
+    } catch (error) {
+        console.error('Error fetching bugs:', error);
+        res.status(500).json({ success: false, message: 'Server error fetching bugs' });
+    }
+};
+
+// PUT /api/admin/bugs/:id
+exports.updateBug = async (req, res) => {
+    try {
+        const { status, adminFeedback } = req.body;
+        const bug = await BugReport.findById(req.params.id);
+        
+        if (!bug) return res.status(404).json({ success: false, message: 'Bug not found' });
+
+        if (status) bug.status = status;
+        if (adminFeedback !== undefined) bug.adminFeedback = adminFeedback;
+
+        await bug.save();
+
+        res.json({ success: true, message: 'Bug updated successfully', data: bug });
+    } catch (error) {
+        console.error('Error updating bug:', error);
+        res.status(500).json({ success: false, message: 'Server error updating bug' });
     }
 };
