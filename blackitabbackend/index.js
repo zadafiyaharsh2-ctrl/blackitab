@@ -38,6 +38,10 @@ const questionRoutes = require('./routes/shared/questionRoutes');
 const teacherRoutes = require('./routes/teacher/teacherRoutes');
 const adminChatRoutes = require('./routes/admin/adminChatRoutes');
 const feedbackRoutes = require('./routes/shared/feedbackRoutes');
+const bugRoutes = require('./routes/shared/bugRoutes');
+
+// --- Caching ---
+const cache = require('./middleware/cacheMiddleware');
 
 // --- Server Setup ---
 
@@ -132,16 +136,16 @@ app.get('/api/topics/:id/full', theoryController.getTopicFullContent);
 // --- Mounted Route Modules ---
 
 app.use('/api/progress', progressRoutes);
-app.use('/api/problems', problemRoutes);
-app.use('/api/social', socialRoutes);
+app.use('/api/problems', cache(60), problemRoutes); // Cache for 60s
+app.use('/api/social', cache(30), socialRoutes); // Cache for 30s
 app.use('/api/messages', messageRoutes);
-app.use('/api/posts', postRoutes);
+app.use('/api/posts', cache(30), postRoutes); // Cache for 30s
 app.use('/api/user', userRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/ai-questions', aiQuestionRoutes);
-app.use('/api/institute', instituteRoutes);
+app.use('/api/institute', cache(120), instituteRoutes); // Cache for 2 mins
 app.use('/api/attempts', attemptRoutes);
-app.use('/api/analytics', analyticsRoutes);
+app.use('/api/analytics', cache(120), analyticsRoutes); // Cache heavy analytics for 2 mins
 app.use('/api/admin', adminRoutes);
 app.use('/api/exams', examRoutes);
 app.use('/api/contests', contestRoutes);
@@ -149,6 +153,7 @@ app.use('/api/questions', questionRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/admin-chat', adminChatRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/bugs', bugRoutes);
 
 // --- GET /api/me — Current User (protected) ---
 
