@@ -4,6 +4,8 @@ const ExamQuestion = require('../../models/ExamQuestion');
 const Post = require('../../models/Post');
 const Attempt = require('../../models/Attempt');
 const JoinRequest = require('../../models/JoinRequest');
+const AssignmentSubmission = require('../../models/AssignmentSubmission');
+const ExamResult = require('../../models/ExamResult');
 
 // GET /api/institute/verify/:code
 exports.verifyCode = async (req, res) => {
@@ -198,9 +200,15 @@ exports.getMembers = async (req, res) => {
             const instId = req.user.instituteId;
             if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
 
-            const { name, email, password, role, batchYear, departments } = req.body;
-            if (!name || !email || !password) {
-                return res.status(400).json({ success: false, message: 'Name, email, and password are required' });
+            const { name, email, role, batchYear, departments } = req.body;
+            let { password } = req.body;
+            if (!name || !email) {
+                return res.status(400).json({ success: false, message: 'Name and email are required' });
+            }
+
+            // Assign a default password if not provided
+            if (!password) {
+                password = '123456';
             }
 
         // Fetch Institute to get the code
@@ -985,10 +993,43 @@ exports.deleteInstituteMaterial = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Material not found in your institute' });
         }
 
+
         await ClassMaterial.findByIdAndDelete(req.params.id);
         res.json({ success: true, message: 'Material deleted' });
     } catch (error) {
         console.error('Delete Institute Material Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// GET /api/institute/student/:id/detail — Full student profile for institute view
+exports.getStudentDetail = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        const student = await User.findOne({ _id: req.params.id, instituteId: instId }).select('-password');
+        if (!student) return res.status(404).json({ success: false, message: 'Student not found in your institute' });
+
+        const [attemptCount, correctCount, submissions, examResults] = await Promise.all([
+            Attempt.countDocuments({ userId: student._id }),
+            Attempt.countDocuments({ userId: student._id, isCorrect: true }),
+            AssignmentSubmission.find({ studentId: student._id })
+                .populate({ path: 'assignmentId', select: 'title totalMarks' })
+                .sort({ submittedAt: -1 })
+                .limit(20),
+            ExamResult.find({ studentId: student._id })
+                .populate({ path: 'examId', select: 'title totalMarks scheduledAt' })
+                .sort({ submittedAt: -1 })
+                .limit(20)
+        ]);
+
+        const accuracy = attemptCount > 0 ? Math.round((correctCount / attemptCount) * 100) : 0;
+
+        res.json({
+            success: true,
+            data: { student, attemptCount, correctCount, accuracy, submissions, examResults }
+        });
+    } catch (error) {
+        console.error('Get Student Detail Error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

@@ -65,4 +65,7 @@ router.post('/batch/:batchId/materials', requireRole('institute', 'hod'), instit
 router.put('/material/:id', requireRole('institute', 'hod'), instituteController.updateInstituteMaterial);
 router.delete('/material/:id', requireRole('institute', 'hod'), instituteController.deleteInstituteMaterial);
 
+// ── Student Detail View ──
+router.get('/student/:id/detail', requireRole('institute', 'hod'), instituteController.getStudentDetail);
+
 module.exports = router;

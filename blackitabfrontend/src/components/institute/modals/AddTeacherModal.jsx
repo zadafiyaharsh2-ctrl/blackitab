@@ -22,10 +22,7 @@ const AddTeacherModal = ({ isOpen, onClose, onSubmit, formData, setFormData, inp
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
             <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className={inputCls} />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
-            <input type="password" required minLength="6" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className={inputCls} />
-          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
             <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className={inputCls}>

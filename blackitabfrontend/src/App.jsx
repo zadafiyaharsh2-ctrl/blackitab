@@ -82,6 +82,7 @@ import InstituteProfile from './pages/institute/InstituteProfile';
 import InstituteDepartments from './pages/institute/InstituteDepartments';
 import TeacherPanel from './pages/institute/TeacherPanel';
 import StudentPanel from './pages/institute/StudentPanel';
+import StudentProfileView from './pages/institute/StudentProfileView';
 import TheoryChecking from './pages/institute/TheoryChecking';
 import QuestionChecker from './pages/institute/QuestionChecker';
 import JoinRequestsPanel from './pages/institute/JoinRequestsPanel';
@@ -828,6 +829,11 @@ function App() {
             {/* Institute — Teacher Performance (reuses same component) */}
             <Route path="/institute/teacher/:teacherId"
               element={<ProtectedRoute requiredRoles={['institute', 'hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TeacherPerformance /></MainLayout></ProtectedRoute>}
+            />
+
+            {/* Institute — Student Profile */}
+            <Route path="/institute/student/:studentId"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><StudentProfileView /></MainLayout></ProtectedRoute>}
             />
 
             {/* System Admin — separate layout (no sidebar) */}

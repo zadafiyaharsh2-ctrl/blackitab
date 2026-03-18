@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import {
   UsersIcon,
@@ -13,6 +14,7 @@ import { CustomToast } from '../../utils/CustomToast';
 import SimpleConfirmationModal from '../../components/shared/SimpleConfirmationModal';
 
 const StudentPanel = () => {
+  const navigate = useNavigate();
   const userDataStr = localStorage.getItem('user');
   const user = userDataStr ? JSON.parse(userDataStr) : null;
   const [students, setStudents] = useState([]);
@@ -22,9 +24,7 @@ const StudentPanel = () => {
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
-  const [viewingStudent, setViewingStudent] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -216,7 +216,7 @@ const StudentPanel = () => {
                       <tr
                         key={s._id}
                         className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer"
-                        onClick={() => { setViewingStudent(s); setIsViewModalOpen(true); }}
+                        onClick={() => navigate(`/institute/student/${s._id}`)}
                       >
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-3">
@@ -353,58 +353,7 @@ const StudentPanel = () => {
         </div>
       )}
 
-      {/* View Student Modal */}
-      {isViewModalOpen && viewingStudent && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setIsViewModalOpen(false)}>
-          <div className="w-full max-w-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-xl shadow-xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/5">
-              <h2 className="font-semibold text-gray-900 dark:text-white">Student Details</h2>
-              <button onClick={() => setIsViewModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-white">
-                <XMarkIcon className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-5">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-12 h-12 rounded-xl bg-gray-900 dark:bg-white flex items-center justify-center text-white dark:text-gray-900 text-xl font-bold shrink-0">
-                  {viewingStudent.name.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <p className="font-bold text-gray-900 dark:text-white">{viewingStudent.name}</p>
-                  <p className="text-sm text-gray-500">{viewingStudent.email}</p>
-                </div>
-              </div>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Batch Year</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{viewingStudent.batchYear || <span className="text-gray-400 italic">Not set</span>}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Total Points</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{viewingStudent.points || 0}</span>
-                </div>
-                <div>
-                  <p className="text-gray-500 mb-1.5">Departments</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {viewingStudent.departments?.length > 0 ? (
-                      viewingStudent.departments.map(d => (
-                        <span key={d} className="px-2.5 py-1 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded text-xs text-gray-600 dark:text-gray-400">{d}</span>
-                      ))
-                    ) : (
-                      <span className="text-xs text-gray-400 italic">No departments assigned</span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex justify-between items-center pt-2 border-t border-gray-100 dark:border-white/5">
-                  <span className="text-gray-500">Joined Platform</span>
-                  <span className="font-medium text-gray-900 dark:text-white text-xs">
-                    {viewingStudent.createdAt ? new Date(viewingStudent.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       <SimpleConfirmationModal 
         isOpen={confirmState.isOpen}

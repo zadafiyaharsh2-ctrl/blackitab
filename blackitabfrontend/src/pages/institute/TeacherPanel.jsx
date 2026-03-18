@@ -6,14 +6,12 @@ import {
   AcademicCapIcon,
   TrashIcon,
   PencilIcon,
-  PlusIcon,
-  ChatBubbleBottomCenterTextIcon
+  PlusIcon
 } from '@heroicons/react/24/outline';
 import PageShimmer from '../../components/shared/PageShimmer';
 import { CustomToast } from '../../utils/CustomToast';
 import SimpleConfirmationModal from '../../components/shared/SimpleConfirmationModal';
 
-import TeacherFeedbackModal from '../../components/institute/modals/TeacherFeedbackModal';
 import AddTeacherModal from '../../components/institute/modals/AddTeacherModal';
 import EditTeacherModal from '../../components/institute/modals/EditTeacherModal';
 
@@ -29,13 +27,9 @@ const TeacherPanel = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editTeacher, setEditTeacher] = useState(null);
 
-  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
-  const [selectedTeacherForFeedback, setSelectedTeacherForFeedback] = useState(null);
-
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: '',
     role: 'teacher'
   });
 
@@ -77,7 +71,7 @@ const TeacherPanel = () => {
       if (res.data.success) {
         CustomToast.success(res.data.message);
         setIsAddModalOpen(false);
-        setFormData({ name: '', email: '', password: '', role: 'teacher' });
+        setFormData({ name: '', email: '', role: 'teacher' });
         fetchData();
       }
     } catch (error) {
@@ -211,21 +205,14 @@ const TeacherPanel = () => {
                       {user?.role === 'institute' && (
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => { setSelectedTeacherForFeedback(t); setIsFeedbackModalOpen(true); }}
-                            className="p-1.5 rounded-lg border border-blue-200 dark:border-blue-500/30 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors"
-                            title="View Feedback"
-                          >
-                            <ChatBubbleBottomCenterTextIcon className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => { setEditTeacher(t); setIsEditModalOpen(true); }}
+                            onClick={(e) => { e.stopPropagation(); setEditTeacher(t); setIsEditModalOpen(true); }}
                             className="p-1.5 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 hover:text-blue-600 hover:border-blue-200 dark:hover:border-blue-500/30 transition-colors"
                             title="Edit"
                           >
                             <PencilIcon className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleRemove(t._id)}
+                            onClick={(e) => { e.stopPropagation(); handleRemove(t._id); }}
                             className="p-1.5 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 hover:text-red-600 hover:border-red-200 dark:hover:border-red-500/30 transition-colors"
                             title="Remove"
                           >
@@ -261,14 +248,6 @@ const TeacherPanel = () => {
         toggleDepartment={toggleDepartment} 
         inputCls={inputCls} 
       />
-
-      {isFeedbackModalOpen && selectedTeacherForFeedback && (
-        <TeacherFeedbackModal 
-          isOpen={isFeedbackModalOpen} 
-          onClose={() => { setIsFeedbackModalOpen(false); setSelectedTeacherForFeedback(null); }} 
-          teacher={selectedTeacherForFeedback} 
-        />
-      )}
 
       <SimpleConfirmationModal 
         isOpen={confirmState.isOpen}
