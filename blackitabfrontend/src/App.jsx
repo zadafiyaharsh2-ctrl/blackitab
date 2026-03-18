@@ -80,6 +80,7 @@ import TeacherBatchAssignmentForm from './pages/teacher/TeacherBatchAssignmentFo
 import InstituteDashboard from './pages/institute/InstituteDashboard';
 import InstituteProfile from './pages/institute/InstituteProfile';
 import InstituteDepartments from './pages/institute/InstituteDepartments';
+import DepartmentDetail from './pages/institute/DepartmentDetail';
 import TeacherPanel from './pages/institute/TeacherPanel';
 import StudentPanel from './pages/institute/StudentPanel';
 import StudentProfileView from './pages/institute/StudentProfileView';
@@ -792,6 +793,12 @@ function App() {
             />
             <Route path="/institute/departments"
               element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteDepartments /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/department/:deptName"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><DepartmentDetail /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/hod/department/:deptName"
+              element={<ProtectedRoute requiredRoles={['hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><DepartmentDetail /></MainLayout></ProtectedRoute>}
             />
             <Route path="/institute/teachers"
               element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TeacherPanel /></MainLayout></ProtectedRoute>}
