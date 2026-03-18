@@ -73,6 +73,7 @@ import HodDepartmentTeachers from './pages/hod/HodDepartmentTeachers';
 import TeacherPerformance from './pages/hod/TeacherPerformance';
 import HodContentReview from './pages/hod/HodContentReview';
 import HodAttendanceView from './pages/hod/HodAttendanceView';
+import HodFeedbackOverview from './pages/hod/HodFeedbackOverview';
 import TeacherBatchMaterialForm from './pages/teacher/TeacherBatchMaterialForm';
 import TeacherBatchAssignmentForm from './pages/teacher/TeacherBatchAssignmentForm';
 
@@ -96,6 +97,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import Sidebar from './components/shared/Sidebar';
 import ProtectedRoute from './components/auth/ProtectedRoute'; // Wrapper that checks if user is logged in
 import PublicRoute from './components/auth/PublicRoute';     // Wrapper for pages accessible only when logged out (like Login)
+import BugReporter from './components/shared/BugReporter'; // Global bug reporter
 
 const SIDEBAR_BREAKPOINT = 768;
 
@@ -176,6 +178,7 @@ function App() {
       {/* BrowserRouter enables URL-based routing */}
       <SocketContextProvider authUser={user}>
         <BrowserRouter>
+          <BugReporter />
           <Routes>
 
             {/* ===== PUBLIC ROUTES ===== */}
@@ -524,53 +527,7 @@ function App() {
               }
             />
 
-            {/* Teacher Batches / Classrooms Route */}
-            <Route
-              path="/teacher/batches"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <TeacherClasses />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
 
-            {/* Teacher Batch Detail / Classroom Management Route */}
-            <Route
-              path="/teacher/batch/:batchId"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <TeacherBatchDetail />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Teacher Attendance Route */}
-            <Route
-              path="/teacher/attendance"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <TeacherAttendance />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Teacher Attendance Route */}
-            <Route
-              path="/teacher/attendance"
-              element={
-                <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <TeacherAttendance />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
 
             {/* Study Content Route */}
             <Route
@@ -827,6 +784,9 @@ function App() {
             />
             <Route path="/hod/attendance"
               element={<ProtectedRoute requiredRoles={['hod', 'institute']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><HodAttendanceView /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/hod/feedback"
+              element={<ProtectedRoute requiredRoles={['hod', 'institute']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><HodFeedbackOverview /></MainLayout></ProtectedRoute>}
             />
 
             {/* Institute — Teacher Performance (reuses same component) */}
