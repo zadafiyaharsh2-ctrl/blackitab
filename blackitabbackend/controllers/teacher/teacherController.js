@@ -723,13 +723,16 @@ exports.getExamHistory = async (req, res) => {
 // POST /api/teacher/content
 exports.createContent = async (req, res) => {
     try {
-        const { title, content: bodyContent, subjectId, topicId, tags, visibility } = req.body;
+        const { title, content: bodyContent, description, contentType, subject, subjectId, topicId, tags, visibility, batches } = req.body;
         if (!title || !bodyContent) return res.status(400).json({ success: false, message: 'title and content are required' });
         if (!req.user.instituteId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
 
         const teacherContent = await TeacherContent.create({
             title,
             content: bodyContent,
+            description: description || '',
+            contentType: contentType || 'notes',
+            subject: subject || '',
             subjectId: subjectId || null,
             topicId: topicId || null,
             tags: tags || [],
