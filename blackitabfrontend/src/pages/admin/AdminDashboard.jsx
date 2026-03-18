@@ -4,7 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import {
   FaUsers, FaSchool, FaChartLine, FaSignOutAlt, FaShieldAlt,
   FaTrophy, FaExclamationTriangle, FaChevronLeft, FaChevronRight, FaQuestion, FaNewspaper,
-  FaStar, FaUserGraduate, FaSpinner, FaComments, FaTimes, FaCheck, FaBan
+  FaStar, FaUserGraduate, FaSpinner, FaComments, FaTimes, FaCheck, FaBan, FaBug
 } from 'react-icons/fa';
 import { CustomToast } from '../../utils/CustomToast';
 import axios from 'axios';
@@ -19,6 +19,7 @@ const QuestionsTab  = lazy(() => import('../../components/admin/tabs/QuestionsTa
 const PostsTab      = lazy(() => import('../../components/admin/tabs/PostsTab'));
 const ContestsTab   = lazy(() => import('../../components/admin/tabs/ContestsTab'));
 const AnalyticsTab  = lazy(() => import('../../components/admin/tabs/AnalyticsTab'));
+const BugsTab       = lazy(() => import('../../components/admin/tabs/BugsTab'));
 
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -401,6 +402,7 @@ const AdminDashboard = () => {
     { id: 'posts', label: 'Posts', icon: FaNewspaper },
     { id: 'contests', label: 'Contests', icon: FaTrophy },
     { id: 'analytics', label: 'Analytics', icon: FaChartLine },
+    { id: 'bugs', label: 'Bugs', icon: FaBug },
   ];
 
   const filteredUsers = userSearch
@@ -546,6 +548,10 @@ const AdminDashboard = () => {
               globalAnalytics={globalAnalytics}
               teacherAnalytics={teacherAnalytics}
             />
+          )}
+
+          {activeTab === 'bugs' && (
+            <BugsTab API_URL={API_URL} headers={headers} />
           )}
         </Suspense>
 
