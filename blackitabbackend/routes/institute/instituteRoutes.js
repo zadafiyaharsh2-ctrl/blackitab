@@ -16,6 +16,7 @@ router.get('/my', instituteController.getMyInstitute);
 // ── Stats ──
 router.get('/stats', requireRole('institute', 'hod'), instituteController.getInstituteStats);
 router.get('/departments/stats', requireRole('institute', 'hod', 'teacher'), instituteController.getDepartmentStats);
+router.get('/departments/:deptName/details', requireRole('institute', 'hod'), instituteController.getDepartmentDetails);
 
 // ── Profile ──
 const { handleBannerUpload } = require('../../middleware/upload');
