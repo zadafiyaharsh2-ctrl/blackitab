@@ -1033,3 +1033,94 @@ exports.getStudentDetail = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+// ══════════════════════════════════════════════════════════════
+// DEPARTMENT DETAILS VIEW
+// ══════════════════════════════════════════════════════════════
+
+// GET /api/institute/departments/:deptName/details
+exports.getDepartmentDetails = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        const deptName = req.params.deptName;
+
+        if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+
+        // Ensure user belongs to the requested department if they are HOD
+        if (req.user.role === 'hod') {
+            const hasDeptsStr = req.user.departments && req.user.departments.some(d => d.toLowerCase() === deptName.toLowerCase());
+            if (!hasDeptsStr) {
+                 return res.status(403).json({ success: false, message: 'Access denied to this department' });
+            }
+        }
+
+        // 1. Find HOD
+        const hod = await User.findOne({
+            instituteId: instId,
+            role: 'hod',
+            departments: { $regex: new RegExp(`^${deptName}$`, 'i') }
+        }).select('name email profileImage');
+
+        // 2. Find Core Teachers
+        const coreTeachers = await User.find({
+            instituteId: instId,
+            role: 'teacher',
+            departments: { $regex: new RegExp(`^${deptName}$`, 'i') }
+        }).select('name email profileImage');
+
+        // 3. Find All Teachers in institute to map their IDs
+        const allTeachers = await User.find({ instituteId: instId, role: 'teacher' }).select('_id name email profileImage departments');
+        const teacherMap = {};
+        allTeachers.forEach(t => { teacherMap[t._id.toString()] = t; });
+
+        // 4. Find all batches taught by ANY teacher in the institute, then filter
+        const Batch = require('../../models/Batch');
+        const batches = await Batch.find({ instituteId: instId })
+            .populate('teacherId', 'name email profileImage departments');
+
+        // We consider a batch belonging to this department if:
+        // A) The batch has an explicit string field (if we ever added one)
+        // B) The teacher of the batch has this department in their `departments` array.
+        // C) The batch's name includes the department name (heuristic fallback).
+        const departmentBatches = batches.filter(b => {
+            const t = b.teacherId;
+            if (t && t.departments && t.departments.some(d => d.toLowerCase() === deptName.toLowerCase())) return true;
+            if (b.name && b.name.toLowerCase().includes(deptName.toLowerCase())) return true;
+            return false;
+        });
+
+        // 5. Visiting Teachers
+        // Teachers who are teaching a batch in this department, but do NOT have this department in their core `departments` array.
+        const visitingTeacherIds = new Set();
+        departmentBatches.forEach(b => {
+             if (b.teacherId) {
+                 const hasDept = b.teacherId.departments?.some(d => d.toLowerCase() === deptName.toLowerCase());
+                 if (!hasDept) {
+                     visitingTeacherIds.add(b.teacherId._id.toString());
+                 }
+             }
+        });
+
+        const visitingTeachers = Array.from(visitingTeacherIds).map(id => teacherMap[id]).filter(Boolean);
+
+        res.json({
+            success: true,
+            data: {
+                hod,
+                coreTeachers,
+                visitingTeachers,
+                batches: departmentBatches.map(b => ({
+                    _id: b._id,
+                    name: b.name,
+                    year: b.year,
+                    section: b.section,
+                    teacher: b.teacherId
+                }))
+            }
+        });
+
+    } catch (error) {
+        console.error('Get Department Details Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
