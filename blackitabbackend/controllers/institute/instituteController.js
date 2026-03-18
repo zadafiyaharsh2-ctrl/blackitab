@@ -1076,16 +1076,17 @@ exports.getDepartmentDetails = async (req, res) => {
         // 4. Find all batches taught by ANY teacher in the institute, then filter
         const Batch = require('../../models/Batch');
         const batches = await Batch.find({ instituteId: instId })
-            .populate('teacherId', 'name email profileImage departments');
+            .populate('teacherIds', 'name email profileImage departments');
 
         // We consider a batch belonging to this department if:
         // A) The batch has an explicit string field (if we ever added one)
         // B) The teacher of the batch has this department in their `departments` array.
         // C) The batch's name includes the department name (heuristic fallback).
         const departmentBatches = batches.filter(b => {
-            const t = b.teacherId;
-            if (t && t.departments && t.departments.some(d => d.toLowerCase() === deptName.toLowerCase())) return true;
             if (b.name && b.name.toLowerCase().includes(deptName.toLowerCase())) return true;
+            if (b.teacherIds && b.teacherIds.length > 0) {
+                return b.teacherIds.some(t => t.departments && t.departments.some(d => d.toLowerCase() === deptName.toLowerCase()));
+            }
             return false;
         });
 
@@ -1093,11 +1094,13 @@ exports.getDepartmentDetails = async (req, res) => {
         // Teachers who are teaching a batch in this department, but do NOT have this department in their core `departments` array.
         const visitingTeacherIds = new Set();
         departmentBatches.forEach(b => {
-             if (b.teacherId) {
-                 const hasDept = b.teacherId.departments?.some(d => d.toLowerCase() === deptName.toLowerCase());
-                 if (!hasDept) {
-                     visitingTeacherIds.add(b.teacherId._id.toString());
-                 }
+             if (b.teacherIds && b.teacherIds.length > 0) {
+                 b.teacherIds.forEach(t => {
+                     const hasDept = t.departments?.some(d => d.toLowerCase() === deptName.toLowerCase());
+                     if (!hasDept) {
+                         visitingTeacherIds.add(t._id.toString());
+                     }
+                 });
              }
         });
 
@@ -1114,7 +1117,7 @@ exports.getDepartmentDetails = async (req, res) => {
                     name: b.name,
                     year: b.year,
                     section: b.section,
-                    teacher: b.teacherId
+                    teachers: b.teacherIds
                 }))
             }
         });
