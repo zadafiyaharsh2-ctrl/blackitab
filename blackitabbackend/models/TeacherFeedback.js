@@ -12,6 +12,14 @@ const teacherFeedbackSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    batchId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Batch'
+    },
+    isAnonymous: {
+        type: Boolean,
+        default: false
+    },
     questionId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'ExamQuestion'
@@ -29,7 +37,7 @@ const teacherFeedbackSchema = new mongoose.Schema({
     },
     feedbackType: {
         type: String,
-        enum: ['quiz_end', 'realtime', 'general'],
+        enum: ['quiz_end', 'realtime', 'general', 'class'],
         default: 'quiz_end'
     },
     instituteId: {
@@ -45,6 +53,6 @@ const teacherFeedbackSchema = new mongoose.Schema({
 });
 
 // One feedback per student-teacher-question combo
-teacherFeedbackSchema.index({ studentId: 1, teacherId: 1, questionId: 1 }, { unique: true, sparse: true });
+teacherFeedbackSchema.index({ studentId: 1, teacherId: 1, questionId: 1 }, { unique: true, partialFilterExpression: { questionId: { $type: "objectId" } } });
 
 module.exports = mongoose.model('TeacherFeedback', teacherFeedbackSchema);

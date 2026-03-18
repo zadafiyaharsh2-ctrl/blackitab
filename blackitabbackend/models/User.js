@@ -57,13 +57,21 @@ const userSchema = new mongoose.Schema({
   // --- HIERARCHY & ROLES ---
   role: {
     type: String,
-    enum: ['student', 'teacher', 'hod', 'institute_admin'],
-    default: 'student'
+    enum: ['student', 'teacher', 'hod', 'institute'],
+    default: 'student',
+    index: true
   },
   instituteId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Institute',
-    default: null
+    default: null,
+    index: true
+  },
+  instituteCode: {
+    type: String,
+    default: '',
+    uppercase: true,
+    trim: true
   },
   batchYear: { type: String },
   division: { type: String },
@@ -71,6 +79,30 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     default: null
+  },
+  departments: [{
+    type: String,
+    trim: true
+  }],
+
+  // --- TEACHER-SPECIFIC FIELDS ---
+  departmentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Department',
+    default: null
+  },
+  specialization: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  teacherSince: {
+    type: Date,
+    default: null
+  },
+  teacherRating: {
+    score: { type: Number, default: 0 },
+    totalReviews: { type: Number, default: 0 }
   },
 
   // --- MASSIVE SCALE METRICS ---

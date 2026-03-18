@@ -2,6 +2,15 @@ const SystemAdmin = require('../models/SystemAdmin');
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET;
 
+// ── Role Hierarchy ──────────────────────────────────────────────────────────
+// Higher number = more privilege. Each role inherits all permissions below it.
+const ROLE_HIERARCHY = {
+    student: 0,
+    teacher: 1,
+    hod: 2,
+    institute_admin: 3
+};
+
 /**
  * requireRole(...roles) — Checks if the authenticated user has one of the allowed roles.
  * Must be used AFTER authMiddleware so req.user is populated.
@@ -16,6 +25,31 @@ const requireRole = (...roles) => {
             return res.status(403).json({
                 success: false,
                 message: `Access denied. Required role: ${roles.join(' or ')}. Your role: ${req.user.role}`
+            });
+        }
+        next();
+    };
+};
+
+/**
+ * requireMinRole(minRole) — Hierarchical check: allows the given role and ALL above it.
+ * Example: requireMinRole('teacher') allows teacher, hod, institute_admin.
+ * Must be used AFTER authMiddleware so req.user is populated.
+ */
+const requireMinRole = (minRole) => {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: 'Authentication required' });
+        }
+        const userLevel = ROLE_HIERARCHY[req.user.role];
+        const requiredLevel = ROLE_HIERARCHY[minRole];
+        if (userLevel === undefined || requiredLevel === undefined) {
+            return res.status(403).json({ success: false, message: 'Invalid role configuration' });
+        }
+        if (userLevel < requiredLevel) {
+            return res.status(403).json({
+                success: false,
+                message: `Access denied. Minimum role required: ${minRole}. Your role: ${req.user.role}`
             });
         }
         next();
@@ -73,4 +107,4 @@ const requireAdmin = async (req, res, next) => {
     }
 };
 
-module.exports = { requireRole, requireSameInstitute, requireAdmin };
+module.exports = { requireRole, requireMinRole, requireSameInstitute, requireAdmin, ROLE_HIERARCHY };
