@@ -85,7 +85,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       { path: '/classes', label: 'My Classes', icon: <FaUsers /> },
       { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
     ] : []),
-    ...( !canAccessInstitute ? [
+    ...( !canAccessInstitute && !canAccessTeacher ? [
       { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
       { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
       { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy /> },
@@ -98,6 +98,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
   // HOD-only department management links
   const hodNavItems = canAccessHod ? [
     { path: '/hod/teachers', label: 'Dept. Teachers', icon: <FaUserTie /> },
+    { path: '/hod/feedback', label: 'Dept. Feedback', icon: <FaCommentDots /> },
     { path: '/hod/content-review', label: 'Content Review', icon: <FaClipboardCheck /> },
     { path: '/hod/attendance', label: 'Dept. Attendance', icon: <FaCalendarDay /> },
   ] : [];
