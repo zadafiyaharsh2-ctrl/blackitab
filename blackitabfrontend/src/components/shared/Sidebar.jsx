@@ -67,18 +67,22 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
   const canAccessTeacher = ['teacher', 'hod'].includes(userRole);
   const canAccessHod = userRole === 'hod';
   const canAccessInstitute = userRole === 'institute';
+  const hasInstitute = Boolean(instituteId);
 
   const navItems = [
     ...(canAccessTeacher ? [
       { path: '/teacher-dashboard', label: 'Teacher Dashboard', icon: <FaSchool /> },
-      { path: '/teacher/batches', label: 'Classes & Batches', icon: <FaUsers /> },
-      { path: '/teacher/attendance', label: 'Attendance', icon: <FaCalendarDay /> },
-
+      ...(hasInstitute ? [
+        { path: '/teacher/batches', label: 'Classes & Batches', icon: <FaUsers /> },
+        { path: '/teacher/attendance', label: 'Attendance', icon: <FaCalendarDay /> },
+      ] : []),
       { path: '/question-management', label: 'Question Bank', icon: <FaListUl /> },
       { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
       { path: '/teacher/tests', label: 'Tests', icon: <FaListAlt /> },
       { path: '/teacher/content', label: 'Theory Content', icon: <FaPenFancy className="text-pink-400" /> },
-      { path: '/teacher/feedback', label: 'Feedback', icon: <FaCommentDots className="text-rose-400" /> },
+      ...(hasInstitute ? [
+        { path: '/teacher/feedback', label: 'Feedback', icon: <FaCommentDots className="text-rose-400" /> },
+      ] : []),
       { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
     ] : !canAccessInstitute ? [
       { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
@@ -89,9 +93,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
       { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
       { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy /> },
-      { path: '/notifications', label: 'Notifications', icon: <FaBell className="text-red-400" /> },
       { path: '/theory', label: 'Theory', icon: <FaBook /> },
-      { path: '/social', label: 'Community', icon: <FaUsers /> },
     ] : [])
   ];
 
@@ -110,7 +112,6 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     { path: '/institute/theory', label: 'Theory Checking', icon: <FaFileAlt /> },
     { path: '/institute/questions', label: 'Question Checker', icon: <FaClipboardCheck /> },
     { path: '/institute/join-requests', label: 'Join Requests', icon: <FaUserPlus />, badge: pendingJoinRequests },
-    { path: '/institute/notifications', label: 'Notifications', icon: <FaBell /> },
     { path: '/institute/departments', label: 'Departments', icon: <FaSitemap /> },
     { path: '/institute/profile', label: 'Institute Profile', icon: <FaSchool /> },
   ] : [];
@@ -198,6 +199,16 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
               );
             })}
           </ul>
+
+          {/* Join Institute Prompt for Teachers */}
+          {canAccessTeacher && !hasInstitute && isOpen && (
+            <div className="mx-1 mt-3 p-3 rounded-xl border border-amber-200 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/5">
+              <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1">🏛 No Institute Linked</p>
+              <p className="text-[11px] text-amber-600/80 dark:text-amber-400/70 leading-relaxed">
+                Join an institute to access Classes, Batches, Attendance, and Feedback features.
+              </p>
+            </div>
+          )}
 
           {/* HOD Department Section */}
           {hodNavItems.length > 0 && (

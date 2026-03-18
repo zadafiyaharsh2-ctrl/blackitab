@@ -7,6 +7,7 @@ import {
   FaFileAlt, FaGraduationCap, FaAward, FaCalendarDay
 } from 'react-icons/fa';
 import API from '../../config';
+import PageShimmer from '../../components/shared/PageShimmer';
 
 export default function TeacherDashboard() {
   const [dashboard, setDashboard] = useState(null);
@@ -32,11 +33,7 @@ export default function TeacherDashboard() {
     }
   };
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <FaSpinner className="animate-spin text-2xl text-gray-400" />
-    </div>
-  );
+  if (loading) return <PageShimmer variant="dashboard" />;
 
   if (error) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">

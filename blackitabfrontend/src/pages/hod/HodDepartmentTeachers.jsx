@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { FaUserTie, FaStar, FaChalkboardTeacher, FaBookOpen, FaQuestionCircle, FaArrowRight, FaChartLine } from 'react-icons/fa';
+import PageShimmer from '../../components/shared/PageShimmer';
 
 const HodDepartmentTeachers = () => {
   const navigate = useNavigate();
@@ -29,13 +30,7 @@ const HodDepartmentTeachers = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full" />
-      </div>
-    );
-  }
+  if (loading) return <PageShimmer variant="cards" />;
 
   return (
     <div className="min-h-screen p-6 text-gray-900 dark:text-white relative overflow-hidden font-sans">

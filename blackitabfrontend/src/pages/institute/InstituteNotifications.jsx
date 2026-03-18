@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { BellIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
-import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import PageShimmer from '../../components/shared/PageShimmer';
 import { CustomToast } from '../../utils/CustomToast';
 
 const InstituteNotifications = () => {
@@ -38,7 +38,7 @@ const InstituteNotifications = () => {
     }
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <PageShimmer variant="list" />;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">

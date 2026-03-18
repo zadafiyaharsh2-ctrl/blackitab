@@ -39,7 +39,6 @@ const AdminDashboard = () => {
   const [userSearch, setUserSearch] = useState('');
   const [userPage, setUserPage] = useState(1);
   const [userPagination, setUserPagination] = useState({ pages: 1, total: 0 });
-  const [questionFilter, setQuestionFilter] = useState('pending');
   const [questionPage, setQuestionPage] = useState(1);
   const [questionPagination, setQuestionPagination] = useState({ pages: 1, total: 0 });
   const [postPage, setPostPage] = useState(1);
@@ -50,7 +49,7 @@ const AdminDashboard = () => {
   const [instituteMembers, setInstituteMembers] = useState([]);
   const [instituteMembersLoading, setInstituteMembersLoading] = useState(false);
   
-  const [rejectModal, setRejectModal] = useState({ open: false, questionId: null, note: '' });
+
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [selectedTeacherForFeedback, setSelectedTeacherForFeedback] = useState(null);
   const [questionPreview, setQuestionPreview] = useState(null);
@@ -126,9 +125,9 @@ const AdminDashboard = () => {
     setInstituteMembersLoading(false);
   };
 
-  async function fetchQuestions(status = 'pending', page = 1) {
+  async function fetchQuestions(page = 1) {
     try {
-      const res = await axios.get(`${API_URL}/api/admin/questions?status=${status}&page=${page}&limit=15`, { headers: headers() });
+      const res = await axios.get(`${API_URL}/api/admin/questions?page=${page}&limit=15`, { headers: headers() });
       if (res.data.success) { setQuestions(res.data.data); setQuestionPagination(res.data.pagination); }
     } catch { setQuestions([]); }
   };
@@ -268,30 +267,20 @@ const AdminDashboard = () => {
     setEditInstituteModal(null);
   };
 
-  const handleApprove = async (id) => {
+  const handleCloneGlobal = async (id) => {
     try {
-      await axios.put(`${API_URL}/api/admin/questions/${id}/approve`, {}, { headers: headers() });
-      fetchQuestions(questionFilter, questionPage);
+      await axios.post(`${API_URL}/api/admin/questions/${id}/clone-global`, {}, { headers: headers() });
+      fetchQuestions(questionPage);
       fetchStats(getToken());
-      CustomToast.success('Question approved for global visibility');
-    } catch { CustomToast.error('Failed to approve'); }
-  };
-
-  const handleReject = async () => {
-    try {
-      await axios.put(`${API_URL}/api/admin/questions/${rejectModal.questionId}/reject`, { note: rejectModal.note }, { headers: headers() });
-      fetchQuestions(questionFilter, questionPage);
-      fetchStats(getToken());
-      CustomToast.success('Question rejected');
-    } catch { CustomToast.error('Failed to reject'); }
-    setRejectModal({ open: false, questionId: null, note: '' });
+      CustomToast.success('Question successfully cloned to Global Bank');
+    } catch { CustomToast.error('Failed to clone question'); }
   };
 
   const handleDeleteQuestion = async (id) => {
     if (!confirm('Permanently delete this question?')) return;
     try {
       await axios.delete(`${API_URL}/api/admin/questions/${id}`, { headers: headers() });
-      fetchQuestions(questionFilter, questionPage);
+      fetchQuestions(questionPage);
       fetchStats(getToken());
       CustomToast.success('Question deleted');
     } catch { CustomToast.error('Failed'); }
@@ -325,8 +314,8 @@ const AdminDashboard = () => {
     }
     try {
       await axios.post(`${API_URL}/api/admin/questions`, newQuestion, { headers: headers() });
-      CustomToast.success('Question created and auto-approved');
-      fetchQuestions(questionFilter, questionPage);
+      CustomToast.success('Question created globally');
+      fetchQuestions(questionPage);
       fetchStats(getToken());
     } catch (err) { CustomToast.error(err.response?.data?.message || 'Failed'); }
     setShowCreateQuestion(false);
@@ -373,16 +362,11 @@ const AdminDashboard = () => {
 
   // ── Tab Switch Handlers ──
   useEffect(() => {
-    if (activeTab === 'questions') fetchQuestions(questionFilter, 1);
+    if (activeTab === 'questions') fetchQuestions(1);
     if (activeTab === 'posts') fetchPosts(1);
     if (activeTab === 'contests') fetchContests();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
-
-  useEffect(() => {
-    if (activeTab === 'questions') { setQuestionPage(1); fetchQuestions(questionFilter, 1); }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questionFilter]);
 
   // ── Layout Data ──
   const statCards = stats ? [
@@ -390,7 +374,6 @@ const AdminDashboard = () => {
     { label: 'Institutes', value: stats.totalInstitutes, color: 'text-emerald-400', bg: 'from-emerald-500/20 to-teal-500/20', icon: FaSchool },
     { label: 'Daily Active', value: stats.dailyActiveUsers, color: 'text-purple-400', bg: 'from-purple-500/20 to-pink-500/20', icon: FaChartLine },
     { label: 'Total Questions', value: stats.totalQuestions, color: 'text-yellow-400', bg: 'from-yellow-500/20 to-orange-500/20', icon: FaQuestion },
-    { label: 'Pending Approval', value: stats.pendingQuestions, color: 'text-red-400', bg: 'from-red-500/20 to-orange-500/20', icon: FaExclamationTriangle },
     { label: 'Total Posts', value: stats.totalPosts, color: 'text-cyan-400', bg: 'from-cyan-500/20 to-blue-500/20', icon: FaNewspaper },
   ] : [];
 
@@ -398,7 +381,7 @@ const AdminDashboard = () => {
     { id: 'overview', label: 'Overview', icon: FaChartLine },
     { id: 'users', label: 'Users', icon: FaUsers },
     { id: 'institutes', label: 'Institutes', icon: FaSchool },
-    { id: 'questions', label: 'Questions', icon: FaQuestion, badge: stats?.pendingQuestions },
+    { id: 'questions', label: 'Questions', icon: FaQuestion },
     { id: 'posts', label: 'Posts', icon: FaNewspaper },
     { id: 'contests', label: 'Contests', icon: FaTrophy },
     { id: 'analytics', label: 'Analytics', icon: FaChartLine },
@@ -511,10 +494,8 @@ const AdminDashboard = () => {
               showCreateQuestion={showCreateQuestion} setShowCreateQuestion={setShowCreateQuestion}
               newQuestion={newQuestion} setNewQuestion={setNewQuestion}
               handleCreateQuestion={handleCreateQuestion}
-              questionFilter={questionFilter} setQuestionFilter={setQuestionFilter}
               questionPreview={questionPreview} setQuestionPreview={setQuestionPreview}
-              rejectModal={rejectModal} setRejectModal={setRejectModal}
-              handleApprove={handleApprove} handleReject={handleReject}
+              handleCloneGlobal={handleCloneGlobal}
               handleDeleteQuestion={handleDeleteQuestion}
               Pagination={Pagination}
               questionPagination={questionPagination} questionPage={questionPage} setQuestionPage={setQuestionPage}
@@ -559,39 +540,7 @@ const AdminDashboard = () => {
 
       </div>
 
-      {/* ── REJECT MODAL ── */}
-      <AnimatePresence>
-        {rejectModal.open && (
-          <div  exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
-            onClick={() => setRejectModal({ open: false, questionId: null, note: '' })}>
-            <div  exit={{ scale: 0.9, opacity: 0 }}
-              className="glass-panel p-6 border border-white/10 rounded-2xl w-full max-w-md"
-              onClick={e => e.stopPropagation()}>
-              <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
-                <FaBan className="text-red-400" /> Reject Question
-              </h3>
-              <textarea
-                value={rejectModal.note}
-                onChange={e => setRejectModal({ ...rejectModal, note: e.target.value })}
-                placeholder="Reason for rejection (optional but helpful for the teacher)..."
-                rows={4}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-red-500/50 resize-none mb-4"
-              />
-              <div className="flex items-center justify-end gap-3">
-                <button onClick={() => setRejectModal({ open: false, questionId: null, note: '' })}
-                  className="px-4 py-2 rounded-xl text-sm font-bold text-gray-400 hover:text-white transition-colors">
-                  Cancel
-                </button>
-                <button onClick={handleReject}
-                  className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-bold transition-colors flex items-center gap-2">
-                  <FaBan /> Reject Question
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </AnimatePresence>
+
 
       {/* ── QUESTION PREVIEW MODAL ── */}
       <AnimatePresence>

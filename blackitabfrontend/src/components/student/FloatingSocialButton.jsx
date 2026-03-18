@@ -22,8 +22,6 @@ const FloatingSocialButton = () => {
     { path: '/social', label: 'Social Feed', icon: <FaUsers />, color: 'from-blue-500 to-indigo-600' },
     { path: '/messages', label: 'Messages', icon: <FaEnvelope />, color: 'from-emerald-500 to-teal-600' },
     { path: '/create-post', label: 'Create Post', icon: <FaPlusSquare />, color: 'from-rose-500 to-pink-600' },
-    { path: `/network/${userId}/followers`, label: 'Followers', icon: <FaUserFriends />, color: 'from-amber-500 to-orange-600' },
-    { path: `/network/${userId}/following`, label: 'Following', icon: <FaUserPlus />, color: 'from-purple-500 to-violet-600' },
     { path: '/profile', label: 'My Profile', icon: <FaUser />, color: 'from-cyan-500 to-sky-600' },
   ];
 

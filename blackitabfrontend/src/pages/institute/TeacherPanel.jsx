@@ -9,7 +9,7 @@ import {
   PlusIcon,
   ChatBubbleBottomCenterTextIcon
 } from '@heroicons/react/24/outline';
-import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import PageShimmer from '../../components/shared/PageShimmer';
 import { CustomToast } from '../../utils/CustomToast';
 import SimpleConfirmationModal from '../../components/shared/SimpleConfirmationModal';
 
@@ -130,7 +130,7 @@ const TeacherPanel = () => {
     });
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <PageShimmer variant="table" />;
 
   const inputCls = 'w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20';
 

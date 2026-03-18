@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import API_URL from '../../config';
 import usePageTitle from '../../hooks/usePageTitle';
+import PageShimmer from '../../components/shared/PageShimmer';
 
 const Problems = () => {
   usePageTitle('Practice Problems');
@@ -173,13 +174,7 @@ const Problems = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-black">
-        <div className="animate-spin h-12 w-12 border-b-2 border-purple-600 rounded-full"></div>
-      </div>
-    );
-  }
+  if (loading) return <PageShimmer variant="cards" />;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors">

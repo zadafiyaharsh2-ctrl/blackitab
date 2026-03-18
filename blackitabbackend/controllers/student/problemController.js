@@ -239,7 +239,7 @@ exports.getExamQuestions = async (req, res) => {
     try {
         const { examId } = req.params;
         const { subject, source } = req.query;
-        const filter = { exam: examId, isProblem: true };
+        const filter = { exam: examId, status: 'Published', isActive: true };
         if (subject) filter.subject = subject;
 
         if (source === 'institute') {
@@ -248,14 +248,19 @@ exports.getExamQuestions = async (req, res) => {
                 return res.status(403).json({ success: false, message: 'You must be part of an institute to view institute questions' });
             }
             filter.instituteId = req.user.instituteId;
+            
+            if (req.user.departmentId) {
+                filter.departmentId = req.user.departmentId;
+            } else if (req.user.departments && req.user.departments.length > 0) {
+                const mongoose = require('mongoose');
+                const validDeptIds = req.user.departments.filter(d => mongoose.Types.ObjectId.isValid(d));
+                if (validDeptIds.length > 0) {
+                    filter.departmentId = { $in: validDeptIds };
+                }
+            }
         } else {
-            // Global mode (default): show only admin-approved questions
-            filter.approvalStatus = 'approved';
-            // Exclude institute-only questions from global view
-            filter.$or = [
-                { instituteId: null },
-                { visibility: 'public' }
-            ];
+            // Global mode (default): show only global questions
+            filter.isGlobal = true;
         }
 
         const questions = await ExamQuestion.find(filter)
@@ -266,7 +271,7 @@ exports.getExamQuestions = async (req, res) => {
 
         // Merge User Attempts if available
         if (req.user) {
-            const Attempt = require('../models/Attempt');
+            const Attempt = require('../../models/Attempt');
             const questionIds = questions.map(q => q._id);
             const userAttempts = await Attempt.find({
                 userId: req.user._id,
@@ -294,9 +299,8 @@ exports.getExamQuestions = async (req, res) => {
 
         res.json({ success: true, data: questionsWithAttempts });
     } catch (err) {
-        
-        res.status(500).json({ success: false, message: 'Server Error' });
-
+        console.error('getExamQuestions Error:', err);
+        res.status(500).json({ success: false, message: 'Server Error', error: err.message, stack: err.stack });
     }
 };
 
@@ -307,14 +311,28 @@ exports.getInstituteExamSubjects = async (req, res) => {
             return res.status(403).json({ success: false, message: 'You must be part of an institute' });
         }
 
-        const exams = await ExamQuestion.distinct('exam', {
+        const filter = {
             instituteId: req.user.instituteId,
-            isProblem: true
-        });
+            status: 'Published',
+            isActive: true
+        };
+
+        if (req.user.departmentId) {
+            filter.departmentId = req.user.departmentId;
+        } else if (req.user.departments && req.user.departments.length > 0) {
+            const mongoose = require('mongoose');
+            const validDeptIds = req.user.departments.filter(d => mongoose.Types.ObjectId.isValid(d));
+            if (validDeptIds.length > 0) {
+                filter.departmentId = { $in: validDeptIds };
+            }
+        }
+
+        const exams = await ExamQuestion.distinct('exam', filter);
 
         res.json({ success: true, data: exams });
     } catch (err) {
-        res.status(500).json({ success: false, message: 'Server Error' });
+        console.error('getInstituteExamSubjects Error:', err);
+        res.status(500).json({ success: false, message: 'Server Error', error: err.message, stack: err.stack });
     }
 };
 

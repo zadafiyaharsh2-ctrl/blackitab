@@ -9,6 +9,7 @@ import {
 } from 'react-icons/fa';
 import ActivityHeatmap from './ActivityHeatmap';
 import API_URL from '../../config';
+import PageShimmer from '../shared/PageShimmer';
 
 const getMasteryLevel = (pct) => {
   if (pct >= 80) return { label: 'Expert', cls: 'text-purple-600 dark:text-purple-400' };
@@ -139,13 +140,7 @@ const StudentHomeContent = ({ embedded = false }) => {
     { label: 'Hard', solved: progressStats.totalCompleted - Math.floor(progressStats.totalCompleted * 0.85), total: totalTopics - Math.floor(totalTopics * 0.8), color: 'bg-red-500' }
   ];
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[24vh]">
-        <FaSpinner className="animate-spin text-2xl text-gray-400" />
-      </div>
-    );
-  }
+  if (loading) return <PageShimmer variant="dashboard" />;
 
   const wrapperClass = embedded ? 'space-y-6' : 'max-w-5xl mx-auto px-4 py-8 space-y-6 pt-20';
 

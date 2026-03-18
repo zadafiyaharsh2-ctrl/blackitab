@@ -6,6 +6,7 @@ import {
 } from 'react-icons/fa';
 import API_URL from '../../config';
 import toast from 'react-hot-toast';
+import PageShimmer from '../../components/shared/PageShimmer';
 
 const StudentMaterialDetail = () => {
   const { classId, materialId } = useParams();
@@ -43,13 +44,7 @@ const StudentMaterialDetail = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <FaSpinner className="animate-spin text-3xl text-gray-400" />
-      </div>
-    );
-  }
+  if (loading) return <PageShimmer variant="detail" />;
 
   if (!material) return null;
 

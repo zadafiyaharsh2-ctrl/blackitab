@@ -18,6 +18,11 @@ const Messages = () => {
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
     const messagesEndRef = useRef(null);
+
+    // Search state for Messages sidebar
+    const [msgSearch, setMsgSearch] = useState('');
+    const [msgSearchResults, setMsgSearchResults] = useState([]);
+    const [showMsgSearchDropdown, setShowMsgSearchDropdown] = useState(false);
     
     const { socket, onlineUsers } = useSocketContext();
 
@@ -78,6 +83,31 @@ const Messages = () => {
             }
         }
     }, [userId, conversations]);
+
+    // Search followed users for Messages
+    useEffect(() => {
+        if (!msgSearch.trim()) {
+            setMsgSearchResults([]);
+            return;
+        }
+        const timer = setTimeout(async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await axios.get(`${API_URL}/api/social/search?query=${msgSearch}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.data.success) {
+                    // Show all results but prioritize followed users first
+                    const myId = JSON.parse(localStorage.getItem('user'))?._id || JSON.parse(localStorage.getItem('user'))?.id;
+                    const results = res.data.data
+                        .filter(u => String(u._id) !== String(myId))
+                        .sort((a, b) => (b.isFollowing ? 1 : 0) - (a.isFollowing ? 1 : 0));
+                    setMsgSearchResults(results);
+                }
+            } catch (err) { console.error(err); }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [msgSearch]);
 
     const fetchConversations = async () => {
         try {
@@ -186,6 +216,11 @@ const Messages = () => {
 
     const myId = JSON.parse(localStorage.getItem('user'))?._id || JSON.parse(localStorage.getItem('user'))?.id;
 
+    // Filter conversations by search text (client-side)
+    const filteredConversations = msgSearch.trim()
+        ? conversations.filter(c => c.name?.toLowerCase().includes(msgSearch.toLowerCase()))
+        : conversations;
+
     const renderMessageContent = (msg) => {
         if (msg.type === 'image') {
             return (
@@ -269,22 +304,66 @@ const Messages = () => {
                         <FaSearch className="absolute left-3 top-3 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
                         <input 
                             type="text" 
-                            placeholder="Search..." 
-                            className="w-full bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl py-2 pl-10 pr-3 text-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all placeholder-gray-500"
+                            placeholder="Search people to message..." 
+                            value={msgSearch}
+                            onChange={(e) => { setMsgSearch(e.target.value); setShowMsgSearchDropdown(true); }}
+                            onFocus={() => setShowMsgSearchDropdown(true)}
+                            onBlur={() => setTimeout(() => setShowMsgSearchDropdown(false), 200)}
+                            className="w-full bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl py-2 pl-10 pr-8 text-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all placeholder-gray-500"
                         />
+                        {msgSearch && (
+                            <button onClick={() => { setMsgSearch(''); setMsgSearchResults([]); }} className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                                <FaTimes size={12} />
+                            </button>
+                        )}
+
+                        {/* Search Results Dropdown */}
+                        {showMsgSearchDropdown && msgSearch.trim() && msgSearchResults.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden z-30 max-h-60 overflow-y-auto custom-scrollbar">
+                                <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-800">People</div>
+                                {msgSearchResults.map(u => (
+                                    <div
+                                        key={u._id}
+                                        className="flex items-center gap-3 p-2.5 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors border-b border-gray-100 dark:border-gray-800 last:border-0"
+                                        onClick={() => {
+                                            navigate(`/messages/${u._id}`);
+                                            setMsgSearch('');
+                                            setMsgSearchResults([]);
+                                            setShowMsgSearchDropdown(false);
+                                        }}
+                                    >
+                                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                            {u.profileImage ? (
+                                                <img src={u.profileImage} alt={u.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <span className="text-white text-xs font-bold">{u.name?.charAt(0).toUpperCase()}</span>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-semibold text-sm text-gray-900 dark:text-white truncate">{u.name}</div>
+                                            <div className="text-[11px] text-gray-500 dark:text-gray-400">{u.followerCount || 0} followers</div>
+                                        </div>
+                                        {u.isFollowing && (
+                                            <span className="text-[10px] font-bold bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded flex-shrink-0">Following</span>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
                 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
                     {loading ? (
                         <div className="text-center p-8 text-gray-500 animate-pulse">Loading chats...</div>
-                    ) : conversations.length === 0 ? (
+                    ) : filteredConversations.length === 0 ? (
                         <div className="text-center p-8 text-gray-500">
                              <div className="text-4xl mb-2 opacity-30">💬</div>
-                             <div>No conversations yet</div>
+                             <div>{msgSearch ? 'No matching conversations' : 'No conversations yet'}</div>
+                             {!msgSearch && <p className="text-xs text-gray-400 mt-2">Search for people above to start a conversation</p>}
                         </div>
                     ) : (
-                        conversations.map(conv => (
+                        filteredConversations.map(conv => (
                             <motion.div 
                                 whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.05)' }}
                                 whileTap={{ scale: 0.98 }}

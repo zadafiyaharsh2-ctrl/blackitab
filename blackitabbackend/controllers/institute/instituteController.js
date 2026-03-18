@@ -125,12 +125,12 @@ exports.getInstituteStats = async (req, res) => {
         const roles = {};
         roleCounts.forEach(r => { roles[r._id] = r.count; });
 
-        const pendingQuestions = await ExamQuestion.countDocuments({ instituteId: instId, approvalStatus: 'pending' });
+
         const pendingJoinRequests = await JoinRequest.countDocuments({ instituteId: instId, status: 'pending' });
 
         res.json({
             success: true,
-            data: { members, questions, pendingQuestions, pendingJoinRequests, posts, attempts, departmentsCount, roleCounts: roles }
+            data: { members, questions, pendingJoinRequests, posts, attempts, departmentsCount, roleCounts: roles }
         });
     } catch (error) {
         
@@ -331,7 +331,20 @@ exports.listInstituteQuestions = async (req, res) => {
         const instId = req.user.instituteId;
         if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
 
-        const questions = await ExamQuestion.find({ instituteId: instId })
+        let filter = { instituteId: instId, status: 'Published', isActive: true };
+        if (req.user.role === 'hod') {
+            if (req.user.departmentId) {
+                filter.departmentId = req.user.departmentId;
+            } else if (req.user.departments && req.user.departments.length > 0) {
+                const mongoose = require('mongoose');
+                const validDeptIds = req.user.departments.filter(d => mongoose.Types.ObjectId.isValid(d));
+                if (validDeptIds.length > 0) {
+                    filter.departmentId = { $in: validDeptIds };
+                }
+            }
+        }
+
+        const questions = await ExamQuestion.find(filter)
             .populate('createdBy', 'name email role departments')
             .sort({ createdAt: -1 })
             .limit(100);
@@ -347,26 +360,43 @@ exports.updateInstituteQuestion = async (req, res) => {
     try {
         const instId = req.user.instituteId;
         const question = await ExamQuestion.findById(req.params.id);
-        if (!question || !question.instituteId || question.instituteId.toString() !== instId.toString()) {
-            return res.status(404).json({ success: false, message: 'Question not found in your institute' });
+        
+        if (!question || !question.instituteId || question.instituteId?.toString() !== instId?.toString() || question.status !== 'Published') {
+            console.log('404 Debug:', {
+                questionExists: !!question,
+                questionInstId: question?.instituteId?.toString(),
+                userInstId: instId?.toString(),
+                questionStatus: question?.status,
+                userRole: req.user.role
+            });
+            return res.status(404).json({ success: false, message: 'Published question not found in your institute' });
         }
         
-        const wasProblem = question.isProblem;
-
-        const allowedUpdates = ['question', 'options', 'correctAnswer', 'explanation', 'subject', 'difficulty', 'approvalStatus', 'topicId', 'isProblem'];
+        if (req.user.role === 'hod') {
+            const hasDeptId = req.user.departmentId && question.departmentId && req.user.departmentId.toString() === question.departmentId.toString();
+            const hasDeptsStr = question.departmentId && req.user.departments && req.user.departments.some(d => d.toString() === question.departmentId.toString());
+            
+            if (!hasDeptId && !hasDeptsStr) {
+                return res.status(403).json({ success: false, message: 'Question does not belong to your department(s)' });
+            }
+        }
+        const allowedUpdates = ['question', 'options', 'correctAnswer', 'explanation', 'subject', 'difficulty', 'topicId', 'approvalStatus'];
         allowedUpdates.forEach(field => {
             if (req.body[field] !== undefined) {
                 question[field] = req.body[field];
             }
         });
-        
+
+        if (question.createdBy?.toString() !== req.user._id.toString()) {
+            question.isModerated = true;
+        }
+
         await question.save();
 
-        const willBeProblem = question.isProblem;
-
-        question.isProblem = question.isProblem;
         res.json({ success: true, message: 'Question updated successfully', data: question });
     } catch (error) {
+        console.error('Update Institute Question Error:', error);
+        require('fs').writeFileSync('c:/Users/Deepesh/Desktop/blackitab/blackitabbackend/error.log', error.stack || error.toString());
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -376,10 +406,25 @@ exports.deleteInstituteQuestion = async (req, res) => {
     try {
         const instId = req.user.instituteId;
         const question = await ExamQuestion.findById(req.params.id);
-        if (!question || !question.instituteId || question.instituteId.toString() !== instId.toString()) {
+        if (!question || !question.instituteId || question.instituteId?.toString() !== instId?.toString()) {
             return res.status(404).json({ success: false, message: 'Question not found in your institute' });
         }
-        await ExamQuestion.findByIdAndDelete(req.params.id);
+
+        if (req.user.role === 'hod') {
+            const hasDeptId = req.user.departmentId && question.departmentId && req.user.departmentId.toString() === question.departmentId.toString();
+            const hasDeptsStr = question.departmentId && req.user.departments && req.user.departments.some(d => d.toString() === question.departmentId.toString());
+            
+            if (!hasDeptId && !hasDeptsStr) {
+                return res.status(403).json({ success: false, message: 'Question does not belong to your department(s)' });
+            }
+        }
+
+        if (question.status === 'Draft') {
+            await ExamQuestion.findByIdAndDelete(req.params.id);
+        } else {
+            question.isActive = false;
+            await question.save();
+        }
         res.json({ success: true, message: 'Question deleted' });
     } catch (error) {
         

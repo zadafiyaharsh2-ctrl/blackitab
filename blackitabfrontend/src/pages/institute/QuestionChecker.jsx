@@ -11,7 +11,7 @@ import {
   ExclamationTriangleIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
-import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import PageShimmer from '../../components/shared/PageShimmer';
 import { CustomToast } from '../../utils/CustomToast';
 
 const QuestionChecker = () => {
@@ -49,36 +49,7 @@ const QuestionChecker = () => {
     }
   };
 
-  // Approve = set isProblem: true + approvalStatus: 'approved' (send to Problems page)
-  const handleApprove = async (id) => {
-    try {
-      const res = await api.put(`/institute/questions/${id}`, { 
-        approvalStatus: 'approved', 
-        isProblem: true 
-      });
-      if (res.data.success) {
-        CustomToast.success('Question approved & sent to Problems');
-        setQuestions(prev => prev.map(q => q._id === id ? { ...q, approvalStatus: 'approved', isProblem: true } : q));
-      }
-    } catch {
-      CustomToast.error('Failed to approve question');
-    }
-  };
-
-  const handleReject = async (id) => {
-    try {
-      const res = await api.put(`/institute/questions/${id}`, { 
-        approvalStatus: 'rejected', 
-        isProblem: false 
-      });
-      if (res.data.success) {
-        CustomToast.success('Question rejected & removed from Problems');
-        setQuestions(prev => prev.map(q => q._id === id ? { ...q, approvalStatus: 'rejected', isProblem: false } : q));
-      }
-    } catch {
-      CustomToast.error('Failed to reject question');
-    }
-  };
+  // Handlers for approval/rejection have been removed as HODs now act only as moderators.
 
   // Open delete confirmation — single question
   const promptDelete = (id) => {
@@ -126,21 +97,7 @@ const QuestionChecker = () => {
     }
   };
 
-  // Bulk approve = send to Problems
-  const handleBulkApprove = async () => {
-    if (selected.size === 0) return;
-    try {
-      const promises = [...selected].map(id => 
-        api.put(`/institute/questions/${id}`, { approvalStatus: 'approved', isProblem: true })
-      );
-      await Promise.all(promises);
-      CustomToast.success(`${selected.size} question(s) approved & sent to Problems`);
-      setQuestions(prev => prev.map(q => selected.has(q._id) ? { ...q, approvalStatus: 'approved', isProblem: true } : q));
-      setSelected(new Set());
-    } catch {
-      CustomToast.error('Failed to approve questions');
-    }
-  };
+
 
   const toggleSelect = (id) => {
     setSelected(prev => {
@@ -209,7 +166,7 @@ const QuestionChecker = () => {
     return acc;
   }, {});
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <PageShimmer variant="table" />;
 
   return (
     <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-6">
@@ -220,7 +177,7 @@ const QuestionChecker = () => {
             <CheckBadgeIcon className="w-6 h-6 text-orange-500" />
             Question Checker
           </h1>
-          <p className="text-gray-500 text-sm">Review, edit, and approve questions submitted by institute teachers</p>
+          <p className="text-gray-500 text-sm">Review, edit, and moderate questions submitted by institute teachers</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={toggleSelectAll} className="px-4 py-2 text-sm font-medium rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
@@ -234,9 +191,7 @@ const QuestionChecker = () => {
         <div className="sticky top-0 z-30 flex flex-wrap items-center gap-3 p-4 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 shadow-lg shadow-blue-500/5">
           <span className="text-sm font-bold text-blue-700 dark:text-blue-300">{selected.size} selected</span>
           <div className="flex-1" />
-          <button onClick={handleBulkApprove} className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition-colors shadow-sm">
-            <CheckCircleIcon className="w-4 h-4" /> Approve Selected
-          </button>
+
           <button onClick={promptBulkDelete} className="flex items-center gap-1.5 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition-colors shadow-sm">
             <TrashIcon className="w-4 h-4" /> Delete Selected
           </button>
@@ -295,13 +250,13 @@ const QuestionChecker = () => {
                             />
                             <span className="text-xs font-mono text-gray-500">Q{idx + 1}</span>
                             <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${
-                              q.isProblem 
+                              q.approvalStatus === 'Approved' 
                                 ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20' 
-                                : q.approvalStatus === 'rejected' 
+                                : (q.approvalStatus === 'rejected' || q.approvalStatus === 'Rejected')
                                   ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/20' 
                                   : 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20'
                             }`}>
-                              {q.isProblem ? 'approved' : q.approvalStatus === 'rejected' ? 'rejected' : 'pending'}
+                              {q.approvalStatus === 'Approved' ? 'approved' : (q.approvalStatus === 'rejected' || q.approvalStatus === 'Rejected') ? 'rejected' : 'pending'}
                             </span>
                             <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded text-xs border border-gray-200 dark:border-white/5">
                               {q.subject}
@@ -350,16 +305,6 @@ const QuestionChecker = () => {
 
                         {/* Action Buttons */}
                         <div className="flex flex-row md:flex-col gap-2 shrink-0 w-full md:w-auto">
-                            {!q.isProblem && (
-                                <button onClick={() => handleApprove(q._id)} className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl text-sm font-medium transition-colors border border-emerald-200 dark:border-emerald-500/20">
-                                    <CheckCircleIcon className="w-4 h-4" /> Approve
-                                </button>
-                            )}
-                            {q.approvalStatus !== 'rejected' && (
-                                <button onClick={() => handleReject(q._id)} className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-orange-50 hover:bg-orange-100 dark:bg-orange-500/10 dark:hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded-xl text-sm font-medium transition-colors border border-orange-200 dark:border-orange-500/20">
-                                    <XCircleIcon className="w-4 h-4" /> Reject
-                                </button>
-                            )}
                             <button onClick={() => openEditModal(q)} className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl text-sm font-medium transition-colors border border-blue-200 dark:border-blue-500/20">
                                 <PencilIcon className="w-4 h-4" /> Edit
                             </button>

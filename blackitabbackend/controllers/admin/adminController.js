@@ -64,13 +64,12 @@ exports.login = async (req, res) => {
 // GET /api/admin/stats
 exports.getPlatformStats = async (req, res) => {
     try {
-        const [totalUsers, totalInstitutes, totalAttempts, totalPosts, totalQuestions, pendingQuestions] = await Promise.all([
+        const [totalUsers, totalInstitutes, totalAttempts, totalPosts, totalQuestions] = await Promise.all([
             User.countDocuments(),
             Institute.countDocuments(),
             Attempt.countDocuments(),
             Post.countDocuments(),
-            ExamQuestion.countDocuments(),
-            ExamQuestion.countDocuments({ approvalStatus: 'pending' })
+            ExamQuestion.countDocuments()
         ]);
 
         const roleCounts = await User.aggregate([
@@ -89,7 +88,7 @@ exports.getPlatformStats = async (req, res) => {
                 totalAttempts,
                 totalPosts,
                 totalQuestions,
-                pendingQuestions,
+
                 dailyActiveUsers: dailyActiveUsers.length,
                 roleCounts: roleCounts.reduce((acc, r) => { acc[r._id] = r.count; return acc; }, {})
             }
@@ -357,13 +356,13 @@ exports.deleteInstitute = async (req, res) => {
 // QUESTION APPROVAL MANAGEMENT
 // ══════════════════════════════════════════════════════════════
 
-// GET /api/admin/questions?page=1&limit=20&status=pending&exam=jee&subject=Physics
+// GET /api/admin/questions?page=1&limit=20&exam=jee&subject=Physics
 exports.listQuestions = async (req, res) => {
     try {
-        const { page = 1, limit = 20, status, exam, subject, search } = req.query;
-        const filter = {};
+        const { page = 1, limit = 20, exam, subject, search } = req.query;
+        // Admins see all Published questions (which includes globals) plus explicitly isGlobal ones
+        const filter = { status: 'Published', isActive: true };
 
-        if (status) filter.approvalStatus = status;
         if (exam) filter.exam = exam;
         if (subject) filter.subject = { $regex: subject, $options: 'i' };
         if (search) filter.question = { $regex: search, $options: 'i' };
@@ -395,58 +394,30 @@ exports.listQuestions = async (req, res) => {
     }
 };
 
-// GET /api/admin/questions/pending
-exports.listPendingQuestions = async (req, res) => {
+// POST /api/admin/questions/:id/clone-global
+exports.cloneToGlobal = async (req, res) => {
     try {
-        const questions = await ExamQuestion.find({ approvalStatus: 'pending' })
-            .populate('createdBy', 'name email role')
-            .populate('instituteId', 'name instituteCode')
-            .sort({ createdAt: -1 });
-
-        res.json({ success: true, data: questions, total: questions.length });
-    } catch (error) {
-        
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-};
-
-// PUT /api/admin/questions/:id/approve
-exports.approveQuestion = async (req, res) => {
-    try {
-        const question = await ExamQuestion.findById(req.params.id);
-        if (!question) {
-            return res.status(404).json({ success: false, message: 'Question not found' });
+        const original = await ExamQuestion.findById(req.params.id);
+        if (!original) {
+            return res.status(404).json({ success: false, message: 'Original question not found' });
         }
 
-        question.approvalStatus = 'approved';
-        question.approvedBy = req.admin._id;
-        question.approvalNote = '';
-        await question.save();
-
-        res.json({ success: true, message: 'Question approved for global visibility', data: question });
-    } catch (error) {
+        const clonedData = original.toObject();
+        delete clonedData._id;
+        delete clonedData.createdAt;
+        delete clonedData.updatedAt;
         
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-};
-
-// PUT /api/admin/questions/:id/reject
-exports.rejectQuestion = async (req, res) => {
-    try {
-        const { note } = req.body;
-        const question = await ExamQuestion.findById(req.params.id);
-        if (!question) {
-            return res.status(404).json({ success: false, message: 'Question not found' });
-        }
-
-        question.approvalStatus = 'rejected';
-        question.approvalNote = note || 'Rejected by admin';
-        question.approvedBy = req.admin._id;
-        await question.save();
-
-        res.json({ success: true, message: 'Question rejected', data: question });
-    } catch (error) {
+        clonedData.instituteId = null;
+        clonedData.departmentId = null;
+        clonedData.isGlobal = true;
+        clonedData.status = 'Published';
+        clonedData.isModerated = false;
+        clonedData.isActive = true;
         
+        const newQuestion = await ExamQuestion.create(clonedData);
+
+        res.status(201).json({ success: true, message: 'Question successfully cloned to Global Bank', data: newQuestion });
+    } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -481,7 +452,7 @@ exports.updateQuestion = async (req, res) => {
              updates.isProblem = updates.isProblem;
         }
 
-        const updated = await ExamQuestion.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+        const updated = await ExamQuestion.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true, context: 'query' });
 
         res.json({ success: true, message: 'Question updated', data: updated });
     } catch (error) {
@@ -722,10 +693,10 @@ exports.editUser = async (req, res) => {
     }
 };
 
-// POST /api/admin/questions — Admin creates question (auto-approved)
+// POST /api/admin/questions — Admin creates question (Global)
 exports.createQuestion = async (req, res) => {
     try {
-        const { exam, subject, question, options, correctAnswer, difficulty, explanation, tags, isPublic } = req.body;
+        const { exam, subject, question, options, correctAnswer, difficulty, explanation, tags, format } = req.body;
 
         if (!exam || !subject || !question || !options || correctAnswer === undefined) {
             return res.status(400).json({ success: false, message: 'Exam, subject, question, options, and correctAnswer are required' });
@@ -744,14 +715,14 @@ exports.createQuestion = async (req, res) => {
             difficulty: difficulty || 'Medium',
             explanation: explanation || '',
             tags: tags || [],
-            isPublic: isPublic !== false,
-            approvalStatus: 'approved', // Admin-created = auto-approved
-            approvedBy: req.admin._id,
-            createdBy: null, // Created by system admin, not a regular user
+            format: format || 'Digital',
+            status: 'Published',
+            isGlobal: true,
+            createdBy: null,
             instituteId: null
         });
 
-        res.status(201).json({ success: true, message: 'Question created and auto-approved', data: newQuestion });
+        res.status(201).json({ success: true, message: 'Question created globally', data: newQuestion });
     } catch (error) {
         
         res.status(500).json({ success: false, message: 'Server error' });

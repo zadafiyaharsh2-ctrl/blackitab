@@ -41,11 +41,12 @@ const examQuestionSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    designatedFor: [{
+    format: {
         type: String,
-        enum: ['digital', 'paper'],
-        default: ['digital']
-    }],
+        enum: ['Paper', 'Digital'],
+        required: true,
+        default: 'Digital'
+    },
     topicId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Topic'
@@ -88,44 +89,43 @@ const examQuestionSchema = new mongoose.Schema({
         default: null,
         index: true
     },
+    departmentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Department',
+        index: true,
+        default: null
+    },
     instituteId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Institute',
-        default: null,
+        index: true,
+        required: function() { return !this.isGlobal; }
+    },
+    status: {
+        type: String,
+        enum: ['Draft', 'Published'],
+        default: 'Draft',
         index: true
     },
-    isPublic: {
+    isGlobal: {
+        type: Boolean,
+        default: false,
+        index: true
+    },
+    isModerated: {
+        type: Boolean,
+        default: false
+    },
+    isActive: {
         type: Boolean,
         default: true
     },
-    visibility: {
-        type: String,
-        enum: ['private', 'institute', 'public'],
-        default: 'public',
-        index: true
-    },
-    // ── Approval Workflow ──
-    approvalStatus: {
-        type: String,
-        enum: ['pending', 'approved', 'rejected'],
-        default: 'pending',
-        index: true
-    },
-    approvalNote: {
-        type: String,
-        default: ''
-    },
-    approvedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'SystemAdmin',
-        default: null
-    },
-    // Sent to Problems Tab
     isProblem: {
         type: Boolean,
         default: false,
         index: true
     },
+
 
     createdAt: {
         type: Date,
@@ -134,5 +134,6 @@ const examQuestionSchema = new mongoose.Schema({
 });
 
 examQuestionSchema.index({ exam: 1, subject: 1 });
+examQuestionSchema.index({ instituteId: 1, departmentId: 1, status: 1 });
 
 module.exports = mongoose.model('ExamQuestion', examQuestionSchema);

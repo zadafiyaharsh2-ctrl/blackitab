@@ -4,6 +4,7 @@ import axios from 'axios';
 import { FaArrowLeft, FaSave, FaSpinner, FaPlus, FaTrash, FaLink, FaFileAlt } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import API_URL from '../../config';
+import PageShimmer from '../../components/shared/PageShimmer';
 
 const TeacherBatchMaterialForm = () => {
   const { batchId, materialId } = useParams();
@@ -120,13 +121,7 @@ const TeacherBatchMaterialForm = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <FaSpinner className="animate-spin text-2xl text-gray-400" />
-      </div>
-    );
-  }
+  if (loading) return <PageShimmer variant="form" />;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">

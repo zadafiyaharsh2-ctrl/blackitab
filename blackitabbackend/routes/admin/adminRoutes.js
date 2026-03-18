@@ -34,10 +34,8 @@ router.delete('/institutes/:id', adminController.deleteInstitute);
 
 // ── Question Approval Management ──
 router.get('/questions', adminController.listQuestions);
-router.get('/questions/pending', adminController.listPendingQuestions);
 router.post('/questions', adminController.createQuestion);
-router.put('/questions/:id/approve', adminController.approveQuestion);
-router.put('/questions/:id/reject', adminController.rejectQuestion);
+router.post('/questions/:id/clone-global', adminController.cloneToGlobal);
 router.put('/questions/:id', adminController.updateQuestion);
 router.delete('/questions/:id', adminController.deleteQuestion);
 

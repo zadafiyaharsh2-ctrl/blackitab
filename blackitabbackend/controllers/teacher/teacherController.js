@@ -355,7 +355,7 @@ exports.searchStudentsInInstitute = async (req, res) => {
 // POST /api/teacher/assignment
 exports.createAssignment = async (req, res) => {
     try {
-        const { title, description, batchId, questionIds, dueDate, totalMarks, content, links, files } = req.body;
+        const { title, description, batchId, questionIds, dueDate, totalMarks, content, links, files, status } = req.body;
         if (!title || !batchId) return res.status(400).json({ success: false, message: 'title and batchId are required' });
         if (!req.user.instituteId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
 
@@ -367,7 +367,7 @@ exports.createAssignment = async (req, res) => {
             content: content || '',
             links: links || [],
             files: files || [],
-            status: 'draft',
+            status: status || 'draft',
             teacherId: req.user._id,
             instituteId: req.user.instituteId
         });

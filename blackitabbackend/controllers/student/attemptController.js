@@ -32,7 +32,7 @@ exports.submitAttempt = async (req, res) => {
                 totalAttempts: 1,
                 successfulAttempts: isCorrect ? 1 : 0
             }
-        });
+        }, { runValidators: true, context: 'query' });
 
         // 5. Update User Gamification — Difficulty-weighted Points & 10 XP per correct question
         const user = await User.findById(userId);
@@ -116,18 +116,20 @@ exports.getDashboardAnalytics = async (req, res) => {
         );
         const problemsSolved = uniqueSolvedIds.size;
         
-        const accuracy = totalAttempts > 0 ? (correctAttempts.length / totalAttempts) * 100 : 0;
+        const accuracy = totalAttempts > 0 ? (correctAttempts.length / totalAttempts) * 100 : null;
         const studySeconds = allAttempts.reduce((acc, curr) => acc + (curr.timeTakenSeconds || 0), 0);
         const studyHours = studySeconds > 0 ? (studySeconds / 3600) : 0;
+        const studyMinutes = Math.round(studySeconds / 60);
 
         const stats = {
             problemsSolved,
             problemsChange: 0,
-            accuracy: Math.round(accuracy * 10) / 10,
+            accuracy: accuracy !== null ? Math.round(accuracy * 10) / 10 : null,
             accuracyChange: 0,
             currentStreak: user.streak || 0,
             streakChange: 0,
             studyHours: Math.round(studyHours * 10) / 10,
+            studyMinutes,
             hoursChange: 0
         };
 
@@ -158,13 +160,34 @@ exports.getDashboardAnalytics = async (req, res) => {
         const strengths = subjectScores.filter(s => s.progress >= 75).map(s => s.name).slice(0, 5);
         const weaknesses = subjectScores.filter(s => s.progress < 50).map(s => s.name).slice(0, 5);
 
-        // Recent activity
-        const recentActivity = allAttempts.slice(0, 5).map(a => ({
-            type: a.isCorrect ? 'completed' : 'attempted',
-            title: a.questionId?.question ? (a.questionId.question.substring(0, 30) + '...') : 'Unknown Question',
-            time: new Date(a.attemptedAt).toLocaleDateString(),
-            difficulty: a.questionId?.difficulty || 'Medium'
-        }));
+        // Recent activity — return real question text + ISO timestamp
+        const recentActivity = allAttempts.slice(0, 5).map(a => {
+            const q = a.questionId;
+            let title = '';
+            if (q) {
+                // Try multiple possible field names for the question text
+                const rawText = q.question || q.questionText || q.title || '';
+                // Strip HTML tags if present
+                const cleanText = rawText.replace(/<[^>]*>/g, '').trim();
+                if (cleanText) {
+                    title = cleanText.length > 60 ? cleanText.substring(0, 60) + '…' : cleanText;
+                }
+                // Append subject or first tag as context (e.g. " - SQL")
+                const context = q.subject || (q.tags?.length > 0 ? q.tags[0] : '');
+                if (context && title) {
+                    title += ` — ${context}`;
+                } else if (context && !title) {
+                    title = context;
+                }
+            }
+            if (!title) title = 'Deleted Question';
+            return {
+                type: a.isCorrect ? 'completed' : 'attempted',
+                title,
+                time: a.attemptedAt, // ISO string for client-side relative formatting
+                difficulty: q?.difficulty || 'Medium'
+            };
+        });
 
         // Weekly Activity (trailing 7 days)
         const weeklyActivity = [];

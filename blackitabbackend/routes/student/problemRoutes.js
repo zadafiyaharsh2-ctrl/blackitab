@@ -102,6 +102,9 @@ router.get('/daily', async (req, res) => {
 // Search Subjects/Chapters
 router.get('/search', searchStudyContent);
 
+// Institute Subjects: MUST come before /:id
+router.get('/institute-subjects', protect, getInstituteExamSubjects);
+
 // Single Problem: Get by ID
 router.route('/:id')
     .get(getProblemById);
@@ -110,10 +113,6 @@ router.route('/:id')
 // Requires strict authentication (protect)
 router.route('/:id/status')
     .post(protect, updateProblemStatus);
-
-
-
-router.get('/institute-subjects', protect, getInstituteExamSubjects);
 
 router.get('/exam/:examId/questions', optionalProtect, getExamQuestions);
 router.post('/exam/:examId/check-answer', protect, checkExamAnswer);

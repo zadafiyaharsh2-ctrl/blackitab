@@ -505,7 +505,8 @@ const ExamQuestions = () => {
     }
 
     return (
-        <div className="max-w-5xl mx-auto px-4 py-8 relative">
+        <div className="min-h-screen bg-transparent dark:bg-transparent text-gray-900 dark:text-white transition-colors duration-300 pt-8 pb-16">
+            <div className="max-w-5xl mx-auto px-4 relative">
             {/* Analyzing Overlay */}
             {analyzing && (
                 <div className="fixed inset-0 z-50 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm flex flex-col items-center justify-center">
@@ -635,6 +636,16 @@ const ExamQuestions = () => {
                                                     <Sparkles className="h-3 w-3" /> AI
                                                 </span>
                                             )}
+                                            {q.format === 'Digital' && (
+                                                <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs rounded-full">
+                                                    Digital
+                                                </span>
+                                            )}
+                                            {q.format === 'Paper' && (
+                                                <span className="px-3 py-1 bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300 text-xs rounded-full">
+                                                    Paper
+                                                </span>
+                                            )}
                                         </div>
                                         <p className="text-gray-900 dark:text-white text-lg font-medium leading-relaxed">
                                             {q.question}
@@ -747,6 +758,7 @@ const ExamQuestions = () => {
                     </div>
                 </motion.div>
             )}
+        </div>
         </div>
     );
 };

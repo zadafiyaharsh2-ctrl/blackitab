@@ -18,6 +18,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import API_URL from '../../config';
+import PageShimmer from '../../components/shared/PageShimmer';
 
 const ProblemDetail = () => {
   // Get problemId from the URL
@@ -52,13 +53,7 @@ const ProblemDetail = () => {
   }, [problemId]);
 
   // Loading State
-  if (loading) {
-    return (
-      <div className="flex justify-center py-20">
-        <div className="animate-spin h-12 w-12 border-b-2 border-purple-600 rounded-full"></div>
-      </div>
-    );
-  }
+  if (loading) return <PageShimmer variant="detail" />;
 
   // Not Found State
   if (!problem) {

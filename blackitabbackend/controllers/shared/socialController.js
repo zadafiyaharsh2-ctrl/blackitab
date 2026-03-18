@@ -275,20 +275,37 @@ exports.getFollowers = async (req, res) => {
     try {
         const userId = req.params.userId;
         const currentUserId = req.user._id;
+        const search = req.query.search || '';
 
         const connections = await Connection.find({ targetUserId: userId, connectionType: 'follow', status: 'accepted' })
                                   .populate('sourceUserId', 'name email followerCount subscriberCount profileImage bio');
 
-        const myFollows = await Connection.find({ sourceUserId: currentUserId, connectionType: 'follow', status: 'accepted' });
-        const myFollowingIds = new Set(myFollows.map(f => f.targetUserId.toString()));
+        // Check who follows the current user (for "Follows you" badge)
+        const followsMe = await Connection.find({ targetUserId: currentUserId, connectionType: 'follow', status: 'accepted' });
+        const followsMeIds = new Set(followsMe.map(f => f.sourceUserId.toString()));
 
-        const users = connections
+        const myFollows = await Connection.find({ sourceUserId: currentUserId, connectionType: 'follow' });
+        const myFollowingIds = new Set(
+            myFollows.filter(c => c.status === 'accepted').map(f => f.targetUserId.toString())
+        );
+        const myPendingIds = new Set(
+            myFollows.filter(c => c.status === 'pending').map(f => f.targetUserId.toString())
+        );
+
+        let users = connections
             .map(c => c.sourceUserId)
-            .filter(u => u) // Keep only valid populated users
+            .filter(u => u)
             .map(u => ({
                 ...(u.toObject ? u.toObject() : u),
-                isFollowing: myFollowingIds.has(u._id.toString())
+                isFollowing: myFollowingIds.has(u._id.toString()),
+                isRequested: myPendingIds.has(u._id.toString()),
+                followsYou: followsMeIds.has(u._id.toString())
             }));
+
+        if (search) {
+            const re = new RegExp(search, 'i');
+            users = users.filter(u => re.test(u.name));
+        }
 
         res.json({ success: true, users, data: users });
     } catch (error) {
@@ -301,24 +318,68 @@ exports.getFollowing = async (req, res) => {
     try {
         const { userId } = req.params;
         const currentUserId = req.user._id;
+        const search = req.query.search || '';
 
         const connections = await Connection.find({ sourceUserId: userId, connectionType: 'follow', status: 'accepted' })
                                   .populate('targetUserId', 'name email followerCount subscriberCount profileImage bio');
 
-        const myFollows = await Connection.find({ sourceUserId: currentUserId, connectionType: 'follow', status: 'accepted' });
-        const myFollowingIds = new Set(myFollows.map(f => f.targetUserId.toString()));
+        // Check who follows the current user (for "Follows you" badge)
+        const followsMe = await Connection.find({ targetUserId: currentUserId, connectionType: 'follow', status: 'accepted' });
+        const followsMeIds = new Set(followsMe.map(f => f.sourceUserId.toString()));
 
-        const users = connections
+        const myFollows = await Connection.find({ sourceUserId: currentUserId, connectionType: 'follow' });
+        const myFollowingIds = new Set(
+            myFollows.filter(c => c.status === 'accepted').map(f => f.targetUserId.toString())
+        );
+        const myPendingIds = new Set(
+            myFollows.filter(c => c.status === 'pending').map(f => f.targetUserId.toString())
+        );
+
+        let users = connections
             .map(c => c.targetUserId)
-            .filter(u => u) // Keep only valid populated users
+            .filter(u => u)
             .map(u => ({ 
                 ...(u.toObject ? u.toObject() : u), 
-                isFollowing: myFollowingIds.has(u._id.toString()) 
+                isFollowing: myFollowingIds.has(u._id.toString()),
+                isRequested: myPendingIds.has(u._id.toString()),
+                followsYou: followsMeIds.has(u._id.toString())
             }));
+
+        if (search) {
+            const re = new RegExp(search, 'i');
+            users = users.filter(u => re.test(u.name));
+        }
 
         res.json({ success: true, users, data: users });
     } catch (error) {
         
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// --- Remove Follower ---
+exports.removeFollower = async (req, res) => {
+    try {
+        const followerUserId = req.params.userId; // The person to remove
+        const currentUserId = req.user._id; // Me (the one being followed)
+
+        const connection = await Connection.findOneAndDelete({
+            sourceUserId: followerUserId,
+            targetUserId: currentUserId,
+            connectionType: 'follow',
+            status: 'accepted'
+        });
+
+        if (!connection) {
+            return res.status(404).json({ success: false, message: 'This user is not following you' });
+        }
+
+        // Decrement counts
+        await User.findByIdAndUpdate(currentUserId, { $inc: { followerCount: -1 } });
+        await User.findByIdAndUpdate(followerUserId, { $inc: { followingCount: -1 } });
+
+        res.json({ success: true, message: 'Follower removed successfully' });
+    } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
