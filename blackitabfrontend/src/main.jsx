@@ -42,10 +42,15 @@ import './index.css'
 // Import the root App component
 import App from './App.jsx'
 
+// Import Google OAuth Provider for authentication
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
 // Find the HTML element with id 'root' and render the App inside it
 createRoot(document.getElementById('root')).render(
   // StrictMode activates additional checks and warnings for descendants
   <StrictMode>
-    <App />
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-client-id-here.apps.googleusercontent.com'}>
+      <App />
+    </GoogleOAuthProvider>
   </StrictMode>,
 )
