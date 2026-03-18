@@ -4,6 +4,87 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) throw new Error('FATAL: JWT_SECRET environment variable is not set!');
 
+const { OAuth2Client } = require('google-auth-library');
+// Note: We create the client dynamically or pass the token. 
+// We will use the VITE_GOOGLE_CLIENT_ID if it were full stack, 
+// but since this is backend we should ideally verify against a known CLIENT_ID, 
+// or let the library verify the signature. We'll use the client ID from request or env.
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID); // Will work even if process.env.GOOGLE_CLIENT_ID is undefined initially
+
+// POST /api/auth/google — authenticate using Google OAuth token
+exports.googleLogin = async (req, res) => {
+    try {
+        const { credential, clientId } = req.body; // credential is the JWT from Google
+
+        if (!credential) {
+            return res.status(400).json({ success: false, message: 'Google credential is required' });
+        }
+
+        // Verify the token
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID || clientId,  // Specify the CLIENT_ID of the app that accesses the backend
+        });
+        
+        const payload = ticket.getPayload();
+        const { sub: googleId, email, name, picture } = payload;
+
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'No email found in Google profile' });
+        }
+
+        const normalizedEmail = email.toLowerCase();
+
+        // 1. Check if user already exists
+        let user = await User.findOne({ email: normalizedEmail });
+
+        if (user) {
+            // User exists, check if they signed up with local before
+            if (user.authProvider !== 'google' && !user.googleId) {
+                // Link Google account to existing local account
+                user.googleId = googleId;
+                await user.save();
+            }
+        } else {
+            // 2. User doesn't exist, create a new one
+            user = new User({
+                name: name,
+                email: normalizedEmail,
+                googleId: googleId,
+                authProvider: 'google',
+                role: 'student', // Default role for new signups
+                profileImage: picture || '',
+                isVerified: true // Google emails are already verified
+            });
+            await user.save();
+        }
+
+        // 3. Generate JWT Token
+        const token = jwt.sign(
+            { userId: user._id, email: user.email },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.json({
+            success: true,
+            message: 'Google Login successful',
+            token,
+            user: { 
+                _id: user._id, 
+                email: user.email, 
+                name: user.name,
+                role: user.role,
+                instituteId: user.instituteId,
+                profileImage: user.profileImage
+            }
+        });
+    } catch (error) {
+        console.error('Google Auth Error:', error);
+        res.status(401).json({ success: false, message: 'Invalid Google token or authentication failed' });
+    }
+};
+
 // POST /api/register — create account and return token immediately
 exports.register = async (req, res) => {
     try {
