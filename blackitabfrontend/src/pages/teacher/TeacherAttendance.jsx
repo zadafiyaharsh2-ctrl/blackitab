@@ -128,19 +128,21 @@ export default function TeacherAttendance() {
   const absentCount = Object.values(attendanceState).filter(s => s === 'Absent').length;
   const lateCount = Object.values(attendanceState).filter(s => s === 'Late').length;
 
-  // ── Status pill cycling: Present → Absent → Late → Present
-  const cycleStatus = (studentId) => {
-    setAttendanceState(prev => {
-      const cur = prev[studentId] || 'Present';
-      const next = cur === 'Present' ? 'Absent' : cur === 'Absent' ? 'Late' : 'Present';
-      return { ...prev, [studentId]: next };
-    });
+  // ── Status mapping
+  const setStudentStatus = (studentId, status) => {
+    setAttendanceState(prev => ({ ...prev, [studentId]: status }));
+  };
+
+  const markAllPresent = () => {
+    const newState = {};
+    students.forEach(s => { newState[s._id] = 'Present'; });
+    setAttendanceState(newState);
   };
 
   const statusConfig = {
-    Present: { label: 'Present', icon: <FaCheckCircle />, cls: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30' },
-    Absent:  { label: 'Absent',  icon: <FaTimesCircle />, cls: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/30' },
-    Late:    { label: 'Late',    icon: <FaClock />,       cls: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30' },
+    Present: { label: 'Present', short: 'P', icon: <FaCheckCircle />, cls: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30' },
+    Absent:  { label: 'Absent',  short: 'A', icon: <FaTimesCircle />, cls: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/30' },
+    Late:    { label: 'Late',    short: 'L', icon: <FaClock />,       cls: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30' },
   };
 
   return (
@@ -258,48 +260,103 @@ export default function TeacherAttendance() {
                   <p className="text-gray-500 text-sm">No students enrolled in this batch yet.</p>
                 </div>
               ) : (
-                <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
-                  <div className="px-4 py-3 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{students.length} Students · Tap status to toggle</p>
-                    <div className="flex gap-2 text-xs text-gray-400">
-                      <span className="flex items-center gap-1"><FaCheckCircle className="text-emerald-500" /> P</span>
-                      <span className="flex items-center gap-1"><FaTimesCircle className="text-red-500" /> A</span>
-                      <span className="flex items-center gap-1"><FaClock className="text-amber-500" /> L</span>
-                    </div>
+                <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02] shadow-sm">
+                  {/* Table Header / Action Bar */}
+                  <div className="px-4 py-3 border-b border-gray-100 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50/50 dark:bg-white/[0.01]">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      {students.length} Students
+                    </p>
+                    <button
+                      onClick={markAllPresent}
+                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/30 transition-colors rounded-md text-xs font-semibold border border-emerald-200 dark:border-emerald-500/30 w-full sm:w-auto"
+                    >
+                      <FaCheckCircle /> Mark All Present
+                    </button>
                   </div>
-                  <div className="divide-y divide-gray-100 dark:divide-white/5">
-                    {students.map((student, idx) => {
-                      const status = attendanceState[student._id] || 'Present';
-                      const cfg = statusConfig[status];
-                      return (
-                        <div key={student._id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/[0.02]">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-600 dark:text-gray-300 font-semibold text-sm shrink-0">
-                              {student.name.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-gray-900 dark:text-white">{student.name}</p>
-                              <p className="text-xs text-gray-400 truncate max-w-[180px]">{student.email}</p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => cycleStatus(student._id)}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold ${cfg.cls}`}
-                          >
-                            {cfg.icon} {cfg.label}
-                          </button>
-                        </div>
-                      );
-                    })}
+
+                  {/* Spreadsheet Table View */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm whitespace-nowrap">
+                      <thead className="bg-gray-50 dark:bg-white/[0.02] border-b border-gray-100 dark:border-white/5 text-gray-500 dark:text-gray-400">
+                        <tr>
+                          <th className="px-4 py-3 font-semibold text-xs tracking-wider uppercase w-12 text-center">S.No</th>
+                          <th className="px-4 py-3 font-semibold text-xs tracking-wider uppercase">Student Name</th>
+                          <th className="px-4 py-3 font-semibold text-xs tracking-wider uppercase text-center w-24">Present</th>
+                          <th className="px-4 py-3 font-semibold text-xs tracking-wider uppercase text-center w-24">Absent</th>
+                          <th className="px-4 py-3 font-semibold text-xs tracking-wider uppercase text-center w-24">Late</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                        {students.map((student, idx) => {
+                          const status = attendanceState[student._id] || 'Present';
+                          return (
+                            <tr key={student._id} className="hover:bg-gray-50/50 dark:hover:bg-white/[0.01] transition-colors group">
+                              {/* Serial Number */}
+                              <td className="px-4 py-3 text-center text-xs font-medium text-gray-400">
+                                {idx + 1}
+                              </td>
+                              
+                              {/* Student Info */}
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-600 dark:text-gray-300 font-semibold text-xs shrink-0 select-none">
+                                    {student.name.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="flex flex-col min-w-[150px]">
+                                    <span className="font-medium text-gray-900 dark:text-white truncate">{student.name}</span>
+                                    <span className="text-[10px] text-gray-400 truncate">{student.email}</span>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Present Checkbox */}
+                              <td className="px-4 py-3 text-center" onClick={() => setStudentStatus(student._id, 'Present')}>
+                                <div className={`w-6 h-6 mx-auto rounded-md border flex items-center justify-center cursor-pointer transition-colors ${
+                                  status === 'Present' 
+                                    ? 'bg-emerald-500 border-emerald-600 text-white' 
+                                    : 'bg-white border-gray-300 text-transparent hover:border-emerald-500 dark:bg-gray-800 dark:border-gray-600'
+                                }`}>
+                                  <FaCheckCircle className={status === 'Present' ? 'text-white' : 'opacity-0'} size={12} />
+                                </div>
+                              </td>
+
+                              {/* Absent Checkbox */}
+                              <td className="px-4 py-3 text-center" onClick={() => setStudentStatus(student._id, 'Absent')}>
+                                <div className={`w-6 h-6 mx-auto rounded-md border flex items-center justify-center cursor-pointer transition-colors ${
+                                  status === 'Absent' 
+                                    ? 'bg-red-500 border-red-600 text-white' 
+                                    : 'bg-white border-gray-300 text-transparent hover:border-red-500 dark:bg-gray-800 dark:border-gray-600'
+                                }`}>
+                                  <FaTimesCircle className={status === 'Absent' ? 'text-white' : 'opacity-0'} size={12} />
+                                </div>
+                              </td>
+
+                              {/* Late Checkbox */}
+                              <td className="px-4 py-3 text-center" onClick={() => setStudentStatus(student._id, 'Late')}>
+                                <div className={`w-6 h-6 mx-auto rounded-md border flex items-center justify-center cursor-pointer transition-colors ${
+                                  status === 'Late' 
+                                    ? 'bg-amber-500 border-amber-600 text-white' 
+                                    : 'bg-white border-gray-300 text-transparent hover:border-amber-500 dark:bg-gray-800 dark:border-gray-600'
+                                }`}>
+                                  <FaClock className={status === 'Late' ? 'text-white' : 'opacity-0'} size={12} />
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
-                  <div className="px-4 py-3 border-t border-gray-100 dark:border-white/5 flex justify-end">
+
+                  {/* Save Button */}
+                  <div className="px-4 py-3 border-t border-gray-100 dark:border-white/5 flex justify-end bg-gray-50/50 dark:bg-white/[0.01]">
                     <button
                       onClick={submitAttendance}
                       disabled={submitting}
-                      className="flex items-center gap-2 px-5 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold rounded-lg hover:bg-gray-700 dark:hover:bg-gray-100 disabled:opacity-50"
+                      className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 shadow-lg shadow-gray-900/20 dark:bg-white dark:shadow-white/10 text-white dark:text-gray-900 text-sm font-semibold rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 disabled:opacity-50 transition-all hover:-translate-y-0.5"
                     >
                       {submitting ? <FaSpinner className="animate-spin" /> : <FaSave />}
-                      {submitting ? 'Saving…' : 'Save Attendance'}
+                      {submitting ? 'Saving Sheet…' : 'Save Attendance'}
                     </button>
                   </div>
                 </div>
