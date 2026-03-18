@@ -7,7 +7,7 @@ const TeacherFeedback = () => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState('all'); // all, quiz_end, realtime, general
+  const [filterType, setFilterType] = useState('all'); // all, class
 
   useEffect(() => {
     fetchFeedbacks();
@@ -121,7 +121,7 @@ const TeacherFeedback = () => {
           </div>
           
           <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 snap-x custom-scrollbar">
-            {['all', 'general', 'quiz_end', 'realtime', 'class'].map(type => (
+            {['all', 'class'].map(type => (
               <button
                 key={type}
                 onClick={() => setFilterType(type)}
