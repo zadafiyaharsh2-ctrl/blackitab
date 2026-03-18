@@ -1,5 +1,5 @@
 const axios = require("axios");
-const AiQuestion = require("../../models/AiQuestion");
+const AiQuestion = require("../../models/AIQuestion");
 const ChatHistory = require("../../models/ChatHistory");
 
 // ===================== DEBUG CONFIGURATION =====================
