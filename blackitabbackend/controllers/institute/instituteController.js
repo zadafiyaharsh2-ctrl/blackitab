@@ -1127,3 +1127,56 @@ exports.getDepartmentDetails = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+// GET /api/institute/teacher/:id/details
+exports.getTeacherFullDetails = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        const teacherId = req.params.id;
+
+        if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+
+        const teacher = await User.findOne({ _id: teacherId, instituteId: instId }).select('-password');
+        if (!teacher) {
+            return res.status(404).json({ success: false, message: 'Teacher not found in your institute' });
+        }
+
+        // HOD Access Check (HOD can only see teachers in their departments... or potentially any teacher if they are inspecting visiting ones, but let's allow it as long as they are in same institute for simplicity of drill-down)
+        
+        const Batch = require('../../models/Batch');
+        const ExamQuestion = require('../../models/ExamQuestion');
+
+        const [batches, questionsCount] = await Promise.all([
+            Batch.find({ instituteId: instId, teacherIds: teacherId })
+                .populate('teacherIds', 'name profileImage email departments')
+                .populate('departmentId', 'name')
+                .lean(),
+            ExamQuestion.countDocuments({ createdBy: teacherId, instituteId: instId })
+        ]);
+
+        // Attach student counts per batch
+        const batchesWithCounts = await Promise.all(batches.map(async b => {
+            const studentCount = b.studentIds ? b.studentIds.length : 0;
+            return {
+                ...b,
+                studentCount
+            };
+        }));
+
+        res.json({
+            success: true,
+            data: {
+                teacher,
+                batches: batchesWithCounts,
+                stats: {
+                    questionsCreated: questionsCount,
+                    totalBatches: batches.length
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Get Teacher Full Details Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
