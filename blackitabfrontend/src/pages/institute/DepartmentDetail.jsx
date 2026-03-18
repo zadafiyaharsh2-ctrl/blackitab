@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../utils/api';
 import PageShimmer from '../../components/shared/PageShimmer';
 import { CustomToast } from '../../utils/CustomToast';
