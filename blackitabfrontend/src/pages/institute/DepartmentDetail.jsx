@@ -115,7 +115,7 @@ const DepartmentDetail = () => {
                             {data.coreTeachers.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {data.coreTeachers.map(teacher => (
-                                        <div key={teacher._id} className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                                        <Link key={teacher._id} to={`/institute/teacher/${teacher._id}`} className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.02] hover:border-blue-500/30 transition-all cursor-pointer group">
                                             <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 flex items-center justify-center font-bold text-sm overflow-hidden shrink-0">
                                                 {teacher.profileImage ? (
                                                     <img src={teacher.profileImage} alt={teacher.name} className="w-full h-full object-cover" />
@@ -127,7 +127,7 @@ const DepartmentDetail = () => {
                                                 <p className="font-semibold text-sm text-gray-900 dark:text-white">{teacher.name}</p>
                                                 <p className="text-xs text-gray-500 max-w-[140px] truncate" title={teacher.email}>{teacher.email}</p>
                                             </div>
-                                        </div>
+                                        </Link>
                                     ))}
                                 </div>
                             ) : (
@@ -155,7 +155,7 @@ const DepartmentDetail = () => {
                                 <p className="text-xs text-gray-500 mb-4">These teachers belong to other departments but are teaching batches within {deptName}.</p>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {data.visitingTeachers.map(teacher => (
-                                        <div key={teacher._id} className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                                        <Link key={teacher._id} to={`/institute/teacher/${teacher._id}`} className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.02] hover:border-blue-500/30 transition-all cursor-pointer group">
                                             <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 flex items-center justify-center font-bold text-sm overflow-hidden shrink-0">
                                                 {teacher.profileImage ? (
                                                     <img src={teacher.profileImage} alt={teacher.name} className="w-full h-full object-cover" />
@@ -169,7 +169,7 @@ const DepartmentDetail = () => {
                                                     Primary: {teacher.departments?.join(', ') || 'None'}
                                                 </p>
                                             </div>
-                                        </div>
+                                        </Link>
                                     ))}
                                 </div>
                             </div>
@@ -194,7 +194,7 @@ const DepartmentDetail = () => {
                             {data.batches.length > 0 ? (
                                 <div className="space-y-3">
                                     {data.batches.map(batch => (
-                                        <div key={batch._id} className="p-3 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5">
+                                        <Link key={batch._id} to={`/teacher/batch/${batch._id}`} className="block p-3 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 hover:border-blue-500/30 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors cursor-pointer group">
                                             <div className="flex justify-between items-start mb-1">
                                                 <h3 className="font-semibold text-sm text-gray-900 dark:text-white">{batch.name}</h3>
                                                 <span className="text-xs font-medium px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300">
@@ -205,7 +205,7 @@ const DepartmentDetail = () => {
                                                 <AcademicCapIcon className="w-3.5 h-3.5" />
                                                 Taught by: <span className="font-medium text-gray-700 dark:text-gray-300">{batch.teachers?.length > 0 ? batch.teachers.map(t => t.name).join(', ') : 'Unknown'}</span>
                                             </div>
-                                        </div>
+                                        </Link>
                                     ))}
                                 </div>
                             ) : (
