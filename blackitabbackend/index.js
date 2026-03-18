@@ -122,6 +122,7 @@ app.get('/favicon.ico', (req, res) => res.status(204).end());
 app.post('/api/register', authController.register);
 app.post('/api/register-institute', authController.registerInstitute);
 app.post('/api/login', authController.login);
+app.post('/api/auth/google', authController.googleLogin);
 
 // --- Theory Routes (inline) ---
 
