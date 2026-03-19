@@ -45,6 +45,44 @@ const debugError = (label, error) => {
 const LANGCHAIN_API_URL =
   process.env.LANGCHAIN_API_URL || "http://127.0.0.1:8000/query";
 
+const CONTEXT_REFUSAL_PATTERNS = [
+  /provided\s+context.*provided\s+docs?/i,
+  /not\s+(?:present|available|mentioned|found)\s+in\s+(?:the\s+)?(?:provided|given)\s+(?:context|docs?|documents?)/i,
+  /(?:provided|given)\s+(?:context|docs?|documents?)\s+(?:does|do)\s+not\s+(?:contain|include|mention)/i,
+  /(?:outside|beyond)\s+(?:the\s+)?(?:provided|given)\s+(?:context|docs?|documents?)/i,
+  /i\s+(?:cannot|can't|do\s+not|don't|am\s+unable\s+to)\s+(?:find|see|answer).*(?:provided|given)\s+(?:context|docs?|documents?)/i,
+  /there\s+is\s+no\s+(?:information|mention|reference).*(?:provided|given)\s+(?:context|docs?|documents?)/i,
+  /i\s+do\s+not\s+have\s+enough\s+context/i,
+  /can(?:not|'t)\s+answer\s+.*\s+based\s+on\s+(?:the\s+)?(?:provided|given)\s+(?:context|docs?|documents?)/i,
+  /(?:however,\s*)?i\s+can\s+provide\s+an?\s+answer\s+based\s+on\s+my\s+general\s+knowledge\.?/i
+];
+
+const DEFAULT_HELPFUL_FALLBACK =
+  "I can help with that. Please ask again with a little more detail (subject, topic, and what you want: definition, difference, example, or steps), and I will give a direct answer.";
+
+const sanitizeAIAnswer = (rawAnswer) => {
+  const answer = typeof rawAnswer === "string" ? rawAnswer.trim() : "";
+  if (!answer) return DEFAULT_HELPFUL_FALLBACK;
+
+  const sentenceParts = answer
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  const filteredParts = sentenceParts.filter(
+    (part) => !CONTEXT_REFUSAL_PATTERNS.some((pattern) => pattern.test(part))
+  );
+
+  const cleaned = filteredParts.join(" ").trim();
+  const hasRefusalSignal = CONTEXT_REFUSAL_PATTERNS.some((pattern) => pattern.test(answer));
+
+  if (hasRefusalSignal && !cleaned) {
+    return DEFAULT_HELPFUL_FALLBACK;
+  }
+
+  return cleaned || answer;
+};
+
 // Log environment configuration on startup
 debugLog("AI Controller Initialized", {
   LANGCHAIN_API_URL,
@@ -130,6 +168,8 @@ const queryAI = async (req, res) => {
         response.data.answer ||
         response.data.response ||
         "No response received";
+
+      aiResponseContent = sanitizeAIAnswer(aiResponseContent);
     } catch (err) {
       debugError("queryAI - AI Server Error", err);
       aiResponseContent =
@@ -272,8 +312,9 @@ const askQuestion = async (req, res) => {
     const questionData = {
       userId,
       question: query.trim(),
-      answer:
-        aiResponse.answer || aiResponse.response || "No response received",
+      answer: sanitizeAIAnswer(
+        aiResponse.answer || aiResponse.response || "No response received"
+      ),
       topK: top_k,
       sources: aiResponse.sources || [],
       sessionId: sessionId || null};

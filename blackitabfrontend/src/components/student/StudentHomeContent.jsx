@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import {
   FaBook,FaSpinner, FaTrophy, FaFire, FaChartLine,
-  FaCheckCircle, FaDatabase, FaCalendarAlt,FaArrowRight,
+  FaCheckCircle, FaDatabase, FaCalendarAlt,FaArrowRight,FaCode,
   FaCloud, FaCrown, FaBolt,
   FaHistory, FaUserGraduate
 } from 'react-icons/fa';
 import ActivityHeatmap from './ActivityHeatmap';
-import API_URL from '../../config';
+import API_URL from '../../config'; 
 import PageShimmer from '../shared/PageShimmer';
 
 const getMasteryLevel = (pct) => {

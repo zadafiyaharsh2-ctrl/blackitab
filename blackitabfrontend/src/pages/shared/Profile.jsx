@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { FaCog, FaTh, FaBookmark, FaUserTag, FaSearch, FaBell, FaEnvelope, FaPen, FaHeart, FaComment, FaPlay, FaLock, FaRupeeSign, FaArrowLeft, FaShareAlt, FaBuilding, FaSignInAlt, FaTimes, FaExternalLinkAlt, FaChartLine, FaFire, FaCheckCircle } from 'react-icons/fa';
+import { FaCog, FaTh, FaCode, FaBookmark, FaUserTag, FaSearch, FaBell, FaEnvelope, FaPen, FaHeart, FaComment, FaPlay, FaLock, FaRupeeSign, FaArrowLeft, FaShareAlt, FaBuilding, FaSignInAlt, FaTimes, FaExternalLinkAlt, FaChartLine, FaFire, FaCheckCircle } from 'react-icons/fa';
 import API_URL from '../../config';
 import usePageTitle from '../../hooks/usePageTitle';
 import toast from 'react-hot-toast';

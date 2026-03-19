@@ -12,7 +12,8 @@ const TeacherClasses = () => {
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [formData, setFormData] = useState({ name: '', year: '', section: '' });
+  const [formData, setFormData] = useState({ name: '', year: '', section: '', department: '' });
+  const [instituteDepartments, setInstituteDepartments] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   
   // Deletion Modal State
@@ -22,7 +23,10 @@ const TeacherClasses = () => {
     batchName: ''
   });
 
-  useEffect(() => { fetchBatches(); }, []);
+  useEffect(() => {
+    fetchBatches();
+    fetchInstituteDepartments();
+  }, []);
 
   const fetchBatches = async () => {
     try {
@@ -38,8 +42,32 @@ const TeacherClasses = () => {
     }
   };
 
+  const fetchInstituteDepartments = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/api/institute/my`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.data.success) {
+        const departments = Array.isArray(res.data.data?.departments)
+          ? res.data.data.departments
+              .map((dept) => (typeof dept === 'string' ? dept.trim() : ''))
+              .filter(Boolean)
+          : [];
+        setInstituteDepartments(departments);
+      }
+    } catch {
+      setInstituteDepartments([]);
+    }
+  };
+
   const handleCreateBatch = async (e) => {
     e.preventDefault();
+    if (!formData.department) {
+      toast.error('Department is required');
+      return;
+    }
     try {
       const token = localStorage.getItem('token');
       const res = await axios.post(`${API_URL}/api/teacher/batch`, formData, {
@@ -49,7 +77,7 @@ const TeacherClasses = () => {
         toast.success('Class created!');
         setBatches([res.data.data, ...batches]);
         setShowCreateModal(false);
-        setFormData({ name: '', year: '', section: '' });
+        setFormData({ name: '', year: '', section: '', department: '' });
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to create class');
@@ -81,7 +109,8 @@ const TeacherClasses = () => {
 
   const filteredBatches = batches.filter(b =>
     b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (b.year && b.year.toLowerCase().includes(searchQuery.toLowerCase()))
+    (b.year && b.year.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    ((b.department || b.departmentId?.name || '').toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
@@ -153,6 +182,9 @@ const TeacherClasses = () => {
                   <p className="text-xs text-gray-400 flex items-center gap-1">
                     <FaGraduationCap /> {batch.subjectId?.name || 'General'}
                   </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Department: {batch.department || batch.departmentId?.name || 'Not set'}
+                  </p>
                 </div>
                 <button
                   onClick={(e) => openDeleteModal(batch, e)}
@@ -220,9 +252,34 @@ const TeacherClasses = () => {
                   />
                 </div>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Department <span className="text-red-500">*</span></label>
+                <select
+                  required
+                  value={formData.department}
+                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                  className="w-full border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                >
+                  <option value="">Select Department</option>
+                  {instituteDepartments.map((dept) => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
+                {instituteDepartments.length === 0 && (
+                  <p className="text-xs text-red-500 mt-1">
+                    No departments found in your institute. Ask institute admin to add departments first.
+                  </p>
+                )}
+              </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-white/10 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400">Cancel</button>
-                <button type="submit" className="flex-1 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold">Create</button>
+                <button
+                  type="submit"
+                  disabled={instituteDepartments.length === 0}
+                  className="flex-1 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Create
+                </button>
               </div>
             </form>
           </div>
