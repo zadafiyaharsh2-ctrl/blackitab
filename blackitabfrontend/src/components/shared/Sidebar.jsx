@@ -107,6 +107,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     { path: '/institute/dashboard', label: 'Dashboard', icon: <FaBuilding /> },
     { path: '/institute/teachers', label: "Teacher's Panel", icon: <FaUserTie /> },
     { path: '/institute/students', label: 'Student Panel', icon: <FaUserGraduate /> },
+    { path: '/hod/attendance', label: 'Attendance', icon: <FaCalendarDay /> },
     { path: '/institute/theory', label: 'Theory Checking', icon: <FaFileAlt /> },
     { path: '/institute/questions', label: 'Question Checker', icon: <FaClipboardCheck /> },
     { path: '/institute/join-requests', label: 'Join Requests', icon: <FaUserPlus />, badge: pendingJoinRequests },
