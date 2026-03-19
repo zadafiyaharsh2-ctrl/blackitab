@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { FaArrowLeft, FaStar, FaBookOpen, FaQuestionCircle, FaUsers, FaCommentDots, FaCalendarCheck, FaChartLine, FaCheckCircle, FaClock } from 'react-icons/fa';
 import PageShimmer from '../../components/shared/PageShimmer';
@@ -7,37 +7,43 @@ import PageShimmer from '../../components/shared/PageShimmer';
 const TeacherPerformance = () => {
   const { teacherId } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
+
   const [teacher, setTeacher] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Determine if this is accessed from institute or hod context
-  const isInstituteContext = location.pathname.startsWith('/institute');
-
   useEffect(() => {
+
     fetchTeacherDetail();
   }, [teacherId]);
 
   const fetchTeacherDetail = async () => {
     try {
       setLoading(true);
-      // Use HOD endpoint for department-scoped view, or institute endpoint
-      const endpoint = isInstituteContext
-        ? `/institute/teachers/${teacherId}/feedback`
-        : `/teacher/department/teacher/${teacherId}/detail`;
-
-      const res = await api.get(endpoint).catch(() => ({ data: { success: false } }));
+      const res = await api.get(`/teacher/department/teacher/${teacherId}/detail`).catch(() => ({ data: { success: false } }));
 
       if (res.data.success) {
-        setTeacher(res.data.data);
-      } else {
-        // Fallback: try the other endpoint
-        const fallbackEndpoint = isInstituteContext
-          ? `/teacher/department/teacher/${teacherId}/detail`
-          : `/institute/teachers/${teacherId}/feedback`;
-        const fallbackRes = await api.get(fallbackEndpoint).catch(() => ({ data: { success: false } }));
-        if (fallbackRes.data.success) setTeacher(fallbackRes.data.data);
+        const d = res.data.data;
+        // Flatten the nested response so the UI template can render correctly
+        const feedbackList = d.feedback || [];
+        const totalReviews = feedbackList.length;
+        const avgRating = totalReviews > 0
+          ? feedbackList.reduce((sum, f) => sum + (f.rating || 0), 0) / totalReviews
+          : 0;
+
+        setTeacher({
+          ...d.teacher,
+          batches: d.batches || [],
+          batchCount: (d.batches || []).length,
+          questionCount: d.questionCount || 0,
+          theoryCount: d.theoryCount || 0,
+          postCount: d.postCount || 0,
+          feedbacks: feedbackList,
+          feedback: feedbackList,
+          totalReviews,
+          avgRating: parseFloat(avgRating.toFixed(1)),
+          recentActivity: []
+        });
       }
     } catch (err) {
       console.error('Failed to fetch teacher detail:', err);

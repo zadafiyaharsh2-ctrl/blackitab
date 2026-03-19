@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CustomToast } from '../../utils/CustomToast';
 import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Building, GraduationCap, BookOpen } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 import API_URL from '../../config';
 import axios from 'axios';
 
@@ -141,6 +142,45 @@ const Signup = ({ onSignupSuccess }) => {
     } catch (err) {
       CustomToast.error('Network error. Unable to reach the servers.');
       console.error('Signup error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Google OAuth logic for Signup
+   */
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          credential: credentialResponse.credential,
+          clientId: credentialResponse.clientId,
+          role: accountType,
+          instituteCode: formData.instituteCode,
+          batchYear: formData.batchYear,
+          division: formData.division
+        }),
+      });
+      const data = await response.json();
+
+      if (data.success && data.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        CustomToast.success(`Welcome to Blackitab, ${data.user.name}!`);
+        if (onSignupSuccess) onSignupSuccess(data.user, data.token);
+
+        navigate('/onboarding');
+      } else {
+        CustomToast.error(data.message || 'Google Sign-Up failed.');
+      }
+    } catch (err) {
+      CustomToast.error('Network error. Unable to reach the servers.');
+      console.error('Google Auth error:', err);
     } finally {
       setLoading(false);
     }
@@ -487,9 +527,41 @@ const Signup = ({ onSignupSuccess }) => {
                   </button>
                 </div>
               </form>
+
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Google Auth Divider & Button - Available on all steps */}
+        {accountType !== 'institute' && (
+          <div className="mt-6 border-t border-gray-200 dark:border-white/10 pt-6">
+            <div className="relative flex justify-center text-sm mb-6">
+              <span className="bg-gray-50 dark:bg-[#0a0a0a] px-2 text-gray-500 dark:text-gray-400 -mt-3">Or continue with</span>
+            </div>
+            
+            <div className="flex justify-center flex-col items-center gap-2 w-full custom-google-btn-container">
+              <style jsx>{`
+                .custom-google-btn-container > div {
+                  width: 100% !important;
+                  display: flex !important;
+                  justify-content: center !important;
+                }
+                .custom-google-btn-container iframe {
+                  margin: 0 auto !important;
+                }
+              `}</style>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => CustomToast.error('Google Sign-Up was unsuccessful')}
+                useOneTap
+                theme="filled_blue"
+                shape="pill"
+                size="large"
+                text="signup_with"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="mt-8 text-center border-t border-gray-200 dark:border-white/10 pt-6">

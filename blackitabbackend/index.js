@@ -126,6 +126,7 @@ app.get('/favicon.ico', (req, res) => res.status(204).end());
 app.post('/api/register', authController.register);
 app.post('/api/register-institute', authController.registerInstitute);
 app.post('/api/login', authController.login);
+app.post('/api/auth/google', authController.googleLogin);
 
 // --- Theory Routes (inline) ---
 
@@ -192,14 +193,26 @@ app.get('/api/me', async (req, res) => {
     res.json({
       success: true,
       user: {
+        _id: user._id,
         id: user._id,
         email: user.email,
         name: user.name,
         role: user.role,
         instituteId: user.instituteId,
+        instituteCode: user.instituteCode,
+        departmentId: user.departmentId,
+        departments: Array.isArray(user.departments) ? user.departments : [],
+        batchYear: user.batchYear,
+        division: user.division,
         institute: instituteInfo,
         bio: user.bio,
         profileImage: user.profileImage,
+        isVerified: user.isVerified,
+        isBanned: user.isBanned,
+        isPrivate: user.isPrivate,
+        points: user.points,
+        xp: user.xp,
+        streak: user.streak,
         followerCount: user.followerCount || 0,
         followingCount: user.followingCount || 0,
         subscriberCount: user.subscriberCount || 0

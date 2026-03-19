@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../../utils/api';
-import { BookOpenIcon, PlusIcon, XMarkIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
+import { BookOpenIcon, PlusIcon, XMarkIcon, BuildingOfficeIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import PageShimmer from '../../components/shared/PageShimmer';
 import { CustomToast } from '../../utils/CustomToast';
 
@@ -142,18 +143,24 @@ const InstituteDepartments = () => {
                     {departments.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                             {departments.map((dept, index) => (
-                                <div
+                                <Link
+                                    to={`/institute/department/${encodeURIComponent(dept)}`}
                                     key={index}
-                                    className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] hover:bg-gray-50 dark:hover:bg-white/[0.04] relative group"
+                                    className="block border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] hover:bg-gray-50 dark:hover:bg-white/[0.04] hover:border-blue-500/30 transition-all relative group cursor-pointer"
                                 >
                                     <div className="flex items-start justify-between gap-2">
-                                        <p className="font-semibold text-sm text-gray-900 dark:text-white leading-snug">
+                                        <div className="font-semibold text-sm text-gray-900 dark:text-white leading-snug flex items-center gap-2">
                                             {dept}
-                                        </p>
+                                            <ChevronRightIcon className="w-4 h-4 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity -ml-1" />
+                                        </div>
                                         {isEditable && (
                                             <button
                                                 type="button"
-                                                onClick={() => handleRemoveDepartment(dept)}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    handleRemoveDepartment(dept);
+                                                }}
                                                 disabled={saving}
                                                 className="w-6 h-6 rounded flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0"
                                                 title={`Remove ${dept}`}
@@ -165,7 +172,7 @@ const InstituteDepartments = () => {
                                     <p className="text-xs text-gray-500 mt-2">
                                         <span className="font-semibold text-gray-700 dark:text-gray-300">{deptStats[dept] || 0}</span> student{deptStats[dept] !== 1 ? 's' : ''} enrolled
                                     </p>
-                                </div>
+                                </Link>
                             ))}
                         </div>
                     ) : (

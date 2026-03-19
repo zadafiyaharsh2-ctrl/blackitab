@@ -84,12 +84,11 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
         { path: '/teacher/feedback', label: 'Feedback', icon: <FaCommentDots className="text-rose-400" /> },
       ] : []),
       { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
-    ] : !canAccessInstitute ? [
+    ] : []),
+    ...( userRole === 'student' ? [
       { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
       { path: '/classes', label: 'My Classes', icon: <FaUsers /> },
       { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
-    ] : []),
-    ...( !canAccessInstitute && !canAccessTeacher ? [
       { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
       { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
       { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy /> },

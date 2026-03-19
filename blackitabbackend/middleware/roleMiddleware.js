@@ -8,7 +8,8 @@ const ROLE_HIERARCHY = {
     student: 0,
     teacher: 1,
     hod: 2,
-    institute_admin: 3
+    institute_admin: 3,
+    institute: 3
 };
 
 /**

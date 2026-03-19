@@ -166,7 +166,9 @@ const AdminDashboard = () => {
       await axios.put(`${API_URL}/api/admin/users/${userId}/role`, { role }, { headers: headers() });
       fetchUsers(null, userPage, userSearch);
       CustomToast.success('Role updated');
-    } catch { CustomToast.error('Failed to update role'); }
+    } catch (err) {
+      CustomToast.error(err.response?.data?.message || 'Failed to update role');
+    }
   };
 
   const handleBan = async (userId) => {

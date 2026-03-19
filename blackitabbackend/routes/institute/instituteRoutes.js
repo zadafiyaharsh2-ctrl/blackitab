@@ -16,6 +16,7 @@ router.get('/my', instituteController.getMyInstitute);
 // ── Stats ──
 router.get('/stats', requireRole('institute', 'hod'), instituteController.getInstituteStats);
 router.get('/departments/stats', requireRole('institute', 'hod', 'teacher'), instituteController.getDepartmentStats);
+router.get('/departments/:deptName/details', requireRole('institute', 'hod'), instituteController.getDepartmentDetails);
 
 // ── Profile ──
 const { handleBannerUpload } = require('../../middleware/upload');
@@ -49,6 +50,7 @@ router.get('/analytics', requireRole('institute', 'hod', 'teacher'), instituteCo
 // ── Teacher Feedback & Monitoring ──
 router.get('/teachers', requireRole('institute', 'hod'), instituteController.listTeachersWithRatings);
 router.get('/teachers/:id/feedback', requireRole('institute', 'hod'), instituteController.getTeacherFeedback);
+router.get('/teacher/:id/details', requireRole('institute', 'hod'), instituteController.getTeacherFullDetails);
 router.post('/feedback', requireRole('student'), instituteController.submitFeedback);
 
 // ── Join Institute (any authenticated user without an institute) ──
@@ -64,5 +66,8 @@ router.get('/materials', requireRole('institute', 'hod'), instituteController.ge
 router.post('/batch/:batchId/materials', requireRole('institute', 'hod'), instituteController.createInstituteMaterial);
 router.put('/material/:id', requireRole('institute', 'hod'), instituteController.updateInstituteMaterial);
 router.delete('/material/:id', requireRole('institute', 'hod'), instituteController.deleteInstituteMaterial);
+
+// ── Student Detail View ──
+router.get('/student/:id/detail', requireRole('institute', 'hod'), instituteController.getStudentDetail);
 
 module.exports = router;

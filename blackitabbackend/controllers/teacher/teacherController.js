@@ -723,13 +723,16 @@ exports.getExamHistory = async (req, res) => {
 // POST /api/teacher/content
 exports.createContent = async (req, res) => {
     try {
-        const { title, content: bodyContent, subjectId, topicId, tags, visibility } = req.body;
+        const { title, content: bodyContent, description, contentType, subject, subjectId, topicId, tags, visibility, batches } = req.body;
         if (!title || !bodyContent) return res.status(400).json({ success: false, message: 'title and content are required' });
         if (!req.user.instituteId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
 
         const teacherContent = await TeacherContent.create({
             title,
             content: bodyContent,
+            description: description || '',
+            contentType: contentType || 'notes',
+            subject: subject || '',
             subjectId: subjectId || null,
             topicId: topicId || null,
             tags: tags || [],
@@ -854,16 +857,86 @@ exports.changeContentVisibility = async (req, res) => {
 // GET /api/teacher/department/teachers
 exports.getDepartmentTeachers = async (req, res) => {
     try {
-        if (!req.user.departmentId) {
+        let filter = { role: 'teacher', instituteId: req.user.instituteId };
+        
+        if (req.user.departmentId) {
+            filter.departmentId = req.user.departmentId;
+        } else if (req.user.departments && req.user.departments.length > 0) {
+            filter.departments = { $in: req.user.departments };
+        } else {
             return res.status(400).json({ success: false, message: 'Not assigned to a department' });
         }
 
-        const teachers = await User.find({
-            departmentId: req.user.departmentId,
-            role: { $in: ['teacher', 'hod'] }
-        }).select('name email role specialization teacherRating teacherSince');
+        const teachers = await User.find(filter).select('name email role specialization teacherRating teacherSince departments');
 
         res.json({ success: true, data: teachers });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// GET /api/teacher/department/batches
+exports.getDepartmentBatches = async (req, res) => {
+    try {
+        if (!req.user.instituteId) {
+            return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+        }
+
+        let departmentIds = [];
+        if (req.user.departmentId) {
+            departmentIds = [req.user.departmentId];
+        } else if (req.user.departments && req.user.departments.length > 0) {
+            const wanted = req.user.departments
+                .map(d => String(d || '').trim().toLowerCase())
+                .filter(Boolean);
+
+            if (wanted.length > 0) {
+                const instituteDepartments = await Department.find({ instituteId: req.user.instituteId }).select('_id name');
+                departmentIds = instituteDepartments
+                    .filter(d => wanted.includes(String(d.name || '').trim().toLowerCase()))
+                    .map(d => d._id);
+            }
+        } else {
+            return res.status(400).json({ success: false, message: 'Not assigned to a department' });
+        }
+
+        const teacherFilter = {
+            role: { $in: ['teacher', 'hod'] },
+            instituteId: req.user.instituteId
+        };
+
+        if (req.user.departmentId) {
+            teacherFilter.departmentId = req.user.departmentId;
+        } else if (req.user.departments && req.user.departments.length > 0) {
+            teacherFilter.departments = { $in: req.user.departments };
+        }
+
+        const teachers = await User.find(teacherFilter).select('_id');
+        const teacherIds = teachers.map(t => t._id);
+
+        const batchQuery = {
+            instituteId: req.user.instituteId,
+            $or: []
+        };
+
+        if (departmentIds.length > 0) {
+            batchQuery.$or.push({ departmentId: { $in: departmentIds } });
+        }
+
+        if (teacherIds.length > 0) {
+            batchQuery.$or.push({ teacherIds: { $in: teacherIds } });
+        }
+
+        if (batchQuery.$or.length === 0) {
+            return res.json({ success: true, data: [] });
+        }
+
+        const batches = await Batch.find(batchQuery)
+            .populate('teacherIds', 'name email')
+            .populate('subjectId', 'name')
+            .sort({ createdAt: -1 });
+
+        res.json({ success: true, data: batches });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
     }
@@ -872,10 +945,16 @@ exports.getDepartmentTeachers = async (req, res) => {
 // GET /api/teacher/department/analytics
 exports.getDepartmentAnalytics = async (req, res) => {
     try {
-        const departmentId = req.user.departmentId;
-        if (!departmentId) return res.status(400).json({ success: false, message: 'Not assigned to a department' });
+        let userFilter = { role: 'teacher', instituteId: req.user.instituteId };
+        if (req.user.departmentId) {
+            userFilter.departmentId = req.user.departmentId;
+        } else if (req.user.departments && req.user.departments.length > 0) {
+            userFilter.departments = { $in: req.user.departments };
+        } else {
+            return res.status(400).json({ success: false, message: 'Not assigned to a department' });
+        }
 
-        const teachers = await User.find({ departmentId, role: { $in: ['teacher', 'hod'] } }).select('_id');
+        const teachers = await User.find(userFilter).select('_id');
         const teacherIds = teachers.map(t => t._id);
 
         const [questionCount, assignmentCount, examCount, batchCount, feedbackStats] = await Promise.all([
@@ -937,10 +1016,16 @@ exports.getDepartmentTeacherDetail = async (req, res) => {
 // GET /api/teacher/department/feedback
 exports.getDepartmentFeedback = async (req, res) => {
     try {
-        const departmentId = req.user.departmentId;
-        if (!departmentId) return res.status(400).json({ success: false, message: 'Not assigned to a department' });
+        let userFilter = { role: 'teacher', instituteId: req.user.instituteId };
+        if (req.user.departmentId) {
+            userFilter.departmentId = req.user.departmentId;
+        } else if (req.user.departments && req.user.departments.length > 0) {
+            userFilter.departments = { $in: req.user.departments };
+        } else {
+            return res.status(400).json({ success: false, message: 'Not assigned to a department' });
+        }
 
-        const teachers = await User.find({ departmentId, role: { $in: ['teacher', 'hod'] } }).select('_id');
+        const teachers = await User.find(userFilter).select('_id');
         const teacherIds = teachers.map(t => t._id);
 
         const rawFeedback = await TeacherFeedback.find({ teacherId: { $in: teacherIds } })
@@ -968,10 +1053,16 @@ exports.getDepartmentFeedback = async (req, res) => {
 // GET /api/teacher/department/content
 exports.getDepartmentContent = async (req, res) => {
     try {
-        const departmentId = req.user.departmentId;
-        if (!departmentId) return res.status(400).json({ success: false, message: 'Not assigned to a department' });
+        let userFilter = { role: 'teacher', instituteId: req.user.instituteId };
+        if (req.user.departmentId) {
+            userFilter.departmentId = req.user.departmentId;
+        } else if (req.user.departments && req.user.departments.length > 0) {
+            userFilter.departments = { $in: req.user.departments };
+        } else {
+            return res.status(400).json({ success: false, message: 'Not assigned to a department' });
+        }
 
-        const teachers = await User.find({ departmentId }).select('_id');
+        const teachers = await User.find(userFilter).select('_id');
         const teacherIds = teachers.map(t => t._id);
 
         const content = await TeacherContent.find({ teacherId: { $in: teacherIds } })

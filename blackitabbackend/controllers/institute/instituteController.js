@@ -4,6 +4,8 @@ const ExamQuestion = require('../../models/ExamQuestion');
 const Post = require('../../models/Post');
 const Attempt = require('../../models/Attempt');
 const JoinRequest = require('../../models/JoinRequest');
+const AssignmentSubmission = require('../../models/AssignmentSubmission');
+const ExamResult = require('../../models/ExamResult');
 
 // GET /api/institute/verify/:code
 exports.verifyCode = async (req, res) => {
@@ -198,9 +200,15 @@ exports.getMembers = async (req, res) => {
             const instId = req.user.instituteId;
             if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
 
-            const { name, email, password, role, batchYear, departments } = req.body;
-            if (!name || !email || !password) {
-                return res.status(400).json({ success: false, message: 'Name, email, and password are required' });
+            const { name, email, role, batchYear, departments } = req.body;
+            let { password } = req.body;
+            if (!name || !email) {
+                return res.status(400).json({ success: false, message: 'Name and email are required' });
+            }
+
+            // Assign a default password if not provided
+            if (!password) {
+                password = '123456';
             }
 
         // Fetch Institute to get the code
@@ -985,10 +993,190 @@ exports.deleteInstituteMaterial = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Material not found in your institute' });
         }
 
+
         await ClassMaterial.findByIdAndDelete(req.params.id);
         res.json({ success: true, message: 'Material deleted' });
     } catch (error) {
         console.error('Delete Institute Material Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// GET /api/institute/student/:id/detail — Full student profile for institute view
+exports.getStudentDetail = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        const student = await User.findOne({ _id: req.params.id, instituteId: instId }).select('-password');
+        if (!student) return res.status(404).json({ success: false, message: 'Student not found in your institute' });
+
+        const [attemptCount, correctCount, submissions, examResults] = await Promise.all([
+            Attempt.countDocuments({ userId: student._id }),
+            Attempt.countDocuments({ userId: student._id, isCorrect: true }),
+            AssignmentSubmission.find({ studentId: student._id })
+                .populate({ path: 'assignmentId', select: 'title totalMarks' })
+                .sort({ submittedAt: -1 })
+                .limit(20),
+            ExamResult.find({ studentId: student._id })
+                .populate({ path: 'examId', select: 'title totalMarks scheduledAt' })
+                .sort({ submittedAt: -1 })
+                .limit(20)
+        ]);
+
+        const accuracy = attemptCount > 0 ? Math.round((correctCount / attemptCount) * 100) : 0;
+
+        res.json({
+            success: true,
+            data: { student, attemptCount, correctCount, accuracy, submissions, examResults }
+        });
+    } catch (error) {
+        console.error('Get Student Detail Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
+// DEPARTMENT DETAILS VIEW
+// ══════════════════════════════════════════════════════════════
+
+// GET /api/institute/departments/:deptName/details
+exports.getDepartmentDetails = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        const deptName = req.params.deptName;
+
+        if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+
+        // Ensure user belongs to the requested department if they are HOD
+        if (req.user.role === 'hod') {
+            const hasDeptsStr = req.user.departments && req.user.departments.some(d => d.toLowerCase() === deptName.toLowerCase());
+            if (!hasDeptsStr) {
+                 return res.status(403).json({ success: false, message: 'Access denied to this department' });
+            }
+        }
+
+        // 1. Find HOD
+        const hod = await User.findOne({
+            instituteId: instId,
+            role: 'hod',
+            departments: { $regex: new RegExp(`^${deptName}$`, 'i') }
+        }).select('name email profileImage');
+
+        // 2. Find Core Teachers
+        const coreTeachers = await User.find({
+            instituteId: instId,
+            role: 'teacher',
+            departments: { $regex: new RegExp(`^${deptName}$`, 'i') }
+        }).select('name email profileImage');
+
+        // 3. Find All Teachers in institute to map their IDs
+        const allTeachers = await User.find({ instituteId: instId, role: 'teacher' }).select('_id name email profileImage departments');
+        const teacherMap = {};
+        allTeachers.forEach(t => { teacherMap[t._id.toString()] = t; });
+
+        // 4. Find all batches taught by ANY teacher in the institute, then filter
+        const Batch = require('../../models/Batch');
+        const batches = await Batch.find({ instituteId: instId })
+            .populate('teacherIds', 'name email profileImage departments');
+
+        // We consider a batch belonging to this department if:
+        // A) The batch has an explicit string field (if we ever added one)
+        // B) The teacher of the batch has this department in their `departments` array.
+        // C) The batch's name includes the department name (heuristic fallback).
+        const departmentBatches = batches.filter(b => {
+            if (b.name && b.name.toLowerCase().includes(deptName.toLowerCase())) return true;
+            if (b.teacherIds && b.teacherIds.length > 0) {
+                return b.teacherIds.some(t => t.departments && t.departments.some(d => d.toLowerCase() === deptName.toLowerCase()));
+            }
+            return false;
+        });
+
+        // 5. Visiting Teachers
+        // Teachers who are teaching a batch in this department, but do NOT have this department in their core `departments` array.
+        const visitingTeacherIds = new Set();
+        departmentBatches.forEach(b => {
+             if (b.teacherIds && b.teacherIds.length > 0) {
+                 b.teacherIds.forEach(t => {
+                     const hasDept = t.departments?.some(d => d.toLowerCase() === deptName.toLowerCase());
+                     if (!hasDept) {
+                         visitingTeacherIds.add(t._id.toString());
+                     }
+                 });
+             }
+        });
+
+        const visitingTeachers = Array.from(visitingTeacherIds).map(id => teacherMap[id]).filter(Boolean);
+
+        res.json({
+            success: true,
+            data: {
+                hod,
+                coreTeachers,
+                visitingTeachers,
+                batches: departmentBatches.map(b => ({
+                    _id: b._id,
+                    name: b.name,
+                    year: b.year,
+                    section: b.section,
+                    teachers: b.teacherIds
+                }))
+            }
+        });
+
+    } catch (error) {
+        console.error('Get Department Details Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// GET /api/institute/teacher/:id/details
+exports.getTeacherFullDetails = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        const teacherId = req.params.id;
+
+        if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+
+        const teacher = await User.findOne({ _id: teacherId, instituteId: instId }).select('-password');
+        if (!teacher) {
+            return res.status(404).json({ success: false, message: 'Teacher not found in your institute' });
+        }
+
+        // HOD Access Check (HOD can only see teachers in their departments... or potentially any teacher if they are inspecting visiting ones, but let's allow it as long as they are in same institute for simplicity of drill-down)
+        
+        const Batch = require('../../models/Batch');
+        const ExamQuestion = require('../../models/ExamQuestion');
+
+        const [batches, questionsCount] = await Promise.all([
+            Batch.find({ instituteId: instId, teacherIds: teacherId })
+                .populate('teacherIds', 'name profileImage email departments')
+                .populate('departmentId', 'name')
+                .lean(),
+            ExamQuestion.countDocuments({ createdBy: teacherId, instituteId: instId })
+        ]);
+
+        // Attach student counts per batch
+        const batchesWithCounts = await Promise.all(batches.map(async b => {
+            const studentCount = b.studentIds ? b.studentIds.length : 0;
+            return {
+                ...b,
+                studentCount
+            };
+        }));
+
+        res.json({
+            success: true,
+            data: {
+                teacher,
+                batches: batchesWithCounts,
+                stats: {
+                    questionsCreated: questionsCount,
+                    totalBatches: batches.length
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Get Teacher Full Details Error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
