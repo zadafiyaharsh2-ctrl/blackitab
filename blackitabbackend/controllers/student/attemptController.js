@@ -285,3 +285,120 @@ exports.getDashboardAnalytics = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+// GET /api/attempts/advanced-insights
+exports.getAdvancedInsights = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const user = await User.findById(userId);
+
+        const allAttempts = await Attempt.find({ userId })
+            .populate('questionId', 'difficulty subject timeTakenSeconds eloRating')
+            .sort({ attemptedAt: -1 })
+            .lean();
+
+        // ── 1. Difficulty Distribution ────────────────────────
+        const diffCounts = { Easy: 0, Medium: 0, Hard: 0 };
+        const diffCorrect = { Easy: 0, Medium: 0, Hard: 0 };
+        allAttempts.forEach(a => {
+            const d = a.questionId?.difficulty || 'Medium';
+            if (diffCounts[d] !== undefined) {
+                diffCounts[d]++;
+                if (a.isCorrect) diffCorrect[d]++;
+            }
+        });
+        const total = allAttempts.length;
+        const difficultyDistribution = Object.entries(diffCounts).map(([label, count]) => ({
+            label,
+            count,
+            pct: total > 0 ? Math.round((count / total) * 100) : 0,
+            accuracy: count > 0 ? Math.round((diffCorrect[label] / count) * 100) : 0
+        }));
+
+        // ── 2. Speed Metrics ──────────────────────────────────
+        const speedBuckets = { Easy: [], Medium: [], Hard: [] };
+        allAttempts.forEach(a => {
+            const d = a.questionId?.difficulty || 'Medium';
+            const t = a.timeTakenSeconds;
+            if (t && t > 0 && speedBuckets[d]) speedBuckets[d].push(t);
+        });
+        const speedMetrics = Object.entries(speedBuckets).map(([label, times]) => {
+            const avg = times.length > 0 ? Math.round(times.reduce((s, v) => s + v, 0) / times.length) : null;
+            return { label, avgSeconds: avg, count: times.length };
+        });
+
+        // ── 3. Quick Wins ─────────────────────────────────────
+        // Correct on first attempt AND solved within 30 seconds
+        const seenQuestions = new Set();
+        let quickWins = 0;
+        const quickWinList = [];
+        // Iterate oldest first for first-attempt detection
+        const chronological = [...allAttempts].reverse();
+        chronological.forEach(a => {
+            const qid = a.questionId?._id?.toString();
+            if (!qid) return;
+            if (!seenQuestions.has(qid)) {
+                seenQuestions.add(qid);
+                if (a.isCorrect && a.timeTakenSeconds > 0 && a.timeTakenSeconds <= 30) {
+                    quickWins++;
+                    if (quickWinList.length < 5) {
+                        quickWinList.push({
+                            subject: a.questionId?.subject || 'General',
+                            difficulty: a.questionId?.difficulty || 'Medium',
+                            timeTaken: a.timeTakenSeconds
+                        });
+                    }
+                }
+            }
+        });
+
+        // ── 4. Global Rankings ────────────────────────────────
+        const studentXP = user.xp || 0;
+        const totalUsers = await User.countDocuments({ role: 'student' });
+        const usersBelow = await User.countDocuments({ role: 'student', xp: { $lt: studentXP } });
+        const percentile = totalUsers > 0 ? Math.round((usersBelow / totalUsers) * 100) : 0;
+        const globalRank = totalUsers - usersBelow;
+
+        // ── 5. Consistency Score ──────────────────────────────
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const recentAttempts = allAttempts.filter(a => new Date(a.attemptedAt) >= thirtyDaysAgo);
+        const activeDays = new Set(
+            recentAttempts.map(a => new Date(a.attemptedAt).toISOString().split('T')[0])
+        );
+        const consistencyScore = Math.round((activeDays.size / 30) * 100);
+
+        // ── 6. Peer Comparison ────────────────────────────────
+        let peerData = null;
+        if (user.instituteId) {
+            const [peerAvgResult] = await User.aggregate([
+                { $match: { role: 'student', instituteId: user.instituteId } },
+                { $group: { _id: null, avgXP: { $avg: '$xp' }, count: { $sum: 1 } } }
+            ]);
+            if (peerAvgResult) {
+                peerData = {
+                    myXP: studentXP,
+                    instituteAvgXP: Math.round(peerAvgResult.avgXP),
+                    peerCount: peerAvgResult.count,
+                    aboveAverage: studentXP >= peerAvgResult.avgXP
+                };
+            }
+        }
+
+        res.json({
+            success: true,
+            data: {
+                difficultyDistribution,
+                speedMetrics,
+                quickWins: { count: quickWins, examples: quickWinList },
+                globalRanking: { xp: studentXP, percentile, globalRank, totalUsers },
+                consistencyScore: { score: consistencyScore, activeDays: activeDays.size, outOf: 30 },
+                peerComparison: peerData
+            }
+        });
+    } catch (error) {
+        console.error('getAdvancedInsights error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+

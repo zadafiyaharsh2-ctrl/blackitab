@@ -338,21 +338,21 @@ const PlaceholderRadarChart = () => {
   );
 };
 
-/* ── Advanced Insights (shimmer) ─────────────────────────── */
+/* ── Advanced Insights (Live) ─────────────────────────── */
 
-const INSIGHT_CARDS = [
-  { icon: PieChart, title: 'Difficulty Distribution' },
-  { icon: Timer, title: 'Speed Metrics' },
-  { icon: Gift, title: 'Quick Wins' },
-  { icon: Trophy, title: 'Global Rankings' },
-  { icon: Gauge, title: 'Consistency Score' },
-  { icon: Users, title: 'Peer Comparison' }
-];
+const difficultyColor = (label) => {
+  if (label === 'Easy') return { bar: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400', badge: 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10' };
+  if (label === 'Hard') return { bar: 'bg-red-500', text: 'text-red-600 dark:text-red-400', badge: 'border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10' };
+  return { bar: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400', badge: 'border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10' };
+};
 
-const AdvancedInsightsSection = ({ problemsSolved }) => {
+const formatTime = (s) => {
+  if (!s) return '—';
+  return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`;
+};
+
+const AdvancedInsightsSection = ({ insights, loading }) => {
   const [expanded, setExpanded] = useState(false);
-  const threshold = 10;
-  const progress = Math.min(problemsSolved / threshold, 1);
 
   return (
     <div className="border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-white/[0.02] overflow-hidden">
@@ -363,42 +363,161 @@ const AdvancedInsightsSection = ({ problemsSolved }) => {
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-amber-500" />
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Advanced Insights</span>
-          {problemsSolved < threshold && (
-            <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
-              Unlocks after {threshold} problems
-            </span>
-          )}
         </div>
         {expanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
       </button>
 
       {expanded && (
         <div className="px-5 pb-5">
-          {problemsSolved < threshold && (
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs text-gray-500">{problemsSolved}/{threshold} problems to unlock</span>
-                <span className="text-xs font-semibold text-gray-500">{Math.round(progress * 100)}%</span>
-              </div>
-              <div className="w-full h-1.5 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all" style={{ width: `${progress * 100}%` }} />
-              </div>
-            </div>
-          )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {INSIGHT_CARDS.map(({ icon: Icon, title }) => (
-              <div key={title} className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] text-center py-8 relative overflow-hidden">
-                <Icon className="h-6 w-6 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-                <p className="text-xs font-semibold text-gray-500">{title}</p>
-                {/* Shimmer skeleton lines */}
-                <div className="mt-3 space-y-2 px-4">
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {[1,2,3,4,5,6].map(i => (
+                <div key={i} className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02]">
+                  <div className="h-4 w-4 shimmer-line rounded mb-3" />
+                  <div className="h-3 shimmer-line w-24 mb-2" />
+                  <div className="h-6 shimmer-line w-16 mb-3" />
                   <div className="h-2 shimmer-line w-full" />
-                  <div className="h-2 shimmer-line w-3/4 mx-auto" />
-                  <div className="h-2 shimmer-line w-1/2 mx-auto" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+
+              {/* 1. Difficulty Distribution */}
+              <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02]">
+                <div className="flex items-center gap-2 mb-3">
+                  <PieChart className="h-4 w-4 text-blue-500" />
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Difficulty Distribution</p>
+                </div>
+                <div className="space-y-2">
+                  {(insights?.difficultyDistribution || []).map(({ label, count, pct, accuracy }) => {
+                    const col = difficultyColor(label);
+                    return (
+                      <div key={label}>
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className={`font-semibold ${col.text}`}>{label}</span>
+                          <span className="text-gray-400">{count} ({pct}%) · {accuracy}% acc</span>
+                        </div>
+                        <div className="w-full h-1.5 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
+                          <div className={`h-full rounded-full ${col.bar} transition-all duration-700`} style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {!insights?.difficultyDistribution?.some(d => d.count > 0) && (
+                    <p className="text-xs text-gray-400 py-2 text-center">No data yet.</p>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
+
+              {/* 2. Speed Metrics */}
+              <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02]">
+                <div className="flex items-center gap-2 mb-3">
+                  <Timer className="h-4 w-4 text-cyan-500" />
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Speed Metrics</p>
+                </div>
+                <div className="space-y-3">
+                  {(insights?.speedMetrics || []).map(({ label, avgSeconds, count }) => {
+                    const col = difficultyColor(label);
+                    return (
+                      <div key={label} className="flex items-center justify-between">
+                        <span className={`text-xs font-semibold border px-2 py-0.5 rounded-full ${col.badge} ${col.text}`}>{label}</span>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-gray-900 dark:text-white">{formatTime(avgSeconds)}</p>
+                          <p className="text-[10px] text-gray-400">{count} attempts</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {!insights?.speedMetrics?.some(s => s.count > 0) && (
+                    <p className="text-xs text-gray-400 py-4 text-center">Solve problems to see speed data.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* 3. Quick Wins */}
+              <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02]">
+                <div className="flex items-center gap-2 mb-3">
+                  <Gift className="h-4 w-4 text-purple-500" />
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Quick Wins</p>
+                </div>
+                <p className="text-3xl font-black text-gray-900 dark:text-white mb-1">{insights?.quickWins?.count ?? 0}</p>
+                <p className="text-xs text-gray-400 mb-3">Solved correctly in ≤30s on first try</p>
+                <div className="space-y-1.5">
+                  {(insights?.quickWins?.examples || []).map((ex, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs border border-gray-100 dark:border-white/5 rounded-lg px-2 py-1">
+                      <span className="text-gray-600 dark:text-gray-300">{ex.subject}</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`font-semibold ${difficultyColor(ex.difficulty).text}`}>{ex.difficulty}</span>
+                        <span className="text-emerald-500 font-bold">{ex.timeTaken}s</span>
+                      </div>
+                    </div>
+                  ))}
+                  {!insights?.quickWins?.examples?.length && (
+                    <p className="text-xs text-gray-400 text-center pt-2">No quick wins yet.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* 4. Global Rankings */}
+              <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02]">
+                <div className="flex items-center gap-2 mb-3">
+                  <Trophy className="h-4 w-4 text-amber-500" />
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Global Rankings</p>
+                </div>
+                <p className="text-3xl font-black text-gray-900 dark:text-white">#{insights?.globalRanking?.globalRank ?? '—'}</p>
+                <p className="text-xs text-gray-400 mb-3">of {insights?.globalRanking?.totalUsers ?? 0} students</p>
+                <div className="w-full h-2 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden mb-1">
+                  <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-600 transition-all duration-700" style={{ width: `${insights?.globalRanking?.percentile ?? 0}%` }} />
+                </div>
+                <p className="text-xs text-gray-400">Top {100 - (insights?.globalRanking?.percentile ?? 0)}% · {insights?.globalRanking?.xp ?? 0} XP</p>
+              </div>
+
+              {/* 5. Consistency Score */}
+              <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02]">
+                <div className="flex items-center gap-2 mb-3">
+                  <Gauge className="h-4 w-4 text-green-500" />
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Consistency Score</p>
+                </div>
+                <p className="text-3xl font-black text-gray-900 dark:text-white">{insights?.consistencyScore?.score ?? 0}%</p>
+                <p className="text-xs text-gray-400 mb-3">{insights?.consistencyScore?.activeDays ?? 0} of 30 days active</p>
+                <div className="w-full h-2 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
+                  <div className="h-full rounded-full bg-gradient-to-r from-green-400 to-emerald-600 transition-all duration-700" style={{ width: `${insights?.consistencyScore?.score ?? 0}%` }} />
+                </div>
+              </div>
+
+              {/* 6. Peer Comparison */}
+              <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02]">
+                <div className="flex items-center gap-2 mb-3">
+                  <Users className="h-4 w-4 text-indigo-500" />
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Peer Comparison</p>
+                </div>
+                {insights?.peerComparison ? (
+                  <>
+                    <div className="flex items-end gap-3 mb-3">
+                      <div>
+                        <p className="text-[10px] text-gray-400">Your XP</p>
+                        <p className="text-2xl font-black text-gray-900 dark:text-white">{insights.peerComparison.myXP}</p>
+                      </div>
+                      <div className="pb-1">
+                        <p className={`text-xs font-semibold ${insights.peerComparison.aboveAverage ? 'text-emerald-500' : 'text-rose-500'}`}>
+                          {insights.peerComparison.aboveAverage ? '▲ above' : '▼ below'} avg
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-400">Inst. Avg</p>
+                        <p className="text-2xl font-black text-gray-400">{insights.peerComparison.instituteAvgXP}</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-400">{insights.peerComparison.peerCount} peers in your institute</p>
+                  </>
+                ) : (
+                  <p className="text-xs text-gray-400 py-6 text-center">Join an institute to compare with peers.</p>
+                )}
+              </div>
+
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -443,6 +562,8 @@ const StudentAnalyticsContent = () => {
     weaknesses: [],
     recentActivity: []
   });
+  const [insights, setInsights] = useState(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -483,6 +604,17 @@ const StudentAnalyticsContent = () => {
           });
           if (examsRes.data.success) setUpcomingExams(examsRes.data.data);
         } catch {}
+
+        // Fetch Advanced Insights in parallel
+        try {
+          setInsightsLoading(true);
+          const insightsRes = await axios.get(`${API_URL}/api/attempts/advanced-insights`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (insightsRes.data.success) setInsights(insightsRes.data.data);
+        } catch {} finally {
+          setInsightsLoading(false);
+        }
       } catch {
       } finally {
         setLoading(false);
@@ -974,8 +1106,8 @@ const StudentAnalyticsContent = () => {
         </div>
       </div>
 
-      {/* ── Advanced Insights (shimmer + toggle) ────────────── */}
-      <AdvancedInsightsSection problemsSolved={stats.problemsSolved} />
+      {/* ── Advanced Insights (Live) ────────────────────── */}
+      <AdvancedInsightsSection insights={insights} loading={insightsLoading} />
 
       {/* ── Top Performing Topics ───────────────────────────── */}
       {masterySubjects.length > 0 && (

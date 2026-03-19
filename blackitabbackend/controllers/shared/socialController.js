@@ -19,7 +19,7 @@ exports.searchUsers = async (req, res) => {
                 { name: { $regex: query, $options: 'i' } },
                 { email: { $regex: query, $options: 'i' } }
             ]
-        }).select('name email followerCount subscriberCount profileImage bio');
+        }).select('name email role followerCount subscriberCount profileImage bio').limit(20);
 
         let results = users.map(u => u.toObject());
 

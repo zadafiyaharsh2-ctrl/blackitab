@@ -389,6 +389,10 @@ const Profile = () => {
         results={searchResults}
         onFollow={handleFollowRequest}
         currentUserId={user.id}
+        onViewProfile={(targetId) => {
+          setShowSearch(false);
+          navigate(`/profile/${targetId}`);
+        }}
       />
 
       <NotificationModal
