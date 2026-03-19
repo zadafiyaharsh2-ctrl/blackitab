@@ -95,8 +95,9 @@ exports.linkManager = async (req, res) => {
  */
 exports.getLeaderboard = async (req, res) => {
     try {
-        // Fetch top 50 non-banned users with xp > 0
+        // Fetch top 50 non-banned students with xp > 0
         const users = await User.find({ 
+            role: 'student',
             isBanned: { $ne: true },
             xp: { $gt: 0 }
         })
