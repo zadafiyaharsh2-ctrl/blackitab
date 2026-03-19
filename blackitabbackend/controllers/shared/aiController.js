@@ -206,7 +206,7 @@ const getSingleChat = async (req, res) => {
   }
 };
 
-// POST /api/ai/ask — original blackitab style: individual Q&A documents
+// POST /api/ai/ask — original RANKLEN style: individual Q&A documents
 const askQuestion = async (req, res) => {
   debugLog("askQuestion - Request Received", {
     body: req.body,
@@ -304,7 +304,7 @@ const askQuestion = async (req, res) => {
   }
 };
 
-// GET /api/ai/history — paginated question history (original blackitab style)
+// GET /api/ai/history — paginated question history (original RANKLEN style)
 const getHistory = async (req, res) => {
   debugLog("getHistory - Request Received", {
     query: req.query,
