@@ -3,9 +3,10 @@ import axios from 'axios';
 import { toast, Toaster } from 'react-hot-toast';
 import {
   FaCheckCircle, FaTimesCircle, FaClock, FaCalendarDay,
-  FaSave, FaHistory, FaArrowLeft, FaSpinner, FaChevronRight, FaUsers
+  FaSave, FaHistory, FaArrowLeft, FaSpinner, FaChevronRight, FaUsers, FaTable
 } from 'react-icons/fa';
 import API from '../../config';
+import AttendanceGrid from '../../components/shared/AttendanceGrid';
 
 const DUMMY_STUDENTS = [
   { _id: 's1', name: 'Alice Walker', email: 'alice@example.com' },
@@ -194,6 +195,12 @@ export default function TeacherAttendance() {
                 className={`px-4 py-2 text-sm font-medium flex items-center gap-1.5 ${viewMode === 'history' ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5'}`}
               >
                 <FaHistory className="text-xs" /> History
+              </button>
+              <button
+                onClick={() => { setViewMode('grid'); fetchHistory(selectedBatch._id); }}
+                className={`px-4 py-2 text-sm font-medium flex items-center gap-1.5 ${viewMode === 'grid' ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+              >
+                <FaTable className="text-xs" /> Register
               </button>
             </div>
           </div>
@@ -446,6 +453,18 @@ export default function TeacherAttendance() {
                     </div>
                   </div>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Grid / Register Mode ── */}
+          {viewMode === 'grid' && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-500">Full attendance register for <strong>{selectedBatch.name}</strong>.</p>
+              {loadingStudents ? (
+                <div className="flex justify-center py-12"><FaSpinner className="animate-spin text-2xl text-gray-400" /></div>
+              ) : (
+                <AttendanceGrid records={historyRecords} students={students} />
               )}
             </div>
           )}
