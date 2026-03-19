@@ -349,6 +349,26 @@ const Theory = () => {
           );
 
         // ========================================
+        // LINK BLOCK
+        // ========================================
+        // Renders clickable external/internal links
+        // Block structure: { type: "link", text: "...", url: "..." }
+        case "link":
+          return (
+            <div key={index} className="my-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl flex items-center shadow-sm">
+              <a 
+                href={block.url} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-bold flex items-center text-lg underline-offset-4 decoration-2 hover:underline transition-all"
+              >
+                <BookOpen className="inline mr-3 h-6 w-6" />
+                {block.text || 'View External Resource'}
+              </a>
+            </div>
+          );
+
+        // ========================================
         // CODE BLOCK
         // ========================================
         // Renders code snippets in a styled gray box with syntax highlighting
