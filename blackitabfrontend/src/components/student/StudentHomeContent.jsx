@@ -322,24 +322,26 @@ const StudentHomeContent = ({ embedded = false }) => {
 
   return (
     <div className={wrapperClass}>
-      <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gray-900 dark:bg-white flex items-center justify-center text-white dark:text-gray-900 text-lg font-bold shrink-0">
-            {user?.name ? user.name.charAt(0).toUpperCase() : <FaUserGraduate />}
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-              {embedded ? 'Learning Workspace' : `${user?.name || 'Student'} Workspace`}
-            </h2>
-            <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
-              <span className="flex items-center gap-1"><FaFire className="text-orange-400" /> {stats.streak} day streak</span>
-              {user?.createdAt && (
-                <span>Joined {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
-              )}
+      {!embedded && (
+        <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gray-900 dark:bg-white flex items-center justify-center text-white dark:text-gray-900 text-lg font-bold shrink-0">
+              {user?.name ? user.name.charAt(0).toUpperCase() : <FaUserGraduate />}
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                {`${user?.name || 'Student'} Workspace`}
+              </h2>
+              <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
+                <span className="flex items-center gap-1"><FaFire className="text-orange-400" /> {stats.streak} day streak</span>
+                {user?.createdAt && (
+                  <span>Joined {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
@@ -395,6 +397,7 @@ const StudentHomeContent = ({ embedded = false }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {!embedded && (
         <div className="relative lg:col-span-2 border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] overflow-hidden">
           <div className="pointer-events-none absolute inset-0 opacity-70">
             <div className="absolute -top-16 -right-12 w-44 h-44 rounded-full bg-blue-200/40 dark:bg-blue-500/10 blur-3xl" />
@@ -461,6 +464,7 @@ const StudentHomeContent = ({ embedded = false }) => {
             )}
           </div>
         </div>
+      )}
 
         <div className="flex flex-col gap-4">
           <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] flex-1">
@@ -478,37 +482,39 @@ const StudentHomeContent = ({ embedded = false }) => {
         </div>
       </div>
 
-      <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
-        <div className="px-5 py-3 border-b border-gray-100 dark:border-white/5">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-            <FaHistory className="text-blue-400" /> Recent Activity
-          </h3>
-        </div>
-        {recentActivity.length > 0 ? (
-          <div className="divide-y divide-gray-100 dark:divide-white/5">
-            {recentActivity.slice(0, 5).map((activity, index) => (
-              <div key={activity._id || index} className="flex items-center justify-between px-5 py-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
-                  <div>
-                    <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 mr-2">{activity.subjectId?.name || 'Topic'}</span>
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{activity.topicId?.name || 'Completed Topic'}</span>
+      {!embedded && (
+        <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
+          <div className="px-5 py-3 border-b border-gray-100 dark:border-white/5">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+              <FaHistory className="text-blue-400" /> Recent Activity
+            </h3>
+          </div>
+          {recentActivity.length > 0 ? (
+            <div className="divide-y divide-gray-100 dark:divide-white/5">
+              {recentActivity.slice(0, 5).map((activity, index) => (
+                <div key={activity._id || index} className="flex items-center justify-between px-5 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                    <div>
+                      <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 mr-2">{activity.subjectId?.name || 'Topic'}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{activity.topicId?.name || 'Completed Topic'}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className="text-emerald-500 font-semibold">+10 XP</span>
+                    <span className="text-gray-400">{timeAgo(activity.completedAt)}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-xs">
-                  <span className="text-emerald-500 font-semibold">+10 XP</span>
-                  <span className="text-gray-400">{timeAgo(activity.completedAt)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-10 text-gray-400">
-            <FaCheckCircle className="text-3xl mx-auto mb-3 opacity-20" />
-            <p className="text-sm">No activity yet. Start solving.</p>
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 text-gray-400">
+              <FaCheckCircle className="text-3xl mx-auto mb-3 opacity-20" />
+              <p className="text-sm">No activity yet. Start solving.</p>
+            </div>
+          )}
+        </div>
+      )}
 
     </div>
   );

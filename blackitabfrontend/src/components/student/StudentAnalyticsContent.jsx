@@ -758,7 +758,7 @@ const StudentAnalyticsContent = () => {
         )}
       </div>
 
-      {/* ── Domain Mastery ─────────────────────────────────── */}
+      {/* ── Domain Mastery (Elo-based) ───────────────────────── */}
       <div className="relative border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] overflow-hidden">
         <div className="pointer-events-none absolute inset-0 opacity-70">
           <div className="absolute -top-16 -right-12 w-44 h-44 rounded-full bg-blue-200/50 dark:bg-blue-500/10 blur-3xl" />
@@ -771,8 +771,12 @@ const StudentAnalyticsContent = () => {
               <BookOpen className="h-3.5 w-3.5" /> Domain Mastery
             </h3>
             <div className="text-right">
-              <p className="text-[10px] uppercase tracking-wide text-gray-400">Overall Mastery</p>
-              <p className="text-base font-bold text-gray-900 dark:text-white">{masteryOverview}%</p>
+              <p className="text-[10px] uppercase tracking-wide text-gray-400">Overall Elo Avg</p>
+              <p className="text-base font-bold text-gray-900 dark:text-white">
+                {masterySubjects.length > 0
+                  ? Math.round(masterySubjects.reduce((sum, s) => sum + (s.elo || 1000), 0) / masterySubjects.length)
+                  : 1000}
+              </p>
             </div>
           </div>
 
@@ -783,7 +787,9 @@ const StudentAnalyticsContent = () => {
                 <div className="mt-3 pt-3 border-t border-gray-200 dark:border-white/10">
                   <p className="text-xs text-gray-500">Top domain</p>
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">{masterySubjects[0].name}</p>
-                  <p className="text-xs text-gray-400">{masterySubjects[0].progress}% mastery</p>
+                  <p className="text-xs text-gray-400">
+                    {masterySubjects[0].elo ? `Elo: ${masterySubjects[0].elo}` : `${masterySubjects[0].progress}% mastery`}
+                  </p>
                 </div>
               </div>
 
@@ -802,7 +808,12 @@ const StudentAnalyticsContent = () => {
                           {subject.mastery}
                         </span>
                       </div>
-                      <p className="text-xs font-semibold text-gray-500 dark:text-gray-300">{subject.progress}%</p>
+                      <div className="text-right shrink-0">
+                        {subject.elo && (
+                          <p className="text-[10px] text-gray-400 font-mono">Elo {subject.elo}</p>
+                        )}
+                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-300">{subject.progress}%</p>
+                      </div>
                     </div>
 
                     <div className={`w-full h-2 rounded-full overflow-hidden ${subject.visual.track}`}>

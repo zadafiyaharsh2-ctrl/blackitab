@@ -690,62 +690,13 @@ const Profile = () => {
               <div className="flex justify-center py-10"><div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div></div>
             ) : (
               <>
-                {/* Stats row */}
-                 {showStudentProgress && (
-                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
-                        <div className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-1">Rank</div>
-                        <div className="text-2xl font-black text-gray-900 dark:text-white">{stats?.rank || 'Unranked'}</div>
-                      </div>
-                      <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
-                        <div className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-1">Total XP</div>
-                        <div className="text-2xl font-black text-blue-500 dark:text-blue-400">{stats?.totalPoints || 0}</div>
-                      </div>
-                      <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
-                        <div className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-1">Current Streak</div>
-                        <div className="text-2xl font-black text-orange-500 dark:text-orange-400">{stats?.streak || 0} <FaFire className="inline" /></div>
-                      </div>
-                      <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
-                        <div className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-1">Solved</div>
-                        <div className="text-2xl font-black text-emerald-500 dark:text-emerald-400">{stats?.totalCompleted || 0}</div>
-                      </div>
-                   </div>
-                 )}
-                
-                {showHeatmap && (
-                  <div className="bg-white dark:bg-[#080808] border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Activity Heatmap</h3>
-                    <ActivityHeatmap data={heatmapData} />
-                  </div>
-                )}
-
-                {/* Recent Activity */}
-                {stats?.recentActivity?.length > 0 && (
-                  <div className="bg-white dark:bg-[#080808] border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Recent Activity</h3>
-                    <div className="space-y-4">
-                      {stats.recentActivity.map((act, i) => (
-                        <div key={i} className="flex items-center gap-4 bg-gray-50 dark:bg-white/5 p-4 rounded-xl border border-gray-100 dark:border-white/5">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${act.type === 'completed' || act.completed ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'}`}>
-                             <FaCheckCircle />
-                          </div>
-                          <div>
-                            <div className="text-gray-900 dark:text-white font-medium">{act.topicId?.title || act.title || 'Completed a task'}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">{new Date(act.completedAt || act.attemptedAt).toLocaleDateString()}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {isMyProfile && user?.role === 'student' && (
+                {isMyProfile && user?.role === 'student' ? (
                   <div className="space-y-4">
-                    <div className="pt-2">
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">Student Workspace</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Your previous dashboard content now lives inside your profile.</p>
-                    </div>
                     <StudentHomeContent embedded />
+                  </div>
+                ) : (
+                  <div className="text-center py-10 text-gray-500 dark:text-gray-400">
+                    No overview data available.
                   </div>
                 )}
               </>
