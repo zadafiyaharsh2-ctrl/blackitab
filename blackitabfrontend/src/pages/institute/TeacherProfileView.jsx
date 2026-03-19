@@ -11,11 +11,9 @@ import {
     ChartBarIcon,
     UserGroupIcon,
     BookOpenIcon,
-    CalendarDaysIcon,
     ChevronDownIcon,
     ChevronUpIcon,
-    UsersIcon,
-    ClockIcon
+    UsersIcon
 } from '@heroicons/react/24/outline';
 
 const TeacherProfileView = () => {
@@ -35,11 +33,7 @@ const TeacherProfileView = () => {
     const [batchStudents, setBatchStudents] = useState({});
     const [loadingStudents, setLoadingStudents] = useState(null);
 
-    // Attendance states
-    const [selectedAttBatch, setSelectedAttBatch] = useState(null);
-    const [attendanceData, setAttendanceData] = useState([]);
-    const [studentAnalytics, setStudentAnalytics] = useState([]);
-    const [loadingAttendance, setLoadingAttendance] = useState(false);
+
 
     useEffect(() => {
         fetchTeacherDetails();
@@ -149,7 +143,6 @@ const TeacherProfileView = () => {
     const tabs = [
         { key: 'overview', label: 'Overview', icon: ChartBarIcon },
         { key: 'batches', label: `Batches (${batches.length})`, icon: UserGroupIcon },
-        { key: 'attendance', label: 'Attendance', icon: CalendarDaysIcon },
     ];
 
     const primaryDept = teacher.departments?.[0] || null;
