@@ -10,6 +10,10 @@ require('dotenv').config();
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const rateLimit = require('express-rate-limit');
+const hpp = require('hpp');
+const xss = require('xss-clean');
+const compression = require('compression');
+const { securityHeaders, globalErrorHandler, notFoundHandler } = require('./middleware/security');
 
 const connectDB = require('./config/database');
 const User = require('./models/User');
@@ -76,25 +80,68 @@ const allowedOrigins = [
   'http://127.0.0.1:5173',
   'https://blackitab.vercel.app'
 ];
-// Helmet for security headers
-app.use(helmet());
 
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
+// Helmet — Fine-tuned security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      connectSrc: ["'self'", ...allowedOrigins, "https://accounts.google.com", "wss:", "ws:"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'self'", "https://accounts.google.com"],
+    }
+  },
+  crossOriginEmbedderPolicy: false,       // Allow cross-origin resources (images, fonts)
+  hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 }));
 
-// Apply Rate Limiting
+// Custom security headers (X-Request-ID, cache-control, etc.)
+app.use(securityHeaders);
+
+// CORS — Strict origin whitelist with credentials
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
+
+// Response compression (gzip)
+app.use(compression());
+
+// Global Rate Limit — 500 requests per 15 minutes per IP
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // Limit each IP to 500 requests per `window` (here, per 15 minutes)
+  windowMs: 15 * 60 * 1000,
+  max: 500,
   message: { success: false, message: 'Too many requests from this IP, please try again in 15 minutes.' },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use('/api', apiLimiter);
 
-app.use(express.json());
+// Auth-Specific Rate Limit — Strict: 10 attempts per 15 minutes
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { success: false, message: 'Too many login/register attempts. Please try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Body parser with payload size limit (prevents large payload DoS)
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+// XSS Protection — Sanitize user input against cross-site scripting
+app.use(xss());
+
+// HPP — Prevent HTTP Parameter Pollution
+app.use(hpp());
 
 // Sanitize MongoDB data to prevent NoSQL injection
 // In Express 5, req.query is a getter, so the default middleware crashes.
@@ -118,15 +165,15 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 connectDB();
 
-// --- Auth Routes (inline) ---
+// --- Auth Routes (inline, with strict rate limiting) ---
 
 app.get('/', (req, res) => res.send('API is running...'));
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
-app.post('/api/register', authController.register);
-app.post('/api/register-institute', authController.registerInstitute);
-app.post('/api/login', authController.login);
-app.post('/api/auth/google', authController.googleLogin);
+app.post('/api/register', authLimiter, authController.register);
+app.post('/api/register-institute', authLimiter, authController.registerInstitute);
+app.post('/api/login', authLimiter, authController.login);
+app.post('/api/auth/google', authLimiter, authController.googleLogin);
 
 // --- Theory Routes (inline) ---
 
@@ -227,11 +274,19 @@ app.get('/api/me', async (req, res) => {
   }
 });
 
+// --- 404 Catch-All (must be AFTER all routes) ---
+app.use(notFoundHandler);
+
+// --- Global Error Handler (must be the LAST middleware) ---
+app.use(globalErrorHandler);
+
 // --- Start Server ---
 
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
-  console.log(`MongoDB connection: ${process.env.MONGODB_URI || 'mongodb://localhost:27017/blackitab'}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`MongoDB connection: ${process.env.MONGODB_URI ? 'configured' : 'using default'}`);
+  console.log('Security: Helmet, CORS, XSS, HPP, MongoSanitize, RateLimit, Compression ✓');
   
   // Start background algorithmic jobs
   startCronJobs();
