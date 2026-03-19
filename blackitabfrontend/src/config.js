@@ -11,7 +11,7 @@
  * 2. If not set, fallback to 'http://localhost:5000' for local development
  */
 
-// const API_URL = import.meta.env.VITE_API_URL || 'https://blackitab.onrender.com';
+// const API_URL = import.meta.env.VITE_API_URL || 'https://RANKLEN.onrender.com';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 // Export as default so it can be imported as: import API_URL from './config';
 export default API_URL;
