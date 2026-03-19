@@ -82,6 +82,7 @@ import InstituteProfile from './pages/institute/InstituteProfile';
 import InstituteDepartments from './pages/institute/InstituteDepartments';
 import DepartmentDetail from './pages/institute/DepartmentDetail';
 import TeacherPanel from './pages/institute/TeacherPanel';
+import TeacherProfileView from './pages/institute/TeacherProfileView';
 import StudentPanel from './pages/institute/StudentPanel';
 import TheoryChecking from './pages/institute/TheoryChecking';
 import QuestionChecker from './pages/institute/QuestionChecker';
@@ -882,6 +883,12 @@ function App() {
             />
             <Route path="/institute/teachers"
               element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TeacherPanel /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/teacher/:id"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TeacherProfileView /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/hod/teacher/:id"
+              element={<ProtectedRoute requiredRoles={['hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TeacherProfileView /></MainLayout></ProtectedRoute>}
             />
             <Route path="/institute/students"
               element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><StudentPanel /></MainLayout></ProtectedRoute>}

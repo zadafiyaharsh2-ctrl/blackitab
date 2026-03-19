@@ -135,8 +135,8 @@ const TeacherBatchDetail = () => {
   if (!batch) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8">
       <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Classroom not found</h2>
-      <button onClick={() => navigate('/teacher/batches')} className="text-blue-500 flex items-center gap-2 text-sm hover:underline">
-        <FaArrowLeft /> Back to Classes
+      <button onClick={() => navigate(-1)} className="text-blue-500 flex items-center gap-2 text-sm hover:underline">
+        <FaArrowLeft /> Back
       </button>
     </div>
   );
@@ -154,8 +154,8 @@ const TeacherBatchDetail = () => {
 
       {/* Header */}
       <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
-        <button onClick={() => navigate('/teacher/batches')} className="flex items-center gap-1.5 text-xs text-blue-500 hover:underline mb-3">
-          <FaArrowLeft /> Back to Classes
+        <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-xs text-blue-500 hover:underline mb-3">
+          <FaArrowLeft /> Back
         </button>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>

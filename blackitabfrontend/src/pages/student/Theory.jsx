@@ -92,7 +92,9 @@ const Theory = () => {
     // Define async function to fetch subjects
     const fetchSubjects = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/subjects`);
+        const token = localStorage.getItem('token');
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+        const res = await axios.get(`${API_URL}/api/subjects`, config);
 
         // If we get an empty array or the request succeeds but has no data, use mock data
         if (res.data.success && res.data.data && res.data.data.length > 0) {
@@ -180,8 +182,11 @@ const Theory = () => {
     // Define async function to fetch topics
     const fetchTopics = async () => {
       try {
+        const token = localStorage.getItem('token');
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
         const res = await axios.get(
-          `${API_URL}/api/subjects/${selectedSubject._id}/topics`
+          `${API_URL}/api/subjects/${selectedSubject._id}/topics`,
+          config
         );
 
         if (res.data.success && res.data.data && res.data.data.length > 0) {
@@ -213,11 +218,13 @@ const Theory = () => {
     // Define async function to fetch topic content
     const fetchTopicData = async () => {
       try {
+        const token = localStorage.getItem('token');
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
         const res = await axios.get(
-          `${API_URL}/api/topics/${selectedTopic._id}/full`
+          `${API_URL}/api/topics/${selectedTopic._id}/full`,
+          config
         );
 
-        const token = localStorage.getItem('token');
         if (res.data.success && res.data.data) {
           setTopicContent(res.data.data);
           // Auto-mark topic as completed when loaded
@@ -248,8 +255,8 @@ const Theory = () => {
   // Each block has a 'type' field that determines how it's rendered
   // Supported types: paragraph, heading, list, numbered_list, image
   const renderContent = (contentBlocks) => {
-    // If no content blocks provided, return null (render nothing)
-    if (!contentBlocks) return null;
+    // If no content blocks provided or it's not an array, return null (render nothing)
+    if (!Array.isArray(contentBlocks)) return null;
 
     // Map over each content block and render based on type
     return contentBlocks.map((block, index) => {
@@ -295,7 +302,7 @@ const Theory = () => {
               {/* Render unordered list with disc bullets */}
               <ul className="list-disc ml-6 space-y-2 text-lg text-gray-700 dark:text-gray-300">
                 {/* Map over items array and render each as list item */}
-                {block.items.map((item, i) => (
+                {block.items?.map((item, i) => (
                   <li key={i}>{item}</li>
                 ))}
               </ul>
@@ -311,7 +318,7 @@ const Theory = () => {
           return (
             <ol key={index} className="list-decimal ml-6 mb-6 space-y-2 text-lg text-gray-700 dark:text-gray-300">
               {/* Map over items array and render each as list item */}
-              {block.items.map((item, i) => (
+              {block.items?.map((item, i) => (
                 <li key={i}>{item}</li>
               ))}
             </ol>
@@ -414,9 +421,9 @@ const Theory = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {block.rows.map((row, rowIndex) => (
+                      {block.rows?.map((row, rowIndex) => (
                         <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-white dark:bg-gray-900/30" : "bg-gray-50 dark:bg-gray-800/30"}>
-                          {row.slice(midPoint).map((cell, cellIndex) => (
+                          {row?.slice(midPoint).map((cell, cellIndex) => (
                             <td key={cellIndex} className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-gray-700 dark:text-gray-300">
                               {cell}
                             </td>
@@ -444,7 +451,7 @@ const Theory = () => {
                 {/* Table header */}
                 <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    {block.headers.map((header, i) => (
+                    {block.headers?.map((header, i) => (
                       <th key={i} className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-200">
                         {header}
                       </th>
@@ -453,9 +460,9 @@ const Theory = () => {
                 </thead>
                 {/* Table body */}
                 <tbody>
-                  {block.rows.map((row, rowIndex) => (
+                  {block.rows?.map((row, rowIndex) => (
                     <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-white dark:bg-gray-900/30" : "bg-gray-50 dark:bg-gray-800/30"}>
-                      {row.map((cell, cellIndex) => (
+                      {row?.map((cell, cellIndex) => (
                         <td key={cellIndex} className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-gray-700 dark:text-gray-300">
                           {cell}
                         </td>

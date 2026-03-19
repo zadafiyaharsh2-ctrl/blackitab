@@ -14,7 +14,7 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID); // Will wor
 // POST /api/auth/google — authenticate using Google OAuth token
 exports.googleLogin = async (req, res) => {
     try {
-        const { credential, clientId } = req.body; // credential is the JWT from Google
+        const { credential, clientId, role, instituteCode, batchYear, division } = req.body; // credential is the JWT from Google
 
         if (!credential) {
             return res.status(400).json({ success: false, message: 'Google credential is required' });
@@ -46,17 +46,45 @@ exports.googleLogin = async (req, res) => {
                 await user.save();
             }
         } else {
+            // Validate incoming role
+            const validRoles = ['student', 'teacher', 'hod', 'institute'];
+            const assignedRole = validRoles.includes(role) ? role : 'student';
+
+            let instituteId = null;
+            if (instituteCode && assignedRole !== 'institute') {
+                const Institute = require('../../models/Institute');
+                const institute = await Institute.findOne({ instituteCode: instituteCode.toUpperCase() });
+                if (institute) {
+                    instituteId = institute._id;
+                }
+            }
+
             // 2. User doesn't exist, create a new one
             user = new User({
                 name: name,
                 email: normalizedEmail,
                 googleId: googleId,
                 authProvider: 'google',
-                role: 'student', // Default role for new signups
+                role: assignedRole,
+                instituteId: instituteId,
+                instituteCode: instituteId ? instituteCode.toUpperCase() : '',
+                batchYear: batchYear || undefined,
+                division: division || undefined,
                 profileImage: picture || '',
                 isVerified: true // Google emails are already verified
             });
             await user.save();
+
+            // Create a Join Request if they provided an institute code but are not an admin
+            if (instituteId && assignedRole !== 'institute') {
+                const JoinRequest = require('../../models/JoinRequest');
+                const joinRequest = new JoinRequest({
+                    userId: user._id,
+                    instituteId: instituteId,
+                    status: 'pending'
+                });
+                await joinRequest.save();
+            }
         }
 
         // 3. Generate JWT Token

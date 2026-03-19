@@ -10,6 +10,18 @@ const teacherContentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.Mixed, // rich text / markdown / HTML
         required: [true, 'Content is required']
     },
+    description: {
+        type: String,
+        default: ''
+    },
+    contentType: {
+        type: String,
+        default: 'notes'
+    },
+    subject: {
+        type: String,
+        default: ''
+    },
     subjectId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Subject',
