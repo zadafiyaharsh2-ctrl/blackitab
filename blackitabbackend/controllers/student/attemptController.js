@@ -25,17 +25,49 @@ exports.submitAttempt = async (req, res) => {
         });
         await attempt.save();
 
-        // 2. Update Question Global Stats (Atomic Updates for Scale)
-        const timeInc = timeTakenSeconds ? timeTakenSeconds : 0;
-        await ExamQuestion.findByIdAndUpdate(questionId, {
+        // 5. Fetch User for Gamification & Elo calculations
+        const user = await User.findById(userId);
+
+        // --- ELO RATING SYSTEM ---
+        const subjectFromQuestion = typeof question.subject === 'string' ? question.subject.trim() : '';
+        const domainName = subjectFromQuestion;
+
+        let questionUpdateQuery = {
             $inc: {
                 totalAttempts: 1,
                 successfulAttempts: isCorrect ? 1 : 0
             }
-        }, { runValidators: true, context: 'query' });
+        };
 
-        // 5. Update User Gamification — Difficulty-weighted Points & 10 XP per correct question
-        const user = await User.findById(userId);
+        if (domainName) {
+            const domainKey = domainName.toLowerCase();
+            const R_B = question.eloRating || 1000;
+            const domainRatingsMap = user.domainRatings || new Map();
+            const R_A = domainRatingsMap.get(domainKey) || 1000;
+
+            const K = 32;
+            const E_A = 1 / (1 + Math.pow(10, (R_B - R_A) / 400));
+            const E_B = 1 / (1 + Math.pow(10, (R_A - R_B) / 400));
+
+            const S_A = isCorrect ? 1 : 0;
+            const S_B = isCorrect ? 0 : 1;
+
+            const new_R_A = Math.round(R_A + K * (S_A - E_A));
+            const new_R_B = Math.round(R_B + K * (S_B - E_B));
+
+            // Update user's domain map
+            domainRatingsMap.set(domainKey, new_R_A);
+            user.domainRatings = domainRatingsMap;
+            
+            // Add new Elo to question update payload
+            questionUpdateQuery.$set = { eloRating: new_R_B };
+        }
+
+        // 2. Update Question Global Stats & Elo Updates
+        const timeInc = timeTakenSeconds ? timeTakenSeconds : 0;
+        await ExamQuestion.findByIdAndUpdate(questionId, questionUpdateQuery, { runValidators: true, context: 'query' });
+
+        // Update User Gamification — Difficulty-weighted Points & 10 XP per correct question
         let newStreak = user.streak || 0;
         let newLongestStreak = user.longestStreak || 0;
         const today = new Date();
@@ -61,7 +93,8 @@ exports.submitAttempt = async (req, res) => {
         const updateData = {
             streak: newStreak,
             longestStreak: newLongestStreak,
-            lastActiveDate: new Date()
+            lastActiveDate: new Date(),
+            domainRatings: user.domainRatings
         };
 
         if (isCorrect) {
@@ -133,21 +166,15 @@ exports.getDashboardAnalytics = async (req, res) => {
             hoursChange: 0
         };
 
-        // Domain mastery should be based on subject domain (DBMS/SQL/etc),
-        // with tag fallback when legacy questions are missing a subject.
+        // Domain mastery should be based on subject domain strictly,
+        // without any fallback to topics/tags.
         const subjectPerformance = {};
         allAttempts.forEach((a) => {
             const question = a.questionId;
             if (!question) return;
 
-            const subjectFromQuestion =
-                typeof question.subject === 'string' ? question.subject.trim() : '';
-            const subjectFromTags =
-                Array.isArray(question.tags) && question.tags.length > 0
-                    ? String(question.tags[0] || '').trim()
-                    : '';
-
-            const domainName = subjectFromQuestion || subjectFromTags;
+            const subjectFromQuestion = typeof question.subject === 'string' ? question.subject.trim() : '';
+            const domainName = subjectFromQuestion;
             if (!domainName) return;
 
             const key = domainName.toLowerCase();
@@ -159,27 +186,37 @@ exports.getDashboardAnalytics = async (req, res) => {
             if (a.isCorrect) subjectPerformance[key].correct += 1;
         });
 
+        const domainRatingsMap = user.domainRatings || new Map();
+
         const subjectScores = Object.values(subjectPerformance)
             .map((perf) => {
-                const prog = perf.total > 0 ? Math.round((perf.correct / perf.total) * 100) : 0;
+                const key = perf.name.toLowerCase();
+                
+                // Get Elo rating from user map, default to baseline 1000
+                const elo = domainRatingsMap.has(key) ? domainRatingsMap.get(key) : 1000;
+                
+                // Scale Elo to a 0-100 logic (1000 Elo = 50%, 1600 Elo = 80%) for progress bar graphic
+                const prog = Math.max(0, Math.min(100, Math.round(elo / 20)));
+                
                 return {
                     name: perf.name,
                     progress: prog,
-                    mastery: prog >= 80 ? 'Advanced' : prog >= 50 ? 'Intermediate' : 'Beginner',
+                    elo,
+                    mastery: elo >= 1400 ? 'Advanced' : elo >= 1000 ? 'Intermediate' : 'Beginner',
                     color:
-                        prog >= 80
+                        elo >= 1400
                             ? 'from-purple-500 to-indigo-600'
-                            : prog >= 50
+                            : elo >= 1000
                                 ? 'from-blue-500 to-cyan-600'
                                 : 'from-pink-500 to-rose-600',
                 };
             })
-            .sort((a, b) => b.progress - a.progress);
+            .sort((a, b) => b.elo - a.elo);
 
         const subjectProgress = subjectScores.slice(0, 6);
         
-        const strengths = subjectScores.filter(s => s.progress >= 75).map(s => s.name).slice(0, 5);
-        const weaknesses = subjectScores.filter(s => s.progress < 50).map(s => s.name).slice(0, 5);
+        const strengths = subjectScores.filter(s => s.elo >= 1300).map(s => s.name).slice(0, 5);
+        const weaknesses = subjectScores.filter(s => s.elo < 1000).map(s => s.name).slice(0, 5);
 
         // Recent activity — return real question text + ISO timestamp
         const recentActivity = allAttempts.slice(0, 5).map(a => {

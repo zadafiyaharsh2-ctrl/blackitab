@@ -72,7 +72,16 @@ const useAskAIChat = ({ subjectContext, topicContext, loadHistory = true } = {})
     // Fetch conversation-thread history on mount
     useEffect(() => {
         if (!loadHistory) return;
-        fetchChatList();
+        
+        const initChat = async () => {
+            const chats = await fetchChatList();
+            if (chats && chats.length > 0) {
+                // Determine the most recent chat and load it automatically on mount
+                loadChat(chats[0]._id);
+            }
+        };
+
+        initChat();
         fetchHistory(); // Legacy QA history
     }, [loadHistory]);
 
@@ -86,11 +95,13 @@ const useAskAIChat = ({ subjectContext, topicContext, loadHistory = true } = {})
                 const data = await response.json();
                 if (data.ok && data.chats) {
                     setChatList(data.chats);
+                    return data.chats;
                 }
             }
         } catch (err) {
             console.error('Failed to load chat list:', err);
         }
+        return [];
     };
 
     const loadChat = async (chatId) => {

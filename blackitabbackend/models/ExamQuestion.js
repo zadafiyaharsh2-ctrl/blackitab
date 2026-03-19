@@ -33,6 +33,10 @@ const examQuestionSchema = new mongoose.Schema({
         ],
         default: 'Medium'
     },
+    eloRating: {
+        type: Number,
+        default: 1000 // Elo baseline defaults to 1000, updated historically or individually over time.
+    },
     explanation: {
         type: String,
         default: 'No explanation available'
