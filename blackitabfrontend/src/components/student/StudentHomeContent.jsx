@@ -18,6 +18,164 @@ const getMasteryLevel = (pct) => {
   return { label: 'Beginner', cls: 'text-gray-500' };
 };
 
+const clampMasteryProgress = (value) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 0;
+  return Math.max(0, Math.min(100, Math.round(numeric)));
+};
+
+const getMasteryTheme = (progress) => {
+  if (progress >= 85) {
+    return {
+      dot: 'bg-violet-500',
+      bar: 'from-violet-500 via-fuchsia-500 to-indigo-500',
+      track: 'bg-violet-100 dark:bg-violet-500/10',
+      badge: 'text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10'
+    };
+  }
+  if (progress >= 65) {
+    return {
+      dot: 'bg-blue-500',
+      bar: 'from-blue-500 via-cyan-500 to-sky-500',
+      track: 'bg-blue-100 dark:bg-blue-500/10',
+      badge: 'text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10'
+    };
+  }
+  if (progress >= 40) {
+    return {
+      dot: 'bg-amber-500',
+      bar: 'from-amber-500 via-orange-500 to-rose-500',
+      track: 'bg-amber-100 dark:bg-amber-500/10',
+      badge: 'text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10'
+    };
+  }
+
+  return {
+    dot: 'bg-gray-500',
+    bar: 'from-gray-500 via-gray-600 to-gray-700',
+    track: 'bg-gray-100 dark:bg-gray-700/30',
+    badge: 'text-gray-700 dark:text-gray-300 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5'
+  };
+};
+
+const HomeMasteryRadar = ({ subjects }) => {
+  const chartSubjects = subjects.slice(0, 6);
+  if (!chartSubjects.length) return null;
+
+  const cx = 100;
+  const cy = 100;
+  const radius = 70;
+  const levels = [0.25, 0.5, 0.75, 1];
+
+  const angles = chartSubjects.map((_, index) => (
+    (Math.PI * 2 * index) / chartSubjects.length - Math.PI / 2
+  ));
+
+  const getPoint = (angle, scale) => ({
+    x: cx + radius * scale * Math.cos(angle),
+    y: cy + radius * scale * Math.sin(angle)
+  });
+
+  const polygonForScale = (scale) => (
+    angles
+      .map((angle) => {
+        const { x, y } = getPoint(angle, scale);
+        return `${x},${y}`;
+      })
+      .join(' ')
+  );
+
+  const dataPolygon = angles
+    .map((angle, index) => {
+      const scale = chartSubjects[index].progress / 100;
+      const { x, y } = getPoint(angle, scale);
+      return `${x},${y}`;
+    })
+    .join(' ');
+
+  return (
+    <svg viewBox="0 0 200 200" className="w-full max-w-[220px] mx-auto">
+      <defs>
+        <linearGradient id="homeMasteryArea" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#a855f7" stopOpacity="0.2" />
+        </linearGradient>
+        <linearGradient id="homeMasteryStroke" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#0ea5e9" />
+          <stop offset="100%" stopColor="#a855f7" />
+        </linearGradient>
+      </defs>
+
+      {levels.map((scale) => (
+        <polygon
+          key={`ring-${scale}`}
+          points={polygonForScale(scale)}
+          fill="none"
+          className="stroke-gray-200 dark:stroke-white/10"
+          strokeWidth="1"
+        />
+      ))}
+
+      {angles.map((angle, index) => {
+        const { x, y } = getPoint(angle, 1);
+        return (
+          <line
+            key={`axis-${index}`}
+            x1={cx}
+            y1={cy}
+            x2={x}
+            y2={y}
+            className="stroke-gray-200 dark:stroke-white/10"
+            strokeWidth="1"
+          />
+        );
+      })}
+
+      <polygon
+        points={dataPolygon}
+        fill="url(#homeMasteryArea)"
+        stroke="url(#homeMasteryStroke)"
+        strokeWidth="2"
+      />
+
+      {angles.map((angle, index) => {
+        const scale = chartSubjects[index].progress / 100;
+        const { x, y } = getPoint(angle, scale);
+        return (
+          <circle
+            key={`dot-${chartSubjects[index].id}`}
+            cx={x}
+            cy={y}
+            r="3"
+            className="fill-blue-500 dark:fill-cyan-400"
+          />
+        );
+      })}
+
+      {angles.map((angle, index) => {
+        const { x, y } = getPoint(angle, 1.15);
+        const textAnchor = x > cx + 4 ? 'start' : x < cx - 4 ? 'end' : 'middle';
+        const label = chartSubjects[index].name.length > 10
+          ? `${chartSubjects[index].name.slice(0, 10)}...`
+          : chartSubjects[index].name;
+
+        return (
+          <text
+            key={`label-${chartSubjects[index].id}`}
+            x={x}
+            y={y}
+            textAnchor={textAnchor}
+            dominantBaseline="middle"
+            className="fill-gray-500 dark:fill-gray-400 text-[8px] font-semibold"
+          >
+            {label}
+          </text>
+        );
+      })}
+    </svg>
+  );
+};
+
 const timeAgo = (dateStr) => {
   if (!dateStr) return '';
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -134,6 +292,24 @@ const StudentHomeContent = ({ embedded = false }) => {
     return { name: subject.name, icon, progress, completed, total, barColor };
   });
 
+  const masterySubjects = recentSubjects
+    .map((subject, index) => {
+      const progress = clampMasteryProgress(subject.progress);
+      const mastery = getMasteryLevel(progress).label;
+      return {
+        id: `${subject.name || 'subject'}-${index}`,
+        ...subject,
+        progress,
+        mastery,
+        theme: getMasteryTheme(progress)
+      };
+    })
+    .sort((a, b) => b.progress - a.progress);
+
+  const masteryOverview = masterySubjects.length > 0
+    ? Math.round(masterySubjects.reduce((sum, subject) => sum + subject.progress, 0) / masterySubjects.length)
+    : 0;
+
   const difficultyBreakdown = [
     { label: 'Easy', solved: Math.floor(progressStats.totalCompleted * 0.5), total: Math.floor(totalTopics * 0.4), color: 'bg-emerald-500' },
     { label: 'Medium', solved: Math.floor(progressStats.totalCompleted * 0.35), total: Math.floor(totalTopics * 0.4), color: 'bg-amber-500' },
@@ -219,43 +395,71 @@ const StudentHomeContent = ({ embedded = false }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-              <FaChartLine className="text-blue-500" /> Subject Mastery
-            </h3>
+        <div className="relative lg:col-span-2 border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] overflow-hidden">
+          <div className="pointer-events-none absolute inset-0 opacity-70">
+            <div className="absolute -top-16 -right-12 w-44 h-44 rounded-full bg-blue-200/40 dark:bg-blue-500/10 blur-3xl" />
+            <div className="absolute -bottom-20 -left-16 w-56 h-56 rounded-full bg-fuchsia-200/40 dark:bg-fuchsia-500/10 blur-3xl" />
           </div>
-          {recentSubjects.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-8">No subjects found. Start solving to see progress.</p>
-          ) : (
-            <div className="space-y-3">
-              {recentSubjects.map((subject) => {
-                const mastery = getMasteryLevel(subject.progress);
-                const SubjectIcon = subject.icon;
 
-                return (
-                  <div key={subject.name} className="flex items-center gap-4 p-3 rounded-lg border border-gray-100 dark:border-white/5">
-                    <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center shrink-0">
-                      <SubjectIcon className="text-gray-600 dark:text-gray-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-center mb-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-gray-900 dark:text-white">{subject.name}</span>
-                          <span className={`text-[10px] font-semibold ${mastery.cls}`}>{mastery.label}</span>
-                        </div>
-                        <span className="text-sm font-bold text-gray-900 dark:text-white">{subject.progress}%</span>
-                      </div>
-                      <div className="w-full bg-gray-100 dark:bg-white/5 rounded-full h-1.5">
-                        <div className={`h-full rounded-full ${subject.barColor}`} style={{ width: `${subject.progress}%` }} />
-                      </div>
-                    </div>
-                    <span className="text-xs text-gray-400 font-mono">{subject.completed}/{subject.total}</span>
-                  </div>
-                );
-              })}
+          <div className="relative">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                <FaChartLine className="text-blue-500" /> Subject Mastery
+              </h3>
+              <div className="text-right">
+                <p className="text-[10px] uppercase tracking-wide text-gray-400">Overall Mastery</p>
+                <p className="text-base font-bold text-gray-900 dark:text-white">{masteryOverview}%</p>
+              </div>
             </div>
-          )}
+
+            {masterySubjects.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-8">No subjects found. Start solving to see progress.</p>
+            ) : (
+              <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
+                <div className="xl:col-span-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gradient-to-br from-slate-50 via-white to-blue-50/60 dark:from-slate-900/40 dark:via-black/10 dark:to-blue-500/5 p-4">
+                  <HomeMasteryRadar subjects={masterySubjects} />
+                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-white/10">
+                    <p className="text-xs text-gray-500">Top subject</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{masterySubjects[0].name}</p>
+                    <p className="text-xs text-gray-400">{masterySubjects[0].progress}% mastery</p>
+                  </div>
+                </div>
+
+                <div className="xl:col-span-3 space-y-2.5">
+                  {masterySubjects.map((subject, index) => {
+                    const SubjectIcon = subject.icon;
+
+                    return (
+                      <div key={subject.id} className="rounded-lg border border-gray-100 dark:border-white/5 p-3 bg-white/80 dark:bg-white/[0.02] backdrop-blur-sm">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center shrink-0">
+                              <SubjectIcon className="text-gray-600 dark:text-gray-400" />
+                            </div>
+                            <span className={`w-2 h-2 rounded-full ${subject.theme.dot}`} />
+                            <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">{subject.name}</span>
+                            <span className="text-[10px] text-gray-400 font-semibold">#{index + 1}</span>
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${subject.theme.badge}`}>
+                              {subject.mastery}
+                            </span>
+                          </div>
+                          <span className="text-xs font-semibold text-gray-500 dark:text-gray-300">{subject.progress}%</span>
+                        </div>
+
+                        <div className={`w-full h-2 rounded-full overflow-hidden ${subject.theme.track}`}>
+                          <div className={`h-full rounded-full bg-gradient-to-r ${subject.theme.bar}`} style={{ width: `${subject.progress}%` }} />
+                        </div>
+
+                        <div className="mt-2 text-right">
+                          <span className="text-xs text-gray-400 font-mono">{subject.completed}/{subject.total}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-col gap-4">

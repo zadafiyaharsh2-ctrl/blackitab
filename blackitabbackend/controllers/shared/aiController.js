@@ -48,6 +48,11 @@ const LANGCHAIN_API_URL =
 const CHAT_CONTEXT_INSTRUCTION =
   "You are continuing an ongoing chat. Use the full conversation history for continuity, and answer the latest user question directly.";
 
+const sanitizeAIAnswer = (text) => {
+  if (typeof text !== "string") return String(text || "");
+  return text.trim();
+};
+
 const buildContextualQuery = (messages, latestUserQuery) => {
   const safeLatestQuery =
     typeof latestUserQuery === "string" ? latestUserQuery.trim() : "";

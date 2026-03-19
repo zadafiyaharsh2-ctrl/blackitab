@@ -31,10 +31,218 @@ const formatStudyTime = (hours, minutes) => {
   return '0 mins';
 };
 
-const difficultyColor = {
-  Easy: 'text-emerald-500',
-  Medium: 'text-amber-500',
-  Hard: 'text-red-500'
+const difficultyMeta = {
+  Easy: {
+    pill: 'text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10',
+    bar: 'from-emerald-500 to-lime-500',
+    track: 'bg-emerald-100 dark:bg-emerald-500/10',
+    intensity: 45
+  },
+  Medium: {
+    pill: 'text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10',
+    bar: 'from-amber-500 to-orange-500',
+    track: 'bg-amber-100 dark:bg-amber-500/10',
+    intensity: 60
+  },
+  Hard: {
+    pill: 'text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10',
+    bar: 'from-rose-500 to-red-500',
+    track: 'bg-rose-100 dark:bg-rose-500/10',
+    intensity: 78
+  }
+};
+
+const getActivityStatusVisual = (isSuccess) => {
+  if (isSuccess) {
+    return {
+      label: 'Solved',
+      chip: 'text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10',
+      dot: 'bg-emerald-500',
+      line: 'from-emerald-500/70 to-transparent',
+      insight: '+10 XP'
+    };
+  }
+
+  return {
+    label: 'Attempted',
+    chip: 'text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10',
+    dot: 'bg-rose-400',
+    line: 'from-rose-400/70 to-transparent',
+    insight: 'Keep going'
+  };
+};
+
+const getActivityIntensity = (difficulty, isSuccess) => {
+  const base = difficultyMeta[difficulty]?.intensity ?? difficultyMeta.Medium.intensity;
+  const adjusted = base + (isSuccess ? 20 : -8);
+  return Math.max(16, Math.min(100, adjusted));
+};
+
+const clampProgress = (value) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 0;
+  return Math.max(0, Math.min(100, Math.round(numeric)));
+};
+
+const deriveMasteryLabel = (progress, fallbackLabel) => {
+  if (typeof fallbackLabel === 'string' && fallbackLabel.trim()) {
+    return fallbackLabel;
+  }
+  if (progress >= 80) return 'Advanced';
+  if (progress >= 50) return 'Intermediate';
+  return 'Beginner';
+};
+
+const getMasteryVisual = (progress) => {
+  if (progress >= 85) {
+    return {
+      dot: 'bg-violet-500',
+      bar: 'from-violet-500 via-fuchsia-500 to-indigo-500',
+      track: 'bg-violet-100 dark:bg-violet-500/10',
+      badge: 'text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10'
+    };
+  }
+  if (progress >= 65) {
+    return {
+      dot: 'bg-blue-500',
+      bar: 'from-blue-500 via-cyan-500 to-sky-500',
+      track: 'bg-blue-100 dark:bg-blue-500/10',
+      badge: 'text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10'
+    };
+  }
+  if (progress >= 40) {
+    return {
+      dot: 'bg-amber-500',
+      bar: 'from-amber-500 via-orange-500 to-rose-500',
+      track: 'bg-amber-100 dark:bg-amber-500/10',
+      badge: 'text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10'
+    };
+  }
+
+  return {
+    dot: 'bg-gray-500',
+    bar: 'from-gray-500 via-gray-600 to-gray-700',
+    track: 'bg-gray-100 dark:bg-gray-700/30',
+    badge: 'text-gray-700 dark:text-gray-300 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5'
+  };
+};
+
+const SubjectMasteryRadar = ({ subjects }) => {
+  const chartSubjects = subjects.slice(0, 6);
+  if (!chartSubjects.length) return null;
+
+  const cx = 110;
+  const cy = 110;
+  const radius = 78;
+  const levels = [0.25, 0.5, 0.75, 1];
+
+  const angles = chartSubjects.map((_, index) => (
+    (Math.PI * 2 * index) / chartSubjects.length - Math.PI / 2
+  ));
+
+  const getPoint = (angle, scale) => ({
+    x: cx + radius * scale * Math.cos(angle),
+    y: cy + radius * scale * Math.sin(angle)
+  });
+
+  const polygonForScale = (scale) => (
+    angles
+      .map((angle) => {
+        const { x, y } = getPoint(angle, scale);
+        return `${x},${y}`;
+      })
+      .join(' ')
+  );
+
+  const dataPolygon = angles
+    .map((angle, index) => {
+      const scale = clampProgress(chartSubjects[index].progress) / 100;
+      const { x, y } = getPoint(angle, scale);
+      return `${x},${y}`;
+    })
+    .join(' ');
+
+  return (
+    <svg viewBox="0 0 220 220" className="w-full max-w-[250px] mx-auto">
+      <defs>
+        <linearGradient id="masteryAreaGradient" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#a855f7" stopOpacity="0.22" />
+        </linearGradient>
+        <linearGradient id="masteryStrokeGradient" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#0ea5e9" />
+          <stop offset="100%" stopColor="#a855f7" />
+        </linearGradient>
+      </defs>
+
+      {levels.map((scale) => (
+        <polygon
+          key={`ring-${scale}`}
+          points={polygonForScale(scale)}
+          fill="none"
+          className="stroke-gray-200 dark:stroke-white/10"
+          strokeWidth="1"
+        />
+      ))}
+
+      {angles.map((angle, index) => {
+        const { x, y } = getPoint(angle, 1);
+        return (
+          <line
+            key={`axis-${index}`}
+            x1={cx}
+            y1={cy}
+            x2={x}
+            y2={y}
+            className="stroke-gray-200 dark:stroke-white/10"
+            strokeWidth="1"
+          />
+        );
+      })}
+
+      <polygon
+        points={dataPolygon}
+        fill="url(#masteryAreaGradient)"
+        stroke="url(#masteryStrokeGradient)"
+        strokeWidth="2"
+      />
+
+      {angles.map((angle, index) => {
+        const scale = clampProgress(chartSubjects[index].progress) / 100;
+        const { x, y } = getPoint(angle, scale);
+        return (
+          <circle
+            key={`dot-${chartSubjects[index].id}`}
+            cx={x}
+            cy={y}
+            r="3.2"
+            className="fill-blue-500 dark:fill-cyan-400"
+          />
+        );
+      })}
+
+      {angles.map((angle, index) => {
+        const { x, y } = getPoint(angle, 1.16);
+        const textAnchor = x > cx + 5 ? 'start' : x < cx - 5 ? 'end' : 'middle';
+        const label = chartSubjects[index].name.length > 12
+          ? `${chartSubjects[index].name.slice(0, 12)}…`
+          : chartSubjects[index].name;
+
+        return (
+          <text
+            key={`label-${chartSubjects[index].id}`}
+            x={x}
+            y={y}
+            textAnchor={textAnchor}
+            dominantBaseline="middle"
+            className="fill-gray-500 dark:fill-gray-400 text-[9px] font-semibold"
+          >
+            {label}
+          </text>
+        );
+      })}
+    </svg>
+  );
 };
 
 /* ── Stat Card ───────────────────────────────────────────── */
@@ -286,6 +494,57 @@ const StudentAnalyticsContent = () => {
 
   const { stats, subjectProgress, strengths, weaknesses, recentActivity } = data;
 
+  const masterySubjects = (subjectProgress || [])
+    .map((subject, index) => {
+      const progress = clampProgress(subject?.progress);
+      const mastery = deriveMasteryLabel(progress, subject?.mastery);
+      const name =
+        typeof subject?.name === 'string' && subject.name.trim()
+          ? subject.name.trim()
+          : `Domain ${index + 1}`;
+
+      return {
+        id: `${name}-${index}`,
+        name,
+        progress,
+        mastery,
+        visual: getMasteryVisual(progress)
+      };
+    })
+    .sort((a, b) => b.progress - a.progress);
+
+  const masteryOverview = masterySubjects.length > 0
+    ? Math.round(masterySubjects.reduce((sum, item) => sum + item.progress, 0) / masterySubjects.length)
+    : 0;
+
+  const recentActivityItems = (recentActivity || []).map((activity, index) => {
+    const isSuccess = activity?.type === 'completed';
+    const difficulty = ['Easy', 'Medium', 'Hard'].includes(activity?.difficulty)
+      ? activity.difficulty
+      : 'Medium';
+    const visual = difficultyMeta[difficulty] || difficultyMeta.Medium;
+    const statusVisual = getActivityStatusVisual(isSuccess);
+
+    return {
+      id: `${activity?.title || 'activity'}-${index}`,
+      title:
+        typeof activity?.title === 'string' && activity.title.trim()
+          ? activity.title.trim()
+          : 'Practice Activity',
+      timeLabel: timeAgo(activity?.time),
+      difficulty,
+      visual,
+      statusVisual,
+      intensity: getActivityIntensity(difficulty, isSuccess)
+    };
+  });
+
+  const activityCompletedCount = recentActivityItems.filter((item) => item.statusVisual.label === 'Solved').length;
+  const activityAttemptedCount = recentActivityItems.length - activityCompletedCount;
+  const activityCompletionRate = recentActivityItems.length > 0
+    ? Math.round((activityCompletedCount / recentActivityItems.length) * 100)
+    : 0;
+
   const handleJoinClassSubmit = async (e) => {
     e.preventDefault();
     if (!classCodeInput) return;
@@ -500,65 +759,66 @@ const StudentAnalyticsContent = () => {
       </div>
 
       {/* ── Domain Mastery ─────────────────────────────────── */}
-      <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-4">
-          <BookOpen className="h-3.5 w-3.5" /> Domain Mastery
-        </h3>
-        {subjectProgress.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {subjectProgress.map((subject, index) => {
-              const radius = 28;
-              const circumference = 2 * Math.PI * radius;
-              const numericProgress = Number(subject?.progress);
-              const safeProgress = Number.isFinite(numericProgress)
-                ? Math.max(0, Math.min(100, Math.round(numericProgress)))
-                : 0;
-              const safeMastery =
-                typeof subject?.mastery === 'string' && subject.mastery.trim()
-                  ? subject.mastery
-                  : safeProgress >= 80
-                    ? 'Advanced'
-                    : safeProgress >= 50
-                      ? 'Intermediate'
-                      : 'Beginner';
-              const safeName =
-                typeof subject?.name === 'string' && subject.name.trim()
-                  ? subject.name
-                  : 'General';
+      <div className="relative border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 opacity-70">
+          <div className="absolute -top-16 -right-12 w-44 h-44 rounded-full bg-blue-200/50 dark:bg-blue-500/10 blur-3xl" />
+          <div className="absolute -bottom-20 -left-16 w-56 h-56 rounded-full bg-fuchsia-200/50 dark:bg-fuchsia-500/10 blur-3xl" />
+        </div>
 
-              return (
-                <div key={`${safeName}-${index}`} className="border border-gray-200 dark:border-white/10 rounded-lg p-4 flex items-center gap-4">
-                  <div className="relative w-16 h-16 shrink-0">
-                    <svg className="-rotate-90 w-16 h-16">
-                      <circle cx="32" cy="32" r={radius} stroke="currentColor" strokeWidth="4" fill="transparent" className="text-gray-100 dark:text-white/10" />
-                      <circle
-                        cx="32"
-                        cy="32"
-                        r={radius}
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="transparent"
-                        strokeDasharray={circumference}
-                        strokeDashoffset={circumference - (safeProgress / 100) * circumference}
-                        strokeLinecap="round"
-                        className="text-blue-500"
+        <div className="relative">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+              <BookOpen className="h-3.5 w-3.5" /> Domain Mastery
+            </h3>
+            <div className="text-right">
+              <p className="text-[10px] uppercase tracking-wide text-gray-400">Overall Mastery</p>
+              <p className="text-base font-bold text-gray-900 dark:text-white">{masteryOverview}%</p>
+            </div>
+          </div>
+
+          {masterySubjects.length > 0 ? (
+            <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
+              <div className="xl:col-span-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gradient-to-br from-slate-50 via-white to-blue-50/60 dark:from-slate-900/40 dark:via-black/10 dark:to-blue-500/5 p-4">
+                <SubjectMasteryRadar subjects={masterySubjects} />
+                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-white/10">
+                  <p className="text-xs text-gray-500">Top domain</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{masterySubjects[0].name}</p>
+                  <p className="text-xs text-gray-400">{masterySubjects[0].progress}% mastery</p>
+                </div>
+              </div>
+
+              <div className="xl:col-span-3 space-y-2.5">
+                {masterySubjects.map((subject, index) => (
+                  <div
+                    key={subject.id}
+                    className="rounded-lg border border-gray-200 dark:border-white/10 bg-white/80 dark:bg-white/[0.02] backdrop-blur-sm p-3"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${subject.visual.dot}`} />
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{subject.name}</p>
+                        <span className="text-[10px] text-gray-400 font-semibold">#{index + 1}</span>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${subject.visual.badge}`}>
+                          {subject.mastery}
+                        </span>
+                      </div>
+                      <p className="text-xs font-semibold text-gray-500 dark:text-gray-300">{subject.progress}%</p>
+                    </div>
+
+                    <div className={`w-full h-2 rounded-full overflow-hidden ${subject.visual.track}`}>
+                      <div
+                        className={`h-full rounded-full bg-gradient-to-r ${subject.visual.bar} transition-all duration-700`}
+                        style={{ width: `${subject.progress}%` }}
                       />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-xs font-bold text-gray-900 dark:text-white">{safeProgress}%</span>
                     </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{safeName}</p>
-                    <p className="text-xs text-gray-400">{safeMastery}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <PlaceholderRadarChart />
-        )}
+                ))}
+              </div>
+            </div>
+          ) : (
+            <PlaceholderRadarChart />
+          )}
+        </div>
       </div>
 
       {/* ── Strengths / Weaknesses ─────────────────────────── */}
@@ -601,53 +861,120 @@ const StudentAnalyticsContent = () => {
       </div>
 
       {/* ── Recent Activity ────────────────────────────────── */}
-      <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
-        <div className="px-5 py-3 border-b border-gray-100 dark:border-white/5">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-            <Code className="h-3.5 w-3.5" /> Recent Activity
-          </h3>
+      <div className="relative border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 opacity-70">
+          <div className="absolute -top-14 -right-16 w-44 h-44 rounded-full bg-emerald-200/40 dark:bg-emerald-500/10 blur-3xl" />
+          <div className="absolute -bottom-20 -left-12 w-56 h-56 rounded-full bg-sky-200/40 dark:bg-sky-500/10 blur-3xl" />
         </div>
-        {recentActivity.length > 0 ? (
-          <div className="divide-y divide-gray-100 dark:divide-white/5">
-            {recentActivity.map((activity, index) => {
-              const isSuccess = activity.type === 'completed';
-              const difficultyCls = difficultyColor[activity.difficulty] || 'text-gray-400';
 
-              return (
-                <div key={`${activity.title || 'activity'}-${index}`} className="flex items-center gap-3 px-5 py-3">
-                  <div className={`w-2 h-2 rounded-full shrink-0 ${isSuccess ? 'bg-emerald-500' : 'bg-red-400'}`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{activity.title}</p>
-                    <p className="text-xs text-gray-400">{timeAgo(activity.time)}</p>
+        <div className="relative">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+              <Code className="h-3.5 w-3.5" /> Recent Activity
+            </h3>
+            <div className="flex items-center gap-2 text-[10px] font-semibold">
+              <span className="px-2 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                {activityCompletedCount} solved
+              </span>
+              <span className="px-2 py-1 rounded-full border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300">
+                {activityAttemptedCount} attempts
+              </span>
+            </div>
+          </div>
+
+          {recentActivityItems.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+              <div className="lg:col-span-1 rounded-xl border border-gray-200 dark:border-white/10 bg-white/80 dark:bg-white/[0.02] backdrop-blur-sm p-4 space-y-3">
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400">Latest update</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{recentActivityItems[0]?.timeLabel || '—'}</p>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs text-gray-500">Completion</span>
+                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{activityCompletionRate}%</span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs shrink-0">
-                    <span className={`${difficultyCls} font-medium`}>{activity.difficulty || 'Medium'}</span>
-                    <span className={isSuccess ? 'text-emerald-500' : 'text-red-400'}>{isSuccess ? '+XP' : 'Failed'}</span>
+                  <div className="w-full h-2 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-cyan-500 to-sky-500 transition-all duration-700"
+                      style={{ width: `${activityCompletionRate}%` }}
+                    />
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-10 text-gray-400">
-            <Activity className="h-6 w-6 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">No activity yet. Start solving.</p>
-          </div>
-        )}
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div className="border border-gray-200 dark:border-white/10 rounded-lg py-2">
+                    <p className="text-[10px] text-gray-400">Solved</p>
+                    <p className="text-sm font-bold text-emerald-600 dark:text-emerald-300">{activityCompletedCount}</p>
+                  </div>
+                  <div className="border border-gray-200 dark:border-white/10 rounded-lg py-2">
+                    <p className="text-[10px] text-gray-400">Timeline</p>
+                    <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{recentActivityItems.length}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="lg:col-span-3 space-y-2.5">
+                {recentActivityItems.map((activity, index) => (
+                  <div
+                    key={activity.id}
+                    className="relative rounded-xl border border-gray-200 dark:border-white/10 bg-white/85 dark:bg-white/[0.02] backdrop-blur-sm px-4 py-3 pl-10"
+                  >
+                    {index < recentActivityItems.length - 1 && (
+                      <span className={`absolute left-[15px] top-8 bottom-[-13px] w-px bg-gradient-to-b ${activity.statusVisual.line}`} />
+                    )}
+                    <span className={`absolute left-3 top-3.5 w-4 h-4 rounded-full ring-2 ring-white dark:ring-gray-900 ${activity.statusVisual.dot} flex items-center justify-center`}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-white/95" />
+                    </span>
+
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{activity.title}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${activity.visual.pill}`}>
+                            {activity.difficulty}
+                          </span>
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${activity.statusVisual.chip}`}>
+                            {activity.statusVisual.label}
+                          </span>
+                          <span className="text-[10px] text-gray-400">{activity.timeLabel}</span>
+                        </div>
+                      </div>
+                      <span className={`text-[11px] font-semibold shrink-0 ${activity.statusVisual.label === 'Solved' ? 'text-emerald-500' : 'text-rose-400'}`}>
+                        {activity.statusVisual.insight}
+                      </span>
+                    </div>
+
+                    <div className={`mt-2 h-1.5 rounded-full overflow-hidden ${activity.visual.track}`}>
+                      <div
+                        className={`h-full rounded-full bg-gradient-to-r ${activity.visual.bar} transition-all duration-700`}
+                        style={{ width: `${activity.intensity}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-10 text-gray-400">
+              <Activity className="h-6 w-6 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">No activity yet. Start solving.</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Advanced Insights (shimmer + toggle) ────────────── */}
       <AdvancedInsightsSection problemsSolved={stats.problemsSolved} />
 
       {/* ── Top Performing Topics ───────────────────────────── */}
-      {subjectProgress.length > 0 && (
+      {masterySubjects.length > 0 && (
         <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-4">
             <Medal className="h-3.5 w-3.5" /> Top Performing Topics
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {subjectProgress.map((topic, index) => (
-              <div key={`${topic.name}-${index}`} className="border border-gray-100 dark:border-white/5 rounded-lg p-3">
+            {masterySubjects.map((topic, index) => (
+              <div key={`${topic.id}-${index}`} className="border border-gray-100 dark:border-white/5 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-gray-900 dark:text-white">{topic.name}</span>
                   <span className="text-xs text-gray-400">{topic.mastery}</span>
