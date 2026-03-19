@@ -341,6 +341,7 @@ const Messages = () => {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="font-semibold text-sm text-gray-900 dark:text-white truncate">{u.name}</div>
+                                            <div className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{u.email || 'No email'}</div>
                                             <div className="text-[11px] text-gray-500 dark:text-gray-400">{u.followerCount || 0} followers</div>
                                         </div>
                                         {u.isFollowing && (

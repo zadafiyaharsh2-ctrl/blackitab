@@ -1,6 +1,7 @@
 const User = require('../../models/User');
 const Connection = require('../../models/Connection');
 const Notification = require('../../models/Notification');
+const Post = require('../../models/Post');
 
 // --- Search ---
 
@@ -278,7 +279,7 @@ exports.getFollowers = async (req, res) => {
         const search = req.query.search || '';
 
         const connections = await Connection.find({ targetUserId: userId, connectionType: 'follow', status: 'accepted' })
-                                  .populate('sourceUserId', 'name email followerCount subscriberCount profileImage bio');
+                      .populate('sourceUserId', 'name role followerCount subscriberCount profileImage bio');
 
         // Check who follows the current user (for "Follows you" badge)
         const followsMe = await Connection.find({ targetUserId: currentUserId, connectionType: 'follow', status: 'accepted' });
@@ -321,7 +322,7 @@ exports.getFollowing = async (req, res) => {
         const search = req.query.search || '';
 
         const connections = await Connection.find({ sourceUserId: userId, connectionType: 'follow', status: 'accepted' })
-                                  .populate('targetUserId', 'name email followerCount subscriberCount profileImage bio');
+                      .populate('targetUserId', 'name role followerCount subscriberCount profileImage bio');
 
         // Check who follows the current user (for "Follows you" badge)
         const followsMe = await Connection.find({ targetUserId: currentUserId, connectionType: 'follow', status: 'accepted' });
@@ -387,28 +388,69 @@ exports.removeFollower = async (req, res) => {
 exports.getUserProfile = async (req, res) => {
     try {
         const userId = req.params.id;
-        const currentUserId = req.user._id;
+        const currentUserId = req.user._id.toString();
+        const isOwnProfile = currentUserId === userId;
 
-        const user = await User.findById(userId).select('-password').lean();
+        const user = await User.findById(userId)
+            .select('name role bio profileImage isPrivate isVerified followerCount followingCount subscriberCount instituteId departments batchYear division specialization createdAt')
+            .lean();
         if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-        const isFollowing = await Connection.exists({ sourceUserId: currentUserId, targetUserId: userId, connectionType: 'follow', status: 'accepted' });
-        const isRequested = await Connection.exists({ sourceUserId: currentUserId, targetUserId: userId, connectionType: 'follow', status: 'pending' });
-        const isFollower = await Connection.exists({ sourceUserId: userId, targetUserId: currentUserId, connectionType: 'follow', status: 'accepted' });
+        const [isFollowing, isRequested, isFollower] = await Promise.all([
+            Connection.exists({ sourceUserId: currentUserId, targetUserId: userId, connectionType: 'follow', status: 'accepted' }),
+            Connection.exists({ sourceUserId: currentUserId, targetUserId: userId, connectionType: 'follow', status: 'pending' }),
+            Connection.exists({ sourceUserId: userId, targetUserId: currentUserId, connectionType: 'follow', status: 'accepted' })
+        ]);
+
+        const canViewPrivateContent = !user.isPrivate || isOwnProfile || !!isFollowing;
 
         // Populate institute info
         let instituteInfo = null;
         if (user.instituteId) {
             const Institute = require('../../models/Institute');
-            const inst = await Institute.findById(user.instituteId).select('name instituteCode description bannerImage');
+            const inst = await Institute.findById(user.instituteId).select('name description bannerImage');
             if (inst) {
-                instituteInfo = { _id: inst._id, name: inst.name, instituteCode: inst.instituteCode, description: inst.description, bannerImage: inst.bannerImage };
+                instituteInfo = {
+                    _id: inst._id,
+                    name: inst.name,
+                    description: inst.description,
+                    bannerImage: inst.bannerImage
+                };
             }
         }
 
+        const publicPostIds = canViewPrivateContent
+            ? await Post.find({ user: userId, contentType: 'post' }).sort({ createdAt: -1 }).select('_id').lean()
+            : [];
+
         res.json({
             success: true,
-            user: { ...user, institute: instituteInfo, isFollowing: !!isFollowing, isRequested: !!isRequested, isFollower: !!isFollower }
+            user: {
+                _id: user._id,
+                id: user._id,
+                name: user.name,
+                role: user.role,
+                bio: user.bio || '',
+                profileImage: user.profileImage || '',
+                isPrivate: !!user.isPrivate,
+                isVerified: !!user.isVerified,
+                followerCount: user.followerCount || 0,
+                followingCount: user.followingCount || 0,
+                subscriberCount: user.subscriberCount || 0,
+                instituteId: user.instituteId || null,
+                institute: instituteInfo,
+                departments: Array.isArray(user.departments) ? user.departments.filter(Boolean) : [],
+                batchYear: user.batchYear,
+                division: user.division,
+                specialization: user.specialization,
+                createdAt: user.createdAt,
+                isFollowing: !!isFollowing,
+                isRequested: !!isRequested,
+                isFollower: !!isFollower,
+                isOwnProfile,
+                canViewPrivateContent,
+                publicPostIds: publicPostIds.map((p) => p._id)
+            }
         });
     } catch (error) {
         
