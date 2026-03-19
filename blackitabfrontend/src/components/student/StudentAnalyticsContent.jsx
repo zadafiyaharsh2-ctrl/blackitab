@@ -589,21 +589,27 @@ const StudentAnalyticsContent = () => {
               link: '/problems'
             });
           }
-        } catch {}
+        } catch {
+          toast.error('Failed to load problem of the day. Please try again later.');
+        }
 
         try {
           const batchesRes = await axios.get(`${API_URL}/api/user/batches`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (batchesRes.data.success) setJoinedBatchCount(batchesRes.data.data.length);
-        } catch {}
+        } catch {
+          toast.error('Failed to load batch information. Please try again later.');
+        }
 
         try {
           const examsRes = await axios.get(`${API_URL}/api/user/upcoming-exams`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (examsRes.data.success) setUpcomingExams(examsRes.data.data);
-        } catch {}
+        } catch {
+          toast.error('Failed to load upcoming exams. Please try again later.');
+        }
 
         // Fetch Advanced Insights in parallel
         try {
@@ -612,10 +618,13 @@ const StudentAnalyticsContent = () => {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (insightsRes.data.success) setInsights(insightsRes.data.data);
-        } catch {} finally {
+        } catch {
+          toast.error('Failed to load advanced insights. Please try again later.');
+        } finally {
           setInsightsLoading(false);
         }
       } catch {
+        toast.error('Failed to load analytics. Please try again later.');
       } finally {
         setLoading(false);
       }
