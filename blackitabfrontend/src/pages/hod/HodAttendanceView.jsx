@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
-import { FaCalendarDay, FaUsers, FaCheck, FaTimes, FaClock } from 'react-icons/fa';
+import { FaCalendarDay, FaUsers, FaCheck, FaTimes, FaClock, FaTable, FaChartBar } from 'react-icons/fa';
 import PageShimmer from '../../components/shared/PageShimmer';
+import AttendanceGrid from '../../components/shared/AttendanceGrid';
 
 const HodAttendanceView = () => {
   const [batches, setBatches] = useState([]);
@@ -11,6 +12,7 @@ const HodAttendanceView = () => {
   const [studentAnalytics, setStudentAnalytics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
+  const [viewMode, setViewMode] = useState('summary'); // 'summary' or 'grid'
 
   useEffect(() => { fetchBatches(); }, []);
 
@@ -137,6 +139,26 @@ const HodAttendanceView = () => {
               <div className="flex justify-center py-20"><div className="animate-spin w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full" /></div>
             ) : (
               <div className="space-y-4">
+                {/* View toggle */}
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold">Attendance Data</h3>
+                  <div className="flex border border-gray-200 dark:border-white/10 rounded-lg overflow-hidden">
+                    <button onClick={() => setViewMode('summary')}
+                      className={`px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 ${viewMode === 'summary' ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5'}`}>
+                      <FaChartBar /> Summary
+                    </button>
+                    <button onClick={() => setViewMode('grid')}
+                      className={`px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 ${viewMode === 'grid' ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5'}`}>
+                      <FaTable /> Register
+                    </button>
+                  </div>
+                </div>
+
+                {/* Grid View */}
+                {viewMode === 'grid' ? (
+                  <AttendanceGrid records={attendance} students={batchStudents} />
+                ) : (
+                  <>
                 {studentAnalytics.length > 0 && (
                   <div className="p-4 bg-white dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10">
                     <h4 className="text-sm font-bold mb-3">Student Attendance Overview</h4>
@@ -203,6 +225,8 @@ const HodAttendanceView = () => {
                         </div>
                       </div>
                     ))}
+                  </>
+                )}
                   </>
                 )}
               </div>
