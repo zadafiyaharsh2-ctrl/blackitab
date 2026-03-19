@@ -5,7 +5,7 @@ import {
   FaCheckCircle, FaTimesCircle, FaClock, FaCalendarDay,
   FaSave, FaHistory, FaArrowLeft, FaSpinner, FaChevronRight,
   FaUsers, FaTable, FaPen, FaChevronLeft, FaCalendarAlt,
-  FaInfoCircle
+  FaInfoCircle, FaBan
 } from 'react-icons/fa';
 import API from '../../config';
 import AttendanceGrid from '../../components/shared/AttendanceGrid';
@@ -142,6 +142,7 @@ export default function TeacherAttendance() {
   const presentCount = Object.values(attendanceState).filter(s => s === 'Present').length;
   const absentCount = Object.values(attendanceState).filter(s => s === 'Absent').length;
   const lateCount = Object.values(attendanceState).filter(s => s === 'Late').length;
+  const noClassCount = Object.values(attendanceState).filter(s => s === 'No Class').length;
 
   const setStudentStatus = (studentId, status) => {
     setAttendanceState(prev => ({ ...prev, [studentId]: status }));
@@ -156,6 +157,12 @@ export default function TeacherAttendance() {
   const markAllAbsent = () => {
     const newState = {};
     students.forEach(s => { newState[s._id] = 'Absent'; });
+    setAttendanceState(newState);
+  };
+
+  const markAllNoClass = () => {
+    const newState = {};
+    students.forEach(s => { newState[s._id] = 'No Class'; });
     setAttendanceState(newState);
   };
 
@@ -179,9 +186,10 @@ export default function TeacherAttendance() {
   })();
 
   const statusConfig = {
-    Present: { label: 'Present', short: 'P', icon: <FaCheckCircle />, cls: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30' },
-    Absent:  { label: 'Absent',  short: 'A', icon: <FaTimesCircle />, cls: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/30' },
-    Late:    { label: 'Late',    short: 'L', icon: <FaClock />,       cls: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30' },
+    Present:    { label: 'Present',  short: 'P', icon: <FaCheckCircle />, cls: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30' },
+    Absent:     { label: 'Absent',   short: 'A', icon: <FaTimesCircle />, cls: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/30' },
+    Late:       { label: 'Late',     short: 'L', icon: <FaClock />,       cls: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30' },
+    'No Class': { label: 'No Class', short: 'N', icon: <FaBan />,         cls: 'bg-gray-100 text-gray-600 border-gray-300 dark:bg-gray-500/10 dark:text-gray-400 dark:border-gray-500/30' },
   };
 
   return (
@@ -334,7 +342,7 @@ export default function TeacherAttendance() {
               </div>
 
               {/* Summary Counters */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-4 gap-3">
                 <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 text-center">
                   <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{presentCount}</p>
                   <p className="text-xs text-gray-500 mt-1">Present</p>
@@ -346,6 +354,10 @@ export default function TeacherAttendance() {
                 <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 text-center">
                   <p className="text-2xl font-bold text-amber-500 dark:text-amber-400">{lateCount}</p>
                   <p className="text-xs text-gray-500 mt-1">Late</p>
+                </div>
+                <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 text-center">
+                  <p className="text-2xl font-bold text-gray-500 dark:text-gray-400">{noClassCount}</p>
+                  <p className="text-xs text-gray-500 mt-1">No Class</p>
                 </div>
               </div>
 
@@ -376,6 +388,12 @@ export default function TeacherAttendance() {
                       >
                         <FaTimesCircle /> All Absent
                       </button>
+                      <button
+                        onClick={markAllNoClass}
+                        className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-500/30 transition-colors rounded-md text-xs font-semibold border border-gray-300 dark:border-gray-500/30"
+                      >
+                        <FaBan /> No Class
+                      </button>
                     </div>
                   </div>
 
@@ -389,6 +407,7 @@ export default function TeacherAttendance() {
                           <th className="px-4 py-3 font-semibold text-xs tracking-wider uppercase text-center w-24">Present</th>
                           <th className="px-4 py-3 font-semibold text-xs tracking-wider uppercase text-center w-24">Absent</th>
                           <th className="px-4 py-3 font-semibold text-xs tracking-wider uppercase text-center w-24">Late</th>
+                          <th className="px-4 py-3 font-semibold text-xs tracking-wider uppercase text-center w-24">No Class</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100 dark:divide-white/5">
