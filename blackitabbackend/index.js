@@ -55,7 +55,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "http://127.0.0.1:5173", "https://blackitab.vercel.app"],
+    origin: ["http://localhost:5173", "http://127.0.0.1:5173", "https://RANKLEN.vercel.app"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
@@ -70,7 +70,7 @@ app.set('socketService', socketService);
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  'https://blackitab.vercel.app'
+  'https://RANKLEN.vercel.app'
 ];
 // Helmet for security headers
 app.use(helmet());
@@ -226,7 +226,7 @@ app.get('/api/me', async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
-  console.log(`MongoDB connection: ${process.env.MONGODB_URI || 'mongodb://localhost:27017/blackitab'}`);
+  console.log(`MongoDB connection: ${process.env.MONGODB_URI || 'mongodb://localhost:27017/RANKLEN'}`);
   
   // Start background algorithmic jobs
   startCronJobs();
