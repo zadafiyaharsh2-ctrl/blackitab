@@ -14,7 +14,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: 'blackitab_posts',
+        folder: 'RANKLEN_posts',
         allowed_formats: ['jpg', 'png', 'jpeg', 'mp4', 'webm'],
         resource_type: 'auto'
     }
