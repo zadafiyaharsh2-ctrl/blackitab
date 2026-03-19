@@ -21,16 +21,8 @@ const DEFAULT_CLASSES_INSTITUTE_MESSAGE = 'You must join an institute before joi
 const Profile = () => {
   usePageTitle('Profile');
   const { userId } = useParams(); // Get userId from URL parameters
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('user');
-    const parsedUser = savedUser ? JSON.parse(savedUser) : null;
-
-    // If visiting a specific profile that isn't mine, start empty to avoid flashing my data
-    if (userId && parsedUser && userId !== parsedUser._id && userId !== parsedUser.id) {
-      return null;
-    }
-    return parsedUser;
-  });
+  const [user, setUser] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
   const location = useLocation();
@@ -80,28 +72,40 @@ const Profile = () => {
   const { onlineUsers } = useSocketContext();
 
   useEffect(() => {
+    const storedUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
+
+    // Determine synchronously whether this is my profile or someone else's
+    const viewingMyProfile = !userId ||
+      userId === 'undefined' ||
+      (storedUser && (userId === storedUser._id || userId === storedUser.id));
+
+    // Immediately reset all profile-specific state BEFORE the async fetch
+    // This prevents flashing the previous user's data
+    if (viewingMyProfile) {
+      // Optimistically show logged-in user data from cache to avoid blank flash
+      setUser(storedUser);
+    } else {
+      setUser(null);
+    }
+    setIsMyProfile(viewingMyProfile);
+    setPosts([]);
+    setStats(null);
+    setHeatmapData([]);
+    setProfileLoading(true);
+
     const fetchProfile = async () => {
       const token = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
 
       if (token) {
         try {
-          // Determine if we are fetching "me" or another "user"
-          // If userId param is present AND generic "user" logic is needed
-
-          let endpoint = `${API_URL}/api/me`;
-          let viewingMyProfile = true;
-
-          if (userId && userId !== 'undefined' && storedUser && userId !== storedUser._id && userId !== storedUser.id) {
-            endpoint = `${API_URL}/api/social/user/${userId}`;
-            viewingMyProfile = false;
-          } else if (userId === 'undefined') {
-            // Redirect to clean profile if undefined
+          if (userId === 'undefined') {
             navigate('/profile');
             return;
           }
 
-          setIsMyProfile(viewingMyProfile);
+          let endpoint = viewingMyProfile
+            ? `${API_URL}/api/me`
+            : `${API_URL}/api/social/user/${userId}`;
 
           const response = await axios.get(endpoint, {
             headers: { Authorization: `Bearer ${token}` }
@@ -109,10 +113,8 @@ const Profile = () => {
 
           if (response.data.success) {
             setUser(response.data.user);
-            // If viewing MY profile, update local storage to keep it fresh
             if (viewingMyProfile) {
               localStorage.setItem('user', JSON.stringify(response.data.user));
-              // Ensure URL is unique/shareable
               if (!userId) {
                 window.history.replaceState(null, '', `/profile/${response.data.user.id}`);
               }
@@ -120,21 +122,19 @@ const Profile = () => {
           }
         } catch (error) {
           console.error('Error fetching profile:', error);
-          if (error.response && error.response.status === 401) {
-            navigate('/login');
-          }
-          if (error.response && error.response.status === 404) {
+          if (error.response?.status === 401) navigate('/login');
+          if (error.response?.status === 404) {
             toast.error('User not found');
             navigate('/dashboard');
           }
+        } finally {
+          setProfileLoading(false);
         }
       } else {
         navigate('/login');
       }
     };
 
-    // Clear previous posts immediately when switching profiles
-    setPosts([]);
     fetchProfile();
   }, [navigate, userId]);
 
@@ -372,7 +372,13 @@ const Profile = () => {
 
 
 
-  if (!user) return <div className="text-white text-center mt-20">Loading...</div>;
+  if (profileLoading && !user) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full" />
+    </div>
+  );
+
+  if (!user) return null;
 
   return (
     <div className="min-h-screen text-gray-900 dark:text-white p-4 py-8 relative overflow-hidden font-sans">
@@ -388,7 +394,7 @@ const Profile = () => {
         onSearch={handleSearchSubmit}
         results={searchResults}
         onFollow={handleFollowRequest}
-        currentUserId={user.id}
+        currentUserId={user?.id || user?._id}
         onViewProfile={(targetId) => {
           setShowSearch(false);
           navigate(`/profile/${targetId}`);

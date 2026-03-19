@@ -247,29 +247,77 @@ const SubjectMasteryRadar = ({ subjects }) => {
 
 /* ── Stat Card ───────────────────────────────────────────── */
 
-const StatCard = ({ icon: Icon, title, value, change, suffix = '' }) => {
+const StatCard = ({ icon: Icon, title, value, change, suffix = '', color = 'blue', progress = 0, sublabel = '' }) => {
   const displayValue = value === null || value === undefined ? '—' : value;
   const trend = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
   const TrendIcon = change > 0 ? ArrowUp : change < 0 ? ArrowDown : Minus;
-  const trendCls = trend === 'positive' ? 'text-emerald-500' : trend === 'negative' ? 'text-red-500' : 'text-gray-400';
+
+  const trendCls = trend === 'positive'
+    ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20'
+    : trend === 'negative'
+    ? 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20'
+    : 'text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10';
+
+  const colorMeta = {
+    blue:    { icon: 'from-blue-500 to-cyan-500',    ring: '#3b82f6', glow: 'rgba(59,130,246,0.15)',  track: '#dbeafe', iconText: 'text-blue-500',   border: 'hover:border-blue-300 dark:hover:border-blue-500/30' },
+    violet:  { icon: 'from-violet-500 to-purple-500', ring: '#8b5cf6', glow: 'rgba(139,92,246,0.15)', track: '#ede9fe', iconText: 'text-violet-500', border: 'hover:border-violet-300 dark:hover:border-violet-500/30' },
+    orange:  { icon: 'from-orange-500 to-amber-500', ring: '#f97316', glow: 'rgba(249,115,22,0.15)',  track: '#ffedd5', iconText: 'text-orange-500', border: 'hover:border-orange-300 dark:hover:border-orange-500/30' },
+    emerald: { icon: 'from-emerald-500 to-teal-500', ring: '#10b981', glow: 'rgba(16,185,129,0.15)', track: '#d1fae5', iconText: 'text-emerald-500', border: 'hover:border-emerald-300 dark:hover:border-emerald-500/30' },
+  }[color] || {};
+
+  const clampedProgress = Math.max(0, Math.min(100, progress || 0));
+  const radius = 22;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (clampedProgress / 100) * circumference;
 
   return (
-    <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02]">
-      <div className="flex items-start justify-between mb-3">
-        <div className="p-2 rounded-lg bg-gray-100 dark:bg-white/5">
-          <Icon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+    <div
+      className={`relative group border border-gray-200 dark:border-white/10 rounded-2xl p-4 bg-white dark:bg-white/[0.02] overflow-hidden transition-all duration-300 hover:shadow-lg dark:hover:shadow-black/30 ${colorMeta.border} cursor-default`}
+    >
+      {/* Subtle bottom glow */}
+      <div
+        className="absolute -bottom-6 -right-6 w-28 h-28 rounded-full blur-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{ background: colorMeta.glow }}
+      />
+      <div
+        className="absolute -bottom-8 -left-4 w-24 h-24 rounded-full blur-2xl pointer-events-none opacity-40"
+        style={{ background: colorMeta.glow }}
+      />
+
+      <div className="relative flex items-start justify-between mb-3">
+        {/* Icon badge */}
+        <div className={`p-2.5 rounded-xl bg-gradient-to-br ${colorMeta.icon} shadow-sm`}>
+          <Icon className="h-4 w-4 text-white" />
         </div>
-        <div className={`flex items-center gap-0.5 text-xs font-semibold ${trendCls}`}>
-          <TrendIcon className="h-3 w-3" />
-          {Math.abs(change)}
-          {suffix}
+
+        {/* SVG progress ring */}
+        <div className="relative w-12 h-12 flex items-center justify-center">
+          <svg viewBox="0 0 56 56" className="w-12 h-12 -rotate-90">
+            <circle cx="28" cy="28" r={radius} fill="none" stroke={colorMeta.track} strokeWidth="4" className="dark:opacity-20" />
+            <circle
+              cx="28" cy="28" r={radius} fill="none"
+              stroke={colorMeta.ring} strokeWidth="4"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              style={{ transition: 'stroke-dashoffset 1s ease' }}
+            />
+          </svg>
+          <span className={`absolute text-[10px] font-bold ${colorMeta.iconText}`}>{clampedProgress}%</span>
         </div>
       </div>
-      <p className="text-xs text-gray-500 mb-1">{title}</p>
-      <p className="text-2xl font-bold text-gray-900 dark:text-white">
-        {displayValue}
-        {displayValue !== '—' && suffix}
+
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-0.5">{title}</p>
+      <p className="text-2xl font-black text-gray-900 dark:text-white leading-none">
+        {displayValue}{displayValue !== '—' && suffix}
       </p>
+      {sublabel && <p className="text-[11px] text-gray-400 mt-0.5">{sublabel}</p>}
+
+      {/* Trend pill */}
+      <div className={`inline-flex items-center gap-1 mt-2.5 border text-[10px] font-semibold rounded-full px-2 py-0.5 ${trendCls}`}>
+        <TrendIcon className="h-2.5 w-2.5" />
+        {Math.abs(change)}{suffix} this week
+      </div>
     </div>
   );
 };
@@ -763,16 +811,44 @@ const StudentAnalyticsContent = () => {
 
       {/* ── Stat Cards ─────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard icon={Target} title="Problems Solved" value={stats.problemsSolved} change={stats.problemsChange} />
+        <StatCard
+          icon={Target}
+          title="Problems Solved"
+          value={stats.problemsSolved}
+          change={stats.problemsChange}
+          color="blue"
+          progress={Math.min(100, Math.round((stats.problemsSolved / Math.max(stats.problemsSolved + 20, 50)) * 100))}
+          sublabel="problems attempted"
+        />
         <StatCard
           icon={TrendingUp}
           title="Accuracy"
           value={stats.problemsSolved === 0 ? null : stats.accuracy}
           change={stats.accuracyChange}
           suffix="%"
+          color="violet"
+          progress={stats.problemsSolved === 0 ? 0 : Math.min(100, stats.accuracy ?? 0)}
+          sublabel="correct answers"
         />
-        <StatCard icon={Flame} title="Current Streak" value={stats.currentStreak} change={stats.streakChange} suffix=" days" />
-        <StatCard icon={Clock} title="Study Time" value={studyTimeDisplay} change={stats.hoursChange} suffix={studyTimeSuffix} />
+        <StatCard
+          icon={Flame}
+          title="Current Streak"
+          value={stats.currentStreak}
+          change={stats.streakChange}
+          suffix=" days"
+          color="orange"
+          progress={Math.min(100, Math.round((stats.currentStreak / Math.max(stats.currentStreak + 7, 30)) * 100))}
+          sublabel="keep it going!"
+        />
+        <StatCard
+          icon={Clock}
+          title="Study Time"
+          value={studyTimeDisplay}
+          change={stats.hoursChange}
+          color="emerald"
+          progress={Math.min(100, Math.round(((stats.studyHours * 60 + (stats.studyMinutes || 0)) / Math.max((stats.studyHours * 60 + (stats.studyMinutes || 0)) + 60, 120)) * 100))}
+          sublabel="total this week"
+        />
       </div>
 
       {/* ── Upcoming Exams Announcement Widget ── */}
@@ -875,18 +951,37 @@ const StudentAnalyticsContent = () => {
       </div>
 
       {/* ── Weekly Activity ────────────────────────────────── */}
-      <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02]">
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-3">
-          <Activity className="h-3.5 w-3.5" /> Weekly Activity
-        </h3>
+      <div className="border border-gray-200 dark:border-white/10 rounded-2xl p-5 bg-white dark:bg-white/[0.02]">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+            <Activity className="h-3.5 w-3.5 text-blue-500" /> Weekly Activity
+          </h3>
+          {data.weeklyActivity?.length > 0 && (
+            <span className="text-[10px] text-gray-400">{data.weeklyActivity.reduce((s, d) => s + d.count, 0)} problems this week</span>
+          )}
+        </div>
         {data.weeklyActivity?.length > 0 ? (
-          <div className="flex items-end gap-1.5 h-28">
+          <div className="flex items-end gap-2 h-28">
             {data.weeklyActivity.map((day, index) => {
               const max = Math.max(...data.weeklyActivity.map((item) => item.count), 1);
+              const pct = (day.count / max) * 100;
+              const isToday = index === data.weeklyActivity.length - 1;
               return (
-                <div key={`${day.day}-${index}`} className="flex flex-col items-center gap-1 flex-1">
-                  <div className="w-full rounded-sm bg-blue-500/80" style={{ height: `${(day.count / max) * 100}%`, minHeight: '4px' }} />
-                  <span className="text-[10px] text-gray-400">{day.day}</span>
+                <div key={`${day.day}-${index}`} className="group flex flex-col items-center gap-1.5 flex-1">
+                  <div className="relative w-full flex items-end" style={{ height: '80px' }}>
+                    <div
+                      className={`w-full rounded-t-lg transition-all duration-700 ${
+                        isToday
+                          ? 'bg-gradient-to-t from-blue-600 to-cyan-400 shadow-sm shadow-blue-500/30'
+                          : 'bg-blue-200 dark:bg-blue-500/30 group-hover:bg-blue-300 dark:group-hover:bg-blue-500/50'
+                      }`}
+                      style={{ height: `${Math.max(pct, 5)}%`, minHeight: '4px' }}
+                    />
+                    {day.count > 0 && (
+                      <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-bold text-gray-500 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">{day.count}</span>
+                    )}
+                  </div>
+                  <span className={`text-[10px] font-semibold ${isToday ? 'text-blue-500' : 'text-gray-400'}`}>{day.day}</span>
                 </div>
               );
             })}

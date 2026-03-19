@@ -112,7 +112,7 @@ export const SearchModal = ({ isOpen, onClose, query, setQuery, onSearch, result
                       </div>
                       
                        <div className="flex items-center gap-2 shrink-0 ml-2">
-                         {currentUserId !== u._id && (
+                         {String(currentUserId) !== String(u._id) && (
                            u.isFollowing ? (
                               <button className="px-3 py-1.5 rounded-full border border-gray-300 dark:border-gray-600 text-gray-500 text-xs font-medium cursor-default">
                                   Following
