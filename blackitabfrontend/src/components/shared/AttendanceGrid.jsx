@@ -76,6 +76,7 @@ const AttendanceGrid = ({ records = [], students: externalStudents = [] }) => {
         if (status === 'Present') return 'P';
         if (status === 'Absent') return 'A';
         if (status === 'Late') return 'L';
+        if (status === 'No Class') return 'N';
         return '—';
     };
 
@@ -83,11 +84,13 @@ const AttendanceGrid = ({ records = [], students: externalStudents = [] }) => {
         if (status === 'Present') return 'text-green-700 dark:text-green-400';
         if (status === 'Absent') return 'text-red-600 dark:text-red-400 font-bold';
         if (status === 'Late') return 'text-amber-600 dark:text-amber-400';
+        if (status === 'No Class') return 'text-gray-500 dark:text-gray-500';
         return 'text-gray-300 dark:text-gray-600';
     };
 
     const getStatusBg = (status) => {
         if (status === 'Absent') return 'bg-red-50 dark:bg-red-500/10';
+        if (status === 'No Class') return 'bg-gray-50 dark:bg-gray-500/5';
         return '';
     };
 
@@ -153,15 +156,17 @@ const AttendanceGrid = ({ records = [], students: externalStudents = [] }) => {
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                         {orderedStudents.map((student, idx) => {
-                            let totalP = 0, totalA = 0, totalL = 0;
+                            let totalP = 0, totalA = 0, totalL = 0, totalN = 0;
                             allDatesFlat.forEach(d => {
                                 const s = student.attendance[d];
                                 if (s === 'Present') totalP++;
                                 else if (s === 'Absent') totalA++;
+                                else if (s === 'No Class') totalN++;
                                 else if (s === 'Late') totalL++;
                             });
                             const total = totalP + totalA + totalL;
                             const pct = total > 0 ? Math.round((totalP / total) * 100) : 0;
+                            // Note: 'No Class' days are NOT counted in the total or percentage
 
                             return (
                                 <tr key={student.id} className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors">
