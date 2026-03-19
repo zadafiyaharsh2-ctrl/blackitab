@@ -404,7 +404,7 @@ exports.updateInstituteQuestion = async (req, res) => {
         res.json({ success: true, message: 'Question updated successfully', data: question });
     } catch (error) {
         console.error('Update Institute Question Error:', error);
-        require('fs').writeFileSync('c:/Users/Deepesh/Desktop/blackitab/blackitabbackend/error.log', error.stack || error.toString());
+        require('fs').writeFileSync('c:/Users/Deepesh/Desktop/RANKLEN/RANKLENbackend/error.log', error.stack || error.toString());
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
