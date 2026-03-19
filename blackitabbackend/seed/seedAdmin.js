@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 const connectDB = require('../config/database');
 const SystemAdmin = require('../models/SystemAdmin');
 
-const ADMIN_USERNAME = 'blackitab_admin';
+const ADMIN_USERNAME = 'RANKLEN_admin';
 const ADMIN_PASSWORD = 'Admin@2026!';
 const ADMIN_PERMISSIONS = ['manage_users', 'manage_institutes', 'override_content', 'view_reports', 'super_admin'];
 
