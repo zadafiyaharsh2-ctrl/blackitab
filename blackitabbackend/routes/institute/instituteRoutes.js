@@ -50,6 +50,7 @@ router.get('/analytics', requireRole('institute', 'hod', 'teacher'), instituteCo
 // ── Teacher Feedback & Monitoring ──
 router.get('/teachers', requireRole('institute', 'hod'), instituteController.listTeachersWithRatings);
 router.get('/teachers/:id/feedback', requireRole('institute', 'hod'), instituteController.getTeacherFeedback);
+router.get('/teacher/:id/details', requireRole('institute', 'hod'), instituteController.getTeacherFullDetails);
 router.post('/feedback', requireRole('student'), instituteController.submitFeedback);
 
 // ── Join Institute (any authenticated user without an institute) ──

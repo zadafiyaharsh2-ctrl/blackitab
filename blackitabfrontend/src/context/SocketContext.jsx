@@ -13,7 +13,7 @@ export const SocketContextProvider = ({ children, authUser }) => {
     const [onlineUsers, setOnlineUsers] = useState([]);
 
     useEffect(() => {
-        if (authUser) {
+        if (authUser?._id) {
             const token = localStorage.getItem('token');
             if (!token) return;
 
@@ -45,7 +45,7 @@ export const SocketContextProvider = ({ children, authUser }) => {
                 setSocket(null);
             }
         }
-    }, [authUser]);
+    }, [authUser?._id]);
 
     return (
         <SocketContext.Provider value={{ socket, onlineUsers }}>

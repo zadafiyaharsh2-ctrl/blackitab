@@ -158,7 +158,11 @@ const Signup = ({ onSignupSuccess }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           credential: credentialResponse.credential,
-          clientId: credentialResponse.clientId
+          clientId: credentialResponse.clientId,
+          role: accountType,
+          instituteCode: formData.instituteCode,
+          batchYear: formData.batchYear,
+          division: formData.division
         }),
       });
       const data = await response.json();
@@ -524,39 +528,40 @@ const Signup = ({ onSignupSuccess }) => {
                 </div>
               </form>
 
-              {/* Google Auth Divider & Button */}
-              {accountType !== 'institute' && (
-                <div className="mt-6 border-t border-gray-200 dark:border-white/10 pt-6">
-                  <div className="relative flex justify-center text-sm mb-6">
-                    <span className="bg-gray-50 dark:bg-[#0a0a0a] px-2 text-gray-500 dark:text-gray-400 -mt-3">Or continue with</span>
-                  </div>
-                  
-                  <div className="flex justify-center flex-col items-center gap-2 w-full custom-google-btn-container">
-                    <style jsx>{`
-                      .custom-google-btn-container > div {
-                        width: 100% !important;
-                        display: flex !important;
-                        justify-content: center !important;
-                      }
-                      .custom-google-btn-container iframe {
-                        margin: 0 auto !important;
-                      }
-                    `}</style>
-                    <GoogleLogin
-                      onSuccess={handleGoogleSuccess}
-                      onError={() => CustomToast.error('Google Sign-Up was unsuccessful')}
-                      useOneTap
-                      theme="filled_blue"
-                      shape="pill"
-                      size="large"
-                      text="signup_with"
-                    />
-                  </div>
-                </div>
-              )}
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Google Auth Divider & Button - Available on all steps */}
+        {accountType !== 'institute' && (
+          <div className="mt-6 border-t border-gray-200 dark:border-white/10 pt-6">
+            <div className="relative flex justify-center text-sm mb-6">
+              <span className="bg-gray-50 dark:bg-[#0a0a0a] px-2 text-gray-500 dark:text-gray-400 -mt-3">Or continue with</span>
+            </div>
+            
+            <div className="flex justify-center flex-col items-center gap-2 w-full custom-google-btn-container">
+              <style jsx>{`
+                .custom-google-btn-container > div {
+                  width: 100% !important;
+                  display: flex !important;
+                  justify-content: center !important;
+                }
+                .custom-google-btn-container iframe {
+                  margin: 0 auto !important;
+                }
+              `}</style>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => CustomToast.error('Google Sign-Up was unsuccessful')}
+                useOneTap
+                theme="filled_blue"
+                shape="pill"
+                size="large"
+                text="signup_with"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="mt-8 text-center border-t border-gray-200 dark:border-white/10 pt-6">

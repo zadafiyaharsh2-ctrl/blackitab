@@ -29,6 +29,11 @@ const batchSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    department: {
+        type: String,
+        trim: true,
+        default: ''
+    },
     section: {
         type: String,
         trim: true,

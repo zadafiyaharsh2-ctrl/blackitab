@@ -68,6 +68,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
   const canAccessHod = userRole === 'hod';
   const canAccessInstitute = userRole === 'institute';
   const hasInstitute = Boolean(instituteId);
+  const INSTITUTE_REQUIRED_FOR_CLASSES_MESSAGE = 'You must join an institute before joining any class.';
 
   const navItems = [
     ...(canAccessTeacher ? [
@@ -84,12 +85,11 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
         { path: '/teacher/feedback', label: 'Feedback', icon: <FaCommentDots className="text-rose-400" /> },
       ] : []),
       { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
-    ] : !canAccessInstitute ? [
+    ] : []),
+    ...( userRole === 'student' ? [
       { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
       { path: '/classes', label: 'My Classes', icon: <FaUsers /> },
       { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
-    ] : []),
-    ...( !canAccessInstitute ? [
       { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
       { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
       { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy /> },
@@ -119,6 +119,22 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       setIsOpen(false);
     }
+  };
+
+  const handleNavItemClick = (event, path) => {
+    if (userRole === 'student' && path === '/classes' && !hasInstitute) {
+      event.preventDefault();
+      navigate('/profile', {
+        state: {
+          openJoinInstituteModal: true,
+          instituteRequiredMessage: INSTITUTE_REQUIRED_FOR_CLASSES_MESSAGE
+        }
+      });
+      handleNavClick();
+      return;
+    }
+
+    handleNavClick();
   };
 
   return (
@@ -180,7 +196,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
               const isActive = location.pathname === item.path || (location.pathname.startsWith(item.path) && item.path !== '/');
               return (
                 <li key={item.path}>
-                  <Link to={item.path} onClick={handleNavClick}>
+                  <Link to={item.path} onClick={(event) => handleNavItemClick(event, item.path)}>
                     <div className={`relative flex items-center ${isOpen ? 'px-4 py-3' : 'px-0 py-3 justify-center'} rounded-xl text-sm font-semibold overflow-hidden group ${
                       isActive
                         ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm font-bold'

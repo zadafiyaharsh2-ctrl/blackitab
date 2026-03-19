@@ -182,6 +182,8 @@ const queryAI = async (req, res) => {
         response.data.answer ||
         response.data.response ||
         "No response received";
+
+      aiResponseContent = sanitizeAIAnswer(aiResponseContent);
     } catch (err) {
       debugError("queryAI - AI Server Error", err);
       aiResponseContent =
@@ -324,8 +326,9 @@ const askQuestion = async (req, res) => {
     const questionData = {
       userId,
       question: query.trim(),
-      answer:
-        aiResponse.answer || aiResponse.response || "No response received",
+      answer: sanitizeAIAnswer(
+        aiResponse.answer || aiResponse.response || "No response received"
+      ),
       topK: top_k,
       sources: aiResponse.sources || [],
       sessionId: sessionId || null};
