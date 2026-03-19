@@ -119,7 +119,7 @@ const LandingPage = () => {
           <motion.div variants={itemVariants}>
             <h1 className="text-6xl sm:text-7xl md:text-9xl font-black mb-6 tracking-tighter leading-none glow-text">
               <span className="bg-clip-text text-transparent bg-gradient-to-br from-white via-gray-200 to-gray-500 drop-shadow-sm">
-                Blackitab
+                RANKLEN
               </span>
             </h1>
           </motion.div>
