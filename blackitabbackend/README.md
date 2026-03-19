@@ -1,4 +1,4 @@
-# Blackitab Backend
+# RANKLEN Backend
 
 Node.js/Express backend with MongoDB database for user authentication.
 
@@ -16,7 +16,7 @@ You have two options:
 #### Option A: Local MongoDB
 1. Install MongoDB Community Edition from [mongodb.com](https://www.mongodb.com/try/download/community)
 2. Start MongoDB service
-3. The app will connect to `mongodb://localhost:27017/blackitab` by default
+3. The app will connect to `mongodb://localhost:27017/RANKLEN` by default
 
 #### Option B: MongoDB Atlas (Cloud)
 1. Create a free account at [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
@@ -30,12 +30,12 @@ Create a `.env` file in the backend directory:
 ```env
 PORT=5000
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-MONGODB_URI=mongodb://localhost:27017/blackitab
+MONGODB_URI=mongodb://localhost:27017/RANKLEN
 ```
 
 For MongoDB Atlas, use:
 ```env
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/blackitab?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/RANKLEN?retryWrites=true&w=majority
 ```
 
 ### 4. Run the Server
