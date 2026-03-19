@@ -27,7 +27,7 @@ const storage = new CloudinaryStorage({
         }
 
         return {
-            folder: 'blackitab_messages',
+            folder: 'RANKLEN_messages',
             resource_type,
             format,
             use_filename: true,
