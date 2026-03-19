@@ -9,8 +9,10 @@ import {
     ArrowLeftIcon, 
     BuildingOfficeIcon,
     BriefcaseIcon,
-    UsersIcon
+    UsersIcon,
+    CalendarDaysIcon
 } from '@heroicons/react/24/outline';
+import InstituteBreadcrumb from '../../components/institute/InstituteBreadcrumb';
 
 const DepartmentDetail = () => {
     const { deptName } = useParams();
@@ -45,21 +47,28 @@ const DepartmentDetail = () => {
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-            {/* Header & Back Navigation */}
-            <div className="flex items-center gap-4">
-                <button 
-                    onClick={() => navigate(-1)}
-                    className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 transition-colors"
-                >
-                    <ArrowLeftIcon className="w-5 h-5" />
-                </button>
+            {/* Breadcrumb */}
+            <InstituteBreadcrumb items={[
+                { label: 'Departments', to: '/institute/departments' },
+                { label: deptName }
+            ]} />
+
+            {/* Header */}
+            <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                         <BuildingOfficeIcon className="w-6 h-6 text-blue-500" />
                         {deptName} Department
                     </h1>
-                    <p className="text-sm text-gray-500 mt-0.5">Comprehensive view of department faculty and batches</p>
+                    <p className="text-sm text-gray-500 mt-0.5">Faculty, batches, and student overview</p>
                 </div>
+                <Link
+                    to="/hod/attendance"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-500/30 transition-all"
+                >
+                    <CalendarDaysIcon className="w-4 h-4" />
+                    View Attendance
+                </Link>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
