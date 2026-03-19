@@ -509,9 +509,25 @@ const StudentAnalyticsContent = () => {
             {subjectProgress.map((subject, index) => {
               const radius = 28;
               const circumference = 2 * Math.PI * radius;
+              const numericProgress = Number(subject?.progress);
+              const safeProgress = Number.isFinite(numericProgress)
+                ? Math.max(0, Math.min(100, Math.round(numericProgress)))
+                : 0;
+              const safeMastery =
+                typeof subject?.mastery === 'string' && subject.mastery.trim()
+                  ? subject.mastery
+                  : safeProgress >= 80
+                    ? 'Advanced'
+                    : safeProgress >= 50
+                      ? 'Intermediate'
+                      : 'Beginner';
+              const safeName =
+                typeof subject?.name === 'string' && subject.name.trim()
+                  ? subject.name
+                  : 'General';
 
               return (
-                <div key={`${subject.name}-${index}`} className="border border-gray-200 dark:border-white/10 rounded-lg p-4 flex items-center gap-4">
+                <div key={`${safeName}-${index}`} className="border border-gray-200 dark:border-white/10 rounded-lg p-4 flex items-center gap-4">
                   <div className="relative w-16 h-16 shrink-0">
                     <svg className="-rotate-90 w-16 h-16">
                       <circle cx="32" cy="32" r={radius} stroke="currentColor" strokeWidth="4" fill="transparent" className="text-gray-100 dark:text-white/10" />
@@ -523,18 +539,18 @@ const StudentAnalyticsContent = () => {
                         strokeWidth="4"
                         fill="transparent"
                         strokeDasharray={circumference}
-                        strokeDashoffset={circumference - (subject.progress / 100) * circumference}
+                        strokeDashoffset={circumference - (safeProgress / 100) * circumference}
                         strokeLinecap="round"
                         className="text-blue-500"
                       />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-xs font-bold text-gray-900 dark:text-white">{subject.progress}%</span>
+                      <span className="text-xs font-bold text-gray-900 dark:text-white">{safeProgress}%</span>
                     </div>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{subject.name}</p>
-                    <p className="text-xs text-gray-400">{subject.mastery}</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{safeName}</p>
+                    <p className="text-xs text-gray-400">{safeMastery}</p>
                   </div>
                 </div>
               );

@@ -133,27 +133,48 @@ exports.getDashboardAnalytics = async (req, res) => {
             hoursChange: 0
         };
 
-        // Extract weak/strong subjects based on tags
-        const tagPerformance = {};
-        allAttempts.forEach(a => {
-            if (!a.questionId || !a.questionId.tags) return;
-            a.questionId.tags.forEach(tag => {
-                if (!tagPerformance[tag]) tagPerformance[tag] = { total: 0, correct: 0 };
-                tagPerformance[tag].total++;
-                if (a.isCorrect) tagPerformance[tag].correct++;
-            });
+        // Domain mastery should be based on subject domain (DBMS/SQL/etc),
+        // with tag fallback when legacy questions are missing a subject.
+        const subjectPerformance = {};
+        allAttempts.forEach((a) => {
+            const question = a.questionId;
+            if (!question) return;
+
+            const subjectFromQuestion =
+                typeof question.subject === 'string' ? question.subject.trim() : '';
+            const subjectFromTags =
+                Array.isArray(question.tags) && question.tags.length > 0
+                    ? String(question.tags[0] || '').trim()
+                    : '';
+
+            const domainName = subjectFromQuestion || subjectFromTags;
+            if (!domainName) return;
+
+            const key = domainName.toLowerCase();
+            if (!subjectPerformance[key]) {
+                subjectPerformance[key] = { name: domainName, total: 0, correct: 0 };
+            }
+
+            subjectPerformance[key].total += 1;
+            if (a.isCorrect) subjectPerformance[key].correct += 1;
         });
 
-        const subjectScores = Object.keys(tagPerformance).map(tag => {
-            const perf = tagPerformance[tag];
-            const prog = Math.round((perf.correct / perf.total) * 100);
-            return {
-                name: tag,
-                progress: prog,
-                mastery: prog >= 80 ? 'Advanced' : prog >= 50 ? 'Intermediate' : 'Beginner',
-                color: prog >= 80 ? 'from-purple-500 to-indigo-600' : prog >= 50 ? 'from-blue-500 to-cyan-600' : 'from-pink-500 to-rose-600'
-            };
-        }).sort((a, b) => b.progress - a.progress) || [];
+        const subjectScores = Object.values(subjectPerformance)
+            .map((perf) => {
+                const prog = perf.total > 0 ? Math.round((perf.correct / perf.total) * 100) : 0;
+                return {
+                    name: perf.name,
+                    progress: prog,
+                    mastery: prog >= 80 ? 'Advanced' : prog >= 50 ? 'Intermediate' : 'Beginner',
+                    color:
+                        prog >= 80
+                            ? 'from-purple-500 to-indigo-600'
+                            : prog >= 50
+                                ? 'from-blue-500 to-cyan-600'
+                                : 'from-pink-500 to-rose-600',
+                };
+            })
+            .sort((a, b) => b.progress - a.progress);
 
         const subjectProgress = subjectScores.slice(0, 6);
         

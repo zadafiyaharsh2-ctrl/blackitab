@@ -45,6 +45,48 @@ const debugError = (label, error) => {
 const LANGCHAIN_API_URL =
   process.env.LANGCHAIN_API_URL || "http://127.0.0.1:8000/query";
 
+const CHAT_CONTEXT_INSTRUCTION =
+  "You are continuing an ongoing chat. Use the full conversation history for continuity, and answer the latest user question directly.";
+
+const buildContextualQuery = (messages, latestUserQuery) => {
+  const safeLatestQuery =
+    typeof latestUserQuery === "string" ? latestUserQuery.trim() : "";
+
+  if (!Array.isArray(messages) || messages.length <= 1) {
+    return safeLatestQuery;
+  }
+
+  // Exclude the most recent user message from history because it is appended separately.
+  const previousMessages = messages.slice(0, -1);
+
+  const historyText = previousMessages
+    .filter(
+      (msg) =>
+        msg &&
+        (msg.role === "user" || msg.role === "assistant") &&
+        typeof msg.content === "string" &&
+        msg.content.trim()
+    )
+    .map((msg) => {
+      const roleLabel = msg.role === "assistant" ? "Assistant" : "User";
+      return `${roleLabel}: ${msg.content.trim()}`;
+    })
+    .join("\n");
+
+  if (!historyText) {
+    return safeLatestQuery;
+  }
+
+  return [
+    CHAT_CONTEXT_INSTRUCTION,
+    "",
+    "Conversation history:",
+    historyText,
+    "",
+    `Latest user question: ${safeLatestQuery}`,
+  ].join("\n");
+};
+
 // Log environment configuration on startup
 debugLog("AI Controller Initialized", {
   LANGCHAIN_API_URL,
@@ -102,18 +144,28 @@ const queryAI = async (req, res) => {
     const userMessage = { role: "user", content: query.trim() };
     chatHistory.messages.push(userMessage);
 
+    const contextualQuery = buildContextualQuery(
+      chatHistory.messages,
+      userMessage.content
+    );
+
     let aiResponseContent = "";
     try {
       debugLog("queryAI - Calling LangChain API", {
         url: LANGCHAIN_API_URL,
-        payload: { query: query.trim(), top_k: 3 },
+        payloadMeta: {
+          top_k: 3,
+          latestQueryLength: userMessage.content.length,
+          contextualQueryLength: contextualQuery.length,
+          contextMessageCount: Math.max(chatHistory.messages.length - 1, 0),
+        },
         timeout: 60000});
 
       const startTime = Date.now();
       const response = await axios.post(
         LANGCHAIN_API_URL,
         {
-          query: query.trim(),
+          query: contextualQuery,
           top_k: 3},
         { timeout: 60000 },
       );
