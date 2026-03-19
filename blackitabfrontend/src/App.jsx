@@ -980,7 +980,7 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout }) {
       };
       const label = Object.entries(pageNames).find(([k]) => location.pathname.startsWith(k));
       if (label) {
-        localStorage.setItem('blackitab_last_page', JSON.stringify({ path: location.pathname, label: label[1], time: Date.now() }));
+        localStorage.setItem('RANKLEN_last_page', JSON.stringify({ path: location.pathname, label: label[1], time: Date.now() }));
       }
     }
   }, [location.pathname]);
@@ -1020,7 +1020,7 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout }) {
                <button onClick={() => setSidebarOpen(true)} className="p-2 bg-gray-100 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
                  <FaBars />
                </button>
-               <span className="font-bold text-lg text-gray-900 dark:text-white tracking-wide">Blackitab</span>
+               <span className="font-bold text-lg text-gray-900 dark:text-white tracking-wide">RANKLEN</span>
             </div>
         </div>
 
