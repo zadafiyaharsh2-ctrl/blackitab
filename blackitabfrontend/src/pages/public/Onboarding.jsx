@@ -8,7 +8,7 @@ import usePageTitle from '../../hooks/usePageTitle';
 const STEPS = [
     {
         id: 'welcome',
-        title: 'Welcome to Blackitab! 🎉',
+        title: 'Welcome to RANKLEN! 🎉',
         subtitle: "You're all set. Let's show you what's possible.",
         content: null,
     },
@@ -36,7 +36,7 @@ const GOALS = [
     { id: 'exam-prep', label: 'Exam Preparation', icon: '📚', desc: 'JEE, NEET, UPSC, CAT, GATE' },
     { id: 'skill-build', label: 'Skill Building', icon: '💡', desc: 'Programming, DSA, problem solving' },
     { id: 'content-create', label: 'Content Creation', icon: '🎬', desc: 'Share knowledge and build an audience' },
-    { id: 'explore', label: 'Just Exploring', icon: '🌐', desc: 'See what Blackitab has to offer' },
+    { id: 'explore', label: 'Just Exploring', icon: '🌐', desc: 'See what RANKLEN has to offer' },
 ];
 
 const EXAMS = [
