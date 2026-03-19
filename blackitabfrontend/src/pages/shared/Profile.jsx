@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { FaCog, FaTh, FaBookmark, FaUserTag, FaSearch, FaBell, FaEnvelope, FaPen, FaHeart, FaComment, FaPlay, FaLock, FaRupeeSign, FaArrowLeft, FaShareAlt, FaBuilding, FaSignInAlt, FaTimes, FaExternalLinkAlt, FaChartLine, FaFire, FaCheckCircle } from 'react-icons/fa';
 import API_URL from '../../config';
@@ -15,6 +15,9 @@ import JoinInstituteModal from '../../components/student/modals/JoinInstituteMod
 import { useSocketContext } from '../../context/SocketContext';
 
 import EditProfileModal from '../../components/shared/EditProfileModal';
+
+const DEFAULT_CLASSES_INSTITUTE_MESSAGE = 'You must join an institute before joining any class.';
+
 const Profile = () => {
   usePageTitle('Profile');
   const { userId } = useParams(); // Get userId from URL parameters
@@ -30,6 +33,7 @@ const Profile = () => {
   });
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMyProfile, setIsMyProfile] = useState(true);
 
   // State for Search
@@ -39,6 +43,18 @@ const Profile = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showJoinInstituteModal, setShowJoinInstituteModal] = useState(false);
+
+  useEffect(() => {
+    if (!location.state?.openJoinInstituteModal) return;
+
+    const redirectMessage =
+      location.state.instituteRequiredMessage || DEFAULT_CLASSES_INSTITUTE_MESSAGE;
+
+    toast.error(redirectMessage);
+    setShowJoinInstituteModal(true);
+
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.pathname, location.state, navigate]);
 
   // State for Notifications
   const [notifications, setNotifications] = useState([]);

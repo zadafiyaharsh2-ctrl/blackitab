@@ -9,6 +9,8 @@ import { AcademicCapIcon } from '@heroicons/react/24/outline';
 import API_URL from '../../config';
 import toast from 'react-hot-toast';
 
+const INSTITUTE_REQUIRED_FOR_CLASSES_MESSAGE = 'You must join an institute before joining any class.';
+
 const ClassCard = ({ batch }) => {
   const navigate = useNavigate();
   const teachers = batch.teacherIds?.map(t => t.name).join(', ') || 'Not assigned';
@@ -46,8 +48,32 @@ const StudentClasses = () => {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [classCode, setClassCode] = useState('');
   const [joining, setJoining] = useState(false);
+  const navigate = useNavigate();
 
-  useEffect(() => { fetchBatches(); }, []);
+  useEffect(() => {
+    const storedUser = (() => {
+      try {
+        return JSON.parse(localStorage.getItem('user') || '{}');
+      } catch {
+        return {};
+      }
+    })();
+
+    const isStudentWithoutInstitute = storedUser?.role === 'student' && !storedUser?.instituteId;
+
+    if (isStudentWithoutInstitute) {
+      setLoading(false);
+      navigate('/profile', {
+        state: {
+          openJoinInstituteModal: true,
+          instituteRequiredMessage: INSTITUTE_REQUIRED_FOR_CLASSES_MESSAGE
+        }
+      });
+      return;
+    }
+
+    fetchBatches();
+  }, [navigate]);
 
   const fetchBatches = async () => {
     try {
