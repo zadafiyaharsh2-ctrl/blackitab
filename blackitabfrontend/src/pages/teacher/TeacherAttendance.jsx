@@ -460,6 +460,17 @@ export default function TeacherAttendance() {
                                   <FaClock className={status === 'Late' ? 'text-white' : 'opacity-0'} size={12} />
                                 </div>
                               </td>
+
+                              {/* No Class */}
+                              <td className="px-4 py-3 text-center" onClick={() => setStudentStatus(student._id, 'No Class')}>
+                                <div className={`w-6 h-6 mx-auto rounded-md border flex items-center justify-center cursor-pointer transition-all ${
+                                  status === 'No Class'
+                                    ? 'bg-gray-500 border-gray-600 text-white scale-110'
+                                    : 'bg-white border-gray-300 text-transparent hover:border-gray-500 dark:bg-gray-800 dark:border-gray-600'
+                                }`}>
+                                  <FaBan className={status === 'No Class' ? 'text-white' : 'opacity-0'} size={12} />
+                                </div>
+                              </td>
                             </tr>
                           );
                         })}
