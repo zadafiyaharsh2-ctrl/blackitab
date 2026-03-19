@@ -2,6 +2,22 @@ const Attempt = require('../../models/Attempt');
 const ExamQuestion = require('../../models/ExamQuestion');
 const User = require('../../models/User');
 
+function toDomainRatingsMap(domainRatings) {
+    if (domainRatings && typeof domainRatings.get === 'function' && typeof domainRatings.set === 'function') {
+        return domainRatings;
+    }
+
+    if (domainRatings && typeof domainRatings === 'object') {
+        return new Map(Object.entries(domainRatings));
+    }
+
+    return new Map();
+}
+
+function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+}
+
 // POST /api/attempts/submit
 exports.submitAttempt = async (req, res) => {
     try {
@@ -42,7 +58,7 @@ exports.submitAttempt = async (req, res) => {
         if (domainName) {
             const domainKey = domainName.toLowerCase();
             const R_B = question.eloRating || 1000;
-            const domainRatingsMap = user.domainRatings || new Map();
+            const domainRatingsMap = toDomainRatingsMap(user.domainRatings);
             const R_A = domainRatingsMap.get(domainKey) || 1000;
 
             const K = 32;
@@ -186,22 +202,28 @@ exports.getDashboardAnalytics = async (req, res) => {
             if (a.isCorrect) subjectPerformance[key].correct += 1;
         });
 
-        const domainRatingsMap = user.domainRatings || new Map();
+        const domainRatingsMap = toDomainRatingsMap(user.domainRatings);
 
         const subjectScores = Object.values(subjectPerformance)
             .map((perf) => {
                 const key = perf.name.toLowerCase();
-                
+
                 // Get Elo rating from user map, default to baseline 1000
-                const elo = domainRatingsMap.has(key) ? domainRatingsMap.get(key) : 1000;
-                
+                const eloFromMap = Number(domainRatingsMap.get(key));
+                const elo = Number.isFinite(eloFromMap) ? eloFromMap : 1000;
+
                 // Scale Elo to a 0-100 logic (1000 Elo = 50%, 1600 Elo = 80%) for progress bar graphic
-                const prog = Math.max(0, Math.min(100, Math.round(elo / 20)));
-                
+                const prog = clamp(Math.round(elo / 20), 0, 100);
+                const accuracyPct = perf.total > 0 ? Math.round((perf.correct / perf.total) * 100) : 0;
+                const blendedScore = Math.round((accuracyPct * 0.7) + (prog * 0.3));
+
                 return {
                     name: perf.name,
                     progress: prog,
                     elo,
+                    attempts: perf.total,
+                    accuracy: accuracyPct,
+                    blendedScore,
                     mastery: elo >= 1400 ? 'Advanced' : elo >= 1000 ? 'Intermediate' : 'Beginner',
                     color:
                         elo >= 1400
@@ -211,12 +233,72 @@ exports.getDashboardAnalytics = async (req, res) => {
                                 : 'from-pink-500 to-rose-600',
                 };
             })
-            .sort((a, b) => b.elo - a.elo);
+            .sort((a, b) => {
+                if (b.blendedScore !== a.blendedScore) return b.blendedScore - a.blendedScore;
+                if (b.attempts !== a.attempts) return b.attempts - a.attempts;
+                return b.elo - a.elo;
+            });
 
         const subjectProgress = subjectScores.slice(0, 6);
-        
-        const strengths = subjectScores.filter(s => s.elo >= 1300).map(s => s.name).slice(0, 5);
-        const weaknesses = subjectScores.filter(s => s.elo < 1000).map(s => s.name).slice(0, 5);
+
+        // Core strengths should represent consistent performance, not one lucky attempt.
+        const strengthPool = subjectScores
+            .filter((s) => s.attempts >= 3 && (s.accuracy >= 70 || s.blendedScore >= 72))
+            .sort((a, b) => {
+                if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy;
+                if (b.attempts !== a.attempts) return b.attempts - a.attempts;
+                return b.blendedScore - a.blendedScore;
+            });
+
+        const strengths = [];
+        for (const item of strengthPool) {
+            if (!strengths.includes(item.name)) strengths.push(item.name);
+            if (strengths.length === 5) break;
+        }
+
+        if (strengths.length < 3) {
+            const fallbackStrengths = subjectScores
+                .filter((s) => s.attempts >= 2 && s.blendedScore >= 65)
+                .sort((a, b) => {
+                    if (b.blendedScore !== a.blendedScore) return b.blendedScore - a.blendedScore;
+                    return b.accuracy - a.accuracy;
+                });
+
+            for (const item of fallbackStrengths) {
+                if (!strengths.includes(item.name)) strengths.push(item.name);
+                if (strengths.length === 5) break;
+            }
+        }
+
+        const weaknessPool = subjectScores
+            .filter((s) => s.attempts >= 2 && (s.accuracy < 55 || s.blendedScore < 60))
+            .sort((a, b) => {
+                if (a.blendedScore !== b.blendedScore) return a.blendedScore - b.blendedScore;
+                if (a.accuracy !== b.accuracy) return a.accuracy - b.accuracy;
+                return b.attempts - a.attempts;
+            });
+
+        const weaknesses = [];
+        for (const item of weaknessPool) {
+            if (!strengths.includes(item.name) && !weaknesses.includes(item.name)) weaknesses.push(item.name);
+            if (weaknesses.length === 5) break;
+        }
+
+        if (weaknesses.length < 2) {
+            const fallbackWeaknesses = subjectScores
+                .filter((s) => s.attempts >= 2)
+                .sort((a, b) => {
+                    if (a.blendedScore !== b.blendedScore) return a.blendedScore - b.blendedScore;
+                    return a.accuracy - b.accuracy;
+                });
+
+            for (const item of fallbackWeaknesses) {
+                if (!strengths.includes(item.name) && !weaknesses.includes(item.name)) weaknesses.push(item.name);
+                if (weaknesses.length === 5) break;
+            }
+        }
+
+        const focusAreas = weaknesses;
 
         // Recent activity — return real question text + ISO timestamp
         const recentActivity = allAttempts.slice(0, 5).map(a => {
@@ -275,6 +357,7 @@ exports.getDashboardAnalytics = async (req, res) => {
                 stats,
                 subjectProgress,
                 strengths,
+                focusAreas,
                 weaknesses,
                 recentActivity,
                 weeklyActivity

@@ -31,6 +31,35 @@ const formatStudyTime = (hours, minutes) => {
   return '0 mins';
 };
 
+const getExamCountdownLabel = (dateStr) => {
+  if (!dateStr) return 'Schedule pending';
+
+  const now = Date.now();
+  const examTime = new Date(dateStr).getTime();
+  if (!Number.isFinite(examTime)) return 'Schedule pending';
+
+  const diffMs = examTime - now;
+  if (diffMs <= 0) return 'Starting now';
+
+  const totalMinutes = Math.floor(diffMs / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+
+  if (days > 0) return `Starts in ${days}d ${hours}h`;
+  if (hours > 0) return `Starts in ${hours}h ${minutes}m`;
+  return `Starts in ${Math.max(1, minutes)}m`;
+};
+
+const isExamStartingSoon = (dateStr) => {
+  if (!dateStr) return false;
+  const now = Date.now();
+  const examTime = new Date(dateStr).getTime();
+  if (!Number.isFinite(examTime)) return false;
+  const diffMs = examTime - now;
+  return diffMs > 0 && diffMs <= (24 * 60 * 60 * 1000);
+};
+
 const difficultyMeta = {
   Easy: {
     pill: 'text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10',
@@ -127,14 +156,18 @@ const getMasteryVisual = (progress) => {
   };
 };
 
-const SubjectMasteryRadar = ({ subjects }) => {
+const SubjectMasteryRadar = ({ subjects, selectedId, onSelect }) => {
   const chartSubjects = subjects.slice(0, 6);
+  const [hoveredId, setHoveredId] = useState(null);
+
   if (!chartSubjects.length) return null;
 
   const cx = 110;
   const cy = 110;
   const radius = 78;
   const levels = [0.25, 0.5, 0.75, 1];
+
+  const activeId = hoveredId || selectedId || chartSubjects[0].id;
 
   const angles = chartSubjects.map((_, index) => (
     (Math.PI * 2 * index) / chartSubjects.length - Math.PI / 2
@@ -154,100 +187,191 @@ const SubjectMasteryRadar = ({ subjects }) => {
       .join(' ')
   );
 
-  const dataPolygon = angles
-    .map((angle, index) => {
-      const scale = clampProgress(chartSubjects[index].progress) / 100;
-      const { x, y } = getPoint(angle, scale);
-      return `${x},${y}`;
-    })
+  const radarPoints = chartSubjects.map((subject, index) => {
+    const angle = angles[index];
+    const scale = clampProgress(subject.progress) / 100;
+    const point = getPoint(angle, scale);
+    const labelPoint = getPoint(angle, 1.16);
+    return { subject, index, angle, scale, point, labelPoint };
+  });
+
+  const activeIndex = radarPoints.findIndex((item) => item.subject.id === activeId);
+  const resolvedActiveIndex = activeIndex >= 0 ? activeIndex : 0;
+  const activeNode = radarPoints[resolvedActiveIndex];
+  const activeSubject = activeNode.subject;
+
+  const dataPolygon = radarPoints
+    .map((item) => `${item.point.x},${item.point.y}`)
     .join(' ');
 
+  const activeAxisEnd = getPoint(activeNode.angle, 1);
+
+  const handleSelect = (subjectId) => {
+    if (typeof onSelect === 'function') onSelect(subjectId);
+  };
+
   return (
-    <svg viewBox="0 0 220 220" className="w-full max-w-[250px] mx-auto">
-      <defs>
-        <linearGradient id="masteryAreaGradient" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#a855f7" stopOpacity="0.22" />
-        </linearGradient>
-        <linearGradient id="masteryStrokeGradient" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#0ea5e9" />
-          <stop offset="100%" stopColor="#a855f7" />
-        </linearGradient>
-      </defs>
+    <div className="w-full">
+      <svg viewBox="0 0 220 220" className="w-full max-w-[250px] mx-auto overflow-visible">
+        <defs>
+          <linearGradient id="masteryAreaGradient" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="#a855f7" stopOpacity="0.22" />
+          </linearGradient>
+          <linearGradient id="masteryStrokeGradient" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#0ea5e9" />
+            <stop offset="100%" stopColor="#a855f7" />
+          </linearGradient>
+          <filter id="masteryGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2.2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-      {levels.map((scale) => (
-        <polygon
-          key={`ring-${scale}`}
-          points={polygonForScale(scale)}
-          fill="none"
-          className="stroke-gray-200 dark:stroke-white/10"
-          strokeWidth="1"
-        />
-      ))}
-
-      {angles.map((angle, index) => {
-        const { x, y } = getPoint(angle, 1);
-        return (
-          <line
-            key={`axis-${index}`}
-            x1={cx}
-            y1={cy}
-            x2={x}
-            y2={y}
+        {levels.map((scale) => (
+          <polygon
+            key={`ring-${scale}`}
+            points={polygonForScale(scale)}
+            fill="none"
             className="stroke-gray-200 dark:stroke-white/10"
             strokeWidth="1"
           />
-        );
-      })}
+        ))}
 
-      <polygon
-        points={dataPolygon}
-        fill="url(#masteryAreaGradient)"
-        stroke="url(#masteryStrokeGradient)"
-        strokeWidth="2"
-      />
+        {angles.map((angle, index) => {
+          const { x, y } = getPoint(angle, 1);
+          return (
+            <line
+              key={`axis-${index}`}
+              x1={cx}
+              y1={cy}
+              x2={x}
+              y2={y}
+              className="stroke-gray-200 dark:stroke-white/10"
+              strokeWidth="1"
+            />
+          );
+        })}
 
-      {angles.map((angle, index) => {
-        const scale = clampProgress(chartSubjects[index].progress) / 100;
-        const { x, y } = getPoint(angle, scale);
-        return (
-          <circle
-            key={`dot-${chartSubjects[index].id}`}
-            cx={x}
-            cy={y}
-            r="3.2"
-            className="fill-blue-500 dark:fill-cyan-400"
-          />
-        );
-      })}
+        <line
+          x1={cx}
+          y1={cy}
+          x2={activeAxisEnd.x}
+          y2={activeAxisEnd.y}
+          className="stroke-blue-400/70 dark:stroke-cyan-400/70"
+          strokeWidth="1.6"
+          strokeDasharray="3 3"
+        />
 
-      {angles.map((angle, index) => {
-        const { x, y } = getPoint(angle, 1.16);
-        const textAnchor = x > cx + 5 ? 'start' : x < cx - 5 ? 'end' : 'middle';
-        const label = chartSubjects[index].name.length > 12
-          ? `${chartSubjects[index].name.slice(0, 12)}…`
-          : chartSubjects[index].name;
+        <polygon
+          points={dataPolygon}
+          fill="url(#masteryAreaGradient)"
+          stroke="url(#masteryStrokeGradient)"
+          strokeWidth="2"
+          className="transition-all duration-300"
+        />
 
-        return (
-          <text
-            key={`label-${chartSubjects[index].id}`}
-            x={x}
-            y={y}
-            textAnchor={textAnchor}
-            dominantBaseline="middle"
-            className="fill-gray-500 dark:fill-gray-400 text-[9px] font-semibold"
-          >
-            {label}
-          </text>
-        );
-      })}
-    </svg>
+        {radarPoints.map((item) => {
+          const isActive = item.subject.id === activeSubject.id;
+
+          return (
+            <g key={`dot-${item.subject.id}`}>
+              {isActive && (
+                <circle
+                  cx={item.point.x}
+                  cy={item.point.y}
+                  r="9"
+                  className="fill-fuchsia-400/20 dark:fill-cyan-400/20"
+                />
+              )}
+
+              <circle
+                cx={item.point.x}
+                cy={item.point.y}
+                r={isActive ? '4.8' : '3.2'}
+                className={`${isActive ? 'fill-fuchsia-500 dark:fill-cyan-300' : 'fill-blue-500 dark:fill-cyan-400'} cursor-pointer outline-none`}
+                filter={isActive ? 'url(#masteryGlow)' : undefined}
+                tabIndex={0}
+                role="button"
+                aria-label={`Inspect ${item.subject.name} domain`}
+                onMouseEnter={() => setHoveredId(item.subject.id)}
+                onMouseLeave={() => setHoveredId(null)}
+                onFocus={() => setHoveredId(item.subject.id)}
+                onBlur={() => setHoveredId(null)}
+                onClick={() => handleSelect(item.subject.id)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    handleSelect(item.subject.id);
+                  }
+                }}
+              >
+                <title>{`${item.subject.name}: ${item.subject.progress}% mastery${item.subject.elo ? `, Elo ${item.subject.elo}` : ''}`}</title>
+              </circle>
+            </g>
+          );
+        })}
+
+        {radarPoints.map((item) => {
+          const { x, y } = item.labelPoint;
+          const textAnchor = x > cx + 5 ? 'start' : x < cx - 5 ? 'end' : 'middle';
+          const label = item.subject.name.length > 12
+            ? `${item.subject.name.slice(0, 12)}…`
+            : item.subject.name;
+          const isActive = item.subject.id === activeSubject.id;
+
+          return (
+            <text
+              key={`label-${item.subject.id}`}
+              x={x}
+              y={y}
+              textAnchor={textAnchor}
+              dominantBaseline="middle"
+              onMouseEnter={() => setHoveredId(item.subject.id)}
+              onMouseLeave={() => setHoveredId(null)}
+              onClick={() => handleSelect(item.subject.id)}
+              className={`${isActive ? 'fill-fuchsia-600 dark:fill-cyan-300' : 'fill-gray-500 dark:fill-gray-400'} text-[9px] font-semibold cursor-pointer transition-colors`}
+            >
+              {label}
+            </text>
+          );
+        })}
+      </svg>
+
+      <div className="mt-3 rounded-lg border border-gray-200 dark:border-white/10 bg-white/70 dark:bg-white/[0.02] px-3 py-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[10px] uppercase tracking-wider text-gray-400">Selected Domain</p>
+          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${activeSubject.visual?.badge || 'border-gray-200 text-gray-500'}`}>
+            {activeSubject.mastery}
+          </span>
+        </div>
+        <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1 truncate">{activeSubject.name}</p>
+        <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-md border border-gray-100 dark:border-white/10 py-1.5">
+            <p className="text-[9px] uppercase tracking-wide text-gray-400">Progress</p>
+            <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">{activeSubject.progress}%</p>
+          </div>
+          <div className="rounded-md border border-gray-100 dark:border-white/10 py-1.5">
+            <p className="text-[9px] uppercase tracking-wide text-gray-400">Elo</p>
+            <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">{activeSubject.elo || '—'}</p>
+          </div>
+          <div className="rounded-md border border-gray-100 dark:border-white/10 py-1.5">
+            <p className="text-[9px] uppercase tracking-wide text-gray-400">Rank</p>
+            <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">#{resolvedActiveIndex + 1}</p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
 /* ── Stat Card ───────────────────────────────────────────── */
 
-const StatCard = ({ icon: Icon, title, value, change, suffix = '', color = 'blue', progress = 0, sublabel = '' }) => {
+const StatCard = ({ icon, title, value, change, suffix = '', color = 'blue', progress = 0, sublabel = '' }) => {
+  const IconComponent = icon;
   const displayValue = value === null || value === undefined ? '—' : value;
   const trend = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
   const TrendIcon = change > 0 ? ArrowUp : change < 0 ? ArrowDown : Minus;
@@ -287,7 +411,7 @@ const StatCard = ({ icon: Icon, title, value, change, suffix = '', color = 'blue
       <div className="relative flex items-start justify-between mb-3">
         {/* Icon badge */}
         <div className={`p-2.5 rounded-xl bg-gradient-to-br ${colorMeta.icon} shadow-sm`}>
-          <Icon className="h-4 w-4 text-white" />
+          {IconComponent ? <IconComponent className="h-4 w-4 text-white" /> : null}
         </div>
 
         {/* SVG progress ring */}
@@ -612,6 +736,7 @@ const StudentAnalyticsContent = () => {
   });
   const [insights, setInsights] = useState(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
+  const [selectedMasteryId, setSelectedMasteryId] = useState(null);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -702,9 +827,18 @@ const StudentAnalyticsContent = () => {
     })
     .sort((a, b) => b.progress - a.progress);
 
-  const masteryOverview = masterySubjects.length > 0
-    ? Math.round(masterySubjects.reduce((sum, item) => sum + item.progress, 0) / masterySubjects.length)
-    : 0;
+  const selectedMasterySubject = masterySubjects.find((subject) => subject.id === selectedMasteryId) || masterySubjects[0] || null;
+
+  useEffect(() => {
+    if (!masterySubjects.length) {
+      if (selectedMasteryId !== null) setSelectedMasteryId(null);
+      return;
+    }
+
+    if (!selectedMasteryId || !masterySubjects.some((subject) => subject.id === selectedMasteryId)) {
+      setSelectedMasteryId(masterySubjects[0].id);
+    }
+  }, [masterySubjects, selectedMasteryId]);
 
   const recentActivityItems = (recentActivity || []).map((activity, index) => {
     const isSuccess = activity?.type === 'completed';
@@ -795,7 +929,6 @@ const StudentAnalyticsContent = () => {
 
   // Format study time display
   const studyTimeDisplay = formatStudyTime(stats.studyHours, stats.studyMinutes || 0);
-  const studyTimeSuffix = ''; // already included in formatted string
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 pt-20 space-y-5">
@@ -853,29 +986,69 @@ const StudentAnalyticsContent = () => {
 
       {/* ── Upcoming Exams Announcement Widget ── */}
       {upcomingExams.length > 0 && (
-        <div className="border border-blue-200 dark:border-blue-500/20 bg-blue-50/50 dark:bg-blue-500/5 rounded-xl p-5 mb-4 shadow-sm">
-           <div className="flex items-center justify-between mb-4">
-             <h3 className="text-sm font-bold text-blue-900 dark:text-blue-400 uppercase tracking-widest flex items-center gap-2">
-               <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-               Upcoming Scheduled Exams
-             </h3>
-           </div>
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {upcomingExams.map((exam) => (
-                 <Link key={exam._id} to={`/classes/${exam.batchId._id}/exam/${exam._id}`} className="block p-4 border border-blue-100 dark:border-blue-500/10 bg-white dark:bg-[#000000]/30 rounded-xl hover:shadow-md hover:border-blue-300 dark:hover:border-blue-500/40 transition-all group">
-                   <div className="flex items-start gap-4">
-                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white shrink-0 shadow-sm group-hover:scale-110 transition-transform">
-                       <Clock className="h-5 w-5" />
-                     </div>
-                     <div>
-                       <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-0.5 truncate max-w-[150px]">{exam.batchId?.name || 'Your Class'}</p>
-                       <h4 className="text-sm font-bold text-gray-900 dark:text-white capitalize group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate max-w-[150px]">{exam.title}</h4>
-                       <p className="text-xs text-gray-500 mt-1">{new Date(exam.scheduledAt).toLocaleString()}</p>
-                     </div>
-                   </div>
-                 </Link>
-              ))}
-           </div>
+        <div className="relative border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] overflow-hidden">
+          <div className="pointer-events-none absolute inset-0 opacity-70">
+            <div className="absolute -top-16 -right-12 w-44 h-44 rounded-full bg-blue-200/40 dark:bg-blue-500/10 blur-3xl" />
+            <div className="absolute -bottom-20 -left-16 w-56 h-56 rounded-full bg-cyan-200/40 dark:bg-cyan-500/10 blur-3xl" />
+          </div>
+
+          <div className="relative">
+            <div className="flex items-center justify-between mb-4 gap-3">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                Upcoming Scheduled Exams
+              </h3>
+              <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 rounded-full px-2.5 py-1">
+                {upcomingExams.length} planned
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {upcomingExams.map((exam) => {
+                const soon = isExamStartingSoon(exam.scheduledAt);
+
+                return (
+                  <Link
+                    key={exam._id}
+                    to={`/classes/${exam.batchId._id}/exam/${exam._id}`}
+                    className="block border border-gray-200 dark:border-white/10 bg-white/85 dark:bg-white/[0.02] backdrop-blur-sm rounded-xl p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-blue-200 dark:hover:border-cyan-400/30 group"
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 truncate max-w-[160px]">
+                          {exam.batchId?.name || 'Your Class'}
+                        </p>
+                        <h4 className="text-sm font-bold text-gray-900 dark:text-white capitalize truncate max-w-[190px] group-hover:text-blue-600 dark:group-hover:text-cyan-300 transition-colors">
+                          {exam.title}
+                        </h4>
+                      </div>
+
+                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                        <Clock className="h-4 w-4" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {exam.scheduledAt ? new Date(exam.scheduledAt).toLocaleString() : 'Schedule pending'}
+                      </p>
+
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                          soon
+                            ? 'text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10'
+                            : 'text-gray-600 dark:text-gray-300 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5'
+                        }`}>
+                          {getExamCountdownLabel(exam.scheduledAt)}
+                        </span>
+                        <span className="text-[10px] font-semibold text-blue-600 dark:text-cyan-300">Open →</span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 
@@ -1019,47 +1192,64 @@ const StudentAnalyticsContent = () => {
           {masterySubjects.length > 0 ? (
             <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
               <div className="xl:col-span-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gradient-to-br from-slate-50 via-white to-blue-50/60 dark:from-slate-900/40 dark:via-black/10 dark:to-blue-500/5 p-4">
-                <SubjectMasteryRadar subjects={masterySubjects} />
+                <SubjectMasteryRadar
+                  subjects={masterySubjects}
+                  selectedId={selectedMasteryId}
+                  onSelect={setSelectedMasteryId}
+                />
                 <div className="mt-3 pt-3 border-t border-gray-200 dark:border-white/10">
-                  <p className="text-xs text-gray-500">Top domain</p>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{masterySubjects[0].name}</p>
+                  <p className="text-xs text-gray-500">Focused domain</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedMasterySubject?.name || masterySubjects[0]?.name}</p>
                   <p className="text-xs text-gray-400">
-                    {masterySubjects[0].elo ? `Elo: ${masterySubjects[0].elo}` : `${masterySubjects[0].progress}% mastery`}
+                    {selectedMasterySubject?.elo
+                      ? `Elo: ${selectedMasterySubject.elo}`
+                      : `${selectedMasterySubject?.progress || masterySubjects[0]?.progress || 0}% mastery`}
                   </p>
                 </div>
               </div>
 
               <div className="xl:col-span-3 space-y-2.5">
-                {masterySubjects.map((subject, index) => (
-                  <div
-                    key={subject.id}
-                    className="rounded-lg border border-gray-200 dark:border-white/10 bg-white/80 dark:bg-white/[0.02] backdrop-blur-sm p-3"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${subject.visual.dot}`} />
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{subject.name}</p>
-                        <span className="text-[10px] text-gray-400 font-semibold">#{index + 1}</span>
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${subject.visual.badge}`}>
-                          {subject.mastery}
-                        </span>
-                      </div>
-                      <div className="text-right shrink-0">
-                        {subject.elo && (
-                          <p className="text-[10px] text-gray-400 font-mono">Elo {subject.elo}</p>
-                        )}
-                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-300">{subject.progress}%</p>
-                      </div>
-                    </div>
+                {masterySubjects.map((subject, index) => {
+                  const isSelected = selectedMasterySubject?.id === subject.id;
 
-                    <div className={`w-full h-2 rounded-full overflow-hidden ${subject.visual.track}`}>
-                      <div
-                        className={`h-full rounded-full bg-gradient-to-r ${subject.visual.bar} transition-all duration-700`}
-                        style={{ width: `${subject.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  return (
+                    <button
+                      type="button"
+                      key={subject.id}
+                      onClick={() => setSelectedMasteryId(subject.id)}
+                      onMouseEnter={() => setSelectedMasteryId(subject.id)}
+                      className={`w-full text-left rounded-lg border backdrop-blur-sm p-3 transition-all duration-200 ${
+                        isSelected
+                          ? 'border-blue-300 dark:border-cyan-400/50 bg-blue-50/70 dark:bg-cyan-500/10 shadow-sm'
+                          : 'border-gray-200 dark:border-white/10 bg-white/80 dark:bg-white/[0.02] hover:border-blue-200 dark:hover:border-cyan-400/30'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${subject.visual.dot}`} />
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{subject.name}</p>
+                          <span className="text-[10px] text-gray-400 font-semibold">#{index + 1}</span>
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${subject.visual.badge}`}>
+                            {subject.mastery}
+                          </span>
+                        </div>
+                        <div className="text-right shrink-0">
+                          {subject.elo && (
+                            <p className="text-[10px] text-gray-400 font-mono">Elo {subject.elo}</p>
+                          )}
+                          <p className="text-xs font-semibold text-gray-500 dark:text-gray-300">{subject.progress}%</p>
+                        </div>
+                      </div>
+
+                      <div className={`w-full h-2 rounded-full overflow-hidden ${subject.visual.track}`}>
+                        <div
+                          className={`h-full rounded-full bg-gradient-to-r ${subject.visual.bar} transition-all duration-700`}
+                          style={{ width: `${subject.progress}%` }}
+                        />
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ) : (
@@ -1216,12 +1406,22 @@ const StudentAnalyticsContent = () => {
       {/* ── Top Performing Topics ───────────────────────────── */}
       {masterySubjects.length > 0 && (
         <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-4">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-1.5">
             <Medal className="h-3.5 w-3.5" /> Top Performing Topics
           </h3>
+          <p className="text-[11px] text-gray-400 mb-4">Click a topic to focus it on the mastery chart.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {masterySubjects.map((topic, index) => (
-              <div key={`${topic.id}-${index}`} className="border border-gray-100 dark:border-white/5 rounded-lg p-3">
+              <button
+                type="button"
+                key={`${topic.id}-${index}`}
+                onClick={() => setSelectedMasteryId(topic.id)}
+                className={`w-full text-left border rounded-lg p-3 transition-all duration-200 ${
+                  selectedMasterySubject?.id === topic.id
+                    ? 'border-blue-300 dark:border-cyan-400/50 bg-blue-50/70 dark:bg-cyan-500/10 shadow-sm'
+                    : 'border-gray-100 dark:border-white/5 hover:border-blue-200 dark:hover:border-cyan-400/30'
+                }`}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-gray-900 dark:text-white">{topic.name}</span>
                   <span className="text-xs text-gray-400">{topic.mastery}</span>
@@ -1232,7 +1432,7 @@ const StudentAnalyticsContent = () => {
                   </div>
                   <span className="text-xs text-gray-400">{topic.progress}%</span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>

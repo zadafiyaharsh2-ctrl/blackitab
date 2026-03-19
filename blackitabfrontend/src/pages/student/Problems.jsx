@@ -19,8 +19,8 @@ import PageShimmer from '../../components/shared/PageShimmer';
 
 const Problems = () => {
   usePageTitle('Practice Problems');
-  const [problemSubjects, setProblemSubjects] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [globalExams, setGlobalExams] = useState([]);
+  const [globalLoading, setGlobalLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('global'); // 'global' | 'institute'
   const [instituteExams, setInstituteExams] = useState([]);
   const [instituteLoading, setInstituteLoading] = useState(false);
@@ -31,22 +31,22 @@ const Problems = () => {
   const user = userDataStr ? JSON.parse(userDataStr) : null;
   const hasInstitute = !!(user?.instituteId);
 
-  // Fetch problem subjects from backend
+  // Fetch global exam list from backend (fully data-driven, no dummy tabs)
   useEffect(() => {
-    const fetchProblemSubjects = async () => {
+    const fetchGlobalExams = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/problems/subjects`);
+        const res = await axios.get(`${API_URL}/api/problems/global-subjects`);
         if (res.data.success) {
-          setProblemSubjects(res.data.data);
+          setGlobalExams(Array.isArray(res.data.data) ? res.data.data : []);
         }
       } catch (err) {
-        console.error('Error fetching problem subjects:', err);
+        console.error('Error fetching global exam list:', err);
       } finally {
-        setLoading(false);
+        setGlobalLoading(false);
       }
     };
 
-    fetchProblemSubjects();
+    fetchGlobalExams();
   }, []);
 
   // Fetch institute exams when switching to institute tab
@@ -72,11 +72,8 @@ const Problems = () => {
     }
   }, [activeTab, hasInstitute]);
 
-  // Exam categories with their metadata
-  const examCategories = [
-    {
-      id: 'jee',
-      name: 'JEE (Joint Entrance Examination)',
+  const examMetaById = {
+    jee: {
       shortName: 'JEE',
       description: 'Master engineering entrance preparation with comprehensive Physics, Chemistry, and Mathematics problem sets',
       icon: FlaskConical,
@@ -84,13 +81,9 @@ const Problems = () => {
       bgColor: 'bg-purple-500/10',
       borderColor: 'border-purple-500/30',
       hoverBorder: 'hover:border-purple-500/60',
-      iconColor: 'text-purple-400',
-      subjects: ['Physics', 'Chemistry', 'Mathematics'],
-      stats: { problems: '500+', difficulty: 'High' }
+      iconColor: 'text-purple-400'
     },
-    {
-      id: 'neet',
-      name: 'NEET (National Eligibility Entrance Test)',
+    neet: {
       shortName: 'NEET',
       description: 'Comprehensive medical entrance exam preparation covering Biology, Chemistry, and Physics fundamentals',
       icon: Microscope,
@@ -98,13 +91,9 @@ const Problems = () => {
       bgColor: 'bg-green-500/10',
       borderColor: 'border-green-500/30',
       hoverBorder: 'hover:border-green-500/60',
-      iconColor: 'text-green-400',
-      subjects: ['Biology', 'Chemistry', 'Physics'],
-      stats: { problems: '450+', difficulty: 'High' }
+      iconColor: 'text-green-400'
     },
-    {
-      id: 'upsc',
-      name: 'UPSC (Union Public Service Commission)',
+    upsc: {
       shortName: 'UPSC',
       description: 'Civil services examination practice with comprehensive coverage of General Studies and optional subjects',
       icon: Award,
@@ -112,13 +101,9 @@ const Problems = () => {
       bgColor: 'bg-blue-500/10',
       borderColor: 'border-blue-500/30',
       hoverBorder: 'hover:border-blue-500/60',
-      iconColor: 'text-blue-400',
-      subjects: ['General Studies', 'Current Affairs', 'Essay'],
-      stats: { problems: '300+', difficulty: 'Expert' }
+      iconColor: 'text-blue-400'
     },
-    {
-      id: 'gate',
-      name: 'GATE (Graduate Aptitude Test in Engineering)',
+    gate: {
       shortName: 'GATE',
       description: 'Technical aptitude and engineering knowledge assessment for postgraduate admissions and PSU recruitment',
       icon: Target,
@@ -126,13 +111,9 @@ const Problems = () => {
       bgColor: 'bg-orange-500/10',
       borderColor: 'border-orange-500/30',
       hoverBorder: 'hover:border-orange-500/60',
-      iconColor: 'text-orange-400',
-      subjects: ['Core Engineering', 'Aptitude', 'Mathematics'],
-      stats: { problems: '400+', difficulty: 'High' }
+      iconColor: 'text-orange-400'
     },
-    {
-      id: 'cat',
-      name: 'CAT (Common Admission Test)',
+    cat: {
       shortName: 'CAT',
       description: 'MBA entrance examination covering Quantitative Ability, Verbal Ability, and Logical Reasoning',
       icon: Briefcase,
@@ -140,41 +121,35 @@ const Problems = () => {
       bgColor: 'bg-pink-500/10',
       borderColor: 'border-pink-500/30',
       hoverBorder: 'hover:border-pink-500/60',
-      iconColor: 'text-pink-400',
-      subjects: ['Quantitative Ability', 'Verbal Ability', 'Logical Reasoning'],
-      stats: { problems: '350+', difficulty: 'Medium' }
-    },
-    {
-      id: 'general',
-      name: 'General Problem Solving',
-      shortName: 'General',
-      description: 'Enhance your problem-solving skills with diverse topics including Data Structures and Algorithms',
+      iconColor: 'text-pink-400'
+    }
+  };
+
+  const getExamMeta = (examId) => {
+    const normalized = String(examId || '').toLowerCase();
+    const fallbackName = normalized ? normalized.toUpperCase() : 'EXAM';
+    return examMetaById[normalized] || {
+      shortName: fallbackName,
+      description: `${fallbackName} preparation questions from the problem bank`,
       icon: BookOpen,
       color: 'from-teal-500 to-cyan-600',
       bgColor: 'bg-teal-500/10',
       borderColor: 'border-teal-500/30',
       hoverBorder: 'hover:border-teal-500/60',
-      iconColor: 'text-teal-400',
-      subjects: ['All Subjects'],
-      stats: { problems: 'All', difficulty: 'Varied' }
-    }
-  ];
+      iconColor: 'text-teal-400'
+    };
+  };
 
   // Handle exam category click
   const handleExamClick = (examId, source = 'global') => {
-    if (examId === 'general') {
-      if (problemSubjects.length > 0)
-        navigate(`/problems/${problemSubjects[0]._id}`);
+    if (source === 'institute') {
+      navigate(`/exam/${examId}/institute`);
     } else {
-      if (source === 'institute') {
-        navigate(`/exam/${examId}/institute`);
-      } else {
-        navigate(`/exam/${examId}`);
-      }
+      navigate(`/exam/${examId}`);
     }
   };
 
-  if (loading) return <PageShimmer variant="cards" />;
+  if (globalLoading) return <PageShimmer variant="cards" />;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors">
@@ -253,47 +228,55 @@ const Problems = () => {
           <>
             <div className="mb-12">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">Choose Your Exam Category</h2>
-              <p className="text-gray-600 dark:text-gray-400">Select the exam you're preparing for and start solving problems</p>
+              <p className="text-gray-600 dark:text-gray-400">These categories are loaded from the live global problem bank</p>
             </div>
 
             {/* Exam Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {examCategories.map((exam) => {
-                const Icon = exam.icon;
+            {globalExams.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {globalExams.map((examEntry) => {
+                  const examId = typeof examEntry === 'string' ? examEntry : examEntry.exam;
+                  const examMeta = getExamMeta(examId);
+                  const Icon = examMeta.icon;
+                  const subjects = Array.isArray(examEntry?.subjects) && examEntry.subjects.length > 0
+                    ? examEntry.subjects
+                    : ['All Subjects'];
+                  const questionCount = Number(examEntry?.questionCount) || 0;
+
                 return (
                   <div
-                    key={exam.id}
-                    onClick={() => handleExamClick(exam.id, 'global')}
-                    className={`group relative bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border ${exam.borderColor} ${exam.hoverBorder} transition-all duration-300 cursor-pointer overflow-hidden hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-1`}
+                    key={examId}
+                    onClick={() => handleExamClick(examId, 'global')}
+                    className={`group relative bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border ${examMeta.borderColor} ${examMeta.hoverBorder} transition-all duration-300 cursor-pointer overflow-hidden hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-1`}
                   >
                     {/* Gradient overlay on hover */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${exam.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
+                    <div className={`absolute inset-0 bg-gradient-to-br ${examMeta.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
 
                     <div className="relative p-6">
                       {/* Icon and Badge */}
                       <div className="flex items-start justify-between mb-4">
-                        <div className={`h-14 w-14 ${exam.bgColor} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                          <Icon className={`${exam.iconColor} h-7 w-7`} />
+                        <div className={`h-14 w-14 ${examMeta.bgColor} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                          <Icon className={`${examMeta.iconColor} h-7 w-7`} />
                         </div>
 
-                        <div className="px-3 py-1 bg-gray-100 dark:bg-gray-700/50 rounded-full">
-                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{exam.stats.difficulty}</span>
+                        <div className="px-3 py-1 bg-gray-100 dark:bg-gray-700/50 rounded-full border border-gray-300 dark:border-gray-600/50">
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Live</span>
                         </div>
                       </div>
 
                       {/* Exam Name */}
                       <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 group-hover:bg-clip-text transition-all">
-                        {exam.shortName}
+                        {examMeta.shortName}
                       </h3>
 
                       <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 line-clamp-2 leading-relaxed">
-                        {exam.description}
+                        {examMeta.description}
                       </p>
 
                       {/* Subjects */}
                       <div className="mb-4">
                         <div className="flex flex-wrap gap-2">
-                          {exam.subjects.map((subject, idx) => (
+                          {subjects.map((subject, idx) => (
                             <span
                               key={idx}
                               className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 rounded-md border border-gray-300 dark:border-gray-600/50"
@@ -307,10 +290,10 @@ const Problems = () => {
                       {/* Stats and CTA */}
                       <div className="flex items-center justify-between pt-4 border-t border-gray-300 dark:border-gray-700/50">
                         <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">
-                          {exam.stats.problems} Problems
+                          {questionCount} Questions
                         </span>
 
-                        <div className={`flex items-center gap-1 ${exam.iconColor} font-semibold text-sm group-hover:translate-x-1 transition-transform duration-300`}>
+                        <div className={`flex items-center gap-1 ${examMeta.iconColor} font-semibold text-sm group-hover:translate-x-1 transition-transform duration-300`}>
                           Start Practice
                           <ChevronRight className="h-4 w-4" />
                         </div>
@@ -318,22 +301,15 @@ const Problems = () => {
                     </div>
                   </div>
                 );
-              })}
-            </div>
-
-            {/* Bottom CTA Section */}
-            <div className="mt-16 text-center">
-              <div className="inline-block bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-2xl p-8">
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Not sure where to start?</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">Try our General Problem Solving section with diverse topics</p>
-                <button
-                  onClick={() => handleExamClick('general')}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50"
-                >
-                  Explore All Problems
-                </button>
+                })}
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-20 bg-gray-50 dark:bg-gray-800/30 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
+                <Globe className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400 text-lg mb-2">No global categories available yet</p>
+                <p className="text-gray-500 text-sm">Global questions need to be published before categories appear here.</p>
+              </div>
+            )}
           </>
         ) : (
           /* Institute Questions Tab */
@@ -353,14 +329,13 @@ const Problems = () => {
             ) : instituteExams.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {instituteExams.map((examId) => {
-                  // Find matching exam metadata
-                  const examMeta = examCategories.find(e => e.id === examId);
-                  const Icon = examMeta?.icon || BookOpen;
-                  const shortName = examMeta?.shortName || examId.toUpperCase();
-                  const bgColor = examMeta?.bgColor || 'bg-orange-500/10';
-                  const iconColor = examMeta?.iconColor || 'text-orange-400';
-                  const borderColor = examMeta?.borderColor || 'border-orange-500/30';
-                  const hoverBorder = examMeta?.hoverBorder || 'hover:border-orange-500/60';
+                  const examMeta = getExamMeta(examId);
+                  const Icon = examMeta.icon;
+                  const shortName = examMeta.shortName;
+                  const bgColor = examMeta.bgColor;
+                  const iconColor = examMeta.iconColor;
+                  const borderColor = examMeta.borderColor;
+                  const hoverBorder = examMeta.hoverBorder;
 
                   return (
                     <div

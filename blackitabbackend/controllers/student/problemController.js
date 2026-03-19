@@ -304,6 +304,60 @@ exports.getExamQuestions = async (req, res) => {
     }
 };
 
+// GET /api/problems/global-subjects — exam types for global published problem bank
+exports.getGlobalExamSubjects = async (req, res) => {
+    try {
+        const exams = await ExamQuestion.aggregate([
+            {
+                $match: {
+                    isGlobal: true,
+                    status: 'Published',
+                    isActive: true
+                }
+            },
+            {
+                $group: {
+                    _id: '$exam',
+                    questionCount: { $sum: 1 },
+                    subjects: { $addToSet: '$subject' }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    exam: '$_id',
+                    questionCount: 1,
+                    subjects: {
+                        $slice: [
+                            {
+                                $filter: {
+                                    input: '$subjects',
+                                    as: 'subject',
+                                    cond: {
+                                        $and: [
+                                            { $ne: ['$$subject', null] },
+                                            { $ne: ['$$subject', ''] }
+                                        ]
+                                    }
+                                }
+                            },
+                            6
+                        ]
+                    }
+                }
+            },
+            {
+                $sort: { questionCount: -1, exam: 1 }
+            }
+        ]);
+
+        res.json({ success: true, data: exams });
+    } catch (err) {
+        console.error('getGlobalExamSubjects Error:', err);
+        res.status(500).json({ success: false, message: 'Server Error', error: err.message, stack: err.stack });
+    }
+};
+
 // GET /api/problems/institute-subjects — distinct exam types for the student's institute
 exports.getInstituteExamSubjects = async (req, res) => {
     try {

@@ -19,6 +19,7 @@ const {
     getProblemById,
     updateProblemStatus,
     getExamQuestions,
+    getGlobalExamSubjects,
     getInstituteExamSubjects,
     checkExamAnswer,
     generateExamQuestions,
@@ -101,6 +102,9 @@ router.get('/daily', async (req, res) => {
 
 // Search Subjects/Chapters
 router.get('/search', searchStudyContent);
+
+// Global exam types for published global problem bank
+router.get('/global-subjects', getGlobalExamSubjects);
 
 // Institute Subjects: MUST come before /:id
 router.get('/institute-subjects', protect, getInstituteExamSubjects);
