@@ -128,7 +128,7 @@ const Signup = ({ onSignupSuccess }) => {
       if (data.success && data.token) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        CustomToast.success('Welcome to Blackitab! Account created successfully.');
+        CustomToast.success('Welcome to RANKLEN! Account created successfully.');
         if (onSignupSuccess) onSignupSuccess(data.user, data.token);
         
         if (accountType === 'institute') {
@@ -171,7 +171,7 @@ const Signup = ({ onSignupSuccess }) => {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
-        CustomToast.success(`Welcome to Blackitab, ${data.user.name}!`);
+        CustomToast.success(`Welcome to RANKLEN, ${data.user.name}!`);
         if (onSignupSuccess) onSignupSuccess(data.user, data.token);
 
         navigate('/onboarding');
@@ -276,7 +276,7 @@ const Signup = ({ onSignupSuccess }) => {
           <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">
             {accountType === 'institute' 
                ? 'Setup a workspace for your institution.'
-               : (step === 1 ? `Join as a ${accountType} on Blackitab.` : 'Link your institute (optional).')} 
+               : (step === 1 ? `Join as a ${accountType} on RANKLEN.` : 'Link your institute (optional).')} 
           </p>
         </div>
 
