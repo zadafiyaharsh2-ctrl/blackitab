@@ -584,8 +584,8 @@ export default function TeacherAttendance() {
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
-                    {['Present', 'Absent', 'Late'].map(stat => {
+                  <div className="grid grid-cols-4 gap-3">
+                    {['Present', 'Absent', 'Late', 'No Class'].map(stat => {
                       const count = selectedHistory.records.filter(r => r.status === stat).length;
                       const cfg = statusConfig[stat];
                       return (
