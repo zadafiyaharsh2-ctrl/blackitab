@@ -45,6 +45,53 @@ const debugError = (label, error) => {
 const LANGCHAIN_API_URL =
   process.env.LANGCHAIN_API_URL || "http://127.0.0.1:8000/query";
 
+const CHAT_CONTEXT_INSTRUCTION =
+  "You are continuing an ongoing chat. Use the full conversation history for continuity, and answer the latest user question directly.";
+
+const sanitizeAIAnswer = (text) => {
+  if (typeof text !== "string") return String(text || "");
+  return text.trim();
+};
+
+const buildContextualQuery = (messages, latestUserQuery) => {
+  const safeLatestQuery =
+    typeof latestUserQuery === "string" ? latestUserQuery.trim() : "";
+
+  if (!Array.isArray(messages) || messages.length <= 1) {
+    return safeLatestQuery;
+  }
+
+  // Exclude the most recent user message from history because it is appended separately.
+  const previousMessages = messages.slice(0, -1);
+
+  const historyText = previousMessages
+    .filter(
+      (msg) =>
+        msg &&
+        (msg.role === "user" || msg.role === "assistant") &&
+        typeof msg.content === "string" &&
+        msg.content.trim()
+    )
+    .map((msg) => {
+      const roleLabel = msg.role === "assistant" ? "Assistant" : "User";
+      return `${roleLabel}: ${msg.content.trim()}`;
+    })
+    .join("\n");
+
+  if (!historyText) {
+    return safeLatestQuery;
+  }
+
+  return [
+    CHAT_CONTEXT_INSTRUCTION,
+    "",
+    "Conversation history:",
+    historyText,
+    "",
+    `Latest user question: ${safeLatestQuery}`,
+  ].join("\n");
+};
+
 // Log environment configuration on startup
 debugLog("AI Controller Initialized", {
   LANGCHAIN_API_URL,
@@ -102,18 +149,28 @@ const queryAI = async (req, res) => {
     const userMessage = { role: "user", content: query.trim() };
     chatHistory.messages.push(userMessage);
 
+    const contextualQuery = buildContextualQuery(
+      chatHistory.messages,
+      userMessage.content
+    );
+
     let aiResponseContent = "";
     try {
       debugLog("queryAI - Calling LangChain API", {
         url: LANGCHAIN_API_URL,
-        payload: { query: query.trim(), top_k: 3 },
+        payloadMeta: {
+          top_k: 3,
+          latestQueryLength: userMessage.content.length,
+          contextualQueryLength: contextualQuery.length,
+          contextMessageCount: Math.max(chatHistory.messages.length - 1, 0),
+        },
         timeout: 60000});
 
       const startTime = Date.now();
       const response = await axios.post(
         LANGCHAIN_API_URL,
         {
-          query: query.trim(),
+          query: contextualQuery,
           top_k: 3},
         { timeout: 60000 },
       );
@@ -130,6 +187,8 @@ const queryAI = async (req, res) => {
         response.data.answer ||
         response.data.response ||
         "No response received";
+
+      aiResponseContent = sanitizeAIAnswer(aiResponseContent);
     } catch (err) {
       debugError("queryAI - AI Server Error", err);
       aiResponseContent =
@@ -206,7 +265,7 @@ const getSingleChat = async (req, res) => {
   }
 };
 
-// POST /api/ai/ask — original blackitab style: individual Q&A documents
+// POST /api/ai/ask — original RANKLEN style: individual Q&A documents
 const askQuestion = async (req, res) => {
   debugLog("askQuestion - Request Received", {
     body: req.body,
@@ -272,8 +331,9 @@ const askQuestion = async (req, res) => {
     const questionData = {
       userId,
       question: query.trim(),
-      answer:
-        aiResponse.answer || aiResponse.response || "No response received",
+      answer: sanitizeAIAnswer(
+        aiResponse.answer || aiResponse.response || "No response received"
+      ),
       topK: top_k,
       sources: aiResponse.sources || [],
       sessionId: sessionId || null};
@@ -304,7 +364,7 @@ const askQuestion = async (req, res) => {
   }
 };
 
-// GET /api/ai/history — paginated question history (original blackitab style)
+// GET /api/ai/history — paginated question history (original RANKLEN style)
 const getHistory = async (req, res) => {
   debugLog("getHistory - Request Received", {
     query: req.query,

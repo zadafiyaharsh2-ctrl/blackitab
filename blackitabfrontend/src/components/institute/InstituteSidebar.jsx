@@ -10,6 +10,7 @@ import {
   BuildingOffice2Icon,
   ArrowRightOnRectangleIcon,
   BookOpenIcon,
+  CalendarDaysIcon,
   SunIcon,
   MoonIcon
 } from '@heroicons/react/24/outline';
@@ -54,6 +55,7 @@ const InstituteSidebar = ({ isOpen, setIsOpen }) => {
     { name: 'Dashboard', path: '/institute/dashboard', icon: HomeIcon },
     { name: 'Teacher\'s Panel', path: '/institute/teachers', icon: AcademicCapIcon },
     { name: 'Student Panel', path: '/institute/students', icon: UsersIcon },
+    { name: 'Attendance', path: '/hod/attendance', icon: CalendarDaysIcon },
     { name: 'Theory Checking', path: '/institute/theory', icon: DocumentTextIcon },
     { name: 'Question Checker', path: '/institute/questions', icon: CheckBadgeIcon },
     { name: 'Join Requests', path: '/institute/join-requests', icon: UsersIcon },

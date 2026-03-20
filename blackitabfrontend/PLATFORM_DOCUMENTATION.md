@@ -1,9 +1,9 @@
-# BlackiTab - Comprehensive Platform Architecture & Logic Documentation
+# RANKLEN - Comprehensive Platform Architecture & Logic Documentation
 
-This document outlines the core logic, algorithms, UI patterns, and data flows that power the BlackiTab application. It serves as a technical reference for future expansions and maintenance.
+This document outlines the core logic, algorithms, UI patterns, and data flows that power the RANKLEN application. It serves as a technical reference for future expansions and maintenance.
 
 ## 1. Core Analytics & Event Architecture
-The heart of BlackiTab is the **Submission & Strategy Engine**. Every action a user takes—completing a theory topic, attempting an exam question, or viewing a leaderboard—generates analytical events.
+The heart of RANKLEN is the **Submission & Strategy Engine**. Every action a user takes—completing a theory topic, attempting an exam question, or viewing a leaderboard—generates analytical events.
 
 ### The Gamification Algorithm (Streak & XP)
 - **XP Calculation**: Points are dynamically generated based on the `difficulty` of the `ExamQuestion` solved combined with the `timeTakenSeconds` compared to the global `averageSolveTimeMs`.

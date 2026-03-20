@@ -22,7 +22,7 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link to="/dashboard">
               <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 cursor-pointer hover:opacity-80 transition-opacity">
-                Blackitab
+                RANKLEN
               </h1>
             </Link>
           </div>

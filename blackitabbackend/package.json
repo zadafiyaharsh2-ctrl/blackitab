@@ -1,5 +1,5 @@
 {
-  "name": "blackitabbackend",
+  "name": "RANKLENbackend",
   "version": "1.0.0",
   "description": "",
   "engines": {
@@ -9,6 +9,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "seed:theory": "node seed/seedTheory.js",
+    "seed:theory:reset": "node seed/seedTheory.js --reset",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

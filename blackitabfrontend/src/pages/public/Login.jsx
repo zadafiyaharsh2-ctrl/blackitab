@@ -127,7 +127,7 @@ const Login = ({ onLoginSuccess }) => {
             Welcome Back
           </h2>
           <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">
-            Sign in to continue to Blackitab
+            Sign in to continue to RANKLEN
           </p>
         </div>
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaUsers, FaEnvelope, FaPlusSquare, FaUser, FaUserFriends, FaUserPlus, FaTimes, FaComment } from 'react-icons/fa';
+import { FaUsers, FaEnvelope, FaPlusSquare, FaTimes, FaComment } from 'react-icons/fa';
 
 /**
  * FloatingSocialButton — A floating bottom-right button that opens
@@ -10,19 +10,18 @@ import { FaUsers, FaEnvelope, FaPlusSquare, FaUser, FaUserFriends, FaUserPlus, F
 const FloatingSocialButton = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
-
-  const userId = (() => {
-    try { return JSON.parse(localStorage.getItem('user') || '{}')._id || ''; } catch { return ''; }
-  })();
+  const MotionButton = motion.button;
 
   // Close panel when navigating
-  useEffect(() => { setOpen(false); }, [location.pathname]);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setOpen(false));
+    return () => cancelAnimationFrame(frame);
+  }, [location.pathname]);
 
   const socialLinks = [
     { path: '/social', label: 'Social Feed', icon: <FaUsers />, color: 'from-blue-500 to-indigo-600' },
     { path: '/messages', label: 'Messages', icon: <FaEnvelope />, color: 'from-emerald-500 to-teal-600' },
     { path: '/create-post', label: 'Create Post', icon: <FaPlusSquare />, color: 'from-rose-500 to-pink-600' },
-    { path: '/profile', label: 'My Profile', icon: <FaUser />, color: 'from-cyan-500 to-sky-600' },
   ];
 
   // Check if we're on a social page
@@ -92,7 +91,7 @@ const FloatingSocialButton = () => {
       </AnimatePresence>
 
       {/* Floating Button */}
-      <motion.button
+      <MotionButton
         onClick={() => setOpen(!open)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
@@ -115,7 +114,7 @@ const FloatingSocialButton = () => {
             </motion.span>
           )}
         </AnimatePresence>
-      </motion.button>
+      </MotionButton>
     </>
   );
 };

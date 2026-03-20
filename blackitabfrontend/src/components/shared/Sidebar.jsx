@@ -12,9 +12,19 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toggleTheme, isDark } = useTheme();
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [, setUnreadCount] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
   const [pendingJoinRequests, setPendingJoinRequests] = useState(0);
+
+  const { role: userRole = 'student', instituteId = null } = (() => {
+    try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
+  })();
+
+  const canAccessTeacher = ['teacher', 'hod'].includes(userRole);
+  const canAccessHod = userRole === 'hod';
+  const canAccessInstitute = userRole === 'institute';
+  const hasInstitute = Boolean(instituteId);
+  const INSTITUTE_REQUIRED_FOR_CLASSES_MESSAGE = 'You must join an institute before joining any class.';
 
   useEffect(() => {
     const fetchUnread = async () => {
@@ -25,7 +35,9 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.data.success) setUnreadCount(res.data.count);
-      } catch { }
+      } catch {
+        // No-op: unread badge is optional UI data.
+      }
     };
     fetchUnread();
     const interval = setInterval(fetchUnread, 30000);
@@ -42,12 +54,14 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.data.success) setPendingJoinRequests(res.data.data.length);
-      } catch { }
+      } catch {
+        // No-op: join request badge is optional UI data.
+      }
     };
     fetchJoinRequests();
     const interval = setInterval(fetchJoinRequests, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [canAccessInstitute]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -59,15 +73,6 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, []);
-
-  const { role: userRole = 'student', instituteId = null } = (() => {
-    try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
-  })();
-
-  const canAccessTeacher = ['teacher', 'hod'].includes(userRole);
-  const canAccessHod = userRole === 'hod';
-  const canAccessInstitute = userRole === 'institute';
-  const hasInstitute = Boolean(instituteId);
 
   const navItems = [
     ...(canAccessTeacher ? [
@@ -108,6 +113,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     { path: '/institute/dashboard', label: 'Dashboard', icon: <FaBuilding /> },
     { path: '/institute/teachers', label: "Teacher's Panel", icon: <FaUserTie /> },
     { path: '/institute/students', label: 'Student Panel', icon: <FaUserGraduate /> },
+    { path: '/hod/attendance', label: 'Attendance', icon: <FaCalendarDay /> },
     { path: '/institute/theory', label: 'Theory Checking', icon: <FaFileAlt /> },
     { path: '/institute/questions', label: 'Question Checker', icon: <FaClipboardCheck /> },
     { path: '/institute/join-requests', label: 'Join Requests', icon: <FaUserPlus />, badge: pendingJoinRequests },
@@ -120,6 +126,24 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       setIsOpen(false);
     }
   };
+
+  const handleNavItemClick = (event, path) => {
+    if (userRole === 'student' && path === '/classes' && !hasInstitute) {
+      event.preventDefault();
+      navigate('/profile', {
+        state: {
+          openJoinInstituteModal: true,
+          instituteRequiredMessage: INSTITUTE_REQUIRED_FOR_CLASSES_MESSAGE
+        }
+      });
+      handleNavClick();
+      return;
+    }
+
+    handleNavClick();
+  };
+
+  const isProfileActive = location.pathname === '/profile' || location.pathname.startsWith('/profile/');
 
   return (
     <>
@@ -180,7 +204,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
               const isActive = location.pathname === item.path || (location.pathname.startsWith(item.path) && item.path !== '/');
               return (
                 <li key={item.path}>
-                  <Link to={item.path} onClick={handleNavClick}>
+                  <Link to={item.path} onClick={(event) => handleNavItemClick(event, item.path)}>
                     <div className={`relative flex items-center ${isOpen ? 'px-4 py-3' : 'px-0 py-3 justify-center'} rounded-xl text-sm font-semibold overflow-hidden group ${
                       isActive
                         ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm font-bold'
@@ -288,6 +312,20 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
 
         {/* Bottom actions */}
         <div className="p-4 border-t border-gray-200/50 dark:border-white/10 space-y-2 bg-gray-50/50 dark:bg-[#000000]">
+          <Link
+            to="/profile"
+            onClick={handleNavClick}
+            className={`w-full flex items-center ${isOpen ? 'px-4 py-3 justify-start gap-4' : 'px-0 py-3 justify-center'} text-sm font-semibold rounded-xl group transition-colors ${
+              isProfileActive
+                ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:bg-blue-500/10 hover:text-blue-600 dark:hover:bg-white/10 dark:hover:text-blue-400'
+            }`}
+            title="Profile"
+          >
+            <span className="text-lg drop-shadow-sm"><FaUser /></span>
+            {isOpen && <span>Profile</span>}
+          </Link>
+
           <button
             onClick={toggleTheme}
             className={`w-full flex items-center ${isOpen ? 'px-4 py-3 justify-start gap-4' : 'px-0 py-3 justify-center'} text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-yellow-500/10 hover:text-yellow-600 dark:hover:bg-white/10 dark:hover:text-yellow-400 rounded-xl group`}

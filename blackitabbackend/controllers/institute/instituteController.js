@@ -404,7 +404,7 @@ exports.updateInstituteQuestion = async (req, res) => {
         res.json({ success: true, message: 'Question updated successfully', data: question });
     } catch (error) {
         console.error('Update Institute Question Error:', error);
-        require('fs').writeFileSync('c:/Users/Deepesh/Desktop/blackitab/blackitabbackend/error.log', error.stack || error.toString());
+        require('fs').writeFileSync('c:/Users/Deepesh/Desktop/RANKLEN/RANKLENbackend/error.log', error.stack || error.toString());
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -1083,6 +1083,7 @@ exports.getDepartmentDetails = async (req, res) => {
         // B) The teacher of the batch has this department in their `departments` array.
         // C) The batch's name includes the department name (heuristic fallback).
         const departmentBatches = batches.filter(b => {
+            if (b.department && b.department.toLowerCase() === deptName.toLowerCase()) return true;
             if (b.name && b.name.toLowerCase().includes(deptName.toLowerCase())) return true;
             if (b.teacherIds && b.teacherIds.length > 0) {
                 return b.teacherIds.some(t => t.departments && t.departments.some(d => d.toLowerCase() === deptName.toLowerCase()));

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useTheme } from '../../context/ThemeContext';
 import API_URL from '../../config';
 
-const ActivityHeatmap = () => {
+const ActivityHeatmap = ({ targetUserId = null }) => {
   const { isDark } = useTheme();
   const [heatmapData, setHeatmapData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,13 +11,22 @@ const ActivityHeatmap = () => {
 
   useEffect(() => {
     const fetchHeatmapData = async () => {
+      setLoading(true);
+      setHeatmapData([]);
+
       try {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        const res = await axios.get(`${API_URL}/api/progress/heatmap`, {
+        const requestConfig = {
           headers: { Authorization: `Bearer ${token}` }
-        });
+        };
+
+        if (targetUserId) {
+          requestConfig.params = { userId: targetUserId };
+        }
+
+        const res = await axios.get(`${API_URL}/api/progress/heatmap`, requestConfig);
 
         if (res.data.success) {
           setHeatmapData(res.data.data);
@@ -30,7 +39,7 @@ const ActivityHeatmap = () => {
     };
 
     fetchHeatmapData();
-  }, []);
+  }, [targetUserId]);
 
   // Auto-scroll to latest days
   useEffect(() => {

@@ -1,6 +1,7 @@
 const User = require('../../models/User');
 const Batch = require('../../models/Batch');
 const Department = require('../../models/Department');
+const Institute = require('../../models/Institute');
 const Assignment = require('../../models/Assignment');
 const AssignmentSubmission = require('../../models/AssignmentSubmission');
 const Announcement = require('../../models/Announcement');
@@ -96,9 +97,44 @@ exports.getRatings = async (req, res) => {
 // POST /api/teacher/batch
 exports.createBatch = async (req, res) => {
     try {
-        const { name, year, section, departmentId, subjectId } = req.body;
+        const { name, year, section, department, departmentId, subjectId } = req.body;
         if (!name) return res.status(400).json({ success: false, message: 'Batch name is required' });
         if (!req.user.instituteId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+
+        const institute = await Institute.findById(req.user.instituteId).select('departments');
+        if (!institute) {
+            return res.status(404).json({ success: false, message: 'Institute not found' });
+        }
+
+        const instituteDepartments = Array.isArray(institute.departments)
+            ? institute.departments
+                .map((dept) => (typeof dept === 'string' ? dept.trim() : ''))
+                .filter(Boolean)
+            : [];
+
+        if (instituteDepartments.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No institute departments configured. Please ask institute admin to add departments first.'
+            });
+        }
+
+        const requestedDepartment = typeof department === 'string' ? department.trim() : '';
+        if (!requestedDepartment) {
+            return res.status(400).json({ success: false, message: 'Department is required' });
+        }
+
+        const normalizedRequested = requestedDepartment.toLowerCase();
+        const matchedDepartment = instituteDepartments.find(
+            (dept) => dept.toLowerCase() === normalizedRequested
+        );
+
+        if (!matchedDepartment) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid department. Please select a department from your institute list.'
+            });
+        }
 
         // Generate a 6-digit unique class code
         let classCode;
@@ -112,6 +148,7 @@ exports.createBatch = async (req, res) => {
         const batch = await Batch.create({
             name, year, section,
             classCode,
+            department: matchedDepartment,
             departmentId: departmentId || req.user.departmentId || null,
             subjectId: subjectId || null,
             instituteId: req.user.instituteId,

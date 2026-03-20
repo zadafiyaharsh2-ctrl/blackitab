@@ -94,6 +94,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true
   }],
+  domainRatings: {
+    type: Map,
+    of: Number,
+    default: {}
+  },
 
   // --- TEACHER-SPECIFIC FIELDS ---
   departmentId: {

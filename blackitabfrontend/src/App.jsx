@@ -42,6 +42,15 @@ import ProblemChapters from './pages/student/ProblemChapters';
 import ProblemList from './pages/student/ProblemList';
 import ProblemDetail from './pages/student/ProblemDetail';
 import Profile from './pages/shared/Profile';
+import { useParams as useRouteParams } from 'react-router-dom';
+
+// Wrapper that gives Profile a unique key per userId so React fully remounts
+// it when navigating from one user's profile to another — preventing stale state.
+const ProfileWithKey = () => {
+  const { userId } = useRouteParams();
+  return <Profile key={userId || 'me'} />;
+};
+
 import LandingPage from './pages/public/LandingPage';
 import Theory from './pages/student/Theory';
 import SocialListPage from './pages/student/SocialListPage';
@@ -61,6 +70,7 @@ import StudentClasses from './pages/student/StudentClasses';
 import StudentClassDetail from './pages/student/StudentClassDetail';
 import StudentMaterialDetail from './pages/student/StudentMaterialDetail';
 import StudentAssignmentDetail from './pages/student/StudentAssignmentDetail';
+import StudentExamDetail from './pages/student/StudentExamDetail';
 import TeacherAssignmentDetail from './pages/TeacherAssignmentDetail';
 import TeacherTests from './pages/TeacherTests';
 import TeacherTestDetail from './pages/TeacherTestDetail';
@@ -502,7 +512,7 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Profile />
+                    <ProfileWithKey />
                   </MainLayout>
                 </ProtectedRoute>
               }
@@ -612,7 +622,65 @@ function App() {
               }
             />
 
+            {/* Student Exam Detail View */}
+            <Route
+              path="/classes/:classId/exam/:examId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <StudentExamDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
+            {/* Teacher Batches / Classrooms Route */}
+            <Route
+              path="/teacher/batches"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherClasses />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Batch Detail / Classroom Management Route */}
+            <Route
+              path="/teacher/batch/:batchId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherBatchDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Attendance Route */}
+            <Route
+              path="/teacher/attendance"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherAttendance />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Attendance Route */}
+            <Route
+              path="/teacher/attendance"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherAttendance />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
             {/* Study Content Route */}
             <Route
@@ -940,7 +1008,7 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout }) {
       };
       const label = Object.entries(pageNames).find(([k]) => location.pathname.startsWith(k));
       if (label) {
-        localStorage.setItem('blackitab_last_page', JSON.stringify({ path: location.pathname, label: label[1], time: Date.now() }));
+        localStorage.setItem('RANKLEN_last_page', JSON.stringify({ path: location.pathname, label: label[1], time: Date.now() }));
       }
     }
   }, [location.pathname]);
@@ -980,7 +1048,7 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout }) {
                <button onClick={() => setSidebarOpen(true)} className="p-2 bg-gray-100 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
                  <FaBars />
                </button>
-               <span className="font-bold text-lg text-gray-900 dark:text-white tracking-wide">Blackitab</span>
+               <span className="font-bold text-lg text-gray-900 dark:text-white tracking-wide">RANKLEN</span>
             </div>
         </div>
 

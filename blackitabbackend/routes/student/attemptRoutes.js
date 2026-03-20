@@ -5,5 +5,6 @@ const protect = require('../../middleware/auth');
 
 router.post('/submit', protect, attemptController.submitAttempt);
 router.get('/analytics', protect, attemptController.getDashboardAnalytics);
+router.get('/advanced-insights', protect, attemptController.getAdvancedInsights);
 
 module.exports = router;
