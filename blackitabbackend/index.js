@@ -224,6 +224,16 @@ app.get('/api/me', async (req, res) => {
 
 // --- Start Server ---
 
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use. Make sure no other process is running on this port, or set PORT in .env to a free port.`);
+    process.exit(1);
+  }
+
+  console.error('Server error:', err);
+  process.exit(1);
+});
+
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
   console.log(`MongoDB connection: ${process.env.MONGODB_URI || 'mongodb://localhost:27017/RANKLEN'}`);
