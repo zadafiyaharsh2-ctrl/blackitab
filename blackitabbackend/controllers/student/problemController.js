@@ -4,6 +4,12 @@ const ExamQuestion = require('../../models/ExamQuestion');
 const ProblemChapter = require('../../models/ProblemChapter');
 const Problem = require('../../models/Problem');
 const ProblemProgress = require('../../models/ProblemProgress');
+const {
+    BASE_ELO,
+    toMap,
+    normalizeDomainKey,
+    getDomainDecaySnapshot,
+} = require('../../services/eloDecayService');
 
 // GET /api/problems/subjects — all problem subjects
 exports.getProblemSubjects = async (req, res) => {
@@ -268,6 +274,10 @@ exports.getExamQuestions = async (req, res) => {
             .sort({ createdAt: -1 });
 
         let questionsWithAttempts = questions.map(q => q.toObject());
+        let responseMeta = {
+            source: source === 'institute' ? 'institute' : 'global',
+            adaptiveRanking: 'createdAt',
+        };
 
         // Merge User Attempts if available
         if (req.user) {
@@ -281,9 +291,10 @@ exports.getExamQuestions = async (req, res) => {
             // Map the latest attempt for each question
             const attemptMap = {};
             userAttempts.forEach(attempt => {
-                if (!attemptMap[attempt.questionId]) {
+                const questionKey = attempt.questionId.toString();
+                if (!attemptMap[questionKey]) {
                     // Only store the latest attempt for O(1) lookup
-                    attemptMap[attempt.questionId] = {
+                    attemptMap[questionKey] = {
                         isCorrect: attempt.isCorrect,
                         selectedOption: attempt.selectedOption,
                         attemptedAt: attempt.attemptedAt
@@ -291,13 +302,69 @@ exports.getExamQuestions = async (req, res) => {
                 }
             });
 
+            const domainRatingsMap = toMap(req.user.domainRatings);
+            const domainLastAttemptedMap = toMap(req.user.domainLastAttemptedAt);
+            const domainDecayCache = new Map();
+
+            const getDomainDecay = (domainName) => {
+                const key = normalizeDomainKey(domainName);
+                if (!key) return null;
+
+                if (!domainDecayCache.has(key)) {
+                    domainDecayCache.set(key, getDomainDecaySnapshot({
+                        domainName,
+                        domainRatings: domainRatingsMap,
+                        domainLastAttemptedAt: domainLastAttemptedMap,
+                        fallbackLastAttemptedAt: req.user.lastActiveDate,
+                    }));
+                }
+
+                return domainDecayCache.get(key);
+            };
+
             questionsWithAttempts = questionsWithAttempts.map(q => ({
                 ...q,
-                userAttempt: attemptMap[q._id] || null
+                userAttempt: attemptMap[q._id.toString()] || null,
+                effectiveUserElo: getDomainDecay(q.subject)?.effectiveElo || BASE_ELO,
+                eloGap: (() => {
+                    const domainDecay = getDomainDecay(q.subject);
+                    if (!domainDecay) return null;
+                    const questionElo = Number.isFinite(Number(q.eloRating)) ? Number(q.eloRating) : BASE_ELO;
+                    return Math.round(Math.abs(questionElo - domainDecay.effectiveEloRaw));
+                })(),
             }));
+
+            const decayCandidates = Array.from(domainDecayCache.values());
+
+            // Prioritize unseen questions nearest to the student's effective Elo.
+            questionsWithAttempts.sort((a, b) => {
+                const aAttempted = a.userAttempt ? 1 : 0;
+                const bAttempted = b.userAttempt ? 1 : 0;
+                if (aAttempted !== bAttempted) return aAttempted - bAttempted;
+
+                const aGap = Number.isFinite(a.eloGap) ? a.eloGap : Number.MAX_SAFE_INTEGER;
+                const bGap = Number.isFinite(b.eloGap) ? b.eloGap : Number.MAX_SAFE_INTEGER;
+                if (aGap !== bGap) return aGap - bGap;
+
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+
+            const prioritizedSubjectHealth = subject
+                ? getDomainDecay(subject)
+                : [...decayCandidates].sort((a, b) => {
+                    if (b.eloLoss !== a.eloLoss) return b.eloLoss - a.eloLoss;
+                    return b.inactivityDays - a.inactivityDays;
+                })[0] || null;
+
+            responseMeta = {
+                ...responseMeta,
+                adaptiveRanking: 'effective-elo',
+                subjectHealth: prioritizedSubjectHealth,
+                decayedDomains: decayCandidates.filter((item) => item.status !== 'healthy').length,
+            };
         }
 
-        res.json({ success: true, data: questionsWithAttempts });
+        res.json({ success: true, data: questionsWithAttempts, meta: responseMeta });
     } catch (err) {
         console.error('getExamQuestions Error:', err);
         res.status(500).json({ success: false, message: 'Server Error', error: err.message, stack: err.stack });
