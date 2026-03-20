@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaTimes, FaSearch, FaUserPlus, FaBell, FaCheck, FaBan, FaReply } from 'react-icons/fa';
+import { FaTimes, FaSearch, FaUserPlus, FaBell, FaCheck, FaBan, FaReply, FaExternalLinkAlt } from 'react-icons/fa';
 
 const ModalBackdrop = ({ children, onClose }) => (
   <motion.div 
@@ -37,19 +37,26 @@ const ModalContent = ({ children, title, onClose, maxWidth = "max-w-md" }) => (
   </motion.div>
 );
 
-export const SearchModal = ({ isOpen, onClose, query, setQuery, onSearch, results, onFollow, currentUserId }) => {
+const roleColor = (role) => {
+  if (role === 'teacher') return 'bg-purple-100 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300';
+  if (role === 'hod') return 'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300';
+  if (role === 'institute') return 'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300';
+  return 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300';
+};
+
+export const SearchModal = ({ isOpen, onClose, query, setQuery, onSearch, results, onFollow, currentUserId, onViewProfile }) => {
   return (
     <AnimatePresence>
       {isOpen && (
         <ModalBackdrop onClose={onClose}>
-          <ModalContent title="Discover People" onClose={onClose} maxWidth="max-w-lg">
+          <ModalContent title="Find People" onClose={onClose} maxWidth="max-w-lg">
             <div className="p-4 border-b border-gray-200 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900/95 z-10 backdrop-blur">
                <form onSubmit={onSearch} className="relative">
-                  <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400" />
+                  <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input 
                     type="text" 
                     placeholder="Search by name or email..." 
-                    className="w-full bg-black/40 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-gray-500"
+                    className="w-full bg-gray-50 dark:bg-black/40 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-gray-400"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     autoFocus
@@ -67,7 +74,7 @@ export const SearchModal = ({ isOpen, onClose, query, setQuery, onSearch, result
                {results.length === 0 && !query && (
                    <div className="flex flex-col items-center justify-center py-10 text-gray-500">
                        <FaUserPlus size={40} className="mb-4 opacity-20" />
-                       <p>Type to search for friends</p>
+                       <p className="text-sm">Search by name or email address</p>
                    </div>
                )}
                
@@ -78,41 +85,61 @@ export const SearchModal = ({ isOpen, onClose, query, setQuery, onSearch, result
                      key={u._id} 
                      initial={{ opacity: 0, x: -20 }}
                      animate={{ opacity: 1, x: 0 }}
-                     className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 dark:bg-white/5 transition-colors group"
+                     className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group"
                    >
-                      <div className="flex items-center gap-3">
-                         <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm shadow-sm overflow-hidden">
+                      <div
+                        className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                        onClick={() => onViewProfile && onViewProfile(u._id)}
+                      >
+                         <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm shadow-sm overflow-hidden shrink-0">
                             {u.profileImage ? (
                                 <img src={u.profileImage} alt={u.name} className="w-full h-full object-cover" />
                             ) : (
-                                u.name.charAt(0).toUpperCase()
+                                u.name?.charAt(0).toUpperCase()
                             )}
                          </div>
-                         <div>
-                            {/* If we had handle or bio, show here */}
-                            <div className="font-semibold text-gray-900 dark:text-white">{u.name}</div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400">{u.followerCount || 0} followers</div> 
+                         <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold text-gray-900 dark:text-white truncate">{u.name}</span>
+                              {u.role && (
+                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${roleColor(u.role)}`}>
+                                  {u.role}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{u.email}</div>
                          </div>
                       </div>
                       
-                       {currentUserId !== u._id && (
-                         u.isFollowing ? (
-                            <button className="px-4 py-1.5 rounded-full border border-gray-600 text-gray-600 dark:text-gray-400 text-sm font-medium transition-all cursor-default">
-                                Following
-                            </button>
-                         ) : u.isRequested ? (
-                            <button className="px-4 py-1.5 rounded-full border border-gray-600 text-gray-500 text-sm font-medium transition-all cursor-not-allowed">
-                                Requested
-                            </button>
-                         ) : (
-                            <button 
-                                 onClick={() => onFollow(u._id)}
-                                 className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-blue-600 text-sm font-medium transition-all text-gray-900 dark:text-white border border-gray-300 dark:border-white/10 hover:border-transparent"
-                            >
-                                Follow
-                            </button>
-                         )
-                       )}
+                       <div className="flex items-center gap-2 shrink-0 ml-2">
+                         {String(currentUserId) !== String(u._id) && (
+                           u.isFollowing ? (
+                              <button className="px-3 py-1.5 rounded-full border border-gray-300 dark:border-gray-600 text-gray-500 text-xs font-medium cursor-default">
+                                  Following
+                              </button>
+                           ) : u.isRequested ? (
+                              <button className="px-3 py-1.5 rounded-full border border-gray-300 dark:border-gray-600 text-gray-400 text-xs font-medium cursor-not-allowed">
+                                  Requested
+                              </button>
+                           ) : (
+                              <button 
+                                   onClick={() => onFollow(u._id)}
+                                   className="px-3 py-1.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition-all shadow-sm"
+                              >
+                                  Follow
+                              </button>
+                           )
+                         )}
+                         {onViewProfile && (
+                           <button
+                             onClick={() => onViewProfile(u._id)}
+                             className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors"
+                             title="View profile"
+                           >
+                             <FaExternalLinkAlt size={11} />
+                           </button>
+                         )}
+                       </div>
                    </motion.div>
                  ))}
                </div>

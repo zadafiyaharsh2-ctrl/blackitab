@@ -4,6 +4,7 @@ const multer = require('multer');
 const Post = require('../../models/Post');
 const User = require('../../models/User');
 const Playlist = require('../../models/Playlist');
+const Connection = require('../../models/Connection');
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -108,30 +109,55 @@ exports.getFeedParams = async (req, res) => {
 // GET /api/posts/user/:userId — posts by user (with privacy check)
 exports.getUserPosts = async (req, res) => {
     try {
-        const targetUser = await User.findById(req.params.userId);
+        const targetUserId = req.params.userId;
+        const viewerId = req.user._id.toString();
+        const isOwnProfile = viewerId === targetUserId;
+
+        const targetUser = await User.findById(targetUserId).select('isPrivate');
         if (!targetUser) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        // Privacy: only show posts if public, self, or accepted follower
-        if (targetUser.isPrivate && req.params.userId !== req.user._id.toString()) {
-            const isFollowing = await require('../../models/Connection').exists({
+        let isAcceptedFollower = false;
+        if (!isOwnProfile) {
+            isAcceptedFollower = !!(await Connection.exists({
                 sourceUserId: req.user._id,
-                targetUserId: req.params.userId,
-                connectionType: 'follow'
-            });
-
-            if (!isFollowing) {
-                return res.json({ success: true, data: [], isPrivate: true, message: 'This account is private.' });
-            }
+                targetUserId,
+                connectionType: 'follow',
+                status: 'accepted'
+            }));
         }
 
-        const posts = await Post.find({ user: req.params.userId })
+        const canViewPosts = isOwnProfile || !targetUser.isPrivate || isAcceptedFollower;
+
+        if (!canViewPosts) {
+            return res.json({
+                success: true,
+                data: [],
+                isPrivate: true,
+                canViewPosts: false,
+                isOwnProfile,
+                message: 'This account is private.'
+            });
+        }
+
+        const query = { user: targetUserId };
+        if (!isOwnProfile) {
+            query.contentType = 'post';
+        }
+
+        const posts = await Post.find(query)
             .populate('user', 'name profileImage')
             .populate('comments.user', 'name profileImage')
             .sort({ createdAt: -1 });
 
-        res.json({ success: true, data: posts });
+        res.json({
+            success: true,
+            data: posts,
+            isPrivate: !!targetUser.isPrivate,
+            canViewPosts: true,
+            isOwnProfile
+        });
     } catch (err) {
         
         res.status(500).json({ success: false, message: 'Server Error' });

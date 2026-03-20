@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { FaEnvelope, FaWallet, FaPlusSquare, FaUser, FaBars, FaStar, FaBell, FaBook } from 'react-icons/fa';
+import { FaEnvelope, FaWallet, FaPlusSquare, FaBars, FaStar, FaBell, FaBook } from 'react-icons/fa';
 import { useTheme } from '../../context/ThemeContext';
 import Logo from '../shared/Logo';
 
@@ -7,14 +7,11 @@ const SocialSidebar = ({ onLogout, isOpen, setIsOpen, user, leftOffset = 0 }) =>
   const location = useLocation();
   const { isDark } = useTheme();
 
-  const userId = user?._id || user?.id;
-
   const navItems = [
     { path: '/dashboard', label: 'Switch to Learning', icon: <FaBook className="text-blue-500" /> },
     { path: '/notifications', label: 'Notifications', icon: <FaBell /> },
     { path: '/messages', label: 'Message', icon: <FaEnvelope /> },
     { path: '/create-post', label: 'Add Post', icon: <FaPlusSquare /> },
-    { path: '/profile', label: 'Profile', icon: <FaUser /> },
   ];
 
   return (

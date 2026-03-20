@@ -50,6 +50,20 @@ or for development:
 npm run dev
 ```
 
+### 5. Seed Theory Page Dummy Data
+
+To populate the student Theory page with demo subjects, topics, and full content blocks:
+
+```bash
+npm run seed:theory
+```
+
+To reset only theory-related collections (`Subject`, `Topic`, `FullTopicData`) before seeding:
+
+```bash
+npm run seed:theory:reset
+```
+
 ## API Endpoints
 
 ### POST /api/register

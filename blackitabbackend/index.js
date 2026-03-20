@@ -182,7 +182,7 @@ app.get("/api/me", async (req, res) => {
 
     // Populate institute info if user belongs to one
     let instituteInfo = null;
-    const isPrivileged = ["institute", "hod"].includes(user.role);
+    const isPrivileged = ['institute', 'hod'].includes(user.role);
 
     if (user.instituteId) {
       const Institute = require("./models/Institute");
@@ -190,15 +190,17 @@ app.get("/api/me", async (req, res) => {
         "name instituteCode description bannerImage",
       );
       if (inst) {
-        instituteInfo = {
-          _id: inst._id,
-          name: inst.name,
-          instituteCode: isPrivileged ? inst.instituteCode : undefined,
-          description: inst.description,
-          bannerImage: inst.bannerImage,
+        instituteInfo = { 
+          _id: inst._id, 
+          name: inst.name, 
+          instituteCode: isPrivileged ? inst.instituteCode : undefined, 
+          description: inst.description, 
+          bannerImage: inst.bannerImage 
         };
       }
     }
+
+    const userObject = user.toObject();
 
     res.json({
       success: true,
@@ -225,8 +227,8 @@ app.get("/api/me", async (req, res) => {
         streak: user.streak,
         followerCount: user.followerCount || 0,
         followingCount: user.followingCount || 0,
-        subscriberCount: user.subscriberCount || 0,
-      },
+        subscriberCount: user.subscriberCount || 0
+      }
     });
   } catch (error) {
     if (

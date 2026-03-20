@@ -1083,6 +1083,7 @@ exports.getDepartmentDetails = async (req, res) => {
         // B) The teacher of the batch has this department in their `departments` array.
         // C) The batch's name includes the department name (heuristic fallback).
         const departmentBatches = batches.filter(b => {
+            if (b.department && b.department.toLowerCase() === deptName.toLowerCase()) return true;
             if (b.name && b.name.toLowerCase().includes(deptName.toLowerCase())) return true;
             if (b.teacherIds && b.teacherIds.length > 0) {
                 return b.teacherIds.some(t => t.departments && t.departments.some(d => d.toLowerCase() === deptName.toLowerCase()));

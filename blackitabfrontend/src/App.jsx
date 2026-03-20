@@ -42,6 +42,15 @@ import ProblemChapters from './pages/student/ProblemChapters';
 import ProblemList from './pages/student/ProblemList';
 import ProblemDetail from './pages/student/ProblemDetail';
 import Profile from './pages/shared/Profile';
+import { useParams as useRouteParams } from 'react-router-dom';
+
+// Wrapper that gives Profile a unique key per userId so React fully remounts
+// it when navigating from one user's profile to another — preventing stale state.
+const ProfileWithKey = () => {
+  const { userId } = useRouteParams();
+  return <Profile key={userId || 'me'} />;
+};
+
 import LandingPage from './pages/public/LandingPage';
 import Theory from './pages/student/Theory';
 import SocialListPage from './pages/student/SocialListPage';
@@ -61,6 +70,7 @@ import StudentClasses from './pages/student/StudentClasses';
 import StudentClassDetail from './pages/student/StudentClassDetail';
 import StudentMaterialDetail from './pages/student/StudentMaterialDetail';
 import StudentAssignmentDetail from './pages/student/StudentAssignmentDetail';
+import StudentExamDetail from './pages/student/StudentExamDetail';
 import TeacherAssignmentDetail from './pages/TeacherAssignmentDetail';
 import TeacherTests from './pages/TeacherTests';
 import TeacherTestDetail from './pages/TeacherTestDetail';
@@ -499,7 +509,7 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Profile />
+                    <ProfileWithKey />
                   </MainLayout>
                 </ProtectedRoute>
               }
@@ -604,6 +614,18 @@ function App() {
                 <ProtectedRoute>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <StudentAssignmentDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Student Exam Detail View */}
+            <Route
+              path="/classes/:classId/exam/:examId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <StudentExamDetail />
                   </MainLayout>
                 </ProtectedRoute>
               }

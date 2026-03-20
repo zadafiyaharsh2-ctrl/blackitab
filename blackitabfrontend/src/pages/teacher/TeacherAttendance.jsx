@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+// import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { toast, Toaster } from 'react-hot-toast';
 import {
-  FaCheckCircle, FaTimesCircle, FaClock, FaCalendarDay,
-  FaSave, FaHistory, FaArrowLeft, FaSpinner, FaChevronRight,
-  FaUsers, FaTable, FaPen, FaChevronLeft, FaCalendarAlt,
-  FaInfoCircle, FaBan
+  FaCalendarDay,
+  FaSave, FaHistory, FaArrowLeft, FaSpinner, FaSearch,
+  FaUsers, FaDownload, FaTable, FaPen, FaChevronLeft, FaChevronRight,
+  FaCalendarAlt, FaInfoCircle, FaBan, FaCheckCircle, FaTimesCircle, FaClock
 } from 'react-icons/fa';
+import * as XLSX from 'xlsx';
 import API from '../../config';
 import AttendanceGrid from '../../components/shared/AttendanceGrid';
 
@@ -20,55 +22,85 @@ export default function TeacherAttendance() {
   const [batches, setBatches] = useState([]);
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [students, setStudents] = useState([]);
+  
+  // View states
   const [viewMode, setViewMode] = useState('take'); // 'take' | 'history' | 'grid'
+  const [selectedHistory, setSelectedHistory] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
+  const filteredStudents = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return students;
+    return students.filter((student) =>
+      student.name?.toLowerCase().includes(query) || student.email?.toLowerCase().includes(query)
+    );
+  }, [students, searchQuery]);
+
+  // Date handling
   const getLocalDateString = (offset = 0) => {
     const d = new Date();
     d.setDate(d.getDate() + offset);
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
     return d.toISOString().split('T')[0];
   };
-
   const [attendanceDate, setAttendanceDate] = useState(getLocalDateString());
+  
+  // Data states
   const [attendanceState, setAttendanceState] = useState({});
   const [historyRecords, setHistoryRecords] = useState([]);
-  const [selectedHistory, setSelectedHistory] = useState(null);
   const [loadingBatches, setLoadingBatches] = useState(true);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [existingRecord, setExistingRecord] = useState(false); // true if editing an existing date
 
   const token = localStorage.getItem('token');
-  const headers = { Authorization: `Bearer ${token}` };
+  const headers = useMemo(() => (
+    token ? { Authorization: `Bearer ${token}` } : {}
+  ), [token]);
 
-  useEffect(() => { fetchBatches(); }, []);
+  const toLocalDateInputValue = useCallback((value) => {
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return getLocalDateString();
+    parsed.setMinutes(parsed.getMinutes() - parsed.getTimezoneOffset());
+    return parsed.toISOString().split('T')[0];
+  }, []);
 
-  const fetchBatches = async () => {
+  const normalizeStudent = useCallback((student) => {
+    if (!student) return null;
+    if (typeof student === 'string') {
+      return { _id: student, name: 'Unknown Student', email: '' };
+    }
+
+    const id = student._id || student.id;
+    if (!id) return null;
+
+    return {
+      _id: id,
+      name: student.name || 'Unknown Student',
+      email: student.email || ''
+    };
+  }, []);
+
+  const fetchBatches = useCallback(async () => {
     try {
       setLoadingBatches(true);
       const res = await axios.get(`${API}/api/teacher/batches`, { headers });
-      setBatches(res.data.data);
+      const batchData = Array.isArray(res.data?.data) ? res.data.data : [];
+      setBatches(batchData);
     } catch {
-      setBatches([
-        { _id: 'b1', name: 'CS101 - Morning', year: '1st Year', section: 'A' },
-        { _id: 'b2', name: 'CS202 - Evening', year: '2nd Year', section: 'B' }
-      ]);
-      toast.error('Could not load classes. Using offline mode.');
+      toast.error('Failed to load classes.');
     } finally {
       setLoadingBatches(false);
     }
-  };
+  }, [headers]);
 
-  useEffect(() => {
-    if (selectedBatch && viewMode === 'take') fetchStudents(selectedBatch._id, attendanceDate);
-  }, [selectedBatch, viewMode, attendanceDate]);
-
-  const fetchStudents = async (batchId, date) => {
+  const fetchStudents = useCallback(async (batchId, date) => {
     try {
       setLoadingStudents(true);
       setExistingRecord(false);
       const studentRes = await axios.get(`${API}/api/teacher/batch/${batchId}`, { headers });
-      const studentData = studentRes.data.data.studentIds || [];
+      const rawStudentData = Array.isArray(studentRes.data?.data?.studentIds) ? studentRes.data.data.studentIds : [];
+      const studentData = rawStudentData.map(normalizeStudent).filter(Boolean);
       setStudents(studentData);
 
       // Check if attendance already exists for this date
@@ -79,46 +111,71 @@ export default function TeacherAttendance() {
           savedRecords = histRes.data.data[0].records;
           setExistingRecord(true);
         }
-      } catch (err) {
-        console.error("Could not fetch day history", err);
+      } catch (error) {
+        // No history for this date yet, which is fine.
       }
 
+      // Initialize state: use saved record if exists, otherwise default to Present
       const init = {};
-      studentData.forEach(s => {
-        const existing = savedRecords.find(r => r.studentId?._id === s._id || r.studentId === s._id);
+      studentData.forEach((s) => {
+        const existing = savedRecords.find((r) => {
+          const recordStudentId = typeof r.studentId === 'object' ? r.studentId?._id : r.studentId;
+          return String(recordStudentId) === String(s._id);
+        });
         init[s._id] = existing ? existing.status : 'Present';
       });
       setAttendanceState(init);
-    } catch {
-      setStudents(DUMMY_STUDENTS);
-      const init = {};
-      DUMMY_STUDENTS.forEach(s => { init[s._id] = 'Present'; });
-      setAttendanceState(init);
-      toast.error('Could not load students. Using demo data.');
+    } catch (error) {
+      toast.error('Failed to load students.');
     } finally {
       setLoadingStudents(false);
     }
-  };
+  }, [headers]);
 
   useEffect(() => {
     if (selectedBatch && (viewMode === 'history' || viewMode === 'grid')) fetchHistory(selectedBatch._id);
   }, [selectedBatch, viewMode]);
 
-  const fetchHistory = async (batchId) => {
+  const getStatusPillClass = (status) => {
+    switch (status) {
+      case 'Present': return 'border-emerald-500 bg-emerald-100 text-emerald-700';
+      case 'Absent': return 'border-red-500 bg-red-100 text-red-700';
+      case 'Late': return 'border-amber-500 bg-amber-100 text-amber-700';
+      case 'No Class': return 'border-gray-500 bg-gray-100 text-gray-700';
+      default: return 'border-gray-300 bg-gray-50 text-gray-600';
+    }
+  };
+
+  const fetchHistory = useCallback(async (batchId) => {
     try {
       setLoadingStudents(true);
       const res = await axios.get(`${API}/api/teacher/attendance/${batchId}`, { headers });
-      setHistoryRecords(res.data.data);
-    } catch {
-      toast.error('Failed to load attendance history.');
+      const history = Array.isArray(res.data?.data) ? res.data.data : [];
+      setHistoryRecords(history);
+    } catch (error) {
+      toast.error('Failed to load session logs.');
     } finally {
       setLoadingStudents(false);
     }
-  };
+  }, [headers]);
+
+  // Initial load
+  useEffect(() => { 
+    fetchBatches(); 
+  }, [fetchBatches]);
+
+  // Fetch data based on mode and batch selection
+  useEffect(() => {
+    if (selectedBatch) {
+      if (viewMode === 'take') fetchStudents(selectedBatch._id, attendanceDate);
+      if (viewMode === 'history') fetchHistory(selectedBatch._id);
+    }
+  }, [selectedBatch, viewMode, attendanceDate, fetchStudents, fetchHistory]);
 
   const submitAttendance = async () => {
     if (!selectedBatch) return;
     const records = students.map(s => ({ studentId: s._id, status: attendanceState[s._id] || 'Present' }));
+    
     try {
       setSubmitting(true);
       await axios.post(`${API}/api/teacher/attendance`, { classId: selectedBatch._id, date: attendanceDate, records }, { headers });
@@ -193,30 +250,33 @@ export default function TeacherAttendance() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-5">
       <Toaster position="bottom-right" />
 
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          {selectedBatch && (
-            <button
-              onClick={() => { setSelectedBatch(null); setSelectedHistory(null); }}
-              className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
-            >
-              <FaArrowLeft className="text-sm" />
-            </button>
-          )}
+      <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <FaCalendarDay className="text-gray-400" />
-              {selectedBatch ? selectedBatch.name : 'Attendance'}
-            </h1>
-            {selectedBatch && (
-              <p className="text-sm text-gray-500 mt-0.5">{selectedBatch.year} · Section {selectedBatch.section}</p>
-            )}
+            <div className="flex items-center gap-2">
+              {selectedBatch && (
+                <button
+                  onClick={() => {
+                    setSelectedBatch(null);
+                    setSelectedHistory(null);
+                  }}
+                  className="p-2 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5"
+                >
+                  <FaArrowLeft className="text-sm" />
+                </button>
+              )}
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <FaCalendarDay className="text-gray-400" />
+                {selectedBatch ? selectedBatch.name : 'Attendance'}
+              </h1>
+            </div>
+            <p className="text-sm text-gray-500 mt-1">
+              {selectedBatch ? `${selectedBatch.year} · Section ${selectedBatch.section}` : 'Select a class to start taking attendance.'}
+            </p>
           </div>
-        </div>
 
         {selectedBatch && (
           <div className="flex border border-gray-200 dark:border-white/10 rounded-lg overflow-hidden">
@@ -241,8 +301,8 @@ export default function TeacherAttendance() {
           </div>
         )}
       </div>
+      </div>
 
-      {/* ── Batch Selection ── */}
       {!selectedBatch ? (
         <div>
           {loadingBatches ? (
@@ -276,7 +336,7 @@ export default function TeacherAttendance() {
         <div className="space-y-5">
 
           {/* ── Take / Edit Attendance Mode ── */}
-          {viewMode === 'take' && (
+          {viewMode === 'take' ? (
             <>
               {/* Date Navigator */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.02]">
@@ -347,12 +407,12 @@ export default function TeacherAttendance() {
                   <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{presentCount}</p>
                   <p className="text-xs text-gray-500 mt-1">Present</p>
                 </div>
-                <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 text-center">
-                  <p className="text-2xl font-bold text-red-500 dark:text-red-400">{absentCount}</p>
+                <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] text-center">
+                  <p className="text-xl font-bold text-red-600 dark:text-red-400">{absentCount}</p>
                   <p className="text-xs text-gray-500 mt-1">Absent</p>
                 </div>
-                <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 text-center">
-                  <p className="text-2xl font-bold text-amber-500 dark:text-amber-400">{lateCount}</p>
+                <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] text-center">
+                  <p className="text-xl font-bold text-amber-600 dark:text-amber-400">{lateCount}</p>
                   <p className="text-xs text-gray-500 mt-1">Late</p>
                 </div>
                 <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 text-center">
@@ -369,6 +429,7 @@ export default function TeacherAttendance() {
                   <p className="text-gray-500 text-sm">No students enrolled in this batch yet.</p>
                 </div>
               ) : (
+                <>
                 <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02] shadow-sm">
                   {/* Action Bar */}
                   <div className="px-4 py-3 border-b border-gray-100 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50/50 dark:bg-white/[0.01]">
@@ -488,33 +549,90 @@ export default function TeacherAttendance() {
                       )}
                     </p>
                     <button
-                      onClick={submitAttendance}
-                      disabled={submitting}
-                      className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 shadow-lg shadow-gray-900/20 dark:bg-white dark:shadow-white/10 text-white dark:text-gray-900 text-sm font-semibold rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 disabled:opacity-50 transition-all hover:-translate-y-0.5"
+                    onClick={submitAttendance}
+                    disabled={submitting}
+                    className="flex-1 lg:flex-none px-3 py-2 text-xs border border-gray-200 dark:border-white/10 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 disabled:cursor-not-allowed"
                     >
                       {submitting ? <FaSpinner className="animate-spin" /> : <FaSave />}
                       {submitting ? 'Saving…' : existingRecord ? 'Update Attendance' : 'Save Attendance'}
                     </button>
                   </div>
+
+                  <button
+                    onClick={submitAttendance}
+                    disabled={submitting}
+                    className="w-full lg:w-auto lg:ml-auto px-4 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {submitting ? <FaSpinner className="animate-spin" /> : <FaSave className="text-xs" />}
+                    Save Attendance
+                  </button>
                 </div>
+
+              <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
+                <div className="px-4 py-3 border-b border-gray-200 dark:border-white/10">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Class Roster</p>
+                </div>
+
+                {loadingStudents ? (
+                  <div className="py-16 text-center"><FaSpinner className="animate-spin text-2xl text-gray-400 mx-auto" /></div>
+                ) : filteredStudents.length === 0 ? (
+                  <div className="py-12 text-center text-sm text-gray-500">No students found in this roster.</div>
+                ) : (
+                  <div className="divide-y divide-gray-200 dark:divide-white/10 max-h-[560px] overflow-y-auto custom-scrollbar">
+                    {filteredStudents.map((student, index) => {
+                      const status = attendanceState[student._id] || 'Present';
+                      return (
+                        <div key={student._id} className="px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-gray-50 dark:hover:bg-white/[0.04]">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                              {index + 1}. {student.name || 'Unknown Student'}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">{student.email || 'No email'}</p>
+                          </div>
+
+                          <div className="flex gap-2 w-full sm:w-auto">
+                            <button
+                              onClick={() => setAttendanceState(prev => ({ ...prev, [student._id]: 'Present' }))}
+                              className={`flex-1 sm:flex-none px-3 py-1.5 text-xs border rounded-md transition-colors ${status === 'Present' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                            >
+                              Present
+                            </button>
+                            <button
+                              onClick={() => setAttendanceState(prev => ({ ...prev, [student._id]: 'Absent' }))}
+                              className={`flex-1 sm:flex-none px-3 py-1.5 text-xs border rounded-md transition-colors ${status === 'Absent' ? 'bg-red-500 border-red-500 text-white' : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                            >
+                              Absent
+                            </button>
+                            <button
+                              onClick={() => setAttendanceState(prev => ({ ...prev, [student._id]: 'Late' }))}
+                              className={`flex-1 sm:flex-none px-3 py-1.5 text-xs border rounded-md transition-colors ${status === 'Late' ? 'bg-amber-500 border-amber-500 text-white' : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                            >
+                              Late
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+                </>
               )}
             </>
-          )}
-
-          {/* ── History Mode ── */}
-          {viewMode === 'history' && (
-            <div className="space-y-4">
+          ) : viewMode === 'history' ? (
+            <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] min-h-[420px]">
               {!selectedHistory ? (
                 <>
                   <p className="text-sm text-gray-500">Past attendance records for this class. Click <strong>Edit</strong> to modify any record.</p>
                   {loadingStudents ? (
-                    <div className="flex justify-center py-12"><FaSpinner className="animate-spin text-2xl text-gray-400" /></div>
+                    <div className="py-14 text-center"><FaSpinner className="animate-spin text-2xl text-gray-400 mx-auto" /></div>
                   ) : historyRecords.length === 0 ? (
-                    <div className="text-center py-12 border border-dashed border-gray-200 dark:border-white/10 rounded-xl">
-                      <p className="text-gray-500 text-sm">No records yet. Take attendance first.</p>
+                    <div className="py-14 text-center border border-dashed border-gray-200 dark:border-white/10 rounded-xl">
+                      <FaHistory className="text-3xl text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                      <p className="text-sm text-gray-500">No past attendance records found.</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="divide-y divide-gray-200 dark:divide-white/10">
                       {historyRecords.map(record => {
                         const d = new Date(record.date);
                         const presentN = record.records.filter(r => r.status === 'Present').length;
@@ -589,24 +707,34 @@ export default function TeacherAttendance() {
                       const count = selectedHistory.records.filter(r => r.status === stat).length;
                       const cfg = statusConfig[stat];
                       return (
-                        <div key={stat} className={`border rounded-xl p-4 text-center ${cfg.cls}`}>
-                          <p className="text-2xl font-bold">{count}</p>
-                          <p className="text-xs mt-1 opacity-75">{stat}</p>
+                        <div key={stat} className="border border-gray-200 dark:border-white/10 rounded-xl p-4 text-center bg-white dark:bg-white/[0.02]">
+                          <p className="text-xl font-bold text-gray-900 dark:text-white">{count}</p>
+                          <p className="text-xs text-gray-500 mt-1">{stat}</p>
                         </div>
                       );
                     })}
                   </div>
 
                   <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
-                    <div className="divide-y divide-gray-100 dark:divide-white/5">
-                      {selectedHistory.records.map((record, i) => {
-                        const cfg = statusConfig[record.status] || statusConfig['Present'];
+                    <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-gray-200 dark:border-white/10 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                      <p className="col-span-5">Student</p>
+                      <p className="col-span-4">Email</p>
+                      <p className="col-span-3 text-right">Status</p>
+                    </div>
+
+                    <div className="divide-y divide-gray-200 dark:divide-white/10 max-h-[500px] overflow-y-auto custom-scrollbar">
+                      {(selectedHistory?.records || []).map((record, index) => {
                         return (
-                          <div key={i} className="flex items-center justify-between px-4 py-3">
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">{record.studentId?.name || 'Unknown'}</p>
-                            <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold ${cfg.cls}`}>
-                              {cfg.icon} {record.status}
-                            </span>
+                          <div key={`${record.studentId?._id || 'row'}-${index}`} className="grid grid-cols-12 gap-2 px-4 py-3 text-sm">
+                            <p className="col-span-5 font-medium text-gray-900 dark:text-white truncate">
+                              {index + 1}. {record.studentId?.name || 'Unknown Student'}
+                            </p>
+                            <p className="col-span-4 text-gray-500 truncate">{record.studentId?.email || 'No email'}</p>
+                            <div className="col-span-3 flex justify-end">
+                              <span className={`px-2 py-0.5 text-xs rounded-md border font-medium ${getStatusPillClass(record.status)}`}>
+                                {record.status || 'Unknown'}
+                              </span>
+                            </div>
                           </div>
                         );
                       })}
@@ -615,7 +743,7 @@ export default function TeacherAttendance() {
                 </div>
               )}
             </div>
-          )}
+          ) : null}
 
           {/* ── Grid / Register Mode ── */}
           {viewMode === 'grid' && (
