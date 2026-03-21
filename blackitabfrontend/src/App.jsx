@@ -15,6 +15,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { FaBars } from 'react-icons/fa';
 
 // Import centralized configuration (API URL)
 import API_URL from './config';
@@ -28,46 +29,87 @@ import { SocketContextProvider } from './context/SocketContext';
 // ============================================================================
 // IMPORT PAGES
 // ============================================================================
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
-import Social from './pages/Social';
-// import AI from './pages/AI';
-import AskAI from './pages/AskAI';
-import Analytics from './pages/Analytics';
-import SchoolAnalytics from './pages/SchoolAnalytics';
-import Problems from './pages/Problems';
-import Contest from './pages/Contest';
-import ProblemChapters from './pages/ProblemChapters';
-import ProblemList from './pages/ProblemList';
-import ProblemDetail from './pages/ProblemDetail';
-import Profile from './pages/Profile';
-import LandingPage from './pages/LandingPage';
-import Theory from './pages/Theory';
-import SocialListPage from './pages/SocialListPage';
-import Messages from './pages/Messages';
-import Notifications from './pages/Notifications';
-import CreatePost from './pages/CreatePost';
-import StudyContent from './pages/StudyContent';
-import ContentDetail from './pages/ContentDetail';
-import AIQuestionGenerator from './pages/AIQuestionGenerator';
-import ExamQuestions from './pages/ExamQuestions';
-import Leaderboard from './pages/Leaderboard';
-import Onboarding from './pages/Onboarding';
-import TeacherDashboard from './pages/TeacherDashboard';
-import CreateExamQuestion from './pages/CreateExamQuestion';
-import MyQuestions from './pages/MyQuestions';
-import QuestionPaper from './pages/QuestionPaper';
-import InstituteDashboard from './pages/InstituteDashboard';
-import AdminLogin from './pages/AdminLogin';
-import AdminDashboard from './pages/AdminDashboard';
+import Login from './pages/public/Login';
+import Signup from './pages/public/Signup';
+import Dashboard from './pages/student/Dashboard';
+import Social from './pages/student/Social';
+// import AI from './pages/student/AI';
+import AskAI from './pages/student/AskAI';
+import SchoolAnalytics from './pages/admin/SchoolAnalytics';
+import Problems from './pages/student/Problems';
+import Contest from './pages/student/Contest';
+import ProblemChapters from './pages/student/ProblemChapters';
+import ProblemList from './pages/student/ProblemList';
+import ProblemDetail from './pages/student/ProblemDetail';
+import Profile from './pages/shared/Profile';
+import { useParams as useRouteParams } from 'react-router-dom';
+
+// Wrapper that gives Profile a unique key per userId so React fully remounts
+// it when navigating from one user's profile to another — preventing stale state.
+const ProfileWithKey = () => {
+  const { userId } = useRouteParams();
+  return <Profile key={userId || 'me'} />;
+};
+
+import LandingPage from './pages/public/LandingPage';
+import Theory from './pages/student/Theory';
+import SocialListPage from './pages/student/SocialListPage';
+import Messages from './pages/shared/Messages';
+import Notifications from './pages/shared/Notifications';
+import CreatePost from './pages/student/CreatePost';
+import StudyContent from './pages/student/StudyContent';
+import ContentDetail from './pages/student/ContentDetail';
+import ExamQuestions from './pages/teacher/ExamQuestions';
+import Leaderboard from './pages/student/Leaderboard';
+import Onboarding from './pages/public/Onboarding';
+import TeacherDashboard from './pages/teacher/TeacherDashboard';
+import ManageQuestions from './pages/teacher/ManageQuestions';
+import TeacherClasses from './pages/teacher/TeacherClasses';
+import TeacherBatchDetail from './pages/teacher/TeacherBatchDetail';
+import StudentClasses from './pages/student/StudentClasses';
+import StudentClassDetail from './pages/student/StudentClassDetail';
+import StudentMaterialDetail from './pages/student/StudentMaterialDetail';
+import StudentAssignmentDetail from './pages/student/StudentAssignmentDetail';
+import StudentExamDetail from './pages/student/StudentExamDetail';
+import TeacherAssignmentDetail from './pages/TeacherAssignmentDetail';
+import TeacherTests from './pages/TeacherTests';
+import TeacherTestDetail from './pages/TeacherTestDetail';
+import TeacherContent from './pages/TeacherContent';
+import TeacherFeedback from './pages/TeacherFeedback';
+import TeacherBatches from './pages/teacher/TeacherBatchDetail';
+
+// HOD Department Pages
+import HodDepartmentTeachers from './pages/hod/HodDepartmentTeachers';
+import TeacherPerformance from './pages/hod/TeacherPerformance';
+import HodContentReview from './pages/hod/HodContentReview';
+import HodAttendanceView from './pages/hod/HodAttendanceView';
+import TeacherBatchMaterialForm from './pages/teacher/TeacherBatchMaterialForm';
+import TeacherBatchAssignmentForm from './pages/teacher/TeacherBatchAssignmentForm';
+
+// Imported Institute Pages
+import InstituteDashboard from './pages/institute/InstituteDashboard';
+import InstituteProfile from './pages/institute/InstituteProfile';
+import InstituteDepartments from './pages/institute/InstituteDepartments';
+import DepartmentDetail from './pages/institute/DepartmentDetail';
+import TeacherPanel from './pages/institute/TeacherPanel';
+import TeacherProfileView from './pages/institute/TeacherProfileView';
+import StudentPanel from './pages/institute/StudentPanel';
+import TheoryChecking from './pages/institute/TheoryChecking';
+import QuestionChecker from './pages/institute/QuestionChecker';
+import JoinRequestsPanel from './pages/institute/JoinRequestsPanel';
+import InstituteNotifications from './pages/institute/InstituteNotifications';
+
+import TeacherAttendance from './pages/teacher/TeacherAttendance';
+import AdminLogin from './pages/public/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
 // ============================================================================
 // IMPORT COMPONENTS
 // ============================================================================
-import Sidebar from './components/Sidebar';
-import ProtectedRoute from './components/ProtectedRoute'; // Wrapper that checks if user is logged in
-import PublicRoute from './components/PublicRoute';     // Wrapper for pages accessible only when logged out (like Login)
+import Sidebar from './components/shared/Sidebar';
+import ProtectedRoute from './components/auth/ProtectedRoute'; // Wrapper that checks if user is logged in
+import PublicRoute from './components/auth/PublicRoute';     // Wrapper for pages accessible only when logged out (like Login)
 
+const SIDEBAR_BREAKPOINT = 768;
 
 function App() {
   // ============================================================================
@@ -75,22 +117,105 @@ function App() {
   // ============================================================================
   const [user, setUser] = useState(null);         // Stores current user data
   const [loading, setLoading] = useState(true);   // Loading state while checking localStorage
-  const [sidebarOpen, setSidebarOpen] = useState(true); // Toggles sidebar open/close
+  const [sidebarOpen, setSidebarOpen] = useState(() => (
+    typeof window === 'undefined' ? true : window.innerWidth >= SIDEBAR_BREAKPOINT
+  )); // Expanded on desktop, hidden on mobile
+
+  const parseStoredUser = () => {
+    try {
+      const raw = localStorage.getItem('user');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const normalizeUserShape = (serverUser, fallbackUser = {}) => {
+    const merged = { ...fallbackUser, ...(serverUser || {}) };
+    const resolvedId = serverUser?._id || serverUser?.id || fallbackUser?._id || fallbackUser?.id;
+    if (resolvedId) {
+      merged._id = resolvedId;
+      merged.id = resolvedId;
+    }
+    return merged;
+  };
 
   // ============================================================================
   // INITIALIZATION
   // ============================================================================
-  // Check for saved token on app load (runs once)
+  // Sync authenticated user from server so admin-side edits are reflected.
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
+    let isActive = true;
 
-    if (token && userData) {
-      // Restore user session if token exists
-      setUser(JSON.parse(userData));
-    }
-    // Finished loading check
-    setLoading(false);
+    const applyUser = (nextUser) => {
+      if (!isActive) return;
+      if (nextUser) {
+        localStorage.setItem('user', JSON.stringify(nextUser));
+        setUser(nextUser);
+      } else {
+        localStorage.removeItem('user');
+        setUser(null);
+      }
+    };
+
+    const syncCurrentUser = async ({ initial = false } = {}) => {
+      const token = localStorage.getItem('token');
+      const storedUser = parseStoredUser();
+
+      if (!token) {
+        applyUser(null);
+        if (initial && isActive) setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/api/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          applyUser(null);
+          if (initial && isActive) setLoading(false);
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(`Failed to sync user: ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const normalizedUser = normalizeUserShape(payload?.user, storedUser || {});
+        applyUser(normalizedUser);
+      } catch {
+        // Fallback to locally cached user if network issues occur.
+        if (storedUser) {
+          setUser(storedUser);
+        } else {
+          applyUser(null);
+        }
+      } finally {
+        if (initial && isActive) setLoading(false);
+      }
+    };
+
+    syncCurrentUser({ initial: true });
+
+    const onFocus = () => syncCurrentUser();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        syncCurrentUser();
+      }
+    };
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      isActive = false;
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   // Handlers to update state after login/signup
@@ -141,7 +266,6 @@ function App() {
           },
         }}
       />
-      {/* BrowserRouter enables URL-based routing */}
       {/* BrowserRouter enables URL-based routing */}
       <SocketContextProvider authUser={user}>
         <BrowserRouter>
@@ -234,18 +358,16 @@ function App() {
               path="/analytics"
               element={
                 <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Analytics />
-                  </MainLayout>
+                  <Navigate to="/dashboard" replace />
                 </ProtectedRoute>
               }
             />
 
-            {/* School Analytics — teacher/hod/institute_admin only */}
+            {/* School Analytics — teacher/hod/institute only */}
             <Route
               path="/school-analytics"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <SchoolAnalytics />
                   </MainLayout>
@@ -299,13 +421,13 @@ function App() {
               }
             />
 
-            {/* AI Question Generator */}
+            {/* Question Management (Consolidated Page) */}
             <Route
-              path="/ai-questions"
+              path="/question-management"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <AIQuestionGenerator />
+                    <ManageQuestions />
                   </MainLayout>
                 </ProtectedRoute>
               }
@@ -387,7 +509,7 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <Profile />
+                    <ProfileWithKey />
                   </MainLayout>
                 </ProtectedRoute>
               }
@@ -449,6 +571,114 @@ function App() {
               }
             />
 
+            {/* Student Classes Page */}
+            <Route
+              path="/classes"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <StudentClasses />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Student Class Detail View */}
+            <Route
+              path="/classes/:classId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <StudentClassDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Student Material Detail View */}
+            <Route
+              path="/classes/:classId/material/:materialId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <StudentMaterialDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Student Assignment Detail View */}
+            <Route
+              path="/classes/:classId/assignment/:assignmentId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <StudentAssignmentDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Student Exam Detail View */}
+            <Route
+              path="/classes/:classId/exam/:examId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <StudentExamDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Batches / Classrooms Route */}
+            <Route
+              path="/teacher/batches"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherClasses />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Batch Detail / Classroom Management Route */}
+            <Route
+              path="/teacher/batch/:batchId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherBatchDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Attendance Route */}
+            <Route
+              path="/teacher/attendance"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherAttendance />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Attendance Route */}
+            <Route
+              path="/teacher/attendance"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherAttendance />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
             {/* Study Content Route */}
             <Route
               path="/study-content"
@@ -475,13 +705,16 @@ function App() {
             <Route
               path="/exam/:examId" element={
                 <ProtectedRoute>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <ExamQuestions />
-
-                  </MainLayout>
+                  <ExamQuestions />
                 </ProtectedRoute>
               }
-
+            />
+            <Route
+              path="/exam/:examId/institute" element={
+                <ProtectedRoute>
+                  <ExamQuestions />
+                </ProtectedRoute>
+              }
             />
 
             {/* ===== ROLE-BASED ROUTES ===== */}
@@ -490,7 +723,7 @@ function App() {
             <Route
               path="/teacher-dashboard"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherDashboard />
                   </MainLayout>
@@ -498,52 +731,220 @@ function App() {
               }
             />
 
-            {/* Create Exam Question */}
+            {/* (Old Routes Removed: CreateExamQuestion and MyQuestions) */}
+
+
+            {/* Teacher Classes & Batches */}
             <Route
-              path="/create-question"
+              path="/teacher/batches"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <CreateExamQuestion />
+                    <TeacherBatches />
                   </MainLayout>
                 </ProtectedRoute>
               }
             />
 
-            {/* My Questions */}
+            {/* Teacher Batch Detail / Classroom Management */}
             <Route
-              path="/my-questions"
+              path="/teacher/batch/:batchId"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <MyQuestions />
+                    <TeacherBatchDetail />
                   </MainLayout>
                 </ProtectedRoute>
               }
             />
 
-            {/* Question Paper Generator */}
+            {/* Teacher Class Material Form (New & Edit) */}
             <Route
-              path="/question-paper"
+              path="/teacher/batch/:batchId/materials/new"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute_admin']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <QuestionPaper />
+                    <TeacherBatchMaterialForm />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teacher/batch/:batchId/materials/edit/:materialId"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherBatchMaterialForm />
                   </MainLayout>
                 </ProtectedRoute>
               }
             />
 
-            {/* Institute Admin Dashboard */}
+            {/* Teacher Class Assignment Form (New & Edit) */}
             <Route
-              path="/institute-dashboard"
+              path="/teacher/batch/:batchId/assignments/new"
               element={
-                <ProtectedRoute requiredRoles={['institute_admin']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <InstituteDashboard />
+                    <TeacherBatchAssignmentForm />
                   </MainLayout>
                 </ProtectedRoute>
               }
+            />
+            <Route
+              path="/teacher/batch/:batchId/assignments/edit/:assignmentId"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherBatchAssignmentForm />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Attendance */}
+            <Route
+              path="/teacher/attendance"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherAttendance />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Assignment Detail / Grading */}
+            <Route
+              path="/teacher/assignment/:id"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherAssignmentDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Tests / Exams */}
+            <Route
+              path="/teacher/tests"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherTests />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Test Detail / Results */}
+            <Route
+              path="/teacher/test/:id"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherTestDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Content Creation */}
+            <Route
+              path="/teacher/content"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherContent />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Feedback & Complaints */}
+            <Route
+              path="/teacher/feedback"
+              element={
+                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <TeacherFeedback />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Institute Profile — accessible to all authenticated users (students see read-only) */}
+            <Route
+              path="/institute-view"
+              element={
+                <ProtectedRoute>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <InstituteProfile />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ===== INSTITUTE ROUTES ===== */}
+            {/* All /institute/* routes now use the shared MainLayout + Sidebar */}
+            <Route path="/institute/dashboard"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteDashboard /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/profile"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteProfile /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/departments"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteDepartments /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/department/:deptName"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><DepartmentDetail /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/hod/department/:deptName"
+              element={<ProtectedRoute requiredRoles={['hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><DepartmentDetail /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/teachers"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TeacherPanel /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/teacher/:id"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TeacherProfileView /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/hod/teacher/:id"
+              element={<ProtectedRoute requiredRoles={['hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TeacherProfileView /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/students"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><StudentPanel /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/theory"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TheoryChecking /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/questions"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><QuestionChecker /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/join-requests"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><JoinRequestsPanel /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/notifications"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteNotifications /></MainLayout></ProtectedRoute>}
+            />
+
+            {/* ===== HOD DEPARTMENT ROUTES ===== */}
+            <Route path="/hod/teachers"
+              element={<ProtectedRoute requiredRoles={['hod', 'institute']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><HodDepartmentTeachers /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/hod/teacher/:teacherId"
+              element={<ProtectedRoute requiredRoles={['hod', 'institute']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TeacherPerformance /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/hod/content-review"
+              element={<ProtectedRoute requiredRoles={['hod', 'institute']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><HodContentReview /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/hod/attendance"
+              element={<ProtectedRoute requiredRoles={['hod', 'institute']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><HodAttendanceView /></MainLayout></ProtectedRoute>}
+            />
+
+            {/* Institute — Teacher Performance (reuses same component) */}
+            <Route path="/institute/teacher/:teacherId"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><TeacherPerformance /></MainLayout></ProtectedRoute>}
             />
 
             {/* System Admin — separate layout (no sidebar) */}
@@ -581,11 +982,11 @@ function App() {
  * - onLogout: Function to handle logout action
  */
 
-import SocialSidebar from './components/SocialSidebar';
+import FloatingSocialButton from './components/student/FloatingSocialButton';
+import NotificationBell from './components/shared/NotificationBell';
 
-function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
+function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout }) {
   const location = useLocation();
-  const isSocial = ['/social', '/profile', '/network', '/messages', '/create-post', '/notifications'].some(path => location.pathname.startsWith(path));
 
   // Track last visited page for "Resume Last Session" on Dashboard
   useEffect(() => {
@@ -595,55 +996,66 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout, user }) {
         '/problems': 'Practice Problems', '/theory': 'Theory', '/social': 'Social Feed',
         '/analytics': 'Analytics', '/contest': 'Contest', '/ask-ai': 'AI Assistant',
         '/leaderboard': 'Leaderboard', '/profile': 'Profile', '/messages': 'Messages',
-        '/teacher-dashboard': 'Teacher Panel', '/question-paper': 'Question Paper',
-        '/create-question': 'Create Question', '/my-questions': 'My Questions',
-        '/institute-dashboard': 'Institute Panel', '/school-analytics': 'School Analytics',
-        '/ai-questions': 'AI Questions', '/notifications': 'Notifications'
+        '/teacher-dashboard': 'Teacher Dashboard', '/question-paper': 'Question Paper',
+        '/institute': 'Institute Panel', '/school-analytics': 'School Analytics',
+        '/question-management': 'Question Bank', '/notifications': 'Notifications'
       };
       const label = Object.entries(pageNames).find(([k]) => location.pathname.startsWith(k));
       if (label) {
-        localStorage.setItem('blackitab_last_page', JSON.stringify({ path: location.pathname, label: label[1], time: Date.now() }));
+        localStorage.setItem('RANKLEN_last_page', JSON.stringify({ path: location.pathname, label: label[1], time: Date.now() }));
       }
     }
   }, [location.pathname]);
 
-  // State for Social Sidebar (independent toggle if needed)
-  const [socialSidebarOpen, setSocialSidebarOpen] = useState(true);
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < SIDEBAR_BREAKPOINT) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname, setSidebarOpen]);
 
-  // If user is not passed as prop, try to get from localStorage (fallback)
-  const currentUser = user || JSON.parse(localStorage.getItem('user') || '{}');
-
-  // Calculate Layout Dimensions based on which sidebar is active
-  const activeSidebarWidth = isSocial 
-    ? (socialSidebarOpen ? '16rem' : '4rem')
-    : (sidebarOpen ? '16rem' : '4rem');
+  // Adjust content margin based on sidebar state (desktop only)
+  // On mobile, the sidebar sits OVER the content, so margin is 0.
+  const contentMarginClass = sidebarOpen ? 'md:ml-[280px]' : 'md:ml-[80px]';
 
   return (
-    <div className="min-h-screen flex bg-gray-50 dark:bg-black text-gray-900 dark:text-white transition-colors duration-300">
-      {/* Contextual Sidebar: Show Social Sidebar if on social routes, otherwise Main Sidebar */}
-      {isSocial ? (
-         <div className="z-50">
-           <SocialSidebar
-             onLogout={onLogout}
-             isOpen={socialSidebarOpen}
-             setIsOpen={setSocialSidebarOpen}
-             user={currentUser}
-             leftOffset={0} // Fixed to the extreme left, replacing the main sidebar
-           />
-         </div>
-      ) : (
-         <div className="z-50">
-           <Sidebar onLogout={onLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-         </div>
+    <div className="min-h-screen flex bg-white dark:bg-[#05000a] text-gray-900 dark:text-white transition-colors duration-300">
+      {/* Sidebar Overlay (Mobile Only) */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
+
+      {/* Main Sidebar */}
+      <div className="z-50 relative">
+        <Sidebar onLogout={onLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      </div>
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 transition-all duration-300 ${location.pathname.startsWith('/messages') ? '' : 'p-6'}`}
-        style={{ marginLeft: activeSidebarWidth }}
+        className={`flex-1 transition-all duration-300 w-full min-h-screen ${location.pathname.startsWith('/messages') ? '' : 'p-4 md:p-8'} ${contentMarginClass}`}
       >
-        {children}
+        {/* Mobile Hamburger Header */}
+        <div className="md:hidden flex items-center justify-between mb-4 sticky top-0 z-30 bg-white/80 dark:bg-black/80 backdrop-blur-md p-4 -mx-4 -mt-4 border-b border-gray-200 dark:border-white/10">
+            <div className="flex items-center gap-3">
+               <button onClick={() => setSidebarOpen(true)} className="p-2 bg-gray-100 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
+                 <FaBars />
+               </button>
+               <span className="font-bold text-lg text-gray-900 dark:text-white tracking-wide">RANKLEN</span>
+            </div>
+        </div>
+
+        <div className="app-mobile-type">
+          {children}
+        </div>
       </div>
+
+      {/* Floating Social Button — Bottom Right */}
+      <FloatingSocialButton />
+
+      {/* Notification Bell — Top Right (hidden on profile pages) */}
+      {!location.pathname.startsWith('/profile') && <NotificationBell />}
     </div>
   );
 }

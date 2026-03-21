@@ -12,17 +12,17 @@
  * - Store lightweight topic metadata (name, subject reference)
  * - Provide fast topic listing without loading heavy content
  * - Link topics to subjects through subjectId reference
- * - Link to full content through full_data_of_topics collection
+ * - Link to full content through FullTopicData collection
  * 
  * Design Decision:
  * - This model is kept lightweight (just name and references)
- * - Full content is stored separately in full_data_of_topics collection
+ * - Full content is stored separately in FullTopicData collection
  * - This separation improves performance when loading topic lists
  * - Users can see all topic names quickly without loading all content
  * 
  * Relationships:
  * - Many topics belong to one subject (many-to-one)
- * - One topic has one full_data_of_topics entry (one-to-one)
+ * - One topic has one FullTopicData entry (one-to-one)
  */
 
 // Import Mongoose library for MongoDB object modeling
@@ -59,7 +59,7 @@ const topicSchema = new mongoose.Schema({
     // ========================================
     // Array to store content blocks
     // NOTE: This field is currently NOT USED in the application
-    // Content is actually stored in the full_data_of_topics collection
+    // Content is actually stored in the FullTopicData collection
     // This field exists for potential future use or backward compatibility
     content: {
         type: [mongoose.Schema.Types.Mixed],   // Array of Mixed type (can contain any data type)

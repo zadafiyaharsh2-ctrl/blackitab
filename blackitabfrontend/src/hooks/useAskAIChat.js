@@ -17,6 +17,17 @@ import { useState, useEffect, useRef } from 'react';
 import API_URL from '../config';
 
 const DEFAULT_GREETING = "Hello! I'm your AI learning assistant. Ask me anything about your studies, and I'll help you understand concepts better. 🎓";
+const SUPPRESSED_AI_LINE = /(?:however,\s*)?i\s+can\s+provide\s+an?\s+answer\s+based\s+on\s+my\s+general\s+knowledge\.?/i;
+
+const sanitizeAssistantContent = (content) => {
+    if (typeof content !== 'string') return content;
+    return content
+        .split(/\n+/)
+        .map(line => line.trim())
+        .filter(line => line && !SUPPRESSED_AI_LINE.test(line))
+        .join('\n')
+        .trim();
+};
 
 const useAskAIChat = ({ subjectContext, topicContext, loadHistory = true } = {}) => {
     // Build a context-aware greeting
@@ -61,7 +72,16 @@ const useAskAIChat = ({ subjectContext, topicContext, loadHistory = true } = {})
     // Fetch conversation-thread history on mount
     useEffect(() => {
         if (!loadHistory) return;
-        fetchChatList();
+        
+        const initChat = async () => {
+            const chats = await fetchChatList();
+            if (chats && chats.length > 0) {
+                // Determine the most recent chat and load it automatically on mount
+                loadChat(chats[0]._id);
+            }
+        };
+
+        initChat();
         fetchHistory(); // Legacy QA history
     }, [loadHistory]);
 
@@ -75,11 +95,13 @@ const useAskAIChat = ({ subjectContext, topicContext, loadHistory = true } = {})
                 const data = await response.json();
                 if (data.ok && data.chats) {
                     setChatList(data.chats);
+                    return data.chats;
                 }
             }
         } catch (err) {
             console.error('Failed to load chat list:', err);
         }
+        return [];
     };
 
     const loadChat = async (chatId) => {
@@ -95,7 +117,7 @@ const useAskAIChat = ({ subjectContext, topicContext, loadHistory = true } = {})
                     setCurrentChatId(chatId);
                     setMessages(data.chat.messages.map(msg => ({
                         role: msg.role,
-                        content: msg.content
+                        content: msg.role === 'assistant' ? sanitizeAssistantContent(msg.content) : msg.content
                     })));
                     // On mobile, you might want to hide the sidebar when a chat is selected
                     setShowHistory(false); 
@@ -172,7 +194,7 @@ const useAskAIChat = ({ subjectContext, topicContext, loadHistory = true } = {})
 
             const aiResponse = {
                 role: 'assistant',
-                content: data.aiResponse?.content || 'No response content'
+                content: sanitizeAssistantContent(data.aiResponse?.content || 'No response content')
             };
 
             setMessages(prev => [...prev, aiResponse]);
@@ -200,7 +222,7 @@ const useAskAIChat = ({ subjectContext, topicContext, loadHistory = true } = {})
     const loadFromHistory = (item) => {
         setMessages([
             { role: 'user', content: item.question },
-            { role: 'assistant', content: item.answer }
+            { role: 'assistant', content: sanitizeAssistantContent(item.answer) }
         ]);
         setShowHistory(false);
     };
@@ -237,8 +259,6 @@ const useAskAIChat = ({ subjectContext, topicContext, loadHistory = true } = {})
     };
 
     const clearAllHistory = async () => {
-        if (!window.confirm('Are you sure you want to clear all history?')) return;
-
         try {
             await fetch(`${API_URL}/api/ai/history/clear`, {
                 method: 'DELETE',

@@ -33,6 +33,10 @@ const examQuestionSchema = new mongoose.Schema({
         ],
         default: 'Medium'
     },
+    eloRating: {
+        type: Number,
+        default: 1000 // Elo baseline defaults to 1000, updated historically or individually over time.
+    },
     explanation: {
         type: String,
         default: 'No explanation available'
@@ -40,6 +44,12 @@ const examQuestionSchema = new mongoose.Schema({
     isAiGenerated: {
         type: Boolean,
         default: false
+    },
+    format: {
+        type: String,
+        enum: ['Paper', 'Digital'],
+        required: true,
+        default: 'Digital'
     },
     topicId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -80,33 +90,47 @@ const examQuestionSchema = new mongoose.Schema({
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
+        default: null,
+        index: true
+    },
+    departmentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Department',
+        index: true,
         default: null
     },
     instituteId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Institute',
-        default: null
+        index: true,
+        required: function() { return !this.isGlobal; }
     },
-    isPublic: {
+    status: {
+        type: String,
+        enum: ['Draft', 'Published'],
+        default: 'Draft',
+        index: true
+    },
+    isGlobal: {
+        type: Boolean,
+        default: false,
+        index: true
+    },
+    isModerated: {
+        type: Boolean,
+        default: false
+    },
+    isActive: {
         type: Boolean,
         default: true
     },
-    // ── Approval Workflow ──
-    approvalStatus: {
-        type: String,
-        enum: ['pending', 'approved', 'rejected'],
-        default: 'pending',
+    isProblem: {
+        type: Boolean,
+        default: false,
         index: true
     },
-    approvalNote: {
-        type: String,
-        default: ''
-    },
-    approvedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'SystemAdmin',
-        default: null
-    },
+
+
     createdAt: {
         type: Date,
         default: Date.now
@@ -114,5 +138,6 @@ const examQuestionSchema = new mongoose.Schema({
 });
 
 examQuestionSchema.index({ exam: 1, subject: 1 });
+examQuestionSchema.index({ instituteId: 1, departmentId: 1, status: 1 });
 
 module.exports = mongoose.model('ExamQuestion', examQuestionSchema);

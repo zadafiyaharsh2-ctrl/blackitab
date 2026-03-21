@@ -30,7 +30,7 @@
    
    **Example:**
    ```
-   mongodb+srv://myuser:mypassword@cluster0.xxxxx.mongodb.net/blackitab?retryWrites=true&w=majority
+   mongodb+srv://myuser:mypassword@cluster0.xxxxx.mongodb.net/RANKLEN?retryWrites=true&w=majority
    ```
 
 ### Step 2: Configure Network Access
@@ -59,26 +59,26 @@
 ### Step 4: Update Your .env File
 
 1. **Open/Create `.env` file**
-   - Location: `blackitab/blackitabbackend/.env`
+   - Location: `RANKLEN/RANKLENbackend/.env`
 
 2. **Add Your Connection String**
    ```env
    PORT=5000
    JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-   MONGODB_URI=mongodb+srv://yourusername:yourpassword@cluster0.xxxxx.mongodb.net/blackitab?retryWrites=true&w=majority
+   MONGODB_URI=mongodb+srv://yourusername:yourpassword@cluster0.xxxxx.mongodb.net/RANKLEN?retryWrites=true&w=majority
    ```
 
    **Important:**
    - Replace `yourusername` with your actual MongoDB username
    - Replace `yourpassword` with your actual MongoDB password
    - Replace `cluster0.xxxxx.mongodb.net` with your actual cluster URL
-   - Keep `/blackitab` as your database name (or change it if you want a different name)
+   - Keep `/RANKLEN` as your database name (or change it if you want a different name)
 
 ### Step 5: Test the Connection
 
 1. **Start your backend server**
    ```bash
-   cd blackitab/blackitabbackend
+   cd RANKLEN/RANKLENbackend
    npm start
    ```
 
@@ -95,7 +95,7 @@
 ```env
 PORT=5000
 JWT_SECRET=my-super-secret-jwt-key-12345
-MONGODB_URI=mongodb+srv://john:MyPassword123@cluster0.abc123.mongodb.net/blackitab?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://john:MyPassword123@cluster0.abc123.mongodb.net/RANKLEN?retryWrites=true&w=majority
 ```
 
 ### Troubleshooting
@@ -132,6 +132,6 @@ If your password contains special characters, you need to URL-encode them:
 Example:
 - Password: `MyP@ss#123`
 - Encoded: `MyP%40ss%23123`
-- Connection string: `mongodb+srv://user:MyP%40ss%23123@cluster0.xxxxx.mongodb.net/blackitab?retryWrites=true&w=majority`
+- Connection string: `mongodb+srv://user:MyP%40ss%23123@cluster0.xxxxx.mongodb.net/RANKLEN?retryWrites=true&w=majority`
 
 

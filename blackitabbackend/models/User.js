@@ -17,8 +17,18 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Password is required'],
+    required: false,
     minlength: [6, 'Password must be at least 6 characters long']
+  },
+  googleId: {
+    type: String,
+    sparse: true,
+    default: null
+  },
+  authProvider: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local'
   },
   createdAt: {
     type: Date,
@@ -57,13 +67,21 @@ const userSchema = new mongoose.Schema({
   // --- HIERARCHY & ROLES ---
   role: {
     type: String,
-    enum: ['student', 'teacher', 'hod', 'institute_admin'],
-    default: 'student'
+    enum: ['student', 'teacher', 'hod', 'institute'],
+    default: 'student',
+    index: true
   },
   instituteId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Institute',
-    default: null
+    default: null,
+    index: true
+  },
+  instituteCode: {
+    type: String,
+    default: '',
+    uppercase: true,
+    trim: true
   },
   batchYear: { type: String },
   division: { type: String },
@@ -71,6 +89,35 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     default: null
+  },
+  departments: [{
+    type: String,
+    trim: true
+  }],
+  domainRatings: {
+    type: Map,
+    of: Number,
+    default: {}
+  },
+
+  // --- TEACHER-SPECIFIC FIELDS ---
+  departmentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Department',
+    default: null
+  },
+  specialization: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  teacherSince: {
+    type: Date,
+    default: null
+  },
+  teacherRating: {
+    score: { type: Number, default: 0 },
+    totalReviews: { type: Number, default: 0 }
   },
 
   // --- MASSIVE SCALE METRICS ---
@@ -82,9 +129,9 @@ const userSchema = new mongoose.Schema({
   isBanned: { type: Boolean, default: false }
 }, { strict: false });
 
-// Hash password before saving
+// Hash password before saving (skip for OAuth users with no password)
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+  if (!this.password || !this.isModified('password')) return next();
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
