@@ -7,7 +7,7 @@ import {
   TrendingUp, Target, Flame, Clock, Award, CheckCircle,
   BookOpen, Brain, Zap, ArrowUp, ArrowDown, Minus,
   Trophy, Users, Activity, PieChart, Medal, Gauge, Timer, Gift, Code,
-  ArrowRight, X, Lock, ChevronDown, ChevronUp, Sparkles
+  ArrowRight, X, Lock, ChevronDown, ChevronUp, Sparkles, ShieldAlert
 } from 'lucide-react';
 
 /* ── Helpers ─────────────────────────────────────────────── */
@@ -29,6 +29,13 @@ const formatStudyTime = (hours, minutes) => {
   if (hours >= 1) return `${hours}h`;
   if (minutes > 0) return `${minutes} min${minutes !== 1 ? 's' : ''}`;
   return '0 mins';
+};
+
+const formatInactiveTime = (days) => {
+  const safeDays = Number.isFinite(Number(days)) ? Number(days) : 0;
+  if (safeDays <= 0) return 'today';
+  if (safeDays === 1) return '1 day';
+  return `${safeDays} days`;
 };
 
 const getExamCountdownLabel = (dateStr) => {
@@ -731,6 +738,7 @@ const StudentAnalyticsContent = () => {
     },
     subjectProgress: [],
     strengths: [],
+    focusAreas: [],
     weaknesses: [],
     recentActivity: []
   });
@@ -806,7 +814,8 @@ const StudentAnalyticsContent = () => {
     fetchAnalytics();
   }, []);
 
-  const { stats, subjectProgress, strengths, weaknesses, recentActivity } = data;
+  const { stats, subjectProgress, strengths, focusAreas, weaknesses, recentActivity } = data;
+  const resolvedFocusAreas = Array.isArray(focusAreas) && focusAreas.length > 0 ? focusAreas : weaknesses;
 
   const masterySubjects = (subjectProgress || [])
     .map((subject, index) => {
@@ -817,17 +826,47 @@ const StudentAnalyticsContent = () => {
           ? subject.name.trim()
           : `Domain ${index + 1}`;
 
+      const effectiveEloRaw = Number(subject?.effectiveElo ?? subject?.elo);
+      const storedEloRaw = Number(subject?.storedElo);
+      const effectiveElo = Number.isFinite(effectiveEloRaw) ? Math.round(effectiveEloRaw) : 1000;
+      const storedElo = Number.isFinite(storedEloRaw) ? Math.round(storedEloRaw) : effectiveElo;
+      const eloLossRaw = Number(subject?.eloLoss);
+      const inferredLoss = Math.max(0, storedElo - effectiveElo);
+      const eloLoss = Number.isFinite(eloLossRaw) ? Math.max(0, Math.round(eloLossRaw)) : inferredLoss;
+      const inactivityDaysRaw = Number(subject?.inactivityDays);
+      const inactivityDays = Number.isFinite(inactivityDaysRaw) ? Math.max(0, Math.round(inactivityDaysRaw)) : 0;
+      const recoveryProblemsTargetRaw = Number(subject?.recoveryProblemsTarget);
+      const recoveryProblemsTarget = Number.isFinite(recoveryProblemsTargetRaw)
+        ? Math.max(1, Math.round(recoveryProblemsTargetRaw))
+        : Math.max(1, Math.ceil(eloLoss / 70));
+
       return {
         id: `${name}-${index}`,
         name,
         progress,
         mastery,
-        visual: getMasteryVisual(progress)
+        visual: getMasteryVisual(progress),
+        elo: effectiveElo,
+        effectiveElo,
+        storedElo,
+        eloLoss,
+        inactivityDays,
+        lastAttemptedAt: subject?.lastAttemptedAt || null,
+        decayStatus: subject?.decayStatus || 'healthy',
+        decayMessage: subject?.decayMessage || '',
+        recoveryProblemsTarget,
       };
     })
     .sort((a, b) => b.progress - a.progress);
 
   const selectedMasterySubject = masterySubjects.find((subject) => subject.id === selectedMasteryId) || masterySubjects[0] || null;
+  const decayingMasterySubjects = masterySubjects
+    .filter((subject) => subject.decayStatus !== 'healthy' && subject.eloLoss >= 8)
+    .sort((a, b) => {
+      if (b.eloLoss !== a.eloLoss) return b.eloLoss - a.eloLoss;
+      return b.inactivityDays - a.inactivityDays;
+    });
+  const primaryDecayAlert = decayingMasterySubjects[0] || null;
 
   useEffect(() => {
     if (!masterySubjects.length) {
@@ -1189,6 +1228,25 @@ const StudentAnalyticsContent = () => {
             </div>
           </div>
 
+          {primaryDecayAlert && (
+            <div className="mb-4 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50/80 dark:bg-amber-500/10 px-3.5 py-3">
+              <div className="flex items-start gap-2.5">
+                <ShieldAlert className="h-4 w-4 mt-0.5 text-amber-600 dark:text-amber-300 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-amber-800 dark:text-amber-200 uppercase tracking-wide">Subject Health Alert</p>
+                  <p className="text-xs text-amber-700 dark:text-amber-200/90 mt-1 leading-relaxed">
+                    {primaryDecayAlert.decayMessage || `Your ${primaryDecayAlert.name} mastery is decaying. Solve ${primaryDecayAlert.recoveryProblemsTarget} problems today to recover toward Elo ${primaryDecayAlert.storedElo}.`}
+                  </p>
+                  <p className="text-[11px] text-amber-700/80 dark:text-amber-200/80 mt-1">
+                    Effective Elo {primaryDecayAlert.effectiveElo}
+                    {primaryDecayAlert.storedElo ? ` (stored ${primaryDecayAlert.storedElo})` : ''}
+                    {primaryDecayAlert.inactivityDays > 0 ? ` after ${formatInactiveTime(primaryDecayAlert.inactivityDays)} inactive.` : ''}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {masterySubjects.length > 0 ? (
             <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
               <div className="xl:col-span-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gradient-to-br from-slate-50 via-white to-blue-50/60 dark:from-slate-900/40 dark:via-black/10 dark:to-blue-500/5 p-4">
@@ -1201,10 +1259,20 @@ const StudentAnalyticsContent = () => {
                   <p className="text-xs text-gray-500">Focused domain</p>
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedMasterySubject?.name || masterySubjects[0]?.name}</p>
                   <p className="text-xs text-gray-400">
-                    {selectedMasterySubject?.elo
-                      ? `Elo: ${selectedMasterySubject.elo}`
+                    {selectedMasterySubject?.effectiveElo
+                      ? `Effective Elo: ${selectedMasterySubject.effectiveElo}`
                       : `${selectedMasterySubject?.progress || masterySubjects[0]?.progress || 0}% mastery`}
                   </p>
+                  {selectedMasterySubject?.storedElo && selectedMasterySubject?.eloLoss > 0 && (
+                    <p className="text-[11px] text-amber-600 dark:text-amber-300 mt-1">
+                      Stored Elo {selectedMasterySubject.storedElo} • decay loss {selectedMasterySubject.eloLoss}
+                    </p>
+                  )}
+                  {selectedMasterySubject?.inactivityDays > 0 && (
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      Last practiced {formatInactiveTime(selectedMasterySubject.inactivityDays)} ago
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -1235,7 +1303,7 @@ const StudentAnalyticsContent = () => {
                         </div>
                         <div className="text-right shrink-0">
                           {subject.elo && (
-                            <p className="text-[10px] text-gray-400 font-mono">Elo {subject.elo}</p>
+                            <p className="text-[10px] text-gray-400 font-mono">Eff Elo {subject.elo}</p>
                           )}
                           <p className="text-xs font-semibold text-gray-500 dark:text-gray-300">{subject.progress}%</p>
                         </div>
@@ -1247,6 +1315,17 @@ const StudentAnalyticsContent = () => {
                           style={{ width: `${subject.progress}%` }}
                         />
                       </div>
+
+                      {(subject.inactivityDays > 0 || subject.eloLoss > 0) && (
+                        <div className="mt-2 flex items-center justify-between text-[10px]">
+                          <span className="text-gray-400">Idle {formatInactiveTime(subject.inactivityDays)}</span>
+                          {subject.eloLoss > 0 && (
+                            <span className={`font-semibold ${subject.decayStatus === 'critical' ? 'text-red-500' : 'text-amber-500'}`}>
+                              -{subject.eloLoss} Elo decay
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </button>
                   );
                 })}
@@ -1282,9 +1361,9 @@ const StudentAnalyticsContent = () => {
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-4">
             <Brain className="h-3.5 w-3.5 text-red-500" /> Focus Areas
           </h3>
-          {weaknesses.length > 0 ? (
+          {resolvedFocusAreas.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {weaknesses.map((item) => (
+              {resolvedFocusAreas.map((item) => (
                 <div key={item} className="flex items-center gap-2.5 p-2.5 border border-gray-100 dark:border-white/5 rounded-lg">
                   <Zap className="h-4 w-4 text-red-500 shrink-0" />
                   <span className="text-sm text-gray-700 dark:text-gray-300">{item}</span>
