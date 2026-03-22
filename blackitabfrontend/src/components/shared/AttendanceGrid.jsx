@@ -10,16 +10,21 @@ import React, { useMemo } from 'react';
 const AttendanceGrid = ({ records = [], students: externalStudents = [] }) => {
 
     const { months, studentMap, orderedStudents, datesByMonth } = useMemo(() => {
-        // Collect all unique dates and sort them
-        const allDates = [...new Set(records.map(r => r.date?.split('T')[0]).filter(Boolean))].sort();
+        const allCombinedKeys = [...new Set(records.map(r => {
+            if (!r.date) return null;
+            const ds = r.date.split('T')[0];
+            const st = r.sessionType || 'Class';
+            return `${ds}|${st}`;
+        }).filter(Boolean))].sort();
 
-        // Group dates by month
+        // Group columns by month
         const datesByMonth = {};
-        allDates.forEach(dateStr => {
+        allCombinedKeys.forEach(combinedKey => {
+            const dateStr = combinedKey.split('|')[0];
             const d = new Date(dateStr + 'T00:00:00');
             const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
             if (!datesByMonth[monthKey]) datesByMonth[monthKey] = [];
-            datesByMonth[monthKey].push(dateStr);
+            datesByMonth[monthKey].push(combinedKey);
         });
 
         const months = Object.keys(datesByMonth).sort();
@@ -39,6 +44,9 @@ const AttendanceGrid = ({ records = [], students: externalStudents = [] }) => {
         records.forEach(rec => {
             const dateStr = rec.date?.split('T')[0];
             if (!dateStr) return;
+            const sType = rec.sessionType || 'Class';
+            const combinedKey = `${dateStr}|${sType}`;
+
             (rec.records || []).forEach(entry => {
                 const sid = typeof entry.studentId === 'object' ? entry.studentId?._id : entry.studentId;
                 const sName = typeof entry.studentId === 'object' ? entry.studentId?.name : null;
@@ -49,7 +57,7 @@ const AttendanceGrid = ({ records = [], students: externalStudents = [] }) => {
                 if (sName && studentMap[sid].name === 'Unknown') {
                     studentMap[sid].name = sName;
                 }
-                studentMap[sid].attendance[dateStr] = entry.status;
+                studentMap[sid].attendance[combinedKey] = entry.status;
             });
         });
 
@@ -140,11 +148,15 @@ const AttendanceGrid = ({ records = [], students: externalStudents = [] }) => {
                         <tr className="bg-gray-50 dark:bg-white/[0.03] border-b border-gray-200 dark:border-white/10">
                             <th className="sticky left-0 z-20 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-white/10"></th>
                             <th className="sticky left-[40px] z-20 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-white/10"></th>
-                            {allDatesFlat.map(dateStr => {
+                            {allDatesFlat.map(combinedKey => {
+                                const [dateStr, sType] = combinedKey.split('|');
                                 const d = new Date(dateStr + 'T00:00:00');
                                 return (
-                                    <th key={dateStr} className="px-1 py-1.5 text-center text-[10px] font-semibold text-gray-500 dark:text-gray-400 border-r border-gray-100 dark:border-white/5 min-w-[28px]">
-                                        {d.getDate()}
+                                    <th key={combinedKey} className="px-1 py-1.5 text-center text-[10px] font-semibold text-gray-500 dark:text-gray-400 border-r border-gray-100 dark:border-white/5 min-w-[36px]">
+                                        <div className="flex flex-col items-center">
+                                            <span>{d.getDate()}</span>
+                                            <span className="text-[8px] opacity-70 uppercase tracking-tighter" title={sType}>{sType.charAt(0)}</span>
+                                        </div>
                                     </th>
                                 );
                             })}
@@ -179,10 +191,10 @@ const AttendanceGrid = ({ records = [], students: externalStudents = [] }) => {
                                         {student.name}
                                     </td>
                                     {/* Date cells */}
-                                    {allDatesFlat.map(dateStr => {
-                                        const status = student.attendance[dateStr];
+                                    {allDatesFlat.map(combinedKey => {
+                                        const status = student.attendance[combinedKey];
                                         return (
-                                            <td key={dateStr} className={`px-1 py-2 text-center border-r border-gray-50 dark:border-white/[0.03] ${getStatusBg(status)}`}>
+                                            <td key={combinedKey} className={`px-1 py-2 text-center border-r border-gray-50 dark:border-white/[0.03] ${getStatusBg(status)}`}>
                                                 <span className={`text-[11px] font-bold ${getStatusColor(status)}`}>
                                                     {status ? getStatusChar(status) : '—'}
                                                 </span>
