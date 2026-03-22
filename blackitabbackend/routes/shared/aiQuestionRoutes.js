@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const aiQuestionController = require('../../controllers/shared/aiQuestionController');
 const authMiddleware = require('../../middleware/auth');
-const rateLimit = require('express-rate-limit');
+const { rateLimit } = require('express-rate-limit');
 
 // Limit question generation to prevent abuse and API cost overrun
 const aiQuestionLimiter = rateLimit({
