@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const Batch = require('../models/Batch');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 let ioInstance = null;
@@ -23,29 +24,58 @@ exports.initSocketService = (io) => {
         }
     });
 
-    io.on('connection', (socket) => {
+    io.on('connection', async (socket) => {
         const userId = socket.user.userId;
-        const roomName = `user_${userId}`;
+        const userRoom = `user_${userId}`;
 
         console.log(`Socket: Connected ${socket.id} (user: ${userId})`);
 
-        // Join personal tracking room
-        socket.join(roomName);
+        // Join personal tracking room (for DMs, notifications)
+        socket.join(userRoom);
         onlineUsers.add(userId);
 
-        // Broadcast to everyone that this user is online (or just broadcast full list)
-        io.emit("getOnlineUsers", Array.from(onlineUsers));
+        // Join batch/class rooms for scoped real-time events
+        try {
+            const batches = await Batch.find({
+                $or: [
+                    { studentIds: userId },
+                    { teacherIds: userId }
+                ]
+            }).select('_id').lean();
+
+            for (const batch of batches) {
+                const batchRoom = `batch_${batch._id}`;
+                socket.join(batchRoom);
+            }
+
+            if (batches.length > 0) {
+                console.log(`Socket: User ${userId} joined ${batches.length} batch room(s)`);
+            }
+        } catch (err) {
+            console.error(`Socket: Failed to join batch rooms for user ${userId}:`, err.message);
+        }
+
+        // Broadcast online status ONLY to rooms this user belongs to
+        // (instead of globally to all connected sockets)
+        const userRooms = Array.from(socket.rooms).filter(r => r !== socket.id);
+        for (const room of userRooms) {
+            io.to(room).emit("getOnlineUsers", Array.from(onlineUsers));
+        }
 
         socket.on('disconnect', () => {
              console.log(`Socket: Disconnected ${socket.id} (user: ${userId})`);
              
-             // Check if user has other active sockets in this room
-             const room = io.sockets.adapter.rooms.get(roomName);
+             // Check if user has other active sockets in their personal room
+             const room = io.sockets.adapter.rooms.get(userRoom);
              if (!room || room.size === 0) {
                  onlineUsers.delete(userId);
              }
              
-             io.emit("getOnlineUsers", Array.from(onlineUsers));
+             // Broadcast updated online status to the user's rooms only
+             const disconnectedRooms = Array.from(socket.rooms || []).filter(r => r !== socket.id);
+             for (const room of disconnectedRooms) {
+                 io.to(room).emit("getOnlineUsers", Array.from(onlineUsers));
+             }
         });
     });
 };
@@ -57,6 +87,24 @@ exports.emitToUser = (userId, eventName, payload) => {
     if (ioInstance) {
         const roomName = `user_${userId}`;
         ioInstance.to(roomName).emit(eventName, payload);
+    }
+};
+
+/**
+ * Emits an event to a specific batch/class room
+ */
+exports.emitToRoom = (roomName, eventName, payload) => {
+    if (ioInstance) {
+        ioInstance.to(roomName).emit(eventName, payload);
+    }
+};
+
+/**
+ * Emits an event to a specific batch room by batch ID
+ */
+exports.emitToBatch = (batchId, eventName, payload) => {
+    if (ioInstance) {
+        ioInstance.to(`batch_${batchId}`).emit(eventName, payload);
     }
 };
 
