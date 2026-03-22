@@ -60,6 +60,7 @@ export default function TeacherAttendance() {
     return d.toISOString().split("T")[0];
   };
   const [attendanceDate, setAttendanceDate] = useState(getLocalDateString());
+  const [sessionType, setSessionType] = useState('Class');
 
   // Data states
   const [attendanceState, setAttendanceState] = useState({});
@@ -112,7 +113,7 @@ export default function TeacherAttendance() {
   }, [headers]);
 
   const fetchStudents = useCallback(
-    async (batchId, date) => {
+    async (batchId, date, currentSessionType) => {
       try {
         setLoadingStudents(true);
         setExistingRecord(false);
@@ -128,11 +129,11 @@ export default function TeacherAttendance() {
           .filter(Boolean);
         setStudents(studentData);
 
-        // Check if attendance already exists for this date
+        // Check if attendance already exists for this date and session type
         let savedRecords = [];
         try {
           const histRes = await axios.get(
-            `${API}/api/teacher/attendance/${batchId}?date=${date}`,
+            `${API}/api/teacher/attendance/${batchId}?date=${date}&sessionType=${currentSessionType}`,
             { headers },
           );
           if (histRes.data.data && histRes.data.data.length > 0) {
@@ -210,10 +211,10 @@ export default function TeacherAttendance() {
   // Fetch data based on mode and batch selection
   useEffect(() => {
     if (selectedBatch) {
-      if (viewMode === "take") fetchStudents(selectedBatch._id, attendanceDate);
+      if (viewMode === "take") fetchStudents(selectedBatch._id, attendanceDate, sessionType);
       if (viewMode === "history") fetchHistory(selectedBatch._id);
     }
-  }, [selectedBatch, viewMode, attendanceDate, fetchStudents, fetchHistory]);
+  }, [selectedBatch, viewMode, attendanceDate, sessionType, fetchStudents, fetchHistory]);
 
   const submitAttendance = async () => {
     if (!selectedBatch) return;
@@ -226,7 +227,7 @@ export default function TeacherAttendance() {
       setSubmitting(true);
       await axios.post(
         `${API}/api/teacher/attendance`,
-        { classId: selectedBatch._id, date: attendanceDate, records },
+        { classId: selectedBatch._id, date: attendanceDate, sessionType, records },
         { headers },
       );
       toast.success(
@@ -246,6 +247,7 @@ export default function TeacherAttendance() {
   const editHistoryRecord = (record) => {
     const dateStr = record.date?.split("T")[0] || getLocalDateString();
     setAttendanceDate(dateStr);
+    setSessionType(record.sessionType || 'Class');
     setSelectedHistory(null);
     setViewMode("take"); // This will trigger fetchStudents via useEffect
   };
@@ -474,6 +476,17 @@ export default function TeacherAttendance() {
                       Today
                     </button>
                   )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <select
+                    value={sessionType}
+                    onChange={(e) => setSessionType(e.target.value)}
+                    className="text-sm border border-gray-200 dark:border-white/10 rounded-lg px-2 py-1.5 bg-white dark:bg-white/5 text-gray-700 dark:text-gray-200 outline-none focus:ring-2 focus:ring-blue-500/30"
+                  >
+                    <option value="Class">Class</option>
+                    <option value="Lab">Lab</option>
+                  </select>
                 </div>
 
                 <div className="flex items-center gap-2">
