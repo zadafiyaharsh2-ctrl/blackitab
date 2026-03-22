@@ -80,6 +80,12 @@ const LandingPage = () => {
           className="flex items-center gap-6"
         >
           <Link 
+            to="/contact" 
+            className="text-gray-400 hover:text-white font-medium transition-colors text-sm tracking-wide"
+          >
+            Contact
+          </Link>
+          <Link 
             to="/login" 
             className="text-gray-400 hover:text-white font-medium transition-colors text-sm tracking-wide"
           >
