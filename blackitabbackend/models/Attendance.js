@@ -29,6 +29,11 @@ const attendanceSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    sessionType: {
+        type: String,
+        enum: ['Class', 'Lab'],
+        default: 'Class'
+    },
     date: {
         type: Date,
         required: true
@@ -38,7 +43,7 @@ const attendanceSchema = new mongoose.Schema({
     timestamps: true 
 });
 
-// Enforce Integrity: unique compound index strictly per class per day
-attendanceSchema.index({ classId: 1, date: 1 }, { unique: true });
+// Enforce Integrity: unique compound index per class per day and sessionType
+attendanceSchema.index({ classId: 1, date: 1, sessionType: 1 }, { unique: true });
 
 module.exports = mongoose.model('Attendance', attendanceSchema);
