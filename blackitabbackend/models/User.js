@@ -132,7 +132,7 @@ const userSchema = new mongoose.Schema({
 
   // --- MODERATION ---
   isBanned: { type: Boolean, default: false }
-}, { strict: false });
+}, { strict: true });
 
 // Hash password before saving (skip for OAuth users with no password)
 userSchema.pre('save', async function (next) {
