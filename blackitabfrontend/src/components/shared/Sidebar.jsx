@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { FaHome, FaUsers, FaRobot, FaUser, FaListAlt, FaSignOutAlt, FaBars, FaBook, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaBell, FaSearch, FaCalendarDay, FaBuilding, FaUserTie, FaUserGraduate, FaFileAlt, FaClipboardCheck, FaUserPlus, FaSitemap, FaClipboardList, FaCommentDots, FaPenFancy } from 'react-icons/fa';
+import { FaHome, FaUsers, FaRobot, FaUser, FaListAlt, FaSignOutAlt, FaBars, FaBook, FaTrophy, FaMoon, FaSun, FaSchool, FaGraduationCap, FaListUl, FaBell, FaSearch, FaCalendarDay, FaBuilding, FaUserTie, FaUserGraduate, FaFileAlt, FaClipboardCheck, FaUserPlus, FaSitemap, FaClipboardList, FaCommentDots, FaPenFancy, FaEnvelope } from 'react-icons/fa';
 import { MdReportProblem } from 'react-icons/md';
 import { useTheme } from '../../context/ThemeContext';
 import Logo from './Logo';
@@ -20,9 +20,18 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
   })();
 
-  const canAccessTeacher = ['teacher', 'hod'].includes(userRole);
-  const canAccessHod = userRole === 'hod';
-  const canAccessInstitute = userRole === 'institute';
+  const ROLE_LEVEL = {
+    'student': 0,
+    'teacher': 1,
+    'hod': 2,
+    'institute': 3,
+    'admin': 4
+  };
+  const userLevel = ROLE_LEVEL[userRole] ?? 0;
+
+  const canAccessTeacher = userLevel >= ROLE_LEVEL['teacher'];
+  const canAccessHod = userLevel >= ROLE_LEVEL['hod'];
+  const canAccessInstitute = userLevel >= ROLE_LEVEL['institute'];
   const hasInstitute = Boolean(instituteId);
   const INSTITUTE_REQUIRED_FOR_CLASSES_MESSAGE = 'You must join an institute before joining any class.';
 
@@ -324,6 +333,25 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
           >
             <span className="text-lg drop-shadow-sm"><FaUser /></span>
             {isOpen && <span>Profile</span>}
+          </Link>
+
+          <button
+            onClick={() => window.dispatchEvent(new Event('openBugReporter'))}
+            className={`w-full flex items-center ${isOpen ? 'px-4 py-3 justify-start gap-4' : 'px-0 py-3 justify-center'} text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-rose-500/10 hover:text-rose-600 dark:hover:bg-white/10 dark:hover:text-rose-400 rounded-xl group`}
+            title="Report an Issue"
+          >
+            <span className="text-lg drop-shadow-sm"><MdReportProblem /></span>
+            {isOpen && <span>Report Bug</span>}
+          </button>
+
+          <Link
+            to="/contact"
+            onClick={handleNavClick}
+            className={`w-full flex items-center ${isOpen ? 'px-4 py-3 justify-start gap-4' : 'px-0 py-3 justify-center'} text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:bg-white/10 dark:hover:text-indigo-400 rounded-xl group`}
+            title="Contact Us"
+          >
+            <span className="text-lg drop-shadow-sm"><FaEnvelope /></span>
+            {isOpen && <span>Contact Us</span>}
           </Link>
 
           <button
