@@ -65,6 +65,15 @@ const examQuestionSchema = new mongoose.Schema({
     sourceShift: {
         type: String
     },
+    sourceDate: {
+        type: Date
+    },
+    sourcePart: {
+        type: String
+    },
+    sourceExamName: {
+        type: String
+    },
     tags: [{
         type: String
     }],
