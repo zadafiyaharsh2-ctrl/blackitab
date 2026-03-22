@@ -7,8 +7,7 @@ const TeacherFeedback = () => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState('all'); // all, class
-
+  
   useEffect(() => {
     fetchFeedbacks();
   }, []);
@@ -39,12 +38,15 @@ const TeacherFeedback = () => {
 
   const stats = getStats();
 
+  // Only include class feedback, or just filter out realtime and quiz_end based on search
   const filteredFeedbacks = feedbacks.filter(f => {
+    // Exclude quiz and realtime feedback as per user request
+    if (f.feedbackType === 'quiz_end' || f.feedbackType === 'realtime') return false;
+    
     const matchesSearch = 
       (f.comment && f.comment.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (f.studentId?.name && f.studentId.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesFilter = filterType === 'all' || f.feedbackType === filterType;
-    return matchesSearch && matchesFilter;
+    return matchesSearch;
   });
 
   const renderStars = (rating) => {
@@ -67,138 +69,165 @@ const TeacherFeedback = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#000000] p-6 text-slate-900 dark:text-white relative overflow-hidden">
-      {/* Background Orbs */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-rose-600/10 blur-[120px] mix-blend-screen" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-red-600/10 blur-[150px] mix-blend-screen" />
-      </div>
-
-      <div className="max-w-7xl mx-auto relative z-10 space-y-8">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#05000a] text-gray-900 dark:text-white p-6 sm:p-10 font-sans transition-colors selection:bg-[#0061FF]/20 selection:text-gray-900">
+      
+      <div className="max-w-[80rem] mx-auto space-y-10">
         
-        {/* Header & Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 flex flex-col justify-center glass-panel p-6 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="p-4 rounded-xl bg-rose-100 dark:bg-rose-500/20 border border-transparent dark:border-rose-500/30">
-                <FaCommentDots className="text-3xl text-rose-700 dark:text-rose-400" />
+        {/* Header & Stats Segment */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+          
+          <div className="lg:col-span-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-full mb-4 shadow-sm">
+              <FaCommentDots className="text-[#0061FF] text-xs" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                Performance Reviews
+              </span>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white leading-[1.1] tracking-tight">
+              Class Feedback
+            </h1>
+            <p className="text-sm font-medium text-gray-500 mt-3 max-w-xl leading-relaxed">
+              Review qualitative and quantitative evaluations from your students, automatically organized by your active classes.
+            </p>
+          </div>
+
+          <div className="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/10 rounded-[2rem] p-6 shadow-sm flex items-center justify-around h-full min-h-[140px]">
+            <div className="text-center group flex flex-col items-center">
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <span className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter group-hover:text-amber-500 transition-colors">
+                  {stats.avg}
+                </span>
+                <FaStar className="text-amber-400 text-2xl -mt-2" />
               </div>
-              <div>
-                <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Student Feedback</h1>
-                <p className="text-sm text-slate-600 dark:text-gray-400 mt-1">Review feedback on your teaching, quizzes, and content.</p>
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Global Rating</span>
+            </div>
+            
+            <div className="w-px h-16 bg-gray-100 dark:bg-white/10"></div>
+            
+            <div className="text-center group flex flex-col items-center">
+              <div className="flex items-center justify-center mb-1">
+                <span className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter group-hover:text-[#0061FF] transition-colors">
+                  {stats.total}
+                </span>
               </div>
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Reviews</span>
             </div>
           </div>
 
-          <div className="glass-panel p-6 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm flex items-center justify-around">
-            <div className="text-center">
-              <div className="text-3xl font-black text-slate-900 dark:text-white flex items-center justify-center gap-1">
-                {stats.avg} <FaStar className="text-yellow-400 text-xl" />
-              </div>
-              <div className="text-xs text-slate-500 dark:text-gray-400 uppercase tracking-widest font-bold mt-1">Avg Rating</div>
-            </div>
-            <div className="w-px h-12 bg-slate-200 dark:bg-white/10"></div>
-            <div className="text-center">
-              <div className="text-3xl font-black text-slate-900 dark:text-white">{stats.total}</div>
-              <div className="text-xs text-slate-500 dark:text-gray-400 uppercase tracking-widest font-bold mt-1">Reviews</div>
-            </div>
-          </div>
         </div>
 
-        {/* Filters & Search */}
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
+        {/* Search Row */}
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between border-y border-gray-100 dark:border-white/5 py-6">
+          <div className="relative w-full md:w-80">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <FaSearch className="text-gray-400 dark:text-gray-500" />
+              <FaSearch className="text-gray-400 text-sm" />
             </div>
             <input 
               type="text" 
-              placeholder="Search feedback..." 
+              placeholder="Search feedback content or student..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl py-4 pl-12 pr-4 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all shadow-sm"
+              className="w-full bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-full py-3 pl-11 pr-4 text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0061FF]/20 focus:border-[#0061FF]/50 transition-all shadow-sm"
             />
-          </div>
-          
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 snap-x custom-scrollbar">
-            {['all', 'class'].map(type => (
-              <button
-                key={type}
-                onClick={() => setFilterType(type)}
-                className={`snap-center px-6 py-4 rounded-xl text-sm font-bold whitespace-nowrap transition-all border ${
-                  filterType === type 
-                    ? 'bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-500/20' 
-                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:bg-white/5 dark:border-white/10 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-white'
-                }`}
-              >
-                {type === 'all' ? 'All Feedback' : getTypeLabel(type)}
-              </button>
-            ))}
           </div>
         </div>
 
-        {/* Feedback List */}
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-500"></div>
-          </div>
-        ) : filteredFeedbacks.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredFeedbacks.map((item) => (
-              <div
-                key={item._id || Math.random()}
-                className="group relative bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm hover:shadow-xl dark:hover:border-rose-500/50 transition-all duration-300 transform hover:-translate-y-1"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-sm font-bold text-white shadow-inner border border-white/10">
-                      {item.studentId?.name ? item.studentId.name[0].toUpperCase() : 'S'}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 dark:text-white text-sm">{item.studentId?.name || 'Anonymous Student'}</h4>
-                      <div className="text-xs text-slate-500 dark:text-gray-500 font-mono mt-0.5">
-                        {item.studentId?.email ? `${item.studentId.email} • ` : ''}
-                        {new Date(item.createdAt).toLocaleDateString()}
+        {/* Feedback List Grid grouped by batch */}
+        <div className="min-h-[400px]">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center h-full py-20">
+              <div className="w-10 h-10 border-4 border-[#0061FF]/20 border-t-[#0061FF] rounded-full animate-spin mb-4"></div>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Syncing Results</p>
+            </div>
+          ) : filteredFeedbacks.length > 0 ? (
+            <div className="space-y-16">
+              {Object.entries(
+                filteredFeedbacks.reduce((acc, fb) => {
+                  const batchName = fb.batchId ? `${fb.batchId.name} ${fb.batchId.classCode ? '('+fb.batchId.classCode+')' : ''}` : 'General / Unassigned';
+                  if (!acc[batchName]) acc[batchName] = [];
+                  acc[batchName].push(fb);
+                  return acc;
+                }, {})
+              ).map(([batchName, batchFeedbacks]) => (
+                <div key={batchName} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="flex items-center gap-3 pb-2 border-b border-gray-200 dark:border-white/10">
+                     <span className="w-2 h-6 bg-[#0061FF] rounded-full shrink-0" />
+                     <h2 className="text-2xl font-black text-gray-900 dark:text-white">{batchName}</h2>
+                     <span className="ml-2 px-3 py-1 bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300 text-xs font-bold rounded-lg border border-gray-200 dark:border-white/5">
+                        {batchFeedbacks.length}
+                     </span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
+                    {batchFeedbacks.map((item) => (
+                      <div
+                        key={item._id || Math.random()}
+                        className="group relative bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/10 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:border-[#0061FF]/30 dark:hover:border-[#0061FF]/30 transition-all duration-300 flex flex-col justify-between"
+                      >
+                        <div>
+                          {/* Header: User & Rating */}
+                          <div className="flex justify-between items-start mb-6 gap-4">
+                            
+                            <div className="flex items-center gap-3 min-w-0">
+                               {item.studentId?.profileImage ? (
+                                <img src={item.studentId.profileImage} alt="Student" className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm" />
+                               ) : (
+                                <div className="w-12 h-12 flex-shrink-0 rounded-full bg-gray-100 flex items-center justify-center text-lg font-black text-gray-600 dark:bg-white/10 dark:text-gray-300 border border-gray-200 dark:border-white/10 shadow-sm">
+                                  {item.studentId?.name ? item.studentId.name[0].toUpperCase() : 'S'}
+                                </div>
+                               )}
+                              <div className="min-w-0 truncate">
+                                <h4 className="font-bold text-gray-900 dark:text-white tracking-tight text-sm truncate">{item.studentId?.name || 'Anonymous Student'}</h4>
+                                <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 dark:text-gray-500 truncate mt-0.5">
+                                  {item.studentId?.email && <span className="truncate">{item.studentId.email}</span>}
+                                  {item.studentId?.email && <span>•</span>}
+                                  <span>{new Date(item.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-0.5 bg-gray-50 dark:bg-black/40 px-2.5 py-1.5 rounded-full border border-gray-200 dark:border-white/5 flex-shrink-0 shadow-inner">
+                              {renderStars(item.rating)}
+                            </div>
+                          </div>
+
+                          {/* Comment Body */}
+                          <div className="mb-8">
+                            <p className={`text-[15px] leading-relaxed font-serif text-pretty ${item.comment ? 'text-gray-700 dark:text-gray-300 font-medium' : 'text-gray-400 dark:text-gray-500 italic'}`}>
+                              "{item.comment || 'No written contextual feedback was provided.'}"
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Tags Footer */}
+                        <div className="pt-5 border-t border-gray-100 dark:border-white/5 flex flex-wrap gap-2 mt-auto">
+                          <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300">
+                            {getTypeLabel(item.feedbackType)}
+                          </span>
+                          
+                          {item.questionId && (
+                            <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full bg-sky-50 text-sky-700 border border-sky-100 dark:bg-sky-500/10 dark:text-sky-400 dark:border-sky-500/20 flex items-center gap-1.5">
+                              <FaQuestionCircle className="text-[11px]" /> Targeted Q.
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                   
-                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-black/40 px-2 py-1 rounded-lg border border-slate-200 dark:border-white/5">
-                    {renderStars(item.rating)}
+                    ))}
                   </div>
                 </div>
-
-                <div className="mb-4">
-                  <p className="text-sm text-slate-700 dark:text-gray-300 italic">
-                    "{item.comment || 'No written feedback provided.'}"
-                  </p>
-                </div>
-
-                <div className="mt-auto pt-4 border-t border-slate-200 dark:border-white/10 flex flex-wrap gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/20">
-                    {getTypeLabel(item.feedbackType)}
-                  </span>
-                  {item.batchId && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
-                      Batch: {item.batchId.name} {item.batchId.classCode ? `(${item.batchId.classCode})` : ''}
-                    </span>
-                  )}
-                  {item.questionId && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-500/20 flex items-center gap-1">
-                      <FaQuestionCircle /> Question Ref
-                    </span>
-                  )}
-                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-24 px-6 bg-white dark:bg-white/[0.02] border border-dashed border-gray-300 dark:border-white/10 rounded-[3rem] shadow-sm max-w-3xl mx-auto flex flex-col items-center justify-center animate-in fade-in">
+              <div className="w-20 h-20 bg-gray-50 dark:bg-white/5 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm border border-gray-100 dark:border-white/5">
+                <FaCommentDots className="text-3xl text-gray-300 dark:text-gray-600" />
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-24 glass-panel border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">
-            <FaCommentDots className="text-5xl text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Feedback Found</h3>
-            <p className="text-slate-500 dark:text-gray-400 max-w-sm mx-auto mb-6">You don't have any feedback matching your current filters.</p>
-          </div>
-        )}
+              <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-3">No Feedback Found</h3>
+              <p className="text-sm font-medium text-gray-500 max-w-md mx-auto">
+                No evaluations match your current search criteria. Try adjusting the parameters or clearing the search box.
+              </p>
+            </div>
+          )}
+        </div>
 
       </div>
     </div>

@@ -114,185 +114,281 @@ const TeacherClasses = () => {
   );
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#05000a] text-gray-900 dark:text-white p-6 sm:p-10 font-sans transition-colors selection:bg-[#0061FF]/20 selection:text-gray-900">
+      
+      <div className="max-w-[75rem] mx-auto space-y-10">
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <FaUsers className="text-gray-400" />
-            Classes &amp; Batches
-          </h1>
-          <p className="text-sm text-gray-500 mt-0.5">Manage your student groups</p>
+        {/* Master Header */}
+         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-gray-200 dark:border-white/10 pb-8">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-full mb-4 shadow-sm">
+              <FaUsers className="text-[#0061FF] dark:text-[#a5c3ff] text-xs" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                Instructional Cohorts
+              </span>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white leading-[1.1] tracking-tight">
+              Classes & Batches
+            </h1>
+            <p className="text-sm font-medium text-gray-500 mt-3 max-w-lg">
+              Manage your academic groups. Create new batches, oversee enrolled learners, and generate secure access codes.
+            </p>
+          </div>
+          
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex-shrink-0 group flex items-center gap-2 px-6 py-3 bg-gray-900 text-white dark:bg-white dark:text-gray-900 hover:bg-[#0061FF] dark:hover:bg-[#0061FF] dark:hover:text-white rounded-full text-xs font-bold uppercase tracking-widest transition-all shadow-md focus:outline-none focus:ring-4 focus:ring-[#0061FF]/20"
+          >
+            <FaPlus className="text-[10px] transform group-hover:rotate-90 transition-transform" /> New Class
+          </button>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold rounded-lg hover:bg-gray-700 dark:hover:bg-gray-100"
-        >
-          <FaPlus className="text-xs" /> New Class
-        </button>
-      </div>
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-        <input
-          type="text"
-          placeholder="Search classes…"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 dark:border-white/10 rounded-lg bg-white dark:bg-white/[0.02] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-        />
-      </div>
-
-      {/* Batch List */}
-      {loading ? (
-        <div className="flex justify-center py-16">
-          <FaSpinner className="animate-spin text-2xl text-gray-400" />
+        {/* Search & Actions Area */}
+        <div className="flex items-center justify-between gap-4 bg-white dark:bg-white/[0.02] p-2 pr-6 rounded-[2rem] border border-gray-200 dark:border-white/10 shadow-sm sticky top-6 z-10 backdrop-blur-md max-w-md">
+          <div className="relative w-full">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <FaSearch className="text-gray-400 text-sm" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search classes, codes, or subjects..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-transparent border-none py-3 pl-10 pr-4 text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-0 transition-colors"
+            />
+          </div>
         </div>
-      ) : filteredBatches.length === 0 ? (
-        <div className="text-center py-16 border border-dashed border-gray-200 dark:border-white/10 rounded-xl">
-          <FaUsers className="text-3xl text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm mb-4">{searchQuery ? 'No classes match your search.' : 'No classes yet. Create your first one.'}</p>
-          {!searchQuery && (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold rounded-lg"
-            >
-              <FaPlus className="inline mr-1 text-xs" /> Create Class
-            </button>
+
+        {/* Content Area */}
+        <div className="min-h-[400px]">
+          {loading ? (
+            
+            /* Loading State */
+            <div className="flex flex-col items-center justify-center py-24 animate-in fade-in">
+              <div className="relative w-16 h-16 flex items-center justify-center">
+                <div className="absolute inset-0 border-4 border-[#0061FF]/10 dark:border-white/5 rounded-full" />
+                <div className="absolute inset-0 border-4 border-[#0061FF] border-t-transparent rounded-full animate-spin" />
+              </div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-6 animate-pulse">Syncing Cohorts...</p>
+            </div>
+
+          ) : filteredBatches.length === 0 ? (
+            
+            /* Empty State */
+            <div className="text-center py-24 px-6 bg-white dark:bg-white/[0.02] border border-dashed border-gray-300 dark:border-white/10 rounded-[3rem] shadow-sm max-w-3xl mx-auto flex flex-col items-center justify-center animate-in fade-in slide-in-from-bottom-4">
+              <div className="w-20 h-20 bg-gray-50 dark:bg-white/5 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm border border-gray-100 dark:border-white/5">
+                <FaUsers className="text-3xl text-gray-300 dark:text-gray-600" />
+              </div>
+              <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-3">
+                {searchQuery ? 'No Matches Found' : 'No Classes Registered'}
+              </h3>
+              <p className="text-sm font-medium text-gray-500 max-w-md mx-auto mb-8">
+                 {searchQuery 
+                    ? `We couldn't find any cohorts matching "${searchQuery}". Please adjust your parameters.` 
+                    : 'You have not initialized any classes yet. Create your first instructional grouping to begin.'}
+              </p>
+              {!searchQuery && (
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="px-8 py-3.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:border-[#0061FF]/30 dark:hover:border-[#0061FF]/30 hover:bg-white dark:hover:bg-white/10 text-gray-900 dark:text-white rounded-full text-xs font-bold uppercase tracking-widest transition-all shadow-sm focus:outline-none"
+                >
+                  Create Your First Class
+                </button>
+              )}
+            </div>
+
+          ) : (
+            
+            /* Batches Grid */
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
+              {filteredBatches.map((batch, idx) => (
+                <div 
+                  key={batch._id || idx}
+                  onClick={() => navigate(`/teacher/batch/${batch._id}`)}
+                  className="group relative bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 hover:border-[#0061FF]/30 dark:hover:border-[#0061FF]/40 rounded-[2.5rem] p-6 sm:p-8 shadow-sm hover:shadow-[#0061FF]/5 transition-all duration-300 cursor-pointer flex flex-col justify-between overflow-hidden"
+                >
+                  
+                  {/* Hover Graphic */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#0061FF]/0 to-[#0061FF]/5 dark:to-[#0061FF]/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+                  {/* Header Row: Title & Action */}
+                   <div className="flex items-start justify-between gap-4 mb-3">
+                      <div className="min-w-0 pr-4">
+                         <h3 className="font-extrabold text-2xl text-gray-900 dark:text-white truncate group-hover:text-[#0061FF] dark:group-hover:text-[#a5c3ff] transition-colors tracking-tight leading-none mb-2">
+                           {batch.name}
+                         </h3>
+                         {batch.classCode && (
+                           <span className="inline-block mt-1 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] px-2 py-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-md shadow-sm select-all">
+                             {batch.classCode}
+                           </span>
+                         )}
+                      </div>
+                      
+                      {/* Delete Action (Top Right, Subtle) */}
+                      <button
+                        onClick={(e) => openDeleteModal(batch, e)}
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 dark:text-gray-600 dark:hover:text-red-400 dark:hover:bg-red-500/10 transition-colors flex-shrink-0 focus:outline-none"
+                        title="Delete Class"
+                      >
+                        <FaTrash className="text-xs" />
+                      </button>
+                   </div>
+                   
+                   {/* Meta Details */}
+                   <div className="mb-8 space-y-1.5 min-h-[40px]">
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 truncate">
+                        <FaGraduationCap className="text-[10px]" /> {batch.subjectId?.name || 'General Subject'}
+                      </p>
+                      <p className="text-[10px] font-semibold text-gray-500 truncate">
+                        {batch.department || batch.departmentId?.name || 'No Dept. Assigned'}
+                      </p>
+                   </div>
+
+                  {/* Footer Row: Stats & CTA */}
+                  <div className="flex items-center justify-between pt-5 border-t border-gray-100 dark:border-white/5 mt-auto">
+                    
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-lg text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                        <FaUsers className="text-[#0061FF] dark:text-[#a5c3ff] text-[10px]" /> 
+                        {batch.studentIds?.length || 0}
+                      </span>
+                      {batch.year && (
+                        <span className="px-2 py-1 text-[10px] font-bold text-gray-400">
+                          {batch.year} {batch.section && `• Sec ${batch.section}`}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-[#0061FF] transition-colors pr-1">
+                      Manage <FaChevronRight className="transform group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+
+                  </div>
+
+                </div>
+              ))}
+            </div>
+
           )}
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filteredBatches.map((batch) => (
-            <div
-              key={batch._id}
-              onClick={() => navigate(`/teacher/batch/${batch._id}`)}
-              className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] hover:border-gray-300 dark:hover:border-white/20 hover:bg-gray-50 dark:hover:bg-white/[0.04] cursor-pointer group"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-gray-900 dark:text-white text-sm truncate">{batch.name}</h3>
-                    {batch.classCode && (
-                      <span className="text-[10px] font-mono bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded shrink-0">{batch.classCode}</span>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-400 flex items-center gap-1">
-                    <FaGraduationCap /> {batch.subjectId?.name || 'General'}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Department: {batch.department || batch.departmentId?.name || 'Not set'}
-                  </p>
-                </div>
-                <button
-                  onClick={(e) => openDeleteModal(batch, e)}
-                  className="p-1.5 text-gray-300 dark:text-gray-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg"
-                >
-                  <FaTrash className="text-xs" />
-                </button>
-              </div>
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <span>{batch.year} {batch.section ? `· ${batch.section}` : ''}</span>
-                <span className="flex items-center gap-1">
-                  <FaUsers className="text-gray-400" /> {batch.studentIds?.length || 0}
-                </span>
-              </div>
-              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-xs text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300">
-                <span>Manage</span>
-                <FaChevronRight className="text-xs" />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      </div>
 
-      {/* Create Modal */}
+      {/* Creation Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowCreateModal(false)} />
-          <div className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-white/10 shadow-xl overflow-hidden">
-            <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100 dark:border-white/5">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Create New Class</h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-gray-600">
-                <FaTimes />
+          <div className="absolute inset-0 bg-gray-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setShowCreateModal(false)} />
+          
+          <div className="relative w-full max-w-md bg-white dark:bg-[#0a0a0a] rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-200 dark:border-white/10">
+            
+            <div className="px-8 py-6 border-b border-gray-100 dark:border-white/5 flex items-center justify-between bg-gray-50/50 dark:bg-white/[0.01]">
+              <h3 className="font-extrabold text-xl text-gray-900 dark:text-white tracking-tight">Initialize Cohort</h3>
+              <button 
+                onClick={() => setShowCreateModal(false)} 
+                className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 flex items-center justify-center text-gray-500 transition-colors focus:outline-none"
+              >
+                <FaTimes className="text-xs" />
               </button>
             </div>
-            <form onSubmit={handleCreateBatch} className="p-5 space-y-4">
+            
+            <form onSubmit={handleCreateBatch} className="p-8 space-y-6">
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Class Name <span className="text-red-500">*</span></label>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">
+                  Class Name <span className="text-[#0061FF]">*</span>
+                </label>
                 <input
                   type="text" required
-                  placeholder="e.g. Class 10 – Science"
+                  placeholder="e.g. Adv. Physics 101"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  autoFocus
+                  className="w-full bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:border-[#0061FF] focus:bg-white dark:focus:bg-[#0a0a0a] transition-all shadow-sm placeholder-gray-400"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year <span className="text-red-500">*</span></label>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">
+                    Academic Year <span className="text-[#0061FF]">*</span>
+                  </label>
                   <input
                     type="text" required
                     placeholder="e.g. 2024"
                     value={formData.year}
                     onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                    className="w-full border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:border-[#0061FF] focus:bg-white dark:focus:bg-[#0a0a0a] transition-all shadow-sm placeholder-gray-400"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Section</label>
+                   <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">
+                    Section
+                  </label>
                   <input
                     type="text"
                     placeholder="e.g. A"
                     value={formData.section}
                     onChange={(e) => setFormData({ ...formData, section: e.target.value })}
-                    className="w-full border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:border-[#0061FF] focus:bg-white dark:focus:bg-[#0a0a0a] transition-all shadow-sm placeholder-gray-400"
                   />
                 </div>
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Department <span className="text-red-500">*</span></label>
-                <select
-                  required
-                  value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  className="w-full border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                >
-                  <option value="">Select Department</option>
-                  {instituteDepartments.map((dept) => (
-                    <option key={dept} value={dept}>{dept}</option>
-                  ))}
-                </select>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">
+                  Department Jurisdiction <span className="text-[#0061FF]">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    required
+                    value={formData.department}
+                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                    className="w-full bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:border-[#0061FF] focus:bg-white dark:focus:bg-[#0a0a0a] transition-all shadow-sm appearance-none cursor-pointer"
+                  >
+                    <option value="" disabled>Select Department</option>
+                    {instituteDepartments.map((dept) => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
+                     <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path></svg>
+                  </div>
+                </div>
                 {instituteDepartments.length === 0 && (
-                  <p className="text-xs text-red-500 mt-1">
-                    No departments found in your institute. Ask institute admin to add departments first.
+                  <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wide mt-2">
+                    No departments available. Contact Institute Admin.
                   </p>
                 )}
               </div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-white/10 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400">Cancel</button>
+
+              <div className="flex gap-4 pt-6 mt-6 border-t border-gray-100 dark:border-white/5">
+                <button 
+                  type="button" 
+                  onClick={() => setShowCreateModal(false)} 
+                  className="flex-1 py-3.5 bg-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-colors focus:outline-none"
+                >
+                  Cancel
+                </button>
                 <button
                   type="submit"
                   disabled={instituteDepartments.length === 0}
-                  className="flex-1 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-3.5 bg-gray-900 text-white dark:bg-white dark:text-gray-900 hover:bg-[#0061FF] dark:hover:bg-[#0061FF] dark:hover:text-white rounded-2xl text-xs font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md focus:outline-none"
                 >
-                  Create
+                  Create Cohort
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-      {/* Delete Confirmation Modal */}
+
+      {/* Delete Confirmation Modal Layer */}
       <DeleteConfirmationModal
         isOpen={deleteModalState.isOpen}
         onClose={() => setDeleteModalState({ isOpen: false, batchId: null, batchName: '' })}
         onConfirm={executeDeleteBatch}
         itemName={deleteModalState.batchName}
         itemType="Class"
-        warningText="This will permanently delete the class, removing all enrolled students, assignments, and attendance records."
+        warningText="This action is irreversible. It will expunge all enrolled students, assignments, and historical attendance records tied to this cohort."
       />
     </div>
   );

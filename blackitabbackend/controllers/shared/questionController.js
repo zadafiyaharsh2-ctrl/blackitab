@@ -1,3 +1,4 @@
+const axios = require('axios');
 const ExamQuestion = require('../../models/ExamQuestion');
 const { ROLE_HIERARCHY } = require('../../middleware/roleMiddleware');
 
@@ -308,6 +309,13 @@ exports.updateQuestion = async (req, res) => {
 // DELETE /api/questions/:id
 exports.deleteQuestion = async (req, res) => {
     try {
+        const question = await ExamQuestion.findById(req.params.id);
+        if (!question) {
+            return res.status(404).json({ success: false, message: 'Question not found' });
+        }
+        if (!canModify(question, req.user)) {
+            return res.status(403).json({ success: false, message: 'Not authorized to delete this question' });
+        }
         await ExamQuestion.findByIdAndDelete(req.params.id);
         res.json({ success: true, message: 'Question deleted' });
     } catch (error) {
@@ -315,7 +323,14 @@ exports.deleteQuestion = async (req, res) => {
     }
 };
 
-// PUT /api/questions/:id/publish — Publish a draft question
+// PUT /api/questions/:id/publish — Publish a draft question (teacher) or approve+moderate (HOD)
+//
+// Flow:
+//  1. Teacher (creator)  → sets status = 'Published', isModerated stays false
+//  2. HOD (canModify)   → sets isModerated = true on an already-published question (approval stamp)
+//     OR directly publishes if teacher already submitted it for review
+//
+// isModerated = true means a HOD has explicitly approved the question content.
 exports.publishQuestion = async (req, res) => {
     try {
         const question = await ExamQuestion.findById(req.params.id);
@@ -323,19 +338,35 @@ exports.publishQuestion = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Question not found' });
         }
 
-        // Only the creator can publish it initially, or HOD if it's already published to edit it
-        if (question.createdBy?.toString() !== req.user._id.toString()) {
+        const isCreator   = question.createdBy?.toString() === req.user._id.toString();
+        const userLevel   = ROLE_HIERARCHY[req.user.role] ?? 0;
+        const isHodOrAbove = userLevel >= ROLE_HIERARCHY['hod'];
+        const sameInstitute = question.instituteId?.toString() === req.user.instituteId?.toString();
+
+        // HOD path — moderate (approve) an already-published question within same institute
+        if (isHodOrAbove && sameInstitute && !isCreator) {
+            if (question.status !== 'Published') {
+                // HOD can also directly publish a Draft if they have edit rights
+                question.status = 'Published';
+            }
+            question.isModerated = true;
+            await question.save();
+            return res.json({ success: true, data: question, action: 'moderated' });
+        }
+
+        // Creator path — publish their own draft
+        if (!isCreator) {
             return res.status(403).json({ success: false, message: 'Not authorized to publish this question' });
         }
-        
         if (question.status === 'Published') {
             return res.status(400).json({ success: false, message: 'Question is already published' });
         }
 
         question.status = 'Published';
+        // isModerated remains false until a HOD approves it
         await question.save();
 
-        res.json({ success: true, data: question });
+        res.json({ success: true, data: question, action: 'published' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
     }

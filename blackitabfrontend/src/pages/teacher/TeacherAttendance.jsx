@@ -342,30 +342,39 @@ export default function TeacherAttendance() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-5">
-      <Toaster position="bottom-right" />
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#05000a] font-sans pb-24 transition-colors">
 
-      <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+      {/* Editorial Header Array */}
+      <div className="relative pt-16 pb-12 sm:pt-24 sm:pb-16 px-6 sm:px-10 lg:px-14 max-w-[90rem] mx-auto border-b border-gray-200 dark:border-white/10">
+        <div className="absolute top-0 right-0 w-[60%] h-full bg-gradient-to-l from-[#0061FF]/3 to-transparent blur-[120px] pointer-events-none rounded-bl-full -z-10" />
+
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 relative z-10">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-6">
               {selectedBatch && (
                 <button
                   onClick={() => {
                     setSelectedBatch(null);
                     setSelectedHistory(null);
                   }}
-                  className="p-2 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5"
+                  className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 dark:border-white/10 text-gray-400 hover:text-[#0061FF] dark:hover:text-[#a5c3ff] hover:bg-white dark:hover:bg-white/5 transition-all shadow-sm"
                 >
                   <FaArrowLeft className="text-sm" />
                 </button>
               )}
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <FaCalendarDay className="text-gray-400" />
-                {selectedBatch ? selectedBatch.name : "Attendance"}
-              </h1>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-full shadow-sm">
+                <FaCalendarDay className="text-[#0061FF] dark:text-[#a5c3ff]" />
+                <span className="text-[11px] font-bold uppercase tracking-widest text-gray-600 dark:text-gray-300">
+                  Attendance Tracker
+                </span>
+              </div>
             </div>
-            <p className="text-sm text-gray-500 mt-1">
+            
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white leading-[1.1] tracking-tight">
+              {selectedBatch ? selectedBatch.name : "Attendance Register"}
+            </h1>
+            <p className="text-sm font-medium text-gray-500 mt-4">
               {selectedBatch
                 ? `${selectedBatch.year} · Section ${selectedBatch.section}`
                 : "Select a class to start taking attendance."}
@@ -373,701 +382,319 @@ export default function TeacherAttendance() {
           </div>
 
           {selectedBatch && (
-            <div className="flex border border-gray-200 dark:border-white/10 rounded-lg overflow-hidden">
+            <div className="flex bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-full p-1.5 shadow-sm">
               <button
                 onClick={() => setViewMode("take")}
-                className={`px-4 py-2 text-sm font-medium flex items-center gap-1.5 ${viewMode === "take" ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900" : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5"}`}
+                className={`px-6 py-2.5 rounded-full text-[13px] font-bold transition-all ${viewMode === "take" ? "bg-[#0061FF] text-white shadow-md" : "text-gray-500 hover:text-gray-900 dark:hover:text-white"}`}
               >
-                <FaPen className="text-[10px]" /> Take / Edit
+                Take
               </button>
               <button
                 onClick={() => setViewMode("history")}
-                className={`px-4 py-2 text-sm font-medium flex items-center gap-1.5 ${viewMode === "history" ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900" : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5"}`}
+                className={`px-6 py-2.5 rounded-full text-[13px] font-bold transition-all ${viewMode === "history" ? "bg-[#0061FF] text-white shadow-md" : "text-gray-500 hover:text-gray-900 dark:hover:text-white"}`}
               >
-                <FaHistory className="text-xs" /> History
+                History
               </button>
               <button
-                onClick={() => {
-                  setViewMode("grid");
-                  fetchHistory(selectedBatch._id);
-                }}
-                className={`px-4 py-2 text-sm font-medium flex items-center gap-1.5 ${viewMode === "grid" ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900" : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5"}`}
+                onClick={() => setViewMode("grid")}
+                className={`px-6 py-2.5 rounded-full text-[13px] font-bold transition-all ${viewMode === "grid" ? "bg-[#0061FF] text-white shadow-md" : "text-gray-500 hover:text-gray-900 dark:hover:text-white"}`}
               >
-                <FaTable className="text-xs" /> Register
+                Grid View
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {!selectedBatch ? (
-        <div>
-          {loadingBatches ? (
-            <div className="flex justify-center py-16">
-              <FaSpinner className="animate-spin text-2xl text-gray-400" />
-            </div>
-          ) : batches.length === 0 ? (
-            <div className="text-center py-16 border border-dashed border-gray-200 dark:border-white/10 rounded-xl">
-              <FaUsers className="text-3xl text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-500 text-sm">
-                No active classes found. Create one in{" "}
-                <strong>Manage Batches</strong>.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {batches.map((batch) => (
-                <button
-                  key={batch._id}
-                  onClick={() => setSelectedBatch(batch)}
-                  className="text-left p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.02] hover:border-blue-300 dark:hover:border-blue-500/40 hover:bg-blue-50/50 dark:hover:bg-blue-500/5 group transition-all"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
-                        {batch.name}
-                      </h3>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {batch.year} · Section {batch.section}
-                      </p>
-                    </div>
-                    <FaChevronRight className="text-gray-300 dark:text-gray-600 group-hover:text-blue-400 text-sm mt-0.5 transition-colors" />
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-5">
-          {/* ── Take / Edit Attendance Mode ── */}
-          {viewMode === "take" ? (
-            <>
-              {/* Date Navigator */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.02]">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => shiftDate(-1)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-                  >
-                    <FaChevronLeft className="text-xs" />
-                  </button>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      value={attendanceDate}
-                      onChange={(e) => setAttendanceDate(e.target.value)}
-                      className="text-sm border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 bg-white dark:bg-white/5 text-gray-700 dark:text-gray-200 outline-none focus:ring-2 focus:ring-blue-500/30"
-                    />
-                  </div>
-                  <button
-                    onClick={() => shiftDate(1)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-                  >
-                    <FaChevronRight className="text-xs" />
-                  </button>
-                  {!isToday && (
-                    <button
-                      onClick={() => setAttendanceDate(getLocalDateString())}
-                      className="text-xs font-semibold px-2.5 py-1.5 rounded-md bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors"
-                    >
-                      Today
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-gray-900 dark:text-white">
-                    {friendlyDate}
-                  </span>
-                  {existingRecord && (
-                    <span className="flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30">
-                      <FaPen className="text-[8px]" /> Editing
-                    </span>
-                  )}
-                  {isFutureDate && (
-                    <span className="flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30">
-                      <FaCalendarAlt className="text-[8px]" /> Scheduled
-                    </span>
-                  )}
-                  {isPastDate && !existingRecord && (
-                    <span className="flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30">
-                      <FaInfoCircle className="text-[8px]" /> Backdated
-                    </span>
-                  )}
-                </div>
-
-                {/* Quick date buttons */}
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => setAttendanceDate(getLocalDateString(-1))}
-                    className={`text-[11px] font-medium px-2 py-1 rounded-md border transition-colors ${attendanceDate === getLocalDateString(-1) ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 border-gray-900 dark:border-white" : "border-gray-200 dark:border-white/10 text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5"}`}
-                  >
-                    Yesterday
-                  </button>
-                  <button
-                    onClick={() => setAttendanceDate(getLocalDateString(-2))}
-                    className={`text-[11px] font-medium px-2 py-1 rounded-md border transition-colors ${attendanceDate === getLocalDateString(-2) ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 border-gray-900 dark:border-white" : "border-gray-200 dark:border-white/10 text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5"}`}
-                  >
-                    2 days ago
-                  </button>
-                  <button
-                    onClick={() => setAttendanceDate(getLocalDateString(-3))}
-                    className={`text-[11px] font-medium px-2 py-1 rounded-md border transition-colors ${attendanceDate === getLocalDateString(-3) ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 border-gray-900 dark:border-white" : "border-gray-200 dark:border-white/10 text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5"}`}
-                  >
-                    3 days ago
-                  </button>
-                </div>
+      <div className="max-w-[90rem] mx-auto px-6 sm:px-10 lg:px-14 py-10">
+        {!selectedBatch ? (
+          <div>
+            {loadingBatches ? (
+              <div className="flex justify-center py-24">
+                <FaSpinner className="animate-spin text-3xl text-[#0061FF]/40" />
               </div>
-
-              {/* Summary Counters */}
-              <div className="grid grid-cols-4 gap-3">
-                <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 text-center">
-                  <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                    {presentCount}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">Present</p>
-                </div>
-                <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] text-center">
-                  <p className="text-xl font-bold text-red-600 dark:text-red-400">
-                    {absentCount}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">Absent</p>
-                </div>
-                <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] text-center">
-                  <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
-                    {lateCount}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">Late</p>
-                </div>
-                <div className="border border-gray-200 dark:border-white/10 rounded-xl p-4 text-center">
-                  <p className="text-2xl font-bold text-gray-500 dark:text-gray-400">
-                    {noClassCount}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">No Class</p>
-                </div>
+            ) : batches.length === 0 ? (
+              <div className="text-center py-24 border border-dashed border-gray-300 dark:border-white/10 rounded-[2rem]">
+                <FaUsers className="text-5xl text-gray-200 dark:text-gray-700 mx-auto mb-4" />
+                <p className="text-gray-500 font-medium tracking-tight">No active classes found.</p>
               </div>
-
-              {/* Student List */}
-              {loadingStudents ? (
-                <div className="flex justify-center py-12">
-                  <FaSpinner className="animate-spin text-2xl text-gray-400" />
-                </div>
-              ) : students.length === 0 ? (
-                <div className="text-center py-12 border border-dashed border-gray-200 dark:border-white/10 rounded-xl">
-                  <p className="text-gray-500 text-sm">
-                    No students enrolled in this batch yet.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02] shadow-sm">
-                    {/* Action Bar */}
-                    <div className="px-4 py-3 border-b border-gray-100 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50/50 dark:bg-white/[0.01]">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        {students.length} Students
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={markAllPresent}
-                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/30 transition-colors rounded-md text-xs font-semibold border border-emerald-200 dark:border-emerald-500/30"
-                        >
-                          <FaCheckCircle /> All Present
-                        </button>
-                        <button
-                          onClick={markAllAbsent}
-                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 dark:bg-red-500/20 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/30 transition-colors rounded-md text-xs font-semibold border border-red-200 dark:border-red-500/30"
-                        >
-                          <FaTimesCircle /> All Absent
-                        </button>
-                        <button
-                          onClick={markAllNoClass}
-                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-500/30 transition-colors rounded-md text-xs font-semibold border border-gray-300 dark:border-gray-500/30"
-                        >
-                          <FaBan /> No Class
-                        </button>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {batches.map((batch) => (
+                  <button
+                    key={batch._id}
+                    onClick={() => setSelectedBatch(batch)}
+                    className="text-left p-8 rounded-[2rem] border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.02] hover:border-[#0061FF]/40 dark:hover:border-[#a5c3ff]/40 transition-all group shadow-sm hover:shadow-md hover:-translate-y-1"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2 group-hover:text-[#0061FF] dark:group-hover:text-[#a5c3ff] transition-colors">
+                          {batch.name}
+                        </h3>
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
+                          {batch.year} · Sec {batch.section}
+                        </p>
+                      </div>
+                      <div className="w-10 h-10 rounded-full border border-gray-100 dark:border-white/5 flex items-center justify-center group-hover:bg-[#0061FF]/5 dark:group-hover:bg-[#a5c3ff]/10 transition-colors">
+                        <FaChevronRight className="text-gray-300 dark:text-gray-600 group-hover:text-[#0061FF] dark:group-hover:text-[#a5c3ff] text-xs transition-colors" />
                       </div>
                     </div>
-
-                    {/* Table */}
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-sm whitespace-nowrap">
-                        <thead className="bg-gray-50 dark:bg-white/[0.02] border-b border-gray-100 dark:border-white/5 text-gray-500 dark:text-gray-400">
-                          <tr>
-                            <th className="px-4 py-3 font-semibold text-xs tracking-wider uppercase w-12 text-center">
-                              S.No
-                            </th>
-                            <th className="px-4 py-3 font-semibold text-xs tracking-wider uppercase">
-                              Student Name
-                            </th>
-                            <th className="px-4 py-3 font-semibold text-xs tracking-wider uppercase text-center w-24">
-                              Present
-                            </th>
-                            <th className="px-4 py-3 font-semibold text-xs tracking-wider uppercase text-center w-24">
-                              Absent
-                            </th>
-                            <th className="px-4 py-3 font-semibold text-xs tracking-wider uppercase text-center w-24">
-                              Late
-                            </th>
-                            <th className="px-4 py-3 font-semibold text-xs tracking-wider uppercase text-center w-24">
-                              No Class
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100 dark:divide-white/5">
-                          {students.map((student, idx) => {
-                            const status =
-                              attendanceState[student._id] || "Present";
-                            return (
-                              <tr
-                                key={student._id}
-                                className="hover:bg-gray-50/50 dark:hover:bg-white/[0.01] transition-colors group"
-                              >
-                                <td className="px-4 py-3 text-center text-xs font-medium text-gray-400">
-                                  {idx + 1}
-                                </td>
-                                <td className="px-4 py-3">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-600 dark:text-gray-300 font-semibold text-xs shrink-0 select-none">
-                                      {student.name.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div className="flex flex-col min-w-[150px]">
-                                      <span className="font-medium text-gray-900 dark:text-white truncate">
-                                        {student.name}
-                                      </span>
-                                      <span className="text-[10px] text-gray-400 truncate">
-                                        {student.email}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </td>
-
-                                {/* Present */}
-                                <td
-                                  className="px-4 py-3 text-center"
-                                  onClick={() =>
-                                    setStudentStatus(student._id, "Present")
-                                  }
-                                >
-                                  <div
-                                    className={`w-6 h-6 mx-auto rounded-md border flex items-center justify-center cursor-pointer transition-all ${
-                                      status === "Present"
-                                        ? "bg-emerald-500 border-emerald-600 text-white scale-110"
-                                        : "bg-white border-gray-300 text-transparent hover:border-emerald-500 dark:bg-gray-800 dark:border-gray-600"
-                                    }`}
-                                  >
-                                    <FaCheckCircle
-                                      className={
-                                        status === "Present"
-                                          ? "text-white"
-                                          : "opacity-0"
-                                      }
-                                      size={12}
-                                    />
-                                  </div>
-                                </td>
-
-                                {/* Absent */}
-                                <td
-                                  className="px-4 py-3 text-center"
-                                  onClick={() =>
-                                    setStudentStatus(student._id, "Absent")
-                                  }
-                                >
-                                  <div
-                                    className={`w-6 h-6 mx-auto rounded-md border flex items-center justify-center cursor-pointer transition-all ${
-                                      status === "Absent"
-                                        ? "bg-red-500 border-red-600 text-white scale-110"
-                                        : "bg-white border-gray-300 text-transparent hover:border-red-500 dark:bg-gray-800 dark:border-gray-600"
-                                    }`}
-                                  >
-                                    <FaTimesCircle
-                                      className={
-                                        status === "Absent"
-                                          ? "text-white"
-                                          : "opacity-0"
-                                      }
-                                      size={12}
-                                    />
-                                  </div>
-                                </td>
-
-                                {/* Late */}
-                                <td
-                                  className="px-4 py-3 text-center"
-                                  onClick={() =>
-                                    setStudentStatus(student._id, "Late")
-                                  }
-                                >
-                                  <div
-                                    className={`w-6 h-6 mx-auto rounded-md border flex items-center justify-center cursor-pointer transition-all ${
-                                      status === "Late"
-                                        ? "bg-amber-500 border-amber-600 text-white scale-110"
-                                        : "bg-white border-gray-300 text-transparent hover:border-amber-500 dark:bg-gray-800 dark:border-gray-600"
-                                    }`}
-                                  >
-                                    <FaClock
-                                      className={
-                                        status === "Late"
-                                          ? "text-white"
-                                          : "opacity-0"
-                                      }
-                                      size={12}
-                                    />
-                                  </div>
-                                </td>
-
-                                {/* No Class */}
-                                <td
-                                  className="px-4 py-3 text-center"
-                                  onClick={() =>
-                                    setStudentStatus(student._id, "No Class")
-                                  }
-                                >
-                                  <div
-                                    className={`w-6 h-6 mx-auto rounded-md border flex items-center justify-center cursor-pointer transition-all ${
-                                      status === "No Class"
-                                        ? "bg-gray-500 border-gray-600 text-white scale-110"
-                                        : "bg-white border-gray-300 text-transparent hover:border-gray-500 dark:bg-gray-800 dark:border-gray-600"
-                                    }`}
-                                  >
-                                    <FaBan
-                                      className={
-                                        status === "No Class"
-                                          ? "text-white"
-                                          : "opacity-0"
-                                      }
-                                      size={12}
-                                    />
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* Save Footer */}
-                    <div className="px-4 py-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-between bg-gray-50/50 dark:bg-white/[0.01]">
-                      <p className="text-xs text-gray-500">
-                        {existingRecord ? (
-                          <span className="flex items-center gap-1">
-                            <FaPen className="text-amber-500" /> Updating
-                            existing record for <strong>{friendlyDate}</strong>
-                          </span>
-                        ) : (
-                          <span>
-                            Creating new record for{" "}
-                            <strong>{friendlyDate}</strong>
-                          </span>
-                        )}
-                      </p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {/* ── Take / Edit Attendance Mode ── */}
+            {viewMode === "take" ? (
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+                
+                {/* Left Column (3/4): Main Roster */}
+                <div className="lg:col-span-3 space-y-6">
+                  {/* Date Strip */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 rounded-[2rem] border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-sm">
+                    <div className="flex items-center gap-3">
                       <button
-                        onClick={submitAttendance}
-                        disabled={submitting}
-                        className="flex-1 lg:flex-none px-3 py-2 text-xs border border-gray-200 dark:border-white/10 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 disabled:cursor-not-allowed"
+                        onClick={() => shiftDate(-1)}
+                        className="w-10 h-10 rounded-full border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                       >
-                        {submitting ? (
-                          <FaSpinner className="animate-spin" />
-                        ) : (
-                          <FaSave />
-                        )}
-                        {submitting
-                          ? "Saving…"
-                          : existingRecord
-                            ? "Update Attendance"
-                            : "Save Attendance"}
+                        <FaChevronLeft className="text-xs" />
+                      </button>
+                      <input
+                        type="date"
+                        value={attendanceDate}
+                        onChange={(e) => setAttendanceDate(e.target.value)}
+                        className="text-sm font-bold border-none bg-transparent text-gray-900 dark:text-white outline-none cursor-pointer"
+                      />
+                      <button
+                        onClick={() => shiftDate(1)}
+                        className="w-10 h-10 rounded-full border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                      >
+                        <FaChevronRight className="text-xs" />
                       </button>
                     </div>
 
+                    <div className="flex items-center gap-3">
+                      {existingRecord ? (
+                        <span className="px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[11px] font-bold uppercase tracking-widest border border-amber-200 dark:border-amber-500/20 flex items-center gap-1.5">
+                          <FaPen className="text-[10px]" /> Editing Record
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 rounded-full bg-[#0061FF]/10 text-[#0061FF] dark:text-[#a5c3ff] text-[11px] font-bold uppercase tracking-widest border border-[#0061FF]/20 flex items-center gap-1.5">
+                          New Record
+                        </span>
+                      )}
+                      
+                      <div className="h-6 w-px bg-gray-200 dark:bg-white/10 mx-2" />
+                      
+                      <span className="text-xl font-extrabold text-gray-900 dark:text-white tracking-tight">{friendlyDate}</span>
+                    </div>
+                  </div>
+
+                  {/* Student List Container */}
+                  <div className="border border-gray-200 dark:border-white/10 rounded-[2rem] bg-white dark:bg-white/[0.02] overflow-hidden shadow-sm">
+                    <div className="px-8 py-5 border-b border-gray-100 dark:border-white/5 bg-[#f8f9fa]/50 dark:bg-[#0a0a0a] flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
+                        Roster • {students.length} Students
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <button onClick={markAllPresent} className="px-4 py-2 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:border-[#0061FF]/30 hover:text-[#0061FF] transition-all rounded-full text-xs font-bold shadow-sm flex items-center justify-center gap-1">
+                          <FaCheckCircle className="text-[10px]" /> All Present
+                        </button>
+                        <button onClick={markAllAbsent} className="px-4 py-2 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:border-red-500/30 hover:text-red-500 transition-all rounded-full text-xs font-bold shadow-sm flex items-center justify-center gap-1">
+                          <FaTimesCircle className="text-[10px]" /> All Absent
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="divide-y divide-gray-100 dark:divide-white/5">
+                      {loadingStudents ? (
+                        <div className="py-24 text-center">
+                          <FaSpinner className="animate-spin text-3xl text-[#0061FF]/40 mx-auto" />
+                        </div>
+                      ) : students.length === 0 ? (
+                        <div className="py-24 text-center text-sm font-medium text-gray-500">
+                          No students enrolled.
+                        </div>
+                      ) : (
+                        students.map((student, idx) => {
+                          const status = attendanceState[student._id] || "Present";
+                          return (
+                            <div key={student._id} className="p-4 sm:px-8 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 dark:hover:bg-white/[0.01] transition-colors group">
+                              <div className="flex items-center gap-4 min-w-0 pr-4">
+                                <span className="text-[11px] font-bold text-gray-400 w-4 text-right shrink-0">{idx + 1}</span>
+                                <div className="min-w-0">
+                                  <p className="text-[15px] font-bold text-gray-900 dark:text-white tracking-tight truncate">
+                                    {student.name}
+                                  </p>
+                                  <p className="text-[11px] font-medium text-gray-500 truncate">
+                                    {student.email}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex shrink-0 w-full sm:w-auto overflow-x-auto shadow-sm rounded-full">
+                                <div className="flex items-center bg-[#f8f9fa] dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-full p-1 min-w-0 w-full">
+                                  {["Present", "Absent", "Late", "No Class"].map(opt => (
+                                    <button
+                                      key={opt}
+                                      onClick={() => setStudentStatus(student._id, opt)}
+                                      className={`flex-1 sm:flex-none px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${status === opt 
+                                        ? (opt === 'Present' ? 'bg-[#0061FF] text-white shadow-sm' 
+                                          : opt === 'Absent' ? 'bg-red-500 text-white shadow-sm' 
+                                          : opt === 'Late' ? 'bg-amber-500 text-white shadow-sm' 
+                                          : 'bg-gray-600 text-white shadow-sm')
+                                        : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'}`}
+                                    >
+                                      {opt === 'Present' ? 'P' : opt === 'Absent' ? 'A' : opt === 'Late' ? 'L' : 'N'}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column (1/4): Snapshot & Save */}
+                <div className="lg:col-span-1 space-y-6">
+                  {/* Summary Block */}
+                  <div className="border border-gray-200 dark:border-white/10 rounded-[2rem] bg-white dark:bg-white/[0.02] p-8 shadow-sm">
+                    <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-6">Snapshot</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-500">Present</span>
+                        <span className="text-xl font-black text-gray-900 dark:text-white">{presentCount}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-500">Absent</span>
+                        <span className="text-xl font-black text-gray-900 dark:text-white">{absentCount}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-500">Late</span>
+                        <span className="text-xl font-black text-gray-900 dark:text-white">{lateCount}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Save Block */}
+                  <div className="border border-gray-200 dark:border-white/10 rounded-[2rem] bg-white dark:bg-white/[0.02] p-8 shadow-sm text-center">
+                    <p className="text-[12px] font-medium text-gray-500 mb-6 leading-relaxed">
+                      {existingRecord ? "You are updating a previously saved attendance block." : "You are submitting a new block for the active date."}
+                    </p>
                     <button
                       onClick={submitAttendance}
                       disabled={submitting}
-                      className="w-full lg:w-auto lg:ml-auto px-4 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 disabled:opacity-50 flex items-center justify-center gap-2"
+                      className="w-full py-4 bg-[#0061FF] dark:bg-[#0061FF] text-white rounded-full font-bold text-sm shadow-md hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                     >
-                      {submitting ? (
-                        <FaSpinner className="animate-spin" />
-                      ) : (
-                        <FaSave className="text-xs" />
-                      )}
-                      Save Attendance
+                      {submitting ? <FaSpinner className="animate-spin" /> : <FaSave />}
+                      {submitting ? "Saving Data..." : existingRecord ? "Update Register" : "Save Register"}
                     </button>
                   </div>
+                </div>
 
-                  <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
-                    <div className="px-4 py-3 border-b border-gray-200 dark:border-white/10">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Class Roster
-                      </p>
-                    </div>
-
+              </div>
+            ) : viewMode === "history" ? (
+              <div className="border border-gray-200 dark:border-white/10 rounded-[2rem] bg-white dark:bg-white/[0.02] p-8 shadow-sm min-h-[500px]">
+                 {!selectedHistory ? (
+                  <>
+                    <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-6">Past Records</h3>
                     {loadingStudents ? (
-                      <div className="py-16 text-center">
-                        <FaSpinner className="animate-spin text-2xl text-gray-400 mx-auto" />
+                      <div className="py-24 text-center">
+                        <FaSpinner className="animate-spin text-3xl text-[#0061FF]/40 mx-auto" />
                       </div>
-                    ) : filteredStudents.length === 0 ? (
-                      <div className="py-12 text-center text-sm text-gray-500">
-                        No students found in this roster.
+                    ) : historyRecords.length === 0 ? (
+                      <div className="py-24 text-center text-sm font-medium text-gray-500">
+                        No past attendance data available.
                       </div>
                     ) : (
-                      <div className="divide-y divide-gray-200 dark:divide-white/10 max-h-[560px] overflow-y-auto custom-scrollbar">
-                        {filteredStudents.map((student, index) => {
-                          const status =
-                            attendanceState[student._id] || "Present";
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {historyRecords.map((record) => {
+                          const d = new Date(record.date);
+                          const presentN = record.records.filter((r) => r.status === "Present").length;
+                          const totalN = record.records.length;
+                          const pct = totalN > 0 ? Math.round((presentN / totalN) * 100) : 0;
+                          
                           return (
-                            <div
-                              key={student._id}
-                              className="px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-gray-50 dark:hover:bg-white/[0.04]"
-                            >
-                              <div className="min-w-0">
-                                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                                  {index + 1}.{" "}
-                                  {student.name || "Unknown Student"}
-                                </p>
-                                <p className="text-xs text-gray-500 truncate">
-                                  {student.email || "No email"}
-                                </p>
+                            <div key={record._id} className="p-6 rounded-[1.5rem] border border-gray-200 dark:border-white/10 bg-[#f8f9fa] dark:bg-white/5 group hover:border-[#0061FF]/40 transition-all">
+                              <p className="text-sm font-extrabold text-gray-900 dark:text-white mb-4">
+                                {d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
+                              </p>
+                              <div className="flex items-center justify-between text-xs font-bold text-gray-500 mb-3">
+                                <span>{presentN} / {totalN} Present</span>
+                                <span className={pct >= 75 ? "text-emerald-500" : pct >= 50 ? "text-amber-500" : "text-red-500"}>{pct}%</span>
                               </div>
-
-                              <div className="flex gap-2 w-full sm:w-auto">
-                                <button
-                                  onClick={() =>
-                                    setAttendanceState((prev) => ({
-                                      ...prev,
-                                      [student._id]: "Present",
-                                    }))
-                                  }
-                                  className={`flex-1 sm:flex-none px-3 py-1.5 text-xs border rounded-md transition-colors ${status === "Present" ? "bg-emerald-500 border-emerald-500 text-white" : "border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"}`}
-                                >
-                                  Present
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    setAttendanceState((prev) => ({
-                                      ...prev,
-                                      [student._id]: "Absent",
-                                    }))
-                                  }
-                                  className={`flex-1 sm:flex-none px-3 py-1.5 text-xs border rounded-md transition-colors ${status === "Absent" ? "bg-red-500 border-red-500 text-white" : "border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"}`}
-                                >
-                                  Absent
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    setAttendanceState((prev) => ({
-                                      ...prev,
-                                      [student._id]: "Late",
-                                    }))
-                                  }
-                                  className={`flex-1 sm:flex-none px-3 py-1.5 text-xs border rounded-md transition-colors ${status === "Late" ? "bg-amber-500 border-amber-500 text-white" : "border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"}`}
-                                >
-                                  Late
-                                </button>
+                              <div className="w-full bg-gray-200 dark:bg-black rounded-full h-1.5 mb-6">
+                                <div className={`h-full rounded-full ${pct >= 75 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-red-500"}`} style={{ width: `${pct}%` }} />
+                              </div>
+                              <div className="flex gap-2">
+                                <button onClick={() => editHistoryRecord(record)} className="flex-1 py-1.5 rounded-full border border-gray-200 dark:border-white/10 text-[11px] font-bold text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-black transition-all">Edit</button>
+                                <button onClick={() => setSelectedHistory(record)} className="flex-1 py-1.5 rounded-full border border-gray-200 dark:border-white/10 text-[11px] font-bold text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-black transition-all">View</button>
                               </div>
                             </div>
                           );
                         })}
                       </div>
                     )}
-                  </div>
-                </>
-              )}
-            </>
-          ) : viewMode === "history" ? (
-            <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] min-h-[420px]">
-              {!selectedHistory ? (
-                <>
-                  <p className="text-sm text-gray-500">
-                    Past attendance records for this class. Click{" "}
-                    <strong>Edit</strong> to modify any record.
-                  </p>
-                  {loadingStudents ? (
-                    <div className="py-14 text-center">
-                      <FaSpinner className="animate-spin text-2xl text-gray-400 mx-auto" />
-                    </div>
-                  ) : historyRecords.length === 0 ? (
-                    <div className="py-14 text-center border border-dashed border-gray-200 dark:border-white/10 rounded-xl">
-                      <FaHistory className="text-3xl text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                      <p className="text-sm text-gray-500">
-                        No past attendance records found.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-gray-200 dark:divide-white/10">
-                      {historyRecords.map((record) => {
-                        const d = new Date(record.date);
-                        const presentN = record.records.filter(
-                          (r) => r.status === "Present",
-                        ).length;
-                        const totalN = record.records.length;
-                        const pct =
-                          totalN > 0
-                            ? Math.round((presentN / totalN) * 100)
-                            : 0;
-                        return (
-                          <div
-                            key={record._id}
-                            className="p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.02] hover:border-gray-300 dark:hover:border-white/20 group transition-all"
-                          >
-                            <div className="flex items-center justify-between mb-3">
-                              <p className="text-sm font-bold text-gray-900 dark:text-white">
-                                {d.toLocaleDateString("en-US", {
-                                  weekday: "short",
-                                  month: "short",
-                                  day: "numeric",
-                                })}
-                              </p>
-                              <div className="flex items-center gap-1.5">
-                                <button
-                                  onClick={() => editHistoryRecord(record)}
-                                  className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors"
-                                >
-                                  <FaPen className="text-[8px]" /> Edit
-                                </button>
-                                <button
-                                  onClick={() => setSelectedHistory(record)}
-                                  className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold border border-gray-200 dark:border-white/10 text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-                                >
-                                  View
-                                </button>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between text-xs">
-                              <div className="flex items-center gap-3 text-gray-500">
-                                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                                  {presentN} P
-                                </span>
-                                <span className="text-red-500 font-semibold">
-                                  {totalN - presentN} A
-                                </span>
-                                <span>· {totalN} total</span>
-                              </div>
-                              <span
-                                className={`font-bold ${pct >= 75 ? "text-emerald-600 dark:text-emerald-400" : pct >= 50 ? "text-amber-600 dark:text-amber-400" : "text-red-500"}`}
-                              >
-                                {pct}%
-                              </span>
-                            </div>
-                            {/* Mini progress bar */}
-                            <div className="mt-2 w-full bg-gray-200 dark:bg-gray-800 rounded-full h-1.5">
-                              <div
-                                className={`h-1.5 rounded-full transition-all ${pct >= 75 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-red-500"}`}
-                                style={{ width: `${pct}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => setSelectedHistory(null)}
-                        className="text-sm text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 hover:underline"
-                      >
-                        <FaArrowLeft className="text-xs" /> Back
+                  </>
+                 ) : (
+                    <div>
+                      <button onClick={() => setSelectedHistory(null)} className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-[#0061FF] dark:hover:text-[#a5c3ff] transition-colors mb-6">
+                        <FaArrowLeft className="text-xs" /> Back to History
                       </button>
-                      <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {new Date(selectedHistory.date).toLocaleDateString(
-                          "en-US",
-                          {
-                            weekday: "long",
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          },
-                        )}
+                      <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-8">
+                        {new Date(selectedHistory.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                       </h2>
-                    </div>
-                    <button
-                      onClick={() => editHistoryRecord(selectedHistory)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors"
-                    >
-                      <FaPen className="text-[10px]" /> Edit Record
-                    </button>
-                  </div>
+                      
+                      {/* Summary Bubbles */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        {["Present", "Absent", "Late", "No Class"].map((stat) => {
+                          const count = selectedHistory.records.filter((r) => r.status === stat).length;
+                          return (
+                            <div key={stat} className="border border-gray-200 dark:border-white/10 rounded-[1.5rem] p-6 text-center bg-[#f8f9fa] dark:bg-white/5">
+                              <p className="text-3xl font-black text-gray-900 dark:text-white leading-none mb-2">{count}</p>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{stat}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
 
-                  <div className="grid grid-cols-4 gap-3">
-                    {["Present", "Absent", "Late", "No Class"].map((stat) => {
-                      const count = selectedHistory.records.filter(
-                        (r) => r.status === stat,
-                      ).length;
-                      const cfg = statusConfig[stat];
-                      return (
-                        <div
-                          key={stat}
-                          className="border border-gray-200 dark:border-white/10 rounded-xl p-4 text-center bg-white dark:bg-white/[0.02]"
-                        >
-                          <p className="text-xl font-bold text-gray-900 dark:text-white">
-                            {count}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">{stat}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
-                    <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-gray-200 dark:border-white/10 text-xs uppercase tracking-wider font-semibold text-gray-500">
-                      <p className="col-span-5">Student</p>
-                      <p className="col-span-4">Email</p>
-                      <p className="col-span-3 text-right">Status</p>
-                    </div>
-
-                    <div className="divide-y divide-gray-200 dark:divide-white/10 max-h-[500px] overflow-y-auto custom-scrollbar">
-                      {(selectedHistory?.records || []).map((record, index) => {
-                        return (
-                          <div
-                            key={`${record.studentId?._id || "row"}-${index}`}
-                            className="grid grid-cols-12 gap-2 px-4 py-3 text-sm"
-                          >
-                            <p className="col-span-5 font-medium text-gray-900 dark:text-white truncate">
-                              {index + 1}.{" "}
-                              {record.studentId?.name || "Unknown Student"}
-                            </p>
-                            <p className="col-span-4 text-gray-500 truncate">
-                              {record.studentId?.email || "No email"}
-                            </p>
-                            <div className="col-span-3 flex justify-end">
-                              <span
-                                className={`px-2 py-0.5 text-xs rounded-md border font-medium ${getStatusPillClass(record.status)}`}
-                              >
-                                {record.status || "Unknown"}
+                      <div className="border border-gray-200 dark:border-white/10 rounded-[1.5rem] overflow-hidden bg-white dark:bg-white/[0.02]">
+                        <div className="divide-y divide-gray-100 dark:divide-white/5 max-h-[500px] overflow-y-auto">
+                          {(selectedHistory.records || []).map((record, index) => (
+                            <div key={index} className="flex items-center justify-between p-4 px-6 hover:bg-gray-50/50 dark:hover:bg-white/[0.01] transition-colors">
+                              <div className="font-bold text-[13px] text-gray-900 dark:text-white tracking-tight">
+                                {index + 1}. {record.studentId?.name || "Unknown"}
+                              </div>
+                              <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full ${record.status === 'Present' ? 'bg-[#0061FF]/10 text-[#0061FF] dark:text-[#a5c3ff]' : record.status === 'Absent' ? 'bg-red-500/10 text-red-500' : 'bg-gray-200 dark:bg-white/10 text-gray-600 dark:text-gray-400'}`}>
+                                {record.status}
                               </span>
                             </div>
-                          </div>
-                        );
-                      })}
+                          ))}
+                        </div>
+                      </div>
                     </div>
+                 )}
+              </div>
+            ) : (
+              <div className="border border-gray-200 dark:border-white/10 rounded-[2rem] p-8 shadow-sm bg-white dark:bg-white/[0.02]">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-6">Attendance Grid</p>
+                {loadingStudents ? (
+                  <div className="py-24 text-center">
+                    <FaSpinner className="animate-spin text-3xl text-[#0061FF]/40 mx-auto" />
                   </div>
-                </div>
-              )}
-            </div>
-          ) : null}
-
-          {/* ── Grid / Register Mode ── */}
-          {viewMode === "grid" && (
-            <div className="space-y-4">
-              <p className="text-sm text-gray-500">
-                Full attendance register for{" "}
-                <strong>{selectedBatch.name}</strong>.
-              </p>
-              {loadingStudents ? (
-                <div className="flex justify-center py-12">
-                  <FaSpinner className="animate-spin text-2xl text-gray-400" />
-                </div>
-              ) : (
-                <AttendanceGrid records={historyRecords} students={students} />
-              )}
-            </div>
-          )}
-        </div>
-      )}
+                ) : (
+                  <AttendanceGrid records={historyRecords} students={students} />
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

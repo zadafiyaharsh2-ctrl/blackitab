@@ -407,47 +407,67 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="admin-theme app-mobile-type min-h-screen bg-slate-50 dark:bg-[#0a0a0a] text-slate-900 dark:text-white">
-      {/* Ambient BG Orbs */}
+    <div className="admin-theme app-mobile-type min-h-screen bg-admin-surface text-admin-on-surface flex font-['Inter']">
+      {/* Ambient BG Orbs from original */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="hidden dark:block absolute top-[-10%] left-[5%] w-[500px] h-[500px] bg-red-600/20 rounded-full blur-[120px] mix-blend-screen" />
-        <div className="hidden dark:block absolute bottom-[-5%] right-[5%] w-[450px] h-[450px] bg-orange-600/15 rounded-full blur-[120px] mix-blend-screen" />
+        <div className="absolute top-[-10%] left-[5%] w-[500px] h-[500px] bg-admin-primary/20 rounded-full blur-[120px] mix-blend-screen" />
+        <div className="absolute bottom-[-5%] right-[5%] w-[450px] h-[450px] bg-admin-secondary/15 rounded-full blur-[120px] mix-blend-screen" />
       </div>
 
-      {/* Admin Top Bar */}
-      <div className="bg-white/90 dark:bg-black/50 border-b border-gray-200 dark:border-white/5 px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          <FaShieldAlt className="text-red-500 text-xl" />
-          <span className="font-bold text-lg">RANKLEN Admin</span>
-          <span className="text-xs bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 px-2 py-0.5 rounded-full font-bold">SYSTEM</span>
+      {/* SideNavBar from Stitch Design */}
+      <aside className="fixed left-0 h-full w-64 border-r border-admin-outline-variant/20 bg-admin-surface-container-low flex flex-col gap-2 p-6 z-[60]">
+        <div className="mb-10 px-2">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-admin-primary to-admin-primary-container flex items-center justify-center shadow-[0_0_15px_rgba(0,97,255,0.4)]">
+              <FaShieldAlt className="text-white text-2xl" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-admin-primary-fixed-dim tracking-tighter">RANKLEN</h1>
+              <p className="text-[10px] text-admin-on-surface-variant tracking-[0.1em] uppercase font-bold opacity-60">Command Center</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-admin-surface-container-high/50 border border-admin-outline-variant/10">
+            <div className="w-8 h-8 rounded-lg bg-admin-surface-container-highest flex items-center justify-center text-white font-bold">{admin?.username?.[0]?.toUpperCase() || 'A'}</div>
+            <div className="overflow-hidden">
+              <p className="text-xs font-bold text-admin-on-surface truncate">{admin?.username || 'Elite Administrator'}</p>
+              <p className="text-[10px] text-admin-on-surface-variant truncate">System Active</p>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-slate-500 dark:text-gray-400 text-sm">{admin?.username || 'admin'}</span>
-          <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 text-sm font-bold transition-colors">
-            <FaSignOutAlt /> Logout
-          </button>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto p-6 md:p-10 relative z-10">
-        {/* Tabs */}
-        <div className="flex gap-1 mb-8 bg-white border border-slate-200 shadow-sm dark:bg-white/5 dark:border-white/10 p-1 rounded-xl w-fit flex-wrap">
+        <nav className="flex flex-col gap-1">
           {tabs.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
-              className={`px-4 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 relative ${activeTab === t.id ? 'bg-slate-900 text-white dark:bg-white dark:text-gray-900' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/10'}`}>
-              <t.icon className="text-xs" />
-              {t.label}
-              {t.badge > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold animate-pulse">
-                  {t.badge > 99 ? '99+' : t.badge}
-                </span>
-              )}
+              className={activeTab === t.id 
+                ? "bg-[#0061ff] text-white rounded-lg shadow-[0_0_15px_rgba(0,97,255,0.4)] flex items-center gap-3 px-4 py-3 translate-x-1 transition-transform group"
+                : "text-[#c2c6d9] hover:text-white hover:bg-[#222a3d] transition-colors duration-200 flex items-center gap-3 px-4 py-3 rounded-lg group"}>
+              <t.icon className="text-lg" />
+              <span className="font-['Inter'] text-xs tracking-[0.05rem] uppercase font-semibold">{t.label}</span>
             </button>
           ))}
+        </nav>
+        <div className="mt-auto pt-6 border-t border-admin-outline-variant/10">
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-admin-error rounded-lg hover:bg-admin-error/10 transition-colors">
+            <FaSignOutAlt className="text-lg" />
+            <span className="font-semibold text-xs uppercase tracking-wider">Logout</span>
+          </button>
         </div>
+      </aside>
 
-        {/* ── TAB CONTENT — lazy loaded ── */}
-        <Suspense fallback={
+      {/* Main Canvas */}
+      <main className="flex-1 ml-64 min-h-screen flex flex-col relative overflow-x-hidden bg-admin-background">
+        {/* TopAppBar */}
+        <header className="bg-admin-surface/60 backdrop-blur-xl border-b border-admin-outline-variant/20 sticky top-0 z-50 flex justify-between items-center px-8 h-20 w-full shadow-[0_32px_32px_-4px_rgba(255,255,255,0.06)]">
+          <div className="flex items-center gap-6">
+             <h2 className="text-xl font-bold text-admin-on-surface flex items-center gap-3">
+               {React.createElement(tabs.find(t=>t.id===activeTab)?.icon || FaChartLine, { className: 'text-admin-primary' })}
+               {tabs.find(t=>t.id===activeTab)?.label || 'Overview'}
+             </h2>
+          </div>
+        </header>
+
+        <div className="p-8 md:p-10 flex flex-col gap-10 relative z-10 w-full max-w-7xl mx-auto">
+          {/* ── TAB CONTENT — lazy loaded ── */}
+          <Suspense fallback={
           <div className="flex items-center justify-center py-24">
             <FaSpinner className="animate-spin text-3xl text-blue-500 opacity-60" />
           </div>
@@ -531,12 +551,18 @@ const AdminDashboard = () => {
             />
           )}
         </Suspense>
-
-
-
       </div>
 
-
+      {/* Footer from Stitch Design */}
+      <footer className="w-full py-8 mt-auto flex flex-col items-center justify-center gap-4 bg-admin-surface border-t border-admin-outline-variant/10">
+        <div className="flex gap-6">
+          <a className="font-['Inter'] text-xs tracking-[0.05rem] text-admin-on-surface-variant/60 hover:text-admin-primary transition-opacity opacity-80 hover:opacity-100 uppercase" href="#">Privacy Policy</a>
+          <a className="font-['Inter'] text-xs tracking-[0.05rem] text-admin-on-surface-variant/60 hover:text-admin-primary transition-opacity opacity-80 hover:opacity-100 uppercase" href="#">System Status</a>
+          <a className="font-['Inter'] text-xs tracking-[0.05rem] text-admin-on-surface-variant/60 hover:text-admin-primary transition-opacity opacity-80 hover:opacity-100 uppercase" href="#">API Docs</a>
+        </div>
+        <p className="font-['Inter'] text-xs tracking-[0.05rem] text-center text-admin-on-surface-variant opacity-80 uppercase">© 2024 RANKLEN Ethereal Command. All rights reserved.</p>
+      </footer>
+      </main>
 
       {/* ── QUESTION PREVIEW MODAL ── */}
       <AnimatePresence>

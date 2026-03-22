@@ -12,15 +12,24 @@ const itemVariants = {
 const OverviewTab = ({ stats, loading, statCards }) => {
   return (
     <div initial="hidden" animate="visible">
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
         {statCards.map((s, i) => (
-          <div key={i} className="glass-panel p-6 border-white/5 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">{s.label}</p>
-              <p className={`text-3xl font-bold ${s.color}`}>{loading ? '...' : s.value?.toLocaleString?.() ?? 0}</p>
+          <div key={i} className="bg-admin-surface-container-high/40 backdrop-blur-xl border border-admin-outline-variant/20 p-6 rounded-2xl flex flex-col justify-between hover:border-admin-primary/40 transition-all group hover:shadow-[0_0_30px_rgba(0,97,255,0.1)]">
+            <div className="flex justify-between items-start mb-6">
+              <div className="w-12 h-12 rounded-full bg-admin-primary/10 flex items-center justify-center text-admin-primary border border-admin-primary/20 group-hover:bg-admin-primary/20 transition-colors">
+                <s.icon className="text-2xl" />
+              </div>
+              <span className="text-xs font-bold text-admin-on-surface-variant bg-admin-surface-container-highest/80 px-2 py-1 rounded-lg">
+                Active
+              </span>
             </div>
-            <div className={`p-3 rounded-2xl bg-gradient-to-br ${s.bg} border border-white/5`}>
-              <s.icon className={`text-xl ${s.color}`} />
+            <div>
+              <p className="text-4xl font-black text-admin-on-surface tracking-tighter">
+                {loading ? '...' : s.value?.toLocaleString?.() ?? 0}
+              </p>
+              <p className="text-[10px] text-admin-on-surface-variant uppercase tracking-widest font-bold mt-2">
+                {s.label}
+              </p>
             </div>
           </div>
         ))}

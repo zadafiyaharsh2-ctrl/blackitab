@@ -113,86 +113,195 @@ const StudentClasses = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6 pt-20">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#05000a] text-gray-900 dark:text-white p-6 sm:p-10 font-sans transition-colors selection:bg-[#0061FF]/20 selection:text-gray-900">
+      
+      <div className="max-w-[75rem] mx-auto space-y-10">
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <AcademicCapIcon className="w-5 h-5 text-gray-400" />
-            My Classes
-          </h1>
-          <p className="text-sm text-gray-500 mt-0.5">Your enrolled classes and attendance records</p>
-        </div>
-        <button
-          onClick={() => setShowJoinModal(true)}
-          className="px-3 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold flex items-center gap-1.5 self-start sm:self-auto hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
-        >
-          <FaPlus className="text-xs" /> Join Another Class
-        </button>
-      </div>
-
-      {/* Class Cards */}
-      {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <FaSpinner className="animate-spin text-2xl text-gray-400" />
-        </div>
-      ) : batches.length === 0 ? (
-        <div className="border border-gray-200 dark:border-white/10 rounded-xl text-center py-14 bg-white dark:bg-white/[0.02] shadow-sm">
-          <FaUsers className="text-4xl text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <p className="font-semibold text-gray-900 dark:text-white text-base">No classes yet</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 mb-5">You haven't joined any classes. Use the button below to get started.</p>
+        {/* Master Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-gray-200 dark:border-white/10 pb-8">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-full mb-4 shadow-sm">
+              <AcademicCapIcon className="w-3 h-3 text-[#0061FF] dark:text-[#a5c3ff]" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                Academic Portfolio
+              </span>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white leading-[1.1] tracking-tight">
+              My Classes
+            </h1>
+            <p className="text-sm font-medium text-gray-500 mt-3 max-w-lg">
+              Access your enrolled active learning environments, review attendance records, and track your academic progress.
+            </p>
+          </div>
+          
           <button
             onClick={() => setShowJoinModal(true)}
-            className="px-5 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-sm"
+            className="flex-shrink-0 group flex items-center gap-2 px-6 py-3 bg-gray-900 text-white dark:bg-white dark:text-gray-900 hover:bg-[#0061FF] dark:hover:bg-[#0061FF] dark:hover:text-white rounded-full text-xs font-bold uppercase tracking-widest transition-all shadow-md focus:outline-none focus:ring-4 focus:ring-[#0061FF]/20"
           >
-            Join a Class
+            <FaPlus className="text-[10px] transform group-hover:rotate-90 transition-transform" /> Join New Class
           </button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {batches.map(batch => <ClassCard key={batch._id} batch={batch} />)}
-        </div>
-      )}
 
-      {/* Join Class Modal */}
-      {showJoinModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => setShowJoinModal(false)} />
-          <div className="relative w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-white/10 shadow-2xl">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/5">
-              <h3 className="font-bold text-gray-900 dark:text-white text-base">Join a Class</h3>
-              <button onClick={() => setShowJoinModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
-                <FaTimes />
+        {/* Content Area */}
+        <div className="min-h-[400px]">
+          {loading ? (
+            
+            /* Loading State */
+            <div className="flex flex-col items-center justify-center py-24 animate-in fade-in">
+              <div className="relative w-16 h-16 flex items-center justify-center">
+                <div className="absolute inset-0 border-4 border-[#0061FF]/10 dark:border-white/5 rounded-full" />
+                <div className="absolute inset-0 border-4 border-[#0061FF] border-t-transparent rounded-full animate-spin" />
+              </div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-6 animate-pulse">Synchronizing Enrollments...</p>
+            </div>
+
+          ) : batches.length === 0 ? (
+            
+            /* Empty State */
+            <div className="text-center py-24 px-6 bg-white dark:bg-white/[0.02] border border-dashed border-gray-300 dark:border-white/10 rounded-[3rem] shadow-sm max-w-3xl mx-auto flex flex-col items-center justify-center animate-in fade-in slide-in-from-bottom-4">
+              <div className="w-20 h-20 bg-gray-50 dark:bg-white/5 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm border border-gray-100 dark:border-white/5">
+                <FaUsers className="text-3xl text-gray-300 dark:text-gray-600" />
+              </div>
+              <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-3">No Active Enrollments</h3>
+              <p className="text-sm font-medium text-gray-500 max-w-md mx-auto mb-8">
+                You have not yet joined any classes for this academic session. Enter a 6-digit access code provided by your instructor to begin.
+              </p>
+              <button
+                onClick={() => setShowJoinModal(true)}
+                className="px-8 py-3.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:border-[#0061FF]/30 dark:hover:border-[#0061FF]/30 hover:bg-white dark:hover:bg-white/10 text-gray-900 dark:text-white rounded-full text-xs font-bold uppercase tracking-widest transition-all shadow-sm focus:outline-none"
+              >
+                Enter Access Code
               </button>
             </div>
-            <form onSubmit={handleJoin} className="p-6 space-y-5">
+
+          ) : (
+            
+            /* Classes Grid */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
+              {batches.map((batch, idx) => {
+                const teachers = batch.teacherIds?.map(t => t.name).join(', ') || 'Unassigned Educator';
+                
+                return (
+                  <div 
+                    key={batch._id || idx}
+                    onClick={() => navigate(`/classes/${batch._id}`)}
+                    className="group relative bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 hover:border-[#0061FF]/30 dark:hover:border-[#0061FF]/40 rounded-[2.5rem] p-6 sm:p-8 shadow-sm hover:shadow-[#0061FF]/5 transition-all duration-300 cursor-pointer flex flex-col justify-between overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#0061FF]/0 to-[#0061FF]/5 dark:to-[#0061FF]/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+                    <div className="flex items-start justify-between gap-4 mb-8">
+                       <div className="w-14 h-14 rounded-2xl bg-gray-900 text-white dark:bg-white dark:text-gray-900 group-hover:bg-[#0061FF] dark:group-hover:bg-[#0061FF] dark:group-hover:text-white flex items-center justify-center text-xl font-black shadow-md border border-gray-800 dark:border-gray-200 flex-shrink-0 transition-colors duration-300 transform group-hover:-rotate-3">
+                         {batch.name?.charAt(0).toUpperCase()}
+                       </div>
+                       
+                       <div className="w-8 h-8 rounded-full border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-300 dark:text-gray-600 group-hover:border-[#0061FF]/30 group-hover:bg-[#0061FF]/5 group-hover:text-[#0061FF] dark:group-hover:bg-[#0061FF]/10 dark:group-hover:text-[#a5c3ff] transition-all flex-shrink-0 mt-1">
+                          <FaChevronRight className="text-[10px] transform group-hover:translate-x-0.5 transition-transform" />
+                       </div>
+                    </div>
+
+                    <div className="min-w-0 mb-6">
+                      <h3 className="font-extrabold text-2xl text-gray-900 dark:text-white truncate group-hover:text-[#0061FF] dark:group-hover:text-[#a5c3ff] transition-colors tracking-tight mb-2">
+                        {batch.name}
+                      </h3>
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
+                        <FaChalkboardTeacher className="text-[10px]" />
+                        <span className="truncate">{teachers}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 pt-5 border-t border-gray-100 dark:border-white/5 mt-auto">
+                      {batch.year && (
+                        <span className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-lg text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                          <FaCalendarAlt /> Year {batch.year}
+                        </span>
+                      )}
+                      {batch.section && (
+                        <span className="px-3 py-1.5 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-lg text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                          Sec {batch.section}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* View Details Hint */}
+                    <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-[#0061FF] dark:text-[#a5c3ff]">
+                        Enter Space
+                      </span>
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+      </div>
+
+      {/* Join Class Modal Window */}
+      {showJoinModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-gray-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setShowJoinModal(false)} />
+          
+          <div className="relative w-full max-w-md bg-white dark:bg-[#0a0a0a] rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-200 dark:border-white/10">
+            
+            <div className="px-8 py-6 border-b border-gray-100 dark:border-white/5 flex items-center justify-between bg-gray-50/50 dark:bg-white/[0.01]">
+              <h3 className="font-extrabold text-xl text-gray-900 dark:text-white tracking-tight">Access Secured Space</h3>
+              <button 
+                onClick={() => setShowJoinModal(false)} 
+                className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 flex items-center justify-center text-gray-500 transition-colors focus:outline-none"
+              >
+                <FaTimes className="text-xs" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleJoin} className="p-8 space-y-8">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Class Code</label>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3 text-center">
+                  Authentication Code
+                </label>
                 <input
                   type="text"
-                  placeholder="Enter 6-digit code"
+                  placeholder="------"
                   value={classCode}
                   onChange={e => setClassCode(e.target.value.toUpperCase())}
                   maxLength={6}
-                  className="w-full border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-mono tracking-[0.2em] bg-gray-50 dark:bg-white/[0.03] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-center uppercase"
+                  autoFocus
+                  className="w-full bg-gray-50 dark:bg-white/[0.02] border-2 border-gray-200 dark:border-white/10 rounded-2xl px-4 py-4 text-2xl font-black text-gray-900 dark:text-white font-mono tracking-[0.3em] text-center focus:outline-none focus:border-[#0061FF] focus:bg-white dark:focus:bg-[#0a0a0a] transition-all shadow-sm uppercase placeholder-gray-300 dark:placeholder-gray-700"
                 />
               </div>
-              <p className="text-xs text-gray-500 text-center">Your teacher will need to approve your join request.</p>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowJoinModal(false)}
-                  className="flex-1 py-2.5 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-xl text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors">
-                  Cancel
+              
+              <div className="text-center space-y-1">
+                 <p className="text-xs font-semibold text-gray-500">
+                    A 6-digit alphanumeric code is required.
+                 </p>
+                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    Approval pending instructor review.
+                 </p>
+              </div>
+
+              <div className="flex flex-col gap-3 pt-4">
+                <button 
+                  type="submit" 
+                  disabled={joining || classCode.length !== 6}
+                  className="w-full py-4 bg-gray-900 text-white dark:bg-white dark:text-gray-900 hover:bg-[#0061FF] dark:hover:bg-[#0061FF] dark:hover:text-white rounded-2xl text-xs font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all shadow-md focus:outline-none"
+                >
+                  {joining ? <FaSpinner className="animate-spin text-sm" /> : null} 
+                  {joining ? 'Authenticating...' : 'Request Access'}
                 </button>
-                <button type="submit" disabled={joining || classCode.length < 6}
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold disabled:opacity-50 disabled:hover:bg-blue-600 flex items-center justify-center gap-2 transition-colors shadow-sm">
-                  {joining ? <FaSpinner className="animate-spin" /> : null} Send Request
+                <button 
+                  type="button" 
+                  onClick={() => setShowJoinModal(false)}
+                  className="w-full py-3.5 bg-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-colors focus:outline-none"
+                >
+                  Cancel Protocol
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
     </div>
   );
 };
