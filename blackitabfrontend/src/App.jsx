@@ -56,6 +56,7 @@ import Theory from './pages/student/Theory';
 import SocialListPage from './pages/student/SocialListPage';
 import Messages from './pages/shared/Messages';
 import Notifications from './pages/shared/Notifications';
+import Contact from './pages/public/Contact';
 import CreatePost from './pages/student/CreatePost';
 import StudyContent from './pages/student/StudyContent';
 import ContentDetail from './pages/student/ContentDetail';
@@ -302,6 +303,12 @@ function App() {
                   <LandingPage />
                 </PublicRoute>
               }
+            />
+
+            {/* ===== CONTACT PAGE ===== */}
+            <Route
+              path="/contact"
+              element={<Contact />}
             />
 
             {/* ===== PROTECTED ROUTES ===== */}
