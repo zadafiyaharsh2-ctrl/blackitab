@@ -268,6 +268,11 @@ const QuestionChecker = () => {
                             }`}>
                               {q.difficulty}
                             </span>
+                            {q.isPYQ && (
+                              <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20" title={q.sourceDate ? new Date(q.sourceDate).toLocaleDateString() : ''}>
+                                🌟 {q.sourceExamName || q.exam} {q.sourceYear ? `• ${q.sourceYear}` : ''} {q.sourceShift && !q.sourcePart ? `• Shift ${q.sourceShift}` : ''} {q.sourcePart ? `• ${q.sourcePart}` : ''}
+                              </span>
+                            )}
                             {q.isAiGenerated && (
                               <span className="px-2 py-0.5 rounded text-xs font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
                                 AI
