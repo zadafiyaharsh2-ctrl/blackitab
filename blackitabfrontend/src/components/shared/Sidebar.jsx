@@ -20,18 +20,9 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
   })();
 
-  const ROLE_LEVEL = {
-    'student': 0,
-    'teacher': 1,
-    'hod': 2,
-    'institute': 3,
-    'admin': 4
-  };
-  const userLevel = ROLE_LEVEL[userRole] ?? 0;
-
-  const canAccessTeacher = userLevel >= ROLE_LEVEL['teacher'];
-  const canAccessHod = userLevel >= ROLE_LEVEL['hod'];
-  const canAccessInstitute = userLevel >= ROLE_LEVEL['institute'];
+  const canAccessTeacher = userRole === 'teacher';
+  const canAccessHod = userRole === 'hod';
+  const canAccessInstitute = userRole === 'institute';
   const hasInstitute = Boolean(instituteId);
   const INSTITUTE_REQUIRED_FOR_CLASSES_MESSAGE = 'You must join an institute before joining any class.';
 
