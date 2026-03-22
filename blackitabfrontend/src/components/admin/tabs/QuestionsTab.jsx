@@ -81,8 +81,12 @@ const QuestionsTab = ({
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                     q.difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-400' :
                     q.difficulty === 'Hard' ? 'bg-red-500/10 text-red-400' :
-                    'bg-yellow-500/10 text-yellow-400'
                   }`}>{q.difficulty}</span>
+                  {q.isPYQ && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20" title={q.sourceDate ? new Date(q.sourceDate).toLocaleDateString() : ''}>
+                      🌟 {q.sourceExamName || q.exam} {q.sourceYear ? `• ${q.sourceYear}` : ''} {q.sourceShift && !q.sourcePart ? `• Shift ${q.sourceShift}` : ''} {q.sourcePart ? `• ${q.sourcePart}` : ''}
+                    </span>
+                  )}
                   {q.isGlobal && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-400"><FaGlobe className="inline mr-1"/>Global</span>}
                   {q.instituteId && !q.isGlobal && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/10 text-orange-400">{q.instituteId.name}</span>}
                 </div>
