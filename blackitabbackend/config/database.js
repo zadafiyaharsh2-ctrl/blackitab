@@ -3,7 +3,13 @@ const dns = require('dns');
 
 const isSrvDnsFailure = (message = '') => /query(?:Srv|Txt)\s+ESERVFAIL/i.test(message);
 
-const getMongoUri = () => process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/RANKLEN';
+const getMongoUri = () => {
+  if (!process.env.MONGODB_URI) {
+    console.error('FATAL: MONGODB_URI environment variable is not set!');
+    process.exit(1);
+  }
+  return process.env.MONGODB_URI;
+};
 
 const getMongooseOptions = () => ({
   serverSelectionTimeoutMS: Number(process.env.MONGODB_SERVER_SELECTION_TIMEOUT_MS || 10000),
