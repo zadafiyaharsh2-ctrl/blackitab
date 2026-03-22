@@ -81,6 +81,7 @@ const QuestionsTab = ({
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                     q.difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-400' :
                     q.difficulty === 'Hard' ? 'bg-red-500/10 text-red-400' :
+                    'bg-yellow-500/10 text-yellow-400'
                   }`}>{q.difficulty}</span>
                   {q.isPYQ && (
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20" title={q.sourceDate ? new Date(q.sourceDate).toLocaleDateString() : ''}>
