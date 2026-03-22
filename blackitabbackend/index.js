@@ -10,6 +10,9 @@ require("dotenv").config();
 const helmet = require("helmet");
 const mongoSanitize = require("express-mongo-sanitize");
 const rateLimit = require("express-rate-limit");
+const compression = require("compression");
+const hpp = require("hpp");
+const { securityHeaders, globalErrorHandler, notFoundHandler } = require("./middleware/security");
 
 const connectDB = require("./config/database");
 const User = require("./models/User");
@@ -38,10 +41,14 @@ const questionRoutes = require("./routes/shared/questionRoutes");
 const teacherRoutes = require("./routes/teacher/teacherRoutes");
 const adminChatRoutes = require("./routes/admin/adminChatRoutes");
 const feedbackRoutes = require("./routes/shared/feedbackRoutes");
+const bugRoutes = require("./routes/shared/bugRoutes");
 
 // --- Server Setup ---
 
 const app = express();
+
+// Trust first proxy (Render / Cloudflare) for correct IP resolution
+app.set("trust proxy", 1);
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
@@ -79,6 +86,9 @@ const allowedOrigins = [
 // Helmet for security headers
 app.use(helmet());
 
+// Custom security headers (request ID, extra hardening)
+app.use(securityHeaders);
+
 app.use(
   cors({
     origin: allowedOrigins,
@@ -111,12 +121,38 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// AI-Specific Rate Limit — Strict: 20 requests per 15 minutes (prevents LLM scraping)
+const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { success: false, message: 'Too many AI requests. Please try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Body parser with payload size limit (prevents large payload DoS)
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 // XSS Protection — Sanitize user input against cross-site scripting
-app.use(xss());
+// NOTE: xss-clean is incompatible with Express 5 (req.query is a read-only getter).
+// We manually sanitize body and params only.
+app.use((req, res, next) => {
+  const stripXSS = (obj) => {
+    if (typeof obj === 'string') {
+      return obj.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/javascript:/gi, '');
+    }
+    if (obj && typeof obj === 'object') {
+      for (const key of Object.keys(obj)) {
+        obj[key] = stripXSS(obj[key]);
+      }
+    }
+    return obj;
+  };
+  if (req.body) req.body = stripXSS(req.body);
+  if (req.params) req.params = stripXSS(req.params);
+  next();
+});
 
 // HPP — Prevent HTTP Parameter Pollution
 app.use(hpp());
@@ -148,10 +184,10 @@ connectDB();
 app.get("/", (req, res) => res.send("API is running..."));
 app.get("/favicon.ico", (req, res) => res.status(204).end());
 
-app.post("/api/register", authController.register);
-app.post("/api/register-institute", authController.registerInstitute);
-app.post("/api/login", authController.login);
-app.post("/api/auth/google", authController.googleLogin);
+app.post("/api/register", authLimiter, authController.register);
+app.post("/api/register-institute", authLimiter, authController.registerInstitute);
+app.post("/api/login", authLimiter, authController.login);
+app.post("/api/auth/google", authLimiter, authController.googleLogin);
 
 // --- Theory Routes (inline) ---
 
@@ -167,7 +203,7 @@ app.use("/api/social", socialRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/user", userRoutes);
-app.use("/api/ai", aiRoutes);
+app.use("/api/ai", aiLimiter, aiRoutes);
 app.use("/api/ai-questions", aiQuestionRoutes);
 app.use("/api/institute", instituteRoutes);
 app.use("/api/attempts", attemptRoutes);
@@ -179,6 +215,7 @@ app.use("/api/questions", questionRoutes);
 app.use("/api/teacher", teacherRoutes);
 app.use("/api/admin-chat", adminChatRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/bugs", bugRoutes);
 
 // --- GET /api/me — Current User (protected) ---
 
