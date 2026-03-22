@@ -1120,7 +1120,7 @@ exports.getDepartmentContent = async (req, res) => {
 // POST /api/teacher/attendance (Saves or updates attendance for a class on a specific date)
 exports.submitAttendance = async (req, res) => {
     try {
-        const { classId, date, records } = req.body;
+        const { classId, date, sessionType = 'Class', records } = req.body;
         if (!classId || !date || !records || !Array.isArray(records)) {
             return res.status(400).json({ success: false, message: 'classId, date, and records array are required' });
         }
@@ -1137,7 +1137,7 @@ exports.submitAttendance = async (req, res) => {
 
         // upsert completely blocks duplicate logs and automatically handles updates on mistakes
         const attendance = await Attendance.findOneAndUpdate(
-            { classId, date: attendanceDate },
+            { classId, date: attendanceDate, sessionType },
             {
                 instituteId: req.user.instituteId,
                 teacherId: req.user._id,
@@ -1171,6 +1171,9 @@ exports.getAttendanceHistory = async (req, res) => {
             const date = new Date(req.query.date);
             date.setHours(0, 0, 0, 0);
             filter.date = date;
+        }
+        if (req.query.sessionType) {
+            filter.sessionType = req.query.sessionType;
         }
 
         const history = await Attendance.find(filter)
