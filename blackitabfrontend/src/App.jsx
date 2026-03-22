@@ -733,7 +733,7 @@ function App() {
             <Route
               path="/teacher-dashboard"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherDashboard />
                   </MainLayout>
@@ -748,7 +748,7 @@ function App() {
             <Route
               path="/teacher/batches"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherBatches />
                   </MainLayout>
@@ -760,7 +760,7 @@ function App() {
             <Route
               path="/teacher/batch/:batchId"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherBatchDetail />
                   </MainLayout>
@@ -772,7 +772,7 @@ function App() {
             <Route
               path="/teacher/batch/:batchId/materials/new"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherBatchMaterialForm />
                   </MainLayout>
@@ -782,7 +782,7 @@ function App() {
             <Route
               path="/teacher/batch/:batchId/materials/edit/:materialId"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherBatchMaterialForm />
                   </MainLayout>
@@ -794,7 +794,7 @@ function App() {
             <Route
               path="/teacher/batch/:batchId/assignments/new"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherBatchAssignmentForm />
                   </MainLayout>
