@@ -32,7 +32,13 @@ const CreateTab = ({ isDark, setActiveTab }) => {
     difficulty: 'Medium',
     explanation: '',
     tags: '',
-    format: 'Digital'
+    format: 'Digital',
+    isPYQ: false,
+    sourceYear: '',
+    sourceShift: '',
+    sourcePart: '',
+    sourceDate: '',
+    sourceExamName: ''
   });
 
   const handleChange = (field, value) => {
@@ -63,6 +69,16 @@ const CreateTab = ({ isDark, setActiveTab }) => {
         tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
         correctAnswer: parseInt(form.correctAnswer),
       };
+      
+      // Clean up empty PYQ fields
+      if (!payload.isPYQ) {
+        delete payload.sourceYear;
+        delete payload.sourceShift;
+        delete payload.sourcePart;
+        delete payload.sourceDate;
+        delete payload.sourceExamName;
+      }
+      
       const res = await axios.post(`${API_URL}/api/exams/questions`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -154,6 +170,38 @@ const CreateTab = ({ isDark, setActiveTab }) => {
                 placeholder="e.g. mechanics, kinematics"
                 className={`w-full px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/50 ${isDark ? 'bg-white/5 border border-white/10 text-white placeholder-gray-600' : 'bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400'}`} />
             </div>
+          </div>
+
+          {/* PYQ Metadata */}
+          <div className={`p-4 rounded-xl border ${isDark ? 'border-amber-500/20 bg-amber-500/5' : 'border-amber-200 bg-amber-50'}`}>
+            <label className="flex items-center gap-2 cursor-pointer mb-2 w-fit">
+              <input type="checkbox" checked={form.isPYQ || false} onChange={e => handleChange('isPYQ', e.target.checked)} className="w-4 h-4 text-amber-500 border-gray-300 rounded focus:ring-amber-500" />
+              <span className={`text-sm font-bold ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>Previous Year Question (PYQ)</span>
+            </label>
+            {form.isPYQ && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Year</label>
+                  <input type="number" placeholder="e.g. 2023" value={form.sourceYear || ''} onChange={e => handleChange('sourceYear', parseInt(e.target.value) || '')} className={`w-full px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-amber-500/50 ${isDark ? 'bg-black/20 border-white/10 text-white' : 'bg-white border-amber-200 text-gray-900'} border`} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Exam Name (If different)</label>
+                  <input type="text" placeholder="e.g. JEE Advanced" value={form.sourceExamName || ''} onChange={e => handleChange('sourceExamName', e.target.value)} className={`w-full px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-amber-500/50 ${isDark ? 'bg-black/20 border-white/10 text-white' : 'bg-white border-amber-200 text-gray-900'} border`} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Exact Date</label>
+                  <input type="date" value={form.sourceDate ? form.sourceDate.split('T')[0] : ''} onChange={e => handleChange('sourceDate', e.target.value)} className={`w-full px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-amber-500/50 ${isDark ? 'bg-black/20 border-white/10 text-[13px] text-white' : 'bg-white border-amber-200 text-gray-900 text-[13px]'} border [&::-webkit-calendar-picker-indicator]:opacity-50 dark:[&::-webkit-calendar-picker-indicator]:invert`} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Shift</label>
+                  <input type="number" placeholder="e.g. 1" value={form.sourceShift || ''} onChange={e => handleChange('sourceShift', parseInt(e.target.value) || '')} className={`w-full px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-amber-500/50 ${isDark ? 'bg-black/20 border-white/10 text-white' : 'bg-white border-amber-200 text-gray-900'} border`} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Part / Session</label>
+                  <input type="text" placeholder="e.g. Session 2" value={form.sourcePart || ''} onChange={e => handleChange('sourcePart', e.target.value)} className={`w-full px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-amber-500/50 ${isDark ? 'bg-black/20 border-white/10 text-white' : 'bg-white border-amber-200 text-gray-900'} border`} />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Explanation */}
