@@ -84,7 +84,16 @@ exports.updateQuestion = async (req, res) => {
             return res.status(403).json({ success: false, message: 'Not authorized to edit this question' });
         }
 
-        const updates = req.body;
+        const allowedFields = [
+            'exam', 'subject', 'question', 'options', 'correctAnswer',
+            'difficulty', 'explanation', 'tags', 'format', 'status'
+        ];
+        const updates = {};
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        }
         if (!isCreator && isSameInstituteSupervisor) {
             updates.isModerated = true;
         }
