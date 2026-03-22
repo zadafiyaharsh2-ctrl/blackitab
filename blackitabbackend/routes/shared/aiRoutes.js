@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const aiController = require('../../controllers/shared/aiController');
 const authMiddleware = require('../../middleware/auth');
-const rateLimit = require('express-rate-limit');
+const { rateLimit } = require('express-rate-limit');
 
 const aiChatLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
