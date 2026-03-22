@@ -457,13 +457,18 @@ exports.updateQuestion = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Question not found' });
         }
 
-        const updates = req.body;
-        if (updates.correctAnswer !== undefined) updates.correctAnswer = parseInt(updates.correctAnswer);
-
-        // Update the isProblem flag directly
-        if (updates.isProblem !== undefined) {
-             updates.isProblem = updates.isProblem;
+        const allowedQuestionFields = [
+            'exam', 'subject', 'question', 'options', 'correctAnswer',
+            'difficulty', 'explanation', 'tags', 'format', 'status',
+            'isGlobal', 'isModerated', 'isActive', 'isProblem'
+        ];
+        const updates = {};
+        for (const field of allowedQuestionFields) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
         }
+        if (updates.correctAnswer !== undefined) updates.correctAnswer = parseInt(updates.correctAnswer);
 
         const updated = await ExamQuestion.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true, context: 'query' });
 
@@ -495,10 +500,19 @@ exports.getUserFullDetails = async (req, res) => {
 // PUT /api/admin/users/full/:id
 exports.editUserFull = async (req, res) => {
     try {
-        // We only explicitly block password from being updated here (requires a separate flow if needed)
-        // All other fields from the body will be applied directly for the Super Admin
-        const updates = { ...req.body };
-        delete updates.password;
+        // Super Admin allowlist — expanded set of fields compared to regular editUser
+        const superAdminAllowedFields = [
+            'name', 'email', 'role', 'bio', 'points', 'xp', 'streak',
+            'isVerified', 'isPrivate', 'isBanned', 'batchYear', 'division',
+            'departmentId', 'departments', 'specialization', 'globalRank',
+            'longestStreak', 'rating', 'followerCount', 'followingCount', 'subscriberCount'
+        ];
+        const updates = {};
+        for (const field of superAdminAllowedFields) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        }
 
         const existingUser = await User.findById(req.params.id);
         if (!existingUser) {
