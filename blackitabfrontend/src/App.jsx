@@ -377,7 +377,7 @@ function App() {
             <Route
               path="/school-analytics"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <SchoolAnalytics />
                   </MainLayout>
@@ -435,7 +435,7 @@ function App() {
             <Route
               path="/question-management"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <ManageQuestions />
                   </MainLayout>
