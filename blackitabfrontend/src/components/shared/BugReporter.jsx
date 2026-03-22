@@ -14,6 +14,13 @@ const BugReporter = () => {
   const [loadingReports, setLoadingReports] = useState(false);
   const location = useLocation();
 
+  // Listen for custom event to open bug reporter
+  React.useEffect(() => {
+    const handleOpenBugReporter = () => setIsOpen(true);
+    window.addEventListener('openBugReporter', handleOpenBugReporter);
+    return () => window.removeEventListener('openBugReporter', handleOpenBugReporter);
+  }, []);
+
   // Fetch reports when tab changes
   React.useEffect(() => {
     if (activeTab === 'my-reports' && isOpen) {
