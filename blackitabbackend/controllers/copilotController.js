@@ -1,85 +1,185 @@
 const { ChatOpenAI } = require("@langchain/openai");
-const { DynamicStructuredTool } = require("@langchain/core/tools");
-const { AgentExecutor, createToolCallingAgent } = require("langchain/agents");
-const { ChatPromptTemplate, MessagesPlaceholder } = require("@langchain/core/prompts");
-const { z } = require("zod");
+const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
+const { HumanMessage, AIMessage, SystemMessage } = require("@langchain/core/messages");
 
-// Import the aggregation from step 1
-const { fetchStudentWeaknessesAggregation } = require("./analyticsController");
+const { getComprehensiveAnalytics } = require("./analyticsController");
+
+function getHistoryLimit() {
+    const parsed = Number(process.env.COPILOT_HISTORY_LIMIT || 6);
+    if (Number.isNaN(parsed)) {
+        return 6;
+    }
+    return Math.min(6, Math.max(4, parsed));
+}
+
+function isPerformanceQuery(text) {
+    if (!text || typeof text !== "string") {
+        return false;
+    }
+    const input = text.toLowerCase();
+    const keywords = [
+        "performance", "progress", "weak", "weakest", "strong", "strongest",
+        "accuracy", "score", "marks", "rank", "improve", "study", "subject",
+        "analytics", "analysis", "practice", "how am i doing", "what should i study",
+        "study plan", "study time", "optimize", "revise", "revision", "focus areas",
+        "where should i focus", "what to focus", "topics to practice"
+    ];
+    return keywords.some((keyword) => input.includes(keyword));
+}
+
+function toEssentialAnalytics(data) {
+    const normalizeSubject = (subject) => {
+        if (!subject || typeof subject !== "object") {
+            return null;
+        }
+        return {
+            name: subject.subject || subject.name || null,
+            accuracy: subject.accuracyPercentage ?? subject.accuracy ?? null,
+        };
+    };
+
+    const allSubjects = Array.isArray(data?.allSubjects)
+        ? data.allSubjects.map(normalizeSubject).filter((subject) => subject?.name)
+        : [];
+
+    return {
+        weakestSubject: normalizeSubject(data?.weakestSubject),
+        strongestSubject: normalizeSubject(data?.strongestSubject),
+        allSubjects,
+    };
+}
+
+function formatMessageForDebug(msg) {
+    const role = msg?._getType?.() || "unknown";
+    const content = Array.isArray(msg?.content) ? JSON.stringify(msg.content) : (msg?.content ?? "");
+    return {
+        role,
+        content,
+    };
+}
+
+function extractUsage(aiMessage) {
+    const usage = aiMessage?.usage_metadata;
+    if (!usage) {
+        return null;
+    }
+    return {
+        input_tokens: usage.input_tokens ?? 0,
+        output_tokens: usage.output_tokens ?? 0,
+        total_tokens: usage.total_tokens ?? 0,
+    };
+}
+
+function createModel() {
+    const provider = (process.env.LLM_PROVIDER || "openai").toLowerCase();
+
+    if (provider === "gemini") {
+        const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+        if (!apiKey) {
+            throw new Error("GEMINI_API_KEY or GOOGLE_API_KEY is required when LLM_PROVIDER=gemini");
+        }
+        return {
+            provider,
+            modelName: process.env.GEMINI_MODEL || "gemini-1.5-flash",
+            model: new ChatGoogleGenerativeAI({
+                apiKey,
+                model: process.env.GEMINI_MODEL || "gemini-1.5-flash",
+                temperature: 0.7,
+            }),
+        };
+    }
+
+    return {
+        provider: "openai",
+        modelName: process.env.OPENAI_MODEL || "gpt-4o-mini",
+        model: new ChatOpenAI({
+            model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+            temperature: 0.7,
+        }),
+    };
+}
 
 exports.generateCopilotResponse = async (req, res) => {
     try {
-        const { message } = req.body;
-        // 1. THE CATASTROPHIC FLAW FIX: 
-        // We rip out the body-parsed user ID and strictly rely on the trusted JWT token.
-        const userId = req.user._id || req.user.id; 
+        const { message, history = [] } = req.body;
+        const debugEnabled = process.env.COPILOT_DEBUG === "true";
+        const includeDebugInResponse = req.query.debug === "1";
+        
+        // Extract userId strictly from the JWT, NEVER from req.body
+        const userId = req.user?._id || req.user?.id; 
 
         if (!userId || !message) {
-            return res.status(400).json({ success: false, error: "Token unauthenticated or message missing." });
+            return res.status(400).json({ success: false, error: "Unauthenticated or message missing." });
         }
 
-        // Initialize Model
-        const model = new ChatOpenAI({
-            modelName: "gpt-4-turbo-preview",
-            temperature: 0.7,
-        });
+        const { model, provider, modelName } = createModel();
 
-        // Define the Tool securely binding the user's ID
-        const fetchWeaknessesTool = new DynamicStructuredTool({
-            name: "fetch_student_weaknesses",
-            description: "Fetches the current student's lowest accuracy subjects/topics and the days since they last practiced them. Call this anytime the user asks what to study or review.",
-            schema: z.object({
-                trigger: z.string().optional().describe("Just pass 'execute'")
-            }),
-            func: async () => {
-                const data = await fetchStudentWeaknessesAggregation(userId);
-                
-                if (!data || data.length === 0) {
-                    return "The student hasn't completed enough quizzes yet to generate an accuracy report.";
-                }
-                return JSON.stringify(data);
+        const historyLimit = getHistoryLimit();
+        const limitedHistory = Array.isArray(history) ? history.slice(-historyLimit) : [];
+        const chatHistory = limitedHistory.map(msg => {
+            if (msg.role === 'user' || msg.type === 'human') {
+                return new HumanMessage(msg.content);
+            } else {
+                return new AIMessage(msg.content);
             }
         });
+        const shouldUseAnalyticsContext = isPerformanceQuery(message);
+        let analyticsContext = null;
+        if (shouldUseAnalyticsContext) {
+            const analyticsData = await getComprehensiveAnalytics(userId);
+            analyticsContext = toEssentialAnalytics(analyticsData);
+        }
 
-        const tools = [fetchWeaknessesTool];
+        const systemInstruction = analyticsContext
+            ? `You are Ranklen Copilot. Reply in 4 sentences or less with clear, actionable study advice. Personalize recommendations strictly using this student analytics context: ${JSON.stringify(analyticsContext)}`
+            : "You are Ranklen Copilot. Reply in 4 sentences or less with clear, actionable study advice.";
 
-        // Prompt Engineering
-        const prompt = ChatPromptTemplate.fromMessages([
-            ["system", `You are the Ranklen Copilot, an elite AI tutor. 
-When a user asks what to study, you MUST use the fetch_student_weaknesses tool to get their historical data. 
-Review their lowest accuracy subjects and the days since their last attempt (to account for memory decay). 
-Recommend a specific topic to study in a brief, direct, and gamified tone. Do not write a long essay. Suggest one immediate action.`],
-            ["human", "{input}"],
-            new MessagesPlaceholder("agent_scratchpad"),
-        ]);
+        const messages = [
+            new SystemMessage(systemInstruction),
+            ...chatHistory,
+            new HumanMessage(message),
+        ];
 
-        // 2. THE SYNTAX FLAW FIX: 
-        // We REMOVE the await as Agent creation is synchronous, and UPGRADE to createToolCallingAgent.
-        const agent = createToolCallingAgent({
-            llm: model,
-            tools,
-            prompt
-        });
+        if (debugEnabled) {
+            console.log("[Copilot Debug] Outgoing payload (first invoke):", messages.map(formatMessageForDebug));
+        }
 
-        const agentExecutor = new AgentExecutor({
-            agent,
-            tools,
-            returnIntermediateSteps: false,
-        });
+        let response = await model.invoke(messages);
+        const firstCallUsage = extractUsage(response);
+        if (debugEnabled && firstCallUsage) {
+            console.log("[Copilot Debug] Token usage (first invoke):", firstCallUsage);
+        }
+        const secondCallUsage = null;
 
-        // Execute
-        const result = await agentExecutor.invoke({
-            input: message,
-        });
+        const reply = typeof response.content === "string"
+            ? response.content
+            : JSON.stringify(response.content);
+
+        const debug = {
+            request_payload_first_invoke: messages.slice(0, 2 + chatHistory.length).map(formatMessageForDebug),
+            provider,
+            model: modelName,
+            analytics_context_included: shouldUseAnalyticsContext,
+            analytics_context: analyticsContext,
+            history_messages_sent: limitedHistory.length,
+            usage: {
+                first_invoke: firstCallUsage,
+                second_invoke: secondCallUsage,
+                total: {
+                    input_tokens: (firstCallUsage?.input_tokens || 0) + (secondCallUsage?.input_tokens || 0),
+                    output_tokens: (firstCallUsage?.output_tokens || 0) + (secondCallUsage?.output_tokens || 0),
+                    total_tokens: (firstCallUsage?.total_tokens || 0) + (secondCallUsage?.total_tokens || 0),
+                }
+            }
+        };
 
         return res.status(200).json({
             success: true,
-            reply: result.output
+            reply,
+            ...(includeDebugInResponse ? { debug } : {})
         });
 
     } catch (error) {
-        // 3. THE SWALLOWED ERROR FIX: 
-        // We log the critical execution error to standard output so developers aren't blind against rate-limiting or JSON parsing failures.
         console.error("[Copilot Error]:", error); 
         return res.status(500).json({ success: false, error: "AI failed to respond." });
     }

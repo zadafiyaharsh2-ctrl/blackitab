@@ -42,7 +42,8 @@ const CopilotDrawer = ({ isOpen, onClose }) => {
 
             // Send payload to the Express route (make sure to set up this route in your backend!)
             const res = await axios.post(`${API_URL}/api/copilot/chat`, {
-                message: userMsg
+                message: userMsg,
+                history: messages
             }, {
                 headers: {
                     Authorization: `Bearer ${token}`

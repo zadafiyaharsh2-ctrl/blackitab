@@ -1021,9 +1021,12 @@ function App() {
 
 import FloatingSocialButton from './components/student/FloatingSocialButton';
 import NotificationBell from './components/shared/NotificationBell';
+import CopilotDrawer from './components/student/CopilotDrawer';
+import { FaRobot } from 'react-icons/fa';
 
 function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout }) {
   const location = useLocation();
+  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
 
   // Track last visited page for "Resume Last Session" on Dashboard
   useEffect(() => {
@@ -1087,6 +1090,17 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout }) {
           {children}
         </div>
       </div>
+
+      {/* Floating Copilot Trigger Button */}
+      <button
+        onClick={() => setIsCopilotOpen(true)}
+        className="fixed bottom-24 right-6 w-14 h-14 bg-[#0061FF] text-white rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 hover:scale-110 transition-all z-40 group border-2 border-[#0061FF]/50"
+        title="Ask Ranklen Copilot"
+      >
+        <FaRobot className="text-2xl group-hover:rotate-12 transition-transform" />
+      </button>
+
+      <CopilotDrawer isOpen={isCopilotOpen} onClose={() => setIsCopilotOpen(false)} />
 
       {/* Floating Social Button — Bottom Right */}
       <FloatingSocialButton />
