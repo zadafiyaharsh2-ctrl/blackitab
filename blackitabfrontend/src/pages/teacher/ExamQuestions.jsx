@@ -7,6 +7,7 @@ import {
     ArrowLeft,
     CheckCircle,
     XCircle,
+    AlertTriangle,
     Sparkles,
     Loader2,
     BookOpen,
@@ -60,8 +61,16 @@ const ExamQuestions = () => {
     const [showTheory, setShowTheory] = useState(false);
     const [theoryContent, setTheoryContent] = useState('');
     const [loadingTheory, setLoadingTheory] = useState(false);
+    const [subjectHealth, setSubjectHealth] = useState(null);
+    const [decayedDomains, setDecayedDomains] = useState(0);
 
     const difficultyMap = { 1: 'Easy', 2: 'Medium', 3: 'Hard' };
+
+    const formatInactivityLabel = (days) => {
+        if (!Number.isFinite(days) || days <= 0) return 'today';
+        if (days === 1) return '1 day';
+        return `${days} days`;
+    };
 
     const startFocusMode = () => {
         const selectedQuestions = questions.slice(0, 8); // Limit to 8
@@ -247,6 +256,9 @@ const ExamQuestions = () => {
                 const res = await axios.get(url, config);
                 if (res.data.success) {
                     setQuestions(res.data.data);
+                    const responseMeta = res.data.meta || {};
+                    setSubjectHealth(responseMeta.subjectHealth || null);
+                    setDecayedDomains(Number.isFinite(Number(responseMeta.decayedDomains)) ? Number(responseMeta.decayedDomains) : 0);
                     
                     // Pre-fill past attempts
                     const initialResults = {};
@@ -268,6 +280,8 @@ const ExamQuestions = () => {
                 }
             } catch (err) {
                 console.error('Error fetching exam questions:', err);
+                setSubjectHealth(null);
+                setDecayedDomains(0);
             } finally {
                 setLoading(false);
             }
@@ -608,6 +622,13 @@ const ExamQuestions = () => {
                         <p className="text-gray-600 dark:text-gray-400 mt-2">
                             {questions.length} question{questions.length !== 1 ? 's' : ''} available
                         </p>
+                        {subjectHealth?.effectiveElo && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Adaptive target Elo: {subjectHealth.effectiveElo}
+                                {subjectHealth.domainName ? ` in ${subjectHealth.domainName}` : ''}
+                                {activeSubject === 'All' && decayedDomains > 1 ? ` • ${decayedDomains} domains currently decaying` : ''}
+                            </p>
+                        )}
                     </div>
 
                     {/* Focus Mode Button */}
@@ -650,6 +671,25 @@ const ExamQuestions = () => {
                     </button>
                 ))}
             </div>
+
+            {subjectHealth && subjectHealth.status !== 'healthy' && (
+                <div className={`mb-6 rounded-xl border px-4 py-3 ${isDark ? 'bg-amber-500/10 border-amber-500/30 text-amber-200' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
+                    <div className="flex items-start gap-3">
+                        <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0" />
+                        <div>
+                            <p className="text-sm font-semibold">Subject Health Alert</p>
+                            <p className="text-xs mt-1 leading-relaxed">
+                                {subjectHealth.message || `Your ${subjectHealth.domainName || activeSubject} mastery is decaying. Solve ${subjectHealth.recoveryProblemsTarget || 2} problems today to recover toward Elo ${subjectHealth.storedElo || 1000}.`}
+                            </p>
+                            <p className="text-[11px] mt-1 opacity-90">
+                                Effective Elo {subjectHealth.effectiveElo || 1000}
+                                {subjectHealth.storedElo ? ` (stored ${subjectHealth.storedElo})` : ''}
+                                {Number.isFinite(subjectHealth.inactivityDays) ? ` after ${formatInactivityLabel(subjectHealth.inactivityDays)} inactive.` : ''}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Questions List */}
             {loading ? (
@@ -699,6 +739,11 @@ const ExamQuestions = () => {
                                                         'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400'
                                                     }`}>
                                                     {q.difficulty}
+                                                </span>
+                                            )}
+                                            {Number.isFinite(q.eloGap) && (
+                                                <span className="px-3 py-1 bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 text-xs rounded-full">
+                                                    Elo gap {q.eloGap}
                                                 </span>
                                             )}
                                             {q.isAIGenerated && (

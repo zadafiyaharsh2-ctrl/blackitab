@@ -99,6 +99,11 @@ const userSchema = new mongoose.Schema({
     of: Number,
     default: {}
   },
+  domainLastAttemptedAt: {
+    type: Map,
+    of: Date,
+    default: {}
+  },
 
   // --- TEACHER-SPECIFIC FIELDS ---
   departmentId: {

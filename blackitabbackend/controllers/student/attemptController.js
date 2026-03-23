@@ -1,18 +1,14 @@
 const Attempt = require('../../models/Attempt');
 const ExamQuestion = require('../../models/ExamQuestion');
 const User = require('../../models/User');
-
-function toDomainRatingsMap(domainRatings) {
-    if (domainRatings && typeof domainRatings.get === 'function' && typeof domainRatings.set === 'function') {
-        return domainRatings;
-    }
-
-    if (domainRatings && typeof domainRatings === 'object') {
-        return new Map(Object.entries(domainRatings));
-    }
-
-    return new Map();
-}
+const {
+    BASE_ELO,
+    toMap,
+    normalizeDomainKey,
+    prettifyDomainName,
+    getDomainDecaySnapshot,
+    getDecayConfig,
+} = require('../../services/eloDecayService');
 
 function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -55,11 +51,22 @@ exports.submitAttempt = async (req, res) => {
             }
         };
 
+        let ratingUpdate = null;
+
         if (domainName) {
-            const domainKey = domainName.toLowerCase();
-            const R_B = question.eloRating || 1000;
-            const domainRatingsMap = toDomainRatingsMap(user.domainRatings);
-            const R_A = domainRatingsMap.get(domainKey) || 1000;
+            const domainKey = normalizeDomainKey(domainName);
+            const R_B = Number.isFinite(Number(question.eloRating)) ? Number(question.eloRating) : BASE_ELO;
+            const domainRatingsMap = toMap(user.domainRatings);
+            const domainLastAttemptedMap = toMap(user.domainLastAttemptedAt);
+            const domainDecay = getDomainDecaySnapshot({
+                domainName,
+                domainRatings: domainRatingsMap,
+                domainLastAttemptedAt: domainLastAttemptedMap,
+                fallbackLastAttemptedAt: user.lastActiveDate,
+            });
+
+            // Use effective (time-decayed) Elo for expected score calculations.
+            const R_A = domainDecay.effectiveEloRaw;
 
             const K = 32;
             const E_A = 1 / (1 + Math.pow(10, (R_B - R_A) / 400));
@@ -73,14 +80,24 @@ exports.submitAttempt = async (req, res) => {
 
             // Update user's domain map
             domainRatingsMap.set(domainKey, new_R_A);
+            domainLastAttemptedMap.set(domainKey, new Date());
             user.domainRatings = domainRatingsMap;
+            user.domainLastAttemptedAt = domainLastAttemptedMap;
             
             // Add new Elo to question update payload
             questionUpdateQuery.$set = { eloRating: new_R_B };
+
+            ratingUpdate = {
+                domain: domainDecay.domainName,
+                storedEloBefore: domainDecay.storedElo,
+                effectiveEloBefore: Math.round(domainDecay.effectiveEloRaw),
+                inactivityDays: domainDecay.inactivityDays,
+                eloLossBeforeAttempt: domainDecay.eloLoss,
+                updatedElo: new_R_A,
+            };
         }
 
         // 2. Update Question Global Stats & Elo Updates
-        const timeInc = timeTakenSeconds ? timeTakenSeconds : 0;
         await ExamQuestion.findByIdAndUpdate(questionId, questionUpdateQuery, { runValidators: true, context: 'query' });
 
         // Update User Gamification — Difficulty-weighted Points & 10 XP per correct question
@@ -110,7 +127,8 @@ exports.submitAttempt = async (req, res) => {
             streak: newStreak,
             longestStreak: newLongestStreak,
             lastActiveDate: new Date(),
-            domainRatings: user.domainRatings
+            domainRatings: user.domainRatings,
+            domainLastAttemptedAt: user.domainLastAttemptedAt,
         };
 
         if (isCorrect) {
@@ -136,7 +154,8 @@ exports.submitAttempt = async (req, res) => {
             success: true,
             isCorrect,
             correctAnswer: question.correctAnswer,
-            explanation: question.explanation
+            explanation: question.explanation,
+            ratingUpdate,
         });
 
     } catch (error) {
@@ -182,45 +201,93 @@ exports.getDashboardAnalytics = async (req, res) => {
             hoursChange: 0
         };
 
-        // Domain mastery should be based on subject domain strictly,
-        // without any fallback to topics/tags.
-        const subjectPerformance = {};
+        // Domain mastery is calculated with time-decayed effective Elo per subject.
+        const subjectPerformance = new Map();
         allAttempts.forEach((a) => {
             const question = a.questionId;
             if (!question) return;
 
             const subjectFromQuestion = typeof question.subject === 'string' ? question.subject.trim() : '';
             const domainName = subjectFromQuestion;
-            if (!domainName) return;
+            const domainKey = normalizeDomainKey(domainName);
+            if (!domainKey) return;
 
-            const key = domainName.toLowerCase();
-            if (!subjectPerformance[key]) {
-                subjectPerformance[key] = { name: domainName, total: 0, correct: 0 };
+            if (!subjectPerformance.has(domainKey)) {
+                subjectPerformance.set(domainKey, {
+                    key: domainKey,
+                    name: domainName,
+                    total: 0,
+                    correct: 0,
+                });
             }
 
-            subjectPerformance[key].total += 1;
-            if (a.isCorrect) subjectPerformance[key].correct += 1;
+            const perf = subjectPerformance.get(domainKey);
+            perf.total += 1;
+            if (a.isCorrect) perf.correct += 1;
         });
 
-        const domainRatingsMap = toDomainRatingsMap(user.domainRatings);
+        const domainRatingsMap = toMap(user.domainRatings);
+        const domainLastAttemptedMap = toMap(user.domainLastAttemptedAt);
 
-        const subjectScores = Object.values(subjectPerformance)
+        for (const key of domainRatingsMap.keys()) {
+            const normalizedKey = normalizeDomainKey(key);
+            if (!normalizedKey) continue;
+
+            if (!subjectPerformance.has(normalizedKey)) {
+                subjectPerformance.set(normalizedKey, {
+                    key: normalizedKey,
+                    name: prettifyDomainName(normalizedKey),
+                    total: 0,
+                    correct: 0,
+                });
+            }
+        }
+
+        for (const key of domainLastAttemptedMap.keys()) {
+            const normalizedKey = normalizeDomainKey(key);
+            if (!normalizedKey) continue;
+
+            if (!subjectPerformance.has(normalizedKey)) {
+                subjectPerformance.set(normalizedKey, {
+                    key: normalizedKey,
+                    name: prettifyDomainName(normalizedKey),
+                    total: 0,
+                    correct: 0,
+                });
+            }
+        }
+
+        const subjectScores = Array.from(subjectPerformance.values())
             .map((perf) => {
-                const key = perf.name.toLowerCase();
+                const domainDecay = getDomainDecaySnapshot({
+                    domainName: perf.name,
+                    domainRatings: domainRatingsMap,
+                    domainLastAttemptedAt: domainLastAttemptedMap,
+                    fallbackLastAttemptedAt: user.lastActiveDate,
+                });
 
-                // Get Elo rating from user map, default to baseline 1000
-                const eloFromMap = Number(domainRatingsMap.get(key));
-                const elo = Number.isFinite(eloFromMap) ? eloFromMap : 1000;
+                const elo = domainDecay.effectiveElo;
 
                 // Scale Elo to a 0-100 logic (1000 Elo = 50%, 1600 Elo = 80%) for progress bar graphic
                 const prog = clamp(Math.round(elo / 20), 0, 100);
                 const accuracyPct = perf.total > 0 ? Math.round((perf.correct / perf.total) * 100) : 0;
-                const blendedScore = Math.round((accuracyPct * 0.7) + (prog * 0.3));
+                const blendedScore = perf.total > 0
+                    ? Math.round((accuracyPct * 0.7) + (prog * 0.3))
+                    : prog;
 
                 return {
-                    name: perf.name,
+                    key: perf.key,
+                    name: domainDecay.domainName,
                     progress: prog,
                     elo,
+                    effectiveElo: domainDecay.effectiveElo,
+                    storedElo: domainDecay.storedElo,
+                    eloLoss: domainDecay.eloLoss,
+                    inactivityDays: domainDecay.inactivityDays,
+                    lastAttemptedAt: domainDecay.lastAttemptedAt,
+                    decayStatus: domainDecay.status,
+                    decayMessage: domainDecay.message,
+                    recoveryProblemsTarget: domainDecay.recoveryProblemsTarget,
                     attempts: perf.total,
                     accuracy: accuracyPct,
                     blendedScore,
@@ -233,6 +300,7 @@ exports.getDashboardAnalytics = async (req, res) => {
                                 : 'from-pink-500 to-rose-600',
                 };
             })
+            .filter((entry) => entry.attempts > 0 || entry.storedElo !== BASE_ELO || entry.inactivityDays > 0)
             .sort((a, b) => {
                 if (b.blendedScore !== a.blendedScore) return b.blendedScore - a.blendedScore;
                 if (b.attempts !== a.attempts) return b.attempts - a.attempts;
@@ -240,6 +308,10 @@ exports.getDashboardAnalytics = async (req, res) => {
             });
 
         const subjectProgress = subjectScores.slice(0, 6);
+        const subjectHealthSummary = {
+            decayingCount: subjectScores.filter((s) => s.decayStatus !== 'healthy').length,
+            criticalCount: subjectScores.filter((s) => s.decayStatus === 'critical').length,
+        };
 
         // Core strengths should represent consistent performance, not one lucky attempt.
         const strengthPool = subjectScores
@@ -270,35 +342,100 @@ exports.getDashboardAnalytics = async (req, res) => {
             }
         }
 
-        const weaknessPool = subjectScores
-            .filter((s) => s.attempts >= 2 && (s.accuracy < 55 || s.blendedScore < 60))
-            .sort((a, b) => {
-                if (a.blendedScore !== b.blendedScore) return a.blendedScore - b.blendedScore;
-                if (a.accuracy !== b.accuracy) return a.accuracy - b.accuracy;
-                return b.attempts - a.attempts;
+        // Build weak topics from problems the user actually attempted.
+        const topicPerformanceMap = new Map();
+        allAttempts.forEach((attemptItem) => {
+            const question = attemptItem.questionId;
+            if (!question) return;
+
+            const topicCandidates = [];
+            if (Array.isArray(question.tags) && question.tags.length > 0) {
+                topicCandidates.push(...question.tags);
+            }
+
+            const subjectName = typeof question.subject === 'string' ? question.subject.trim() : '';
+            if (subjectName) topicCandidates.push(subjectName);
+
+            if (!topicCandidates.length && question.topicId) {
+                topicCandidates.push(String(question.topicId));
+            }
+
+            const seenTopicKeys = new Set();
+            topicCandidates.forEach((topicRaw) => {
+                const topicName = String(topicRaw || '').trim();
+                if (!topicName) return;
+
+                const key = topicName.toLowerCase();
+                if (seenTopicKeys.has(key)) return;
+                seenTopicKeys.add(key);
+
+                if (!topicPerformanceMap.has(key)) {
+                    topicPerformanceMap.set(key, {
+                        name: topicName,
+                        total: 0,
+                        correct: 0,
+                    });
+                }
+
+                const topicPerf = topicPerformanceMap.get(key);
+                topicPerf.total += 1;
+                if (attemptItem.isCorrect) topicPerf.correct += 1;
+            });
+        });
+
+        const topicStats = Array.from(topicPerformanceMap.values())
+            .filter((topic) => topic.total >= 2)
+            .map((topic) => {
+                const accuracy = topic.total > 0 ? Math.round((topic.correct / topic.total) * 100) : 0;
+                const weaknessScore = Math.round(((100 - accuracy) * 0.75) + Math.min(topic.total * 4, 25));
+                return {
+                    ...topic,
+                    accuracy,
+                    weaknessScore,
+                };
             });
 
-        const weaknesses = [];
-        for (const item of weaknessPool) {
-            if (!strengths.includes(item.name) && !weaknesses.includes(item.name)) weaknesses.push(item.name);
-            if (weaknesses.length === 5) break;
+        const weakTopicPool = topicStats
+            .filter((topic) => topic.accuracy < 65)
+            .sort((a, b) => {
+                if (b.weaknessScore !== a.weaknessScore) return b.weaknessScore - a.weaknessScore;
+                if (a.accuracy !== b.accuracy) return a.accuracy - b.accuracy;
+                return b.total - a.total;
+            });
+
+        const focusAreas = [];
+        for (const topic of weakTopicPool) {
+            if (!strengths.includes(topic.name) && !focusAreas.includes(topic.name)) {
+                focusAreas.push(topic.name);
+            }
+            if (focusAreas.length === 5) break;
         }
 
-        if (weaknesses.length < 2) {
-            const fallbackWeaknesses = subjectScores
-                .filter((s) => s.attempts >= 2)
-                .sort((a, b) => {
-                    if (a.blendedScore !== b.blendedScore) return a.blendedScore - b.blendedScore;
-                    return a.accuracy - b.accuracy;
-                });
+        if (focusAreas.length < 2) {
+            const fallbackTopics = [...topicStats].sort((a, b) => {
+                if (a.accuracy !== b.accuracy) return a.accuracy - b.accuracy;
+                return b.total - a.total;
+            });
 
-            for (const item of fallbackWeaknesses) {
-                if (!strengths.includes(item.name) && !weaknesses.includes(item.name)) weaknesses.push(item.name);
-                if (weaknesses.length === 5) break;
+            for (const topic of fallbackTopics) {
+                if (!strengths.includes(topic.name) && !focusAreas.includes(topic.name)) {
+                    focusAreas.push(topic.name);
+                }
+                if (focusAreas.length === 5) break;
             }
         }
 
-        const focusAreas = weaknesses;
+        const focusAreaDetails = focusAreas
+            .map((topicName) => topicStats.find((topic) => topic.name === topicName))
+            .filter(Boolean)
+            .map((topic) => ({
+                name: topic.name,
+                attempts: topic.total,
+                accuracy: topic.accuracy,
+                weaknessScore: topic.weaknessScore,
+            }));
+
+        const weaknesses = [...focusAreas];
 
         // Recent activity — return real question text + ISO timestamp
         const recentActivity = allAttempts.slice(0, 5).map(a => {
@@ -356,8 +493,11 @@ exports.getDashboardAnalytics = async (req, res) => {
             data: {
                 stats,
                 subjectProgress,
+                subjectHealthSummary,
+                decayConfig: getDecayConfig(),
                 strengths,
                 focusAreas,
+                focusAreaDetails,
                 weaknesses,
                 recentActivity,
                 weeklyActivity
