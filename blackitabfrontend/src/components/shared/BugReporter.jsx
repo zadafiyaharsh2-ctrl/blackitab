@@ -73,19 +73,6 @@ const BugReporter = () => {
 
   return (
     <>
-      {/* Floating Button */}
-      <motion.button
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-tr from-rose-500 to-red-600 text-white flex items-center justify-center shadow-lg hover:shadow-red-500/30 border border-white/10 group"
-        title="Report a bug"
-      >
-        <FaBug className="text-2xl group-hover:rotate-12 transition-transform" />
-      </motion.button>
-
       {/* Modal */}
       <AnimatePresence>
         {isOpen && (
