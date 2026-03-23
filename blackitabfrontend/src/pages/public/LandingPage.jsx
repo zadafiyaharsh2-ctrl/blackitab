@@ -1,10 +1,10 @@
 /**
  * ============================================================================
- * LANDING PAGE (Redesigned)
+ * LANDING PAGE (Premium Light Mode)
  * ============================================================================
  * 
- * Concept: Minimalist, Premium, High-Impact.
- * Upgraded with Framer Motion, dynamic orbs, and glassmorphism.
+ * Concept: Strict Ranklen Design System (Academic Curator).
+ * Ultra-clean bg-gray-50, crisp white cards, electric blue accents.
  */
 
 import React from 'react';
@@ -14,71 +14,30 @@ import { FaArrowRight } from 'react-icons/fa';
 import Logo from '../../components/shared/Logo';
 import Socialfeatures from '../../components/shared/SocialFeatures';
 
-// Framer Motion Variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.2, delayChildren: 0.1 }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    transition: { type: "spring", stiffness: 80, damping: 20 } 
-  }
-};
-
 const LandingPage = () => {
   return (
-    <div className="min-h-screen bg-[#050505] text-white overflow-hidden relative selection:bg-blue-500/30 selection:text-white font-sans">
+    <div className="min-h-screen font-sans bg-[#f8f9fa] text-gray-900">
       
-      {/* ==================== BACKGROUND EFFECTS ==================== */}
-      <div className="fixed inset-0 z-0">
-         {/* Deep dark base */}
-         <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-black to-black" />
-         
-         {/* Animated Background Orbs */}
-         <motion.div 
-            animate={{ x: [0, 50, 0], y: [0, -50, 0], scale: [1, 1.1, 1], opacity: [0.15, 0.3, 0.15] }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-            className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-600/30 rounded-full blur-[150px] mix-blend-screen"
-         />
-         <motion.div 
-            animate={{ x: [0, -50, 0], y: [0, 50, 0], scale: [1, 1.2, 1], opacity: [0.1, 0.25, 0.1] }}
-            transition={{ duration: 18, repeat: Infinity, ease: "linear", delay: 2 }}
-            className="absolute bottom-[-20%] right-[-10%] w-[700px] h-[700px] bg-indigo-600/30 rounded-full blur-[160px] mix-blend-screen"
-         />
-
-         {/* Grid Overlay */}
-         <div className="absolute inset-0 opacity-[0.05]" 
+      {/* ==================== BACKGROUND ==================== */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+         {/* Subtle Grid Overlay */}
+         <div className="absolute inset-0 opacity-[0.04]" 
               style={{ 
-                backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)', 
-                backgroundSize: '60px 60px' 
+                backgroundImage: 'linear-gradient(rgba(0,0,0,1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,1) 1px, transparent 1px)', 
+                backgroundSize: '40px 40px' 
               }}
          />
+         {/* Top ambient glow */}
+         <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-500/5 rounded-full blur-[120px]" />
       </div>
 
       {/* ==================== NAVBAR ==================== */}
-      <nav className="relative z-50 w-full py-6 px-6 md:px-12 flex justify-between items-center backdrop-blur-sm border-b border-white/5">
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          className="flex items-center gap-3"
-        >
-          <Logo className="w-10 h-10" textSize="text-2xl" />
-        </motion.div>
+      <nav className="relative z-50 w-full py-5 px-6 md:px-12 flex justify-between items-center border-b border-gray-200 bg-white/80 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <Logo className="w-8 h-8" textSize="text-xl" />
+        </div>
         
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          className="flex items-center gap-6"
-        >
+        <div className="flex items-center gap-6">
           <Link 
             to="/contact" 
             className="text-gray-400 hover:text-white font-medium transition-colors text-sm tracking-wide"
@@ -87,85 +46,66 @@ const LandingPage = () => {
           </Link>
           <Link 
             to="/login" 
-            className="text-gray-400 hover:text-white font-medium transition-colors text-sm tracking-wide"
+            className="text-sm font-semibold tracking-wide text-gray-500 hover:text-gray-900 transition-colors"
           >
-            Log In
+            Log in
           </Link>
           <Link 
             to="/signup" 
-            className="relative group px-6 py-2.5 rounded-full font-bold text-sm bg-white text-black overflow-hidden transition-all hover:scale-105"
+            className="px-6 py-2.5 rounded-full text-sm font-bold bg-[#0061FF] text-white transition-opacity hover:opacity-90 shadow-[0_4px_14px_rgba(0,97,255,0.2)]"
           >
-             <span className="relative z-10">Sign Up</span>
-             <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-white opacity-0 group-hover:opacity-100 transition-opacity z-0" />
-             {/* Outerglow */}
-             <div className="absolute inset-0 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.4)] group-hover:shadow-[0_0_30px_rgba(255,255,255,0.6)] transition-shadow -z-10" />
+             Sign up
           </Link>
-        </motion.div>
+        </div>
       </nav>
 
       {/* ==================== HERO SECTION ==================== */}
-      <main className="relative z-10 flex flex-col items-center justify-center min-h-[85vh] text-center px-4">
+      <main className="relative z-10 flex flex-col items-center justify-center min-h-[80vh] text-center px-6">
         
         <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="max-w-5xl mx-auto flex flex-col items-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="max-w-4xl mx-auto flex flex-col items-center mt-12 mb-20"
         >
-          {/* Animated Badge */}
-          <motion.div variants={itemVariants} className="mb-8 relative">
-             <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full blur opacity-30 animate-pulse" />
-             <span className="relative px-5 py-2 rounded-full border border-white/10 bg-black/50 backdrop-blur-md text-xs font-bold text-blue-300 tracking-widest uppercase flex items-center justify-center shadow-inner">
-               <span className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-ping" />
-               The Future of EdTech
-             </span>
-          </motion.div>
+          {/* Badge */}
+          <div className="mb-8 px-5 py-1.5 rounded-full border border-gray-200 bg-white shadow-sm text-xs font-bold tracking-[0.15em] uppercase text-gray-600 flex items-center gap-2">
+             <span className="w-2 h-2 rounded-full bg-[#0061FF] animate-pulse" />
+             The Academic Curator
+          </div>
 
           {/* Main Headline */}
-          <motion.div variants={itemVariants}>
-            <h1 className="text-6xl sm:text-7xl md:text-9xl font-black mb-6 tracking-tighter leading-none glow-text">
-              <span className="bg-clip-text text-transparent bg-gradient-to-br from-white via-gray-200 to-gray-500 drop-shadow-sm">
-                RANKLEN
-              </span>
-            </h1>
-          </motion.div>
+          <h1 className="text-5xl sm:text-6xl md:text-[5rem] font-black mb-6 tracking-tighter leading-[1.1] text-gray-900">
+            Elevate Education with <span className="text-[#0061FF]">AI-Powered Insights.</span>
+          </h1>
 
           {/* Sub-headline */}
-          <motion.div variants={itemVariants}>
-            <p className="text-lg sm:text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto mb-12 leading-relaxed font-light tracking-wide">
-              Precision engineering for your education. 
-              <br className="hidden md:block" />
-              <span className="text-gray-300 font-medium"> Master complex concepts with AI-driven insights and real-time analytics.</span>
-            </p>
-          </motion.div>
+          <p className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-medium tracking-tight text-gray-500">
+            Empowering educators with real-time mistake tracking, deep analytics, and flexible monetization models wrapped in a premium ecosystem.
+          </p>
 
-          {/* Call to Action Button */}
-          <motion.div variants={itemVariants} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          {/* Hero Buttons */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
             <Link 
               to="/signup"
-              className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-300 bg-black border border-white/20 rounded-full overflow-hidden shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]"
+              className="flex items-center justify-center w-full sm:w-auto px-8 py-3.5 rounded-full text-sm font-bold transition-transform hover:-translate-y-0.5 bg-[#0061FF] text-white shadow-[0_8px_20px_rgba(0,97,255,0.25)]"
             >
-              {/* Hover sweep effect */}
-              <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[150%] group-hover:animate-[shimmer_1.5s_infinite]" />
-               
-              <span className="relative z-10 tracking-wide text-glow">Get Started Free</span>
-              <FaArrowRight className="relative z-10 ml-3 w-4 h-4 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+              Get Started
             </Link>
-          </motion.div>
+            <Link 
+              to="#features"
+              className="flex items-center justify-center w-full sm:w-auto px-8 py-3.5 rounded-full text-sm font-bold border border-gray-200 bg-white text-gray-900 hover:bg-gray-50 transition-colors shadow-sm"
+            >
+              Watch Demo <FaArrowRight className="ml-2 w-3 h-3 text-gray-400" />
+            </Link>
+          </div>
         </motion.div>
-
       </main>
 
-      {/* Social Features block */}
-      <motion.div 
-         initial={{ opacity: 0, y: 50 }}
-         whileInView={{ opacity: 1, y: 0 }}
-         viewport={{ once: true, margin: "-100px" }}
-         transition={{ duration: 0.8 }}
-         className="relative z-10"
-      >
+      {/* ==================== SOCIAL FEATURES ==================== */}
+      <div id="features" className="relative z-10">
          <Socialfeatures/>
-      </motion.div>
+      </div>
       
     </div>
   );

@@ -132,12 +132,12 @@ const TheoryChecking = () => {
   if (loading) return <PageShimmer variant="table" />;
 
   return (
-    <div className="p-4 lg:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 lg:p-8 max-w-6xl mx-auto space-y-8 font-sans">
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 tracking-tight">
-            <DocumentTextIcon className="w-6 h-6 text-orange-500" />
+            <DocumentTextIcon className="w-6 h-6 text-[#063669] dark:text-[#a7c8ff]" />
             Theory Checking
           </h1>
           <p className="text-gray-500 text-sm">Upload and manage study materials and notes for students</p>
@@ -146,7 +146,7 @@ const TheoryChecking = () => {
         {['institute', 'hod', 'teacher'].includes(user?.role) && (
           <button
             onClick={() => openModal()}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors shadow-sm"
+            className="bg-gradient-to-br from-[#063669] to-[#274e82] hover:opacity-90 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 font-bold tracking-wide transition-all shadow-md"
           >
             <PlusIcon className="w-5 h-5" />
             Upload Material
@@ -156,13 +156,13 @@ const TheoryChecking = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {theories.length === 0 ? (
-          <div className="col-span-full p-8 text-center glass-panel border-gray-200 dark:border-white/10 rounded-2xl shadow-sm">
+          <div className="col-span-full p-8 text-center bg-white/70 dark:bg-white/[0.03] backdrop-blur-xl shadow-[0_20px_40px_rgba(0,0,0,0.04)] dark:shadow-none rounded-2xl">
             <DocumentTextIcon className="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-3" />
             <p className="text-gray-500">No theory materials uploaded yet.</p>
           </div>
         ) : (
           theories.map(t => (
-            <div key={t._id} className="glass-panel border-gray-200 dark:border-white/10 rounded-2xl p-5 flex flex-col h-full hover:border-orange-500/50 transition-colors shadow-sm group">
+            <div key={t._id} className="bg-white/70 dark:bg-white/[0.03] backdrop-blur-xl shadow-[0_20px_40px_rgba(0,0,0,0.04)] dark:shadow-none rounded-2xl p-6 flex flex-col h-full hover:bg-white/90 dark:hover:bg-white/[0.06] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all group">
               <div className="flex justify-between items-start mb-3 gap-2">
                 <h3 className="font-bold text-gray-900 dark:text-white text-lg leading-tight line-clamp-2" title={t.title}>{t.title}</h3>
                 {['institute', 'hod', 'teacher'].includes(user?.role) && canEdit(t.uploadedBy?._id || t.uploadedBy) && (
@@ -203,7 +203,7 @@ const TheoryChecking = () => {
                     href={t.fileUrl} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-sm font-medium text-orange-400 hover:text-orange-300 transition-colors"
+                    className="flex items-center gap-1 text-[13px] font-bold text-[#063669] dark:text-[#a7c8ff] hover:text-[#274e82] transition-colors"
                   >
                     <LinkIcon className="w-4 h-4" />
                     View File
@@ -283,9 +283,9 @@ const TheoryChecking = () => {
               </form>
             </div>
 
-            <div className="p-6 border-t border-gray-200 dark:border-white/10 shrink-0 flex gap-3 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-md rounded-b-2xl">
-              <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-2.5 rounded-xl bg-gray-200 dark:bg-white/5 hover:bg-gray-300 dark:hover:bg-white/10 text-gray-800 dark:text-white font-medium transition-colors border border-gray-300 dark:border-white/10">Cancel</button>
-              <button type="submit" form="theoryForm" className="flex-1 px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-medium transition-colors">
+            <div className="p-6 border-t border-gray-200/50 dark:border-white/10 shrink-0 flex gap-3 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-md rounded-b-2xl">
+              <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-2.5 rounded-xl bg-gray-200 dark:bg-white/5 hover:bg-gray-300 dark:hover:bg-white/10 text-gray-800 dark:text-white font-semibold transition-colors">Cancel</button>
+              <button type="submit" form="theoryForm" className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-br from-[#063669] to-[#274e82] hover:opacity-90 text-white font-bold tracking-wide transition-all shadow-md">
                 {editingTheory ? 'Save Changes' : 'Upload'}
               </button>
             </div>
