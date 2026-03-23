@@ -203,9 +203,9 @@ const DepartmentDetail = () => {
                             {data.batches.length > 0 ? (
                                 <div className="space-y-3">
                                     {data.batches.map(batch => (
-                                        <Link key={batch._id} to={`/teacher/batch/${batch._id}`} className="block p-3 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 hover:border-blue-500/30 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors cursor-pointer group">
+                                        <div key={batch._id} className="p-3 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 hover:border-blue-500/30 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors group">
                                             <div className="flex justify-between items-start mb-1">
-                                                <h3 className="font-semibold text-sm text-gray-900 dark:text-white">{batch.name}</h3>
+                                                <Link to={`/teacher/batch/${batch._id}`} className="font-semibold text-sm text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 group-hover:underline">{batch.name}</Link>
                                                 <span className="text-xs font-medium px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300">
                                                     {batch.year} {batch.section}
                                                 </span>
@@ -217,8 +217,7 @@ const DepartmentDetail = () => {
                                                 </div>
                                                 <Link
                                                     to={`/institute/batch/${batch._id}/timetable`}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                    className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded transition-colors"
+                                                    className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded transition-colors ml-auto"
                                                 >
                                                     <CalendarDaysIcon className="w-3 h-3" /> Timetable
                                                 </Link>
