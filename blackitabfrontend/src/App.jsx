@@ -100,8 +100,11 @@ import TheoryChecking from './pages/institute/TheoryChecking';
 import QuestionChecker from './pages/institute/QuestionChecker';
 import JoinRequestsPanel from './pages/institute/JoinRequestsPanel';
 import InstituteNotifications from './pages/institute/InstituteNotifications';
+import InstituteHierarchy from './pages/institute/InstituteHierarchy';
+import InstituteComplaints from './pages/institute/InstituteComplaints';
 
 import TeacherAttendance from './pages/teacher/TeacherAttendance';
+import SubmitComplaint from './pages/student/SubmitComplaint';
 import AdminLogin from './pages/public/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 // ============================================================================
@@ -731,6 +734,28 @@ function App() {
 
             {/* Teacher / HOD Dashboard */}
             <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute requiredRoles={['student']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <StudentDashboard />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/student/complaints"
+              element={
+                <ProtectedRoute requiredRoles={['student']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <SubmitComplaint />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
               path="/teacher-dashboard"
               element={
                 <ProtectedRoute requiredRoles={['teacher', 'hod']}>
@@ -933,6 +958,12 @@ function App() {
             />
             <Route path="/institute/join-requests"
               element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><JoinRequestsPanel /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/complaints"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteComplaints /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/hierarchy"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteHierarchy /></MainLayout></ProtectedRoute>}
             />
             <Route path="/institute/notifications"
               element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteNotifications /></MainLayout></ProtectedRoute>}
