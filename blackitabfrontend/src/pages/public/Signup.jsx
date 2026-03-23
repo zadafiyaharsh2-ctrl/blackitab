@@ -2,8 +2,9 @@ import { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CustomToast } from '../../utils/CustomToast';
-import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Building, GraduationCap, BookOpen, Quote } from 'lucide-react';
-import { GoogleLogin } from '@react-oauth/google';
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Building, GraduationCap } from 'lucide-react';
+import AuthBrandingPane from '../../components/public/auth/AuthBrandingPane';
+import GoogleAuthDivider from '../../components/public/auth/GoogleAuthDivider';
 import API_URL from '../../config';
 import axios from 'axios';
 
@@ -202,32 +203,10 @@ const Signup = ({ onSignupSuccess }) => {
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-50 text-gray-900 font-sans">
       
       {/* BRANDING PANE - Asymmetrical Split (Left) */}
-      <div className="hidden md:flex md:w-[45%] lg:w-1/2 relative bg-[#f8f9fa] border-r border-gray-200 flex-col justify-between p-12 lg:p-16 overflow-hidden">
-        {/* Subtle Decorative Layer */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,97,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
-        <div className="absolute -left-[20%] -top-[10%] w-[80%] h-[80%] rounded-full bg-gradient-to-br from-[#0061FF]/5 to-transparent blur-[100px] pointer-events-none" />
-
-        <div className="relative z-10 flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-center">
-            <BookOpen className="w-5 h-5 text-[#0061FF]" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-gray-900">RANKLEN</span>
-        </div>
-
-        <div className="relative z-10 my-auto">
-          <Quote className="w-12 h-12 text-gray-200 mb-6" />
-          <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-gray-900 leading-tight mb-6">
-            Architect Your <br />Scholarly Era.
-          </h1>
-          <p className="text-lg text-gray-500 leading-relaxed max-w-md">
-            The Digital Curator. A premium, high-art environment to organize, manage, and excel in your educational journey.
-          </p>
-        </div>
-
-        <div className="relative z-10 text-sm font-medium text-gray-400">
-          © {new Date().getFullYear()} Ranklen. All rights reserved.
-        </div>
-      </div>
+      <AuthBrandingPane 
+        title="Architect Your <br />Scholarly Era."
+        subtitle="The Digital Curator. A premium, high-art environment to organize, manage, and excel in your educational journey."
+      />
 
       {/* FORM PANE - Asymmetrical Split (Right) */}
       <div className="w-full md:w-[55%] lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative overflow-y-auto">
@@ -476,35 +455,11 @@ const Signup = ({ onSignupSuccess }) => {
 
           {/* Google Auth Divider & Button - Available on all steps */}
           {accountType !== 'institute' && (
-            <div className="mt-8 border-t border-gray-100 pt-8 relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                Or continue with
-              </div>
-              
-              <div className="flex justify-center flex-col items-center gap-2 w-full custom-google-btn-container">
-                <style jsx>{`
-                  .custom-google-btn-container > div {
-                    width: 100% !important;
-                    display: flex !important;
-                    justify-content: center !important;
-                  }
-                  .custom-google-btn-container iframe {
-                    margin: 0 auto !important;
-                  }
-                `}</style>
-                <div className="w-full p-[1px] rounded-full border border-gray-200 bg-white hover:bg-gray-50 transition-colors">
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => CustomToast.error('Google Sign-Up was unsuccessful')}
-                    useOneTap
-                    theme="outline"
-                    shape="pill"
-                    size="large"
-                    text="signup_with"
-                  />
-                </div>
-              </div>
-            </div>
+            <GoogleAuthDivider 
+              onSuccess={handleGoogleSuccess} 
+              onError={() => CustomToast.error('Google Sign-Up was unsuccessful')} 
+              label="signup_with" 
+            />
           )}
 
           {/* Footer */}
