@@ -487,10 +487,59 @@ export default function TeacherAttendance() {
                           New Record
                         </span>
                       )}
+                      {isFutureDate && (
+                        <span className="px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-[11px] font-bold uppercase tracking-widest border border-blue-200 dark:border-blue-500/20 flex items-center gap-1.5">
+                          <FaCalendarAlt className="text-[10px]" /> Scheduled
+                        </span>
+                      )}
+                      {isPastDate && !existingRecord && (
+                        <span className="px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 text-[11px] font-bold uppercase tracking-widest border border-purple-200 dark:border-purple-500/20 flex items-center gap-1.5">
+                          <FaInfoCircle className="text-[10px]" /> Backdated
+                        </span>
+                      )}
                       
                       <div className="h-6 w-px bg-gray-200 dark:bg-white/10 mx-2" />
                       
                       <span className="text-xl font-extrabold text-gray-900 dark:text-white tracking-tight">{friendlyDate}</span>
+                    </div>
+
+                    {/* Session Type + Quick Dates */}
+                    <div className="flex flex-wrap items-center gap-3">
+                      <select
+                        value={sessionType}
+                        onChange={(e) => setSessionType(e.target.value)}
+                        className="text-[11px] font-bold uppercase tracking-widest border border-gray-200 dark:border-white/10 rounded-full px-4 py-2 bg-white dark:bg-white/5 text-gray-700 dark:text-gray-200 outline-none focus:ring-2 focus:ring-[#0061FF]/30"
+                      >
+                        <option value="Class">Class</option>
+                        <option value="Lab">Lab</option>
+                      </select>
+                      
+                      {!isToday && (
+                        <button
+                          onClick={() => setAttendanceDate(getLocalDateString())}
+                          className="text-[11px] font-bold uppercase tracking-widest px-4 py-2 rounded-full bg-[#0061FF]/10 text-[#0061FF] dark:text-[#a5c3ff] border border-[#0061FF]/20 hover:bg-[#0061FF]/20 transition-colors"
+                        >
+                          Today
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setAttendanceDate(getLocalDateString(-1))}
+                        className={`text-[11px] font-bold px-3 py-2 rounded-full border transition-colors ${attendanceDate === getLocalDateString(-1) ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 border-gray-900 dark:border-white' : 'border-gray-200 dark:border-white/10 text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                      >
+                        Yesterday
+                      </button>
+                      <button
+                        onClick={() => setAttendanceDate(getLocalDateString(-2))}
+                        className={`text-[11px] font-bold px-3 py-2 rounded-full border transition-colors ${attendanceDate === getLocalDateString(-2) ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 border-gray-900 dark:border-white' : 'border-gray-200 dark:border-white/10 text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                      >
+                        2d ago
+                      </button>
+                      <button
+                        onClick={() => setAttendanceDate(getLocalDateString(-3))}
+                        className={`text-[11px] font-bold px-3 py-2 rounded-full border transition-colors ${attendanceDate === getLocalDateString(-3) ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 border-gray-900 dark:border-white' : 'border-gray-200 dark:border-white/10 text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                      >
+                        3d ago
+                      </button>
                     </div>
                   </div>
 
