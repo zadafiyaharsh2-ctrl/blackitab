@@ -439,17 +439,6 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
             {isOpen && <span>Profile Settings</span>}
           </Link>
 
-          <button
-            onClick={() => window.dispatchEvent(new Event("openBugReporter"))}
-            className={`w-full flex items-center ${isOpen ? "px-4 py-3 justify-start gap-4" : "px-0 py-3 justify-center"} text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-rose-500/10 hover:text-rose-600 dark:hover:bg-white/10 dark:hover:text-rose-400 rounded-xl group`}
-            title="Report an Issue"
-          >
-            <span className="text-lg drop-shadow-sm">
-              <MdReportProblem />
-            </span>
-            {isOpen && <span>Report Bug</span>}
-          </button>
-
           <Link
             to="/contact"
             onClick={handleNavClick}
