@@ -735,17 +735,6 @@ function App() {
 
             {/* Teacher / HOD Dashboard */}
             <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute requiredRoles={['student']}>
-                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
-                    <StudentDashboard />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
               path="/student/complaints"
               element={
                 <ProtectedRoute requiredRoles={['student']}>
