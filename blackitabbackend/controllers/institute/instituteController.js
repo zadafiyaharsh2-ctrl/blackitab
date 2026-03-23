@@ -889,6 +889,60 @@ exports.updateComplaintStatus = async (req, res) => {
 };
 
 // ══════════════════════════════════════════════════════════════
+// TIMETABLE SYSTEM
+// ══════════════════════════════════════════════════════════════
+const Timetable = require('../../models/Timetable');
+
+// POST /api/institute/timetable/:batchId - Create or update timetable
+exports.saveTimetable = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        const { batchId } = req.params;
+        const { schedule } = req.body;
+
+        if (!schedule || !Array.isArray(schedule)) {
+            return res.status(400).json({ success: false, message: 'Invalid schedule format' });
+        }
+
+        let timetable = await Timetable.findOne({ batchId, instituteId: instId });
+        
+        if (timetable) {
+            timetable.schedule = schedule;
+            await timetable.save();
+        } else {
+            timetable = new Timetable({
+                batchId,
+                instituteId: instId,
+                schedule
+            });
+            await timetable.save();
+        }
+
+        res.json({ success: true, message: 'Timetable saved successfully', data: timetable });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error saving timetable' });
+    }
+};
+
+// GET /api/institute/timetable/:batchId - View timetable
+exports.getTimetable = async (req, res) => {
+    try {
+        const { batchId } = req.params;
+        
+        const timetable = await Timetable.findOne({ batchId })
+            .populate('schedule.periods.teacherId', 'name profileImage email');
+            
+        if (!timetable) {
+            return res.json({ success: true, data: null });
+        }
+
+        res.json({ success: true, data: timetable });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error fetching timetable' });
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
 // JOIN INSTITUTE
 // ══════════════════════════════════════════════════════════════
 
