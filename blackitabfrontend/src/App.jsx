@@ -102,6 +102,7 @@ import JoinRequestsPanel from './pages/institute/JoinRequestsPanel';
 import InstituteNotifications from './pages/institute/InstituteNotifications';
 import InstituteHierarchy from './pages/institute/InstituteHierarchy';
 import InstituteComplaints from './pages/institute/InstituteComplaints';
+import InstituteTimetable from './pages/institute/InstituteTimetable';
 
 import TeacherAttendance from './pages/teacher/TeacherAttendance';
 import SubmitComplaint from './pages/student/SubmitComplaint';
@@ -958,6 +959,9 @@ function App() {
             />
             <Route path="/institute/join-requests"
               element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><JoinRequestsPanel /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/batch/:batchId/timetable"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteTimetable /></MainLayout></ProtectedRoute>}
             />
             <Route path="/institute/complaints"
               element={<ProtectedRoute requiredRoles={['institute', 'hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteComplaints /></MainLayout></ProtectedRoute>}
