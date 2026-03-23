@@ -11,10 +11,41 @@ const bugReportSchema = new mongoose.Schema({
         required: true,
         enum: ['student', 'teacher', 'hod', 'institute', 'superadmin']
     },
+    category: {
+        type: String,
+        enum: ['bug', 'security', 'abuse'],
+        default: 'bug'
+    },
+    severity: {
+        type: String,
+        enum: ['low', 'medium', 'high', 'critical'],
+        default: 'medium'
+    },
     description: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        maxlength: 2000
+    },
+    stepsToReproduce: {
+        type: String,
+        trim: true,
+        maxlength: 2000
+    },
+    expectedBehavior: {
+        type: String,
+        trim: true,
+        maxlength: 1000
+    },
+    actualBehavior: {
+        type: String,
+        trim: true,
+        maxlength: 1000
+    },
+    endpoint: {
+        type: String,
+        trim: true,
+        maxlength: 200
     },
     pageContext: {
         type: String,
@@ -24,7 +55,7 @@ const bugReportSchema = new mongoose.Schema({
     status: {
         type: String,
         required: true,
-        enum: ['Open', 'In Progress', 'Resolved'],
+        enum: ['Open', 'In Progress', 'Resolved', 'Wont Fix'],
         default: 'Open'
     },
     adminFeedback: {
