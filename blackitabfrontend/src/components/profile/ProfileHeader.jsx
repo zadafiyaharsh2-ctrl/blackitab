@@ -14,12 +14,6 @@ import {
 const OwnerControls = ({ onEditProfile, onCopyProfileLink, onOpenSettings }) => (
   <div className="flex flex-wrap items-center gap-3 shrink-0 mt-6 lg:mt-0">
     <button
-      onClick={onEditProfile}
-      className="bg-[#0061FF] hover:opacity-90 text-white px-6 py-3 rounded-full font-bold tracking-wide transition-opacity flex items-center justify-center gap-2 text-sm shadow-[0_4px_14px_0_rgba(0,97,255,0.2)] dark:shadow-none"
-    >
-      <FaPen size={12} /> Edit Profile
-    </button>
-    <button
       onClick={onCopyProfileLink}
       className="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 px-5 py-3 rounded-full font-semibold transition-colors flex items-center justify-center gap-2 text-sm shadow-sm"
       title="Copy Profile Link"
@@ -28,9 +22,9 @@ const OwnerControls = ({ onEditProfile, onCopyProfileLink, onOpenSettings }) => 
       <span className="hidden sm:inline">Copy Link</span>
     </button>
     <button
-      onClick={onOpenSettings}
+      onClick={onEditProfile}
       className="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 p-3.5 rounded-full font-semibold transition-colors flex items-center justify-center shadow-sm"
-      title="Profile Settings"
+      title="Edit Profile"
     >
       <FaCog size={14} />
     </button>

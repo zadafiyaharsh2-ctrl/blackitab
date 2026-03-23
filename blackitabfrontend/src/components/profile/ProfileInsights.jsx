@@ -47,7 +47,9 @@ const ProfileInsights = ({
   heatmapUserId,
   onOpenProfile,
   onOpenClass,
-  onOpenClasses
+  onOpenClasses,
+  onOpenPosts,
+  onOpenStudyContent
 }) => {
   if (insightsLoading) {
     return (
@@ -146,22 +148,24 @@ const ProfileInsights = ({
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-white/[0.02] p-3">
+              <button
+                type="button"
+                onClick={onOpenPosts}
+                className="w-full text-left rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-white/[0.02] p-3 hover:border-blue-300 dark:hover:border-blue-500/30 hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
+                title="View Posts"
+              >
                 <p className="text-[11px] text-gray-500">Posts</p>
                 <p className="text-xl font-black text-gray-900 dark:text-white">{contentStats.regularPosts}</p>
-              </div>
-              <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-white/[0.02] p-3">
+              </button>
+              <button
+                type="button"
+                onClick={onOpenStudyContent}
+                className="w-full text-left rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-white/[0.02] p-3 hover:border-blue-300 dark:hover:border-blue-500/30 hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
+                title="View Study Content"
+              >
                 <p className="text-[11px] text-gray-500">Study Content</p>
                 <p className="text-xl font-black text-gray-900 dark:text-white">{contentStats.studyContent}</p>
-              </div>
-              <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-white/[0.02] p-3">
-                <p className="text-[11px] text-gray-500">Paid Content</p>
-                <p className="text-xl font-black text-gray-900 dark:text-white">{contentStats.paidContent}</p>
-              </div>
-              <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-white/[0.02] p-3">
-                <p className="text-[11px] text-gray-500">Videos</p>
-                <p className="text-xl font-black text-gray-900 dark:text-white">{contentStats.videos}</p>
-              </div>
+              </button>
             </div>
 
             <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">

@@ -83,10 +83,9 @@ const InstituteDashboard = () => {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-5">
-
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-8 font-sans">
       {/* Banner */}
-      <div className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 h-40 bg-gray-100 dark:bg-white/5">
+      <div className="relative rounded-2xl overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.06)] dark:shadow-none h-48 bg-white/70 dark:bg-white/5 backdrop-blur-xl">
         {institute?.bannerImage ? (
           <img src={institute.bannerImage} alt="Banner" className="w-full h-full object-cover" />
         ) : (
@@ -111,10 +110,10 @@ const InstituteDashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {statCards.map((card, idx) => (
           <div key={idx} onClick={() => navigate(card.path)}
-            className="border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-white/[0.02] cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5"
+            className="rounded-2xl p-5 bg-white/70 dark:bg-white/[0.03] backdrop-blur-xl shadow-[0_20px_40px_rgba(0,0,0,0.04)] dark:shadow-none cursor-pointer hover:bg-white/90 dark:hover:bg-white/[0.06] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all flex flex-col items-start gap-1"
           >
             <div className="flex items-center justify-between mb-2">
               <card.icon className="w-4 h-4 text-gray-400" />
@@ -126,27 +125,27 @@ const InstituteDashboard = () => {
       </div>
 
       {/* About + Quick Links */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-3">
-            <DocumentTextIcon className="w-3.5 h-3.5" /> About Institute
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 rounded-2xl p-6 bg-white/70 dark:bg-white/[0.03] backdrop-blur-xl shadow-[0_20px_40px_rgba(0,0,0,0.04)] dark:shadow-none">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-2 mb-4">
+            <DocumentTextIcon className="w-4 h-4" /> About Institute
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap">
+          <p className="text-[15px] text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap font-medium">
             {institute?.description || 'No description provided. Head to Profile to add details.'}
           </p>
         </div>
-        <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
-          <div className="px-4 py-3 border-b border-gray-100 dark:border-white/5">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Quick Links</h3>
+        <div className="rounded-2xl overflow-hidden bg-white/70 dark:bg-white/[0.03] backdrop-blur-xl shadow-[0_20px_40px_rgba(0,0,0,0.04)] dark:shadow-none flex flex-col">
+          <div className="px-6 py-5">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest">Quick Links</h3>
           </div>
-          <div className="divide-y divide-gray-100 dark:divide-white/5">
+          <div className="flex flex-col gap-1 px-4 pb-4">
             {[
               { label: 'Manage Theory Files', path: '/institute/theory' },
               { label: 'Review Questions', path: '/institute/questions' },
               { label: 'Join Requests', path: '/institute/join-requests' },
             ].map((l, i) => (
-              <button key={i} onClick={() => navigate(l.path)} className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center justify-between">
-                {l.label} <span className="text-gray-400">→</span>
+              <button key={i} onClick={() => navigate(l.path)} className="w-full text-left px-4 py-3 text-[15px] font-medium text-gray-700 dark:text-gray-300 rounded-xl hover:bg-white/50 dark:hover:bg-white/5 transition-colors flex items-center justify-between group">
+                {l.label} <span className="text-gray-400 group-hover:translate-x-1 transition-transform">→</span>
               </button>
             ))}
           </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API_URL from '../../config';
 import { FaPlay, FaUser, FaEye, FaHeart, FaSearch } from 'react-icons/fa';
@@ -7,6 +7,9 @@ import { motion } from 'framer-motion';
 
 const StudyContent = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const authorId = queryParams.get('author');
   const [content, setContent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,10 +35,11 @@ const StudyContent = () => {
     }
   };
 
-  const filteredContent = content.filter(item =>
-    item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredContent = content.filter(item => {
+    const matchesSearch = item.title?.toLowerCase().includes(searchQuery.toLowerCase()) || item.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesAuthor = authorId ? (item.user?._id === authorId || item.user === authorId) : true;
+    return matchesSearch && matchesAuthor;
+  });
 
   return (
     <div className="min-h-screen p-6 md:p-8">
