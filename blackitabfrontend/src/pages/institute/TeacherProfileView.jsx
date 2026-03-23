@@ -13,7 +13,9 @@ import {
     BookOpenIcon,
     ChevronDownIcon,
     ChevronUpIcon,
-    UsersIcon
+    UsersIcon,
+    DocumentTextIcon,
+    ClipboardDocumentCheckIcon
 } from '@heroicons/react/24/outline';
 
 const TeacherProfileView = () => {
@@ -25,7 +27,9 @@ const TeacherProfileView = () => {
     const [data, setData] = useState({
         teacher: null,
         batches: [],
-        stats: { questionsCreated: 0, totalBatches: 0 }
+        materials: [],
+        assignments: [],
+        stats: { questionsCreated: 0, totalBatches: 0, totalMaterials: 0, totalAssignments: 0 }
     });
 
     // Expandable batch states
@@ -99,6 +103,8 @@ const TeacherProfileView = () => {
     const tabs = [
         { key: 'overview', label: 'Overview', icon: ChartBarIcon },
         { key: 'batches', label: `Batches (${batches.length})`, icon: UserGroupIcon },
+        { key: 'materials', label: `Materials (${data.materials?.length || 0})`, icon: DocumentTextIcon },
+        { key: 'assignments', label: `Assignments (${data.assignments?.length || 0})`, icon: ClipboardDocumentCheckIcon }
     ];
 
     const primaryDept = teacher.departments?.[0] || null;
@@ -157,8 +163,8 @@ const TeacherProfileView = () => {
                         <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalBatches}</p>
                     </div>
                     <div className="text-center">
-                        <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Questions</p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.questionsCreated}</p>
+                        <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Uploads</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{(stats.totalMaterials || 0) + (stats.totalAssignments || 0)}</p>
                     </div>
                 </div>
             </div>
@@ -309,6 +315,79 @@ const TeacherProfileView = () => {
                         <div className="text-center py-12 border border-dashed border-gray-200 dark:border-white/10 rounded-xl">
                             <AcademicCapIcon className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
                             <p className="text-sm text-gray-500">This teacher is not managing any batches yet.</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ═══ Materials Tab ═══ */}
+            {activeTab === 'materials' && (
+                <div className="space-y-3">
+                    {data.materials?.length > 0 ? (
+                        data.materials.map(mat => (
+                            <div key={mat._id} className="p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.02]">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-10 h-10 rounded-lg bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center border border-orange-200 dark:border-orange-500/20">
+                                            <DocumentTextIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-gray-900 dark:text-white text-base">{mat.title}</h3>
+                                            <p className="text-xs text-gray-500 mt-1">{mat.description || 'No description provided'}</p>
+                                            <div className="flex items-center gap-2 mt-2">
+                                                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/5">
+                                                    Batch: {mat.batchId?.name || 'Unknown'} ({mat.batchId?.year})
+                                                </span>
+                                                <span className="text-[10px] text-gray-400">{new Date(mat.createdAt).toLocaleDateString()}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="text-center py-12 border border-dashed border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-white/[0.02]">
+                            <DocumentTextIcon className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+                            <p className="text-sm text-gray-500">No materials uploaded by this teacher.</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ═══ Assignments Tab ═══ */}
+            {activeTab === 'assignments' && (
+                <div className="space-y-3">
+                    {data.assignments?.length > 0 ? (
+                        data.assignments.map(assign => (
+                            <div key={assign._id} className="p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.02]">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center border border-indigo-200 dark:border-indigo-500/20">
+                                            <ClipboardDocumentCheckIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-gray-900 dark:text-white text-base">{assign.title}</h3>
+                                            <p className="text-xs text-gray-500 mt-1">{assign.description || 'No description provided'}</p>
+                                            <div className="flex items-center gap-2 mt-2">
+                                                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/5">
+                                                    Batch: {assign.batchId?.name || 'Unknown'} ({assign.batchId?.year})
+                                                </span>
+                                                {assign.dueDate && (
+                                                    <span className="text-[10px] text-gray-400">Due: {new Date(assign.dueDate).toLocaleDateString()}</span>
+                                                )}
+                                                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10">
+                                                    Max Score: {assign.maxScore || 100}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="text-center py-12 border border-dashed border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-white/[0.02]">
+                            <ClipboardDocumentCheckIcon className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+                            <p className="text-sm text-gray-500">No assignments created by this teacher.</p>
                         </div>
                     )}
                 </div>
