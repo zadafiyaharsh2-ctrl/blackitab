@@ -1,8 +1,8 @@
-const { ChatOpenAI } = require("@langchain/openai");
+const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
 const { DynamicStructuredTool } = require("@langchain/core/tools");
-const { AgentExecutor, createToolCallingAgent } = require("langchain/agents");
-const { ChatPromptTemplate, MessagesPlaceholder } = require("@langchain/core/prompts");
+const { createReactAgent } = require("@langchain/langgraph/prebuilt");
 const { z } = require("zod");
+const { HumanMessage } = require("@langchain/core/messages");
 
 // Import the aggregation from step 1
 const { fetchStudentWeaknessesAggregation } = require("./analyticsController");
@@ -18,9 +18,9 @@ exports.generateCopilotResponse = async (req, res) => {
             return res.status(400).json({ success: false, error: "Token unauthenticated or message missing." });
         }
 
-        // Initialize Model
-        const model = new ChatOpenAI({
-            modelName: "gpt-4-turbo-preview",
+        // Initialize Model (Using Google Gemini)
+        const model = new ChatGoogleGenerativeAI({
+            model: "gemini-1.5-flash", 
             temperature: 0.7,
         });
 
@@ -43,38 +43,29 @@ exports.generateCopilotResponse = async (req, res) => {
 
         const tools = [fetchWeaknessesTool];
 
-        // Prompt Engineering
-        const prompt = ChatPromptTemplate.fromMessages([
-            ["system", `You are the Ranklen Copilot, an elite AI tutor. 
+        const promptModifier = `You are the Ranklen Copilot, an elite AI tutor. 
 When a user asks what to study, you MUST use the fetch_student_weaknesses tool to get their historical data. 
 Review their lowest accuracy subjects and the days since their last attempt (to account for memory decay). 
-Recommend a specific topic to study in a brief, direct, and gamified tone. Do not write a long essay. Suggest one immediate action.`],
-            ["human", "{input}"],
-            new MessagesPlaceholder("agent_scratchpad"),
-        ]);
+Recommend a specific topic to study in a brief, direct, and gamified tone. Do not write a long essay. Suggest one immediate action.`;
 
         // 2. THE SYNTAX FLAW FIX: 
-        // We REMOVE the await as Agent creation is synchronous, and UPGRADE to createToolCallingAgent.
-        const agent = createToolCallingAgent({
+        // We UPGRADE to createReactAgent from @langchain/langgraph since createToolCallingAgent is deprecated and moved in LangChain v0.3+.
+        const agent = createReactAgent({
             llm: model,
             tools,
-            prompt
-        });
-
-        const agentExecutor = new AgentExecutor({
-            agent,
-            tools,
-            returnIntermediateSteps: false,
+            messageModifier: promptModifier,
         });
 
         // Execute
-        const result = await agentExecutor.invoke({
-            input: message,
+        const result = await agent.invoke({
+            messages: [new HumanMessage(message)],
         });
+
+        const reply = result.messages[result.messages.length - 1].content;
 
         return res.status(200).json({
             success: true,
-            reply: result.output
+            reply: reply
         });
 
     } catch (error) {

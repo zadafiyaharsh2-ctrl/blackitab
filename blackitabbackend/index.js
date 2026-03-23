@@ -38,6 +38,7 @@ const questionRoutes = require("./routes/shared/questionRoutes");
 const teacherRoutes = require("./routes/teacher/teacherRoutes");
 const adminChatRoutes = require("./routes/admin/adminChatRoutes");
 const feedbackRoutes = require("./routes/shared/feedbackRoutes");
+const copilotRoutes = require("./routes/shared/copilotRoutes");
 
 // --- Server Setup ---
 
@@ -159,6 +160,7 @@ app.use("/api/questions", questionRoutes);
 app.use("/api/teacher", teacherRoutes);
 app.use("/api/admin-chat", adminChatRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/copilot", copilotRoutes);
 
 // --- GET /api/me — Current User (protected) ---
 

@@ -7,6 +7,7 @@ import Logo from './Logo';
 import GlobalSearch from './GlobalSearch';
 import axios from 'axios';
 import API_URL from '../../config';
+import CopilotDrawer from '../student/CopilotDrawer';
 
 const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
   const location = useLocation();
@@ -15,6 +16,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
   const [, setUnreadCount] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
   const [pendingJoinRequests, setPendingJoinRequests] = useState(0);
+  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
 
   const { role: userRole = 'student', instituteId = null } = (() => {
     try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
@@ -83,6 +85,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       ] : []),
       { path: '/question-management', label: 'Question Bank', icon: <FaListUl /> },
       { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
+      { path: '/copilot', label: 'Ranklen Copilot', icon: <FaRobot /> },
       { path: '/teacher/tests', label: 'Tests', icon: <FaListAlt /> },
       { path: '/teacher/content', label: 'Theory Content', icon: <FaPenFancy /> },
       ...(hasInstitute ? [
@@ -94,6 +97,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
       { path: '/classes', label: 'My Classes', icon: <FaUsers /> },
       { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
+      { path: '/copilot', label: 'Ranklen Copilot', icon: <FaRobot /> },
       { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
       { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
       { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy /> },
@@ -127,6 +131,13 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
   };
 
   const handleNavItemClick = (event, path) => {
+    if (path === '/copilot') {
+      event.preventDefault();
+      setIsCopilotOpen(true);
+      handleNavClick();
+      return;
+    }
+
     if (userRole === 'student' && path === '/classes' && !hasInstitute) {
       event.preventDefault();
       navigate('/profile', {
@@ -348,6 +359,7 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
           </div>
         </div>
       </div>
+      <CopilotDrawer isOpen={isCopilotOpen} onClose={() => setIsCopilotOpen(false)} />
     </>
   );
 };
