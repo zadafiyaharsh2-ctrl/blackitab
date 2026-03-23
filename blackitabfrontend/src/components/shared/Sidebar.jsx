@@ -96,6 +96,9 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
       { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
       { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
+      { path: '/saved-questions', label: 'Saved Pyqs', icon: <FaBookmark /> },
+      { path: '/student/complaints', label: 'Submit Complaint', icon: <FaExclamationTriangle /> },
+      { path: '/bug-report', label: 'Report a Bug', icon: <FaBug /> },
       { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy /> },
       { path: '/theory', label: 'Theory', icon: <FaBook /> },
     ] : [])
@@ -116,8 +119,10 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     { path: '/hod/attendance', label: 'Attendance', icon: <FaCalendarDay /> },
     { path: '/institute/theory', label: 'Theory Checking', icon: <FaFileAlt /> },
     { path: '/institute/questions', label: 'Question Checker', icon: <FaClipboardCheck /> },
+    { path: '/institute/complaints', label: 'Complaints & Feedback', icon: <FaExclamationTriangle /> },
+    { path: '/institute/hierarchy', label: 'Hierarchy', icon: <FaSitemap /> },
     { path: '/institute/join-requests', label: 'Join Requests', icon: <FaUserPlus />, badge: pendingJoinRequests },
-    { path: '/institute/departments', label: 'Departments', icon: <FaSitemap /> },
+    { path: '/institute/departments', label: 'Departments', icon: <FaListUl /> },
     { path: '/institute/profile', label: 'Institute Profile', icon: <FaSchool /> },
   ] : [];
 
