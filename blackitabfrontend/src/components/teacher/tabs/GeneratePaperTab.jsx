@@ -96,201 +96,180 @@ const GeneratePaperTab = ({ isDark }) => {
   };
 
   return (
-    <div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* ── LEFT: Filter Panel ── */}
-        <div className="lg:col-span-1">
-          <div className={`p-4 sm:p-6 rounded-2xl sticky top-4 sm:top-6 overflow-hidden ${isDark ? 'glass-panel border-white/10' : 'bg-white border-y border-x border-gray-200 shadow-sm'}`}>
-            <h2 className={`text-lg font-bold flex items-center gap-2 mb-5 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              <FaFilter className="text-blue-500" /> Filters
-            </h2>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* ── LEFT: Extractor Blueprint ── */}
+      <div className="lg:col-span-1">
+        <div className={`p-8 rounded-[2.5rem] sticky top-8 border space-y-8 ${isDark ? 'bg-[#0a0a0a] border-white/10' : 'bg-white border-gray-200 shadow-sm'}`}>
+          <div className="border-b pb-6 border-gray-100 dark:border-white/5">
+             <h2 className={`text-xl font-black uppercase tracking-widest mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>Extraction Matrix</h2>
+             <p className={`text-xs font-bold font-mono ${isDark ? 'text-[#0061FF]' : 'text-[#0061FF]'}`}>PDF Rendering Engine</p>
+          </div>
 
-            {/* Paper Title */}
-            <div className="mb-4">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Paper Title</label>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. GATE Mock Test"
-                className={`w-full px-4 py-2.5 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition ${isDark ? 'bg-white/5 border border-white/10 text-white' : 'bg-gray-50 border border-gray-200 text-gray-900'}`}
-              />
-            </div>
+          <div className={`p-6 rounded-3xl border ${isDark ? 'bg-[#05000a] border-white/5' : 'bg-gray-50 border-gray-100'}`}>
+             <label className={`block text-[10px] font-black uppercase tracking-widest mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Document Header</label>
+             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
+                placeholder="Examinee Assessment Title"
+                className={`w-full px-5 py-4 rounded-xl outline-none font-medium transition-all focus:ring-2 focus:ring-[#0061FF]/30 border ${isDark ? 'bg-[#0a0a0a] border-white/10 text-white placeholder-gray-600 focus:border-[#0061FF]/50' : 'bg-white border-transparent text-gray-900 placeholder-gray-400 focus:border-[#0061FF]/30'}`}
+             />
+          </div>
 
-            {/* Exam Select */}
-            <div className="mb-4">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Exam</label>
-              <select value={exam} onChange={(e) => setExam(e.target.value)}
-                className={`w-full px-4 py-2.5 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition cursor-pointer appearance-none ${isDark ? 'bg-white/5 border border-white/10 text-white' : 'bg-gray-50 border border-gray-200 text-gray-900'}`}>
-                <option value="" className={isDark ? 'bg-gray-900' : 'bg-white'}>All Exams</option>
-                {availableExams.map(e => <option key={e} value={e} className={isDark ? 'bg-gray-900' : 'bg-white'}>{e.toUpperCase()}</option>)}
-              </select>
-            </div>
+          <div className={`p-6 rounded-3xl border space-y-4 ${isDark ? 'bg-[#05000a] border-white/5' : 'bg-gray-50 border-gray-100'}`}>
+             <div>
+               <label className={`block text-[10px] font-black uppercase tracking-widest mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Target Exam</label>
+               <select value={exam} onChange={(e) => setExam(e.target.value)}
+                  className={`w-full px-5 py-4 rounded-xl outline-none font-bold cursor-pointer transition-all border ${isDark ? 'bg-[#0a0a0a] border-white/10 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
+                  <option value="">All Exams</option>
+                  {availableExams.map(e => <option key={e} value={e}>{e}</option>)}
+               </select>
+             </div>
+             <div>
+               <label className={`block text-[10px] font-black uppercase tracking-widest mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Subject Vector</label>
+               <select value={subject} onChange={(e) => setSubject(e.target.value)}
+                  className={`w-full px-5 py-4 rounded-xl outline-none font-bold cursor-pointer transition-all border ${isDark ? 'bg-[#0a0a0a] border-white/10 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
+                  <option value="">All Subjects</option>
+                  {availableSubjects.map(s => <option key={s} value={s}>{s}</option>)}
+               </select>
+             </div>
+          </div>
 
-            {/* Subject Select */}
-            <div className="mb-4">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Subject</label>
-              <select value={subject} onChange={(e) => setSubject(e.target.value)}
-                className={`w-full px-4 py-2.5 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition cursor-pointer appearance-none ${isDark ? 'bg-white/5 border border-white/10 text-white' : 'bg-gray-50 border border-gray-200 text-gray-900'}`}>
-                <option value="" className={isDark ? 'bg-gray-900' : 'bg-white'}>All Subjects</option>
-                {availableSubjects.map(s => <option key={s} value={s} className={isDark ? 'bg-gray-900' : 'bg-white'}>{s}</option>)}
-              </select>
-            </div>
-
-            {/* Difficulty */}
-            <div className="mb-4">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Difficulty</label>
-              <div className="flex flex-wrap gap-2">
+          <div className={`p-6 rounded-3xl border ${isDark ? 'bg-[#05000a] border-white/5' : 'bg-gray-50 border-gray-100'}`}>
+             <label className={`block text-[10px] font-black uppercase tracking-widest mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Volatility Rating</label>
+             <div className="flex flex-wrap gap-2">
                 {['', 'Easy', 'Medium', 'Hard'].map(d => (
                   <button key={d} onClick={() => setDifficulty(d)}
-                    className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${
+                    className={`flex-1 px-3 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
                       difficulty === d
-                        ? 'bg-blue-500 text-white border-blue-500 shadow-md'
-                        : isDark ? 'bg-white/5 text-gray-400 border-white/10 hover:border-blue-500/50' : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-300'
+                        ? 'bg-gray-900 text-white border-gray-900 dark:bg-white dark:text-gray-900 dark:border-white shadow-lg shadow-black/10'
+                        : isDark ? 'bg-transparent text-gray-500 border-white/10 hover:border-white/30 hover:text-gray-300' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-800'
                     }`}>
-                    {d || 'All'}
+                    {d || 'Any'}
                   </button>
                 ))}
-              </div>
-            </div>
-
-            {/* Question Count */}
-            <div className="mb-4">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                Number of Questions: <span className="text-blue-500">{limit}</span>
-              </label>
-              <input type="range" min="5" max="100" step="5" value={limit} onChange={(e) => setLimit(Number(e.target.value))}
-                className="w-full accent-blue-500" />
-              <div className="flex justify-between text-[10px] text-gray-400 mt-1">
-                <span>5</span><span>25</span><span>50</span><span>75</span><span>100</span>
-              </div>
-            </div>
-
-            {/* Include Answers Toggle */}
-            <div className="mb-6">
-              <label className="flex items-center justify-between cursor-pointer group">
-                <span className={`text-sm font-semibold transition ${isDark ? 'text-gray-300 group-hover:text-blue-400' : 'text-gray-700 group-hover:text-blue-500'}`}>Include Answer Key</span>
-                <div onClick={() => setIncludeAnswers(!includeAnswers)}
-                  className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer ${
-                    includeAnswers ? 'bg-blue-500' : (isDark ? 'bg-gray-700' : 'bg-gray-300')
-                  }`}>
-                  <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                    includeAnswers ? 'translate-x-6' : 'translate-x-0.5'
-                  }`} />
-                </div>
-              </label>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-3">
-              <button onClick={fetchPreview} disabled={loading}
-                className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm border transition disabled:opacity-50 ${
-                  isDark ? 'bg-white/5 hover:bg-white/10 text-white border-white/10' : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border-gray-200'
-                }`}>
-                {loading ? <FaSpinner className="animate-spin" /> : <FaEye />} Preview Questions
-              </button>
-
-              <button onClick={downloadPDF} disabled={downloading || questions.length === 0}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-semibold text-sm shadow-lg shadow-red-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                {downloading ? <FaSpinner className="animate-spin" /> : <FaDownload />}
-                {downloading ? 'Generating PDF...' : 'Download PDF'}
-              </button>
-            </div>
-
-            {/* Stats */}
-            {questions.length > 0 && (
-              <div className="mt-4 p-3 rounded-xl bg-blue-500/5 border border-blue-500/10">
-                <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
-                  Found {totalFound} paper-designated questions matching your filters
-                </p>
-              </div>
-            )}
+             </div>
           </div>
+          
+          <div className={`p-6 rounded-3xl border ${isDark ? 'bg-[#05000a] border-white/5' : 'bg-gray-50 border-gray-100'}`}>
+             <div className="flex items-center justify-between mb-4">
+                 <label className={`block text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Batch Size</label>
+                 <span className={`text-sm font-black ${isDark ? 'text-white' : 'text-[#0061FF]'}`}>{limit} Qs</span>
+             </div>
+             <input type="range" min="5" max="100" step="5" value={limit} onChange={(e) => setLimit(Number(e.target.value))}
+               className="w-full accent-[#0061FF] cursor-pointer" />
+          </div>
+
+          <div className={`p-6 rounded-3xl border ${isDark ? 'bg-[#05000a] border-white/5' : 'bg-gray-50 border-gray-100'} flex items-center justify-between cursor-pointer group`} onClick={() => setIncludeAnswers(!includeAnswers)}>
+             <span className={`text-xs font-black uppercase tracking-widest transition-colors ${isDark ? 'text-gray-400 group-hover:text-white' : 'text-gray-600 group-hover:text-gray-900'}`}>Encode Answer Vault</span>
+             <div className={`relative w-12 h-6 rounded-full transition-colors ${
+               includeAnswers ? 'bg-[#0061FF]' : (isDark ? 'bg-gray-700' : 'bg-gray-300')
+             }`}>
+               <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
+                 includeAnswers ? 'translate-x-6' : 'translate-x-0.5'
+               }`} />
+             </div>
+          </div>
+
+          <div className="space-y-4 pt-4">
+            <button onClick={fetchPreview} disabled={loading}
+              className={`w-full py-4 rounded-full font-bold text-sm uppercase tracking-wider border transition-colors flex justify-center items-center gap-2 ${
+                isDark ? 'bg-transparent border-[#0061FF]/30 text-[#0061FF] hover:bg-[#0061FF]/5' : 'bg-white border-gray-200 hover:bg-gray-50 text-[#0061FF]'
+              } disabled:opacity-50`}>
+              {loading ? <FaSpinner className="animate-spin text-lg" /> : <FaEye className="text-lg" />} Live Audit
+            </button>
+            <button onClick={downloadPDF} disabled={downloading || questions.length === 0}
+              className="w-full py-4 rounded-full bg-gray-900 text-white dark:bg-white dark:text-gray-900 hover:scale-105 shadow-xl font-bold text-sm uppercase tracking-wider transition-all disabled:opacity-50 disabled:hover:scale-100 flex justify-center items-center gap-2">
+              {downloading ? <FaSpinner className="animate-spin text-lg" /> : <FaDownload className="text-lg" />} Print Document
+            </button>
+          </div>
+          
+          {questions.length > 0 && (
+            <div className={`text-center py-4 rounded-2xl border ${isDark ? 'bg-[#0061FF]/5 border-[#0061FF]/10 text-[#a5c3ff]' : 'bg-[#0061FF]/5 border-[#0061FF]/10 text-[#0061FF]'}`}>
+                 <p className="text-[10px] font-black uppercase tracking-widest">{totalFound} Eligible Targets Located</p>
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* ── RIGHT: Preview Panel ── */}
-        <div className="lg:col-span-2">
-          <div className={`p-4 sm:p-6 rounded-2xl overflow-hidden ${isDark ? 'glass-panel border-white/10' : 'bg-white border-y border-x border-gray-200 shadow-sm'}`}>
-            <h2 className={`text-lg font-bold flex flex-wrap items-center gap-2 mb-5 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              <FaListUl className="text-purple-500" /> Question Preview
-              {questions.length > 0 && (
-                <span className="w-full sm:w-auto sm:ml-auto text-sm font-normal text-gray-500">{questions.length} questions</span>
-              )}
-            </h2>
-
-            {/* Error */}
-            {error && (
-              <div className="mb-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
-                {error}
-              </div>
-            )}
-
-            {/* Loading */}
-            {loading && (
-              <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                <FaSpinner className="animate-spin text-3xl mb-3" />
-                <p className="text-sm">Loading questions...</p>
-              </div>
-            )}
-
-            {/* Empty */}
-            {!loading && questions.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                <FaFilePdf className="text-4xl mb-3 opacity-30" />
-                <p className="text-sm">No paper-designated questions found. Try adjusting your filters.</p>
-              </div>
-            )}
-
-            {/* Question List */}
-            {!loading && questions.length > 0 && (
-              <div className="space-y-4">
-                <AnimatePresence>
-                  {questions.map((q, index) => (
-                    <div key={q._id || index}
-                      className={`p-4 rounded-xl border transition group overflow-hidden ${isDark ? 'bg-white/[0.02] border-white/5 hover:border-blue-500/20' : 'bg-gray-50 border-gray-200 hover:border-blue-300'}`}>
-                      <div className="flex items-start gap-3 min-w-0">
-                        <span className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                          {index + 1}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-medium leading-relaxed break-words ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            {q.question || q.content || 'Question text unavailable'}
-                          </p>
-                          <div className="flex flex-wrap items-center gap-2 mt-2">
-                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${diffColors[q.difficulty] || diffColors.Medium}`}>
-                              {q.difficulty}
-                            </span>
-                            {q.exam && (
-                              <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold break-words ${isDark ? 'bg-white/10 text-gray-400' : 'bg-gray-200 text-gray-600'}`}>
-                                {q.exam.toUpperCase()}
-                              </span>
-                            )}
-                            {q.subject && (
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold break-words bg-purple-500/10 text-purple-500 border border-purple-500/20">
-                                {q.subject}
-                              </span>
-                            )}
-                          </div>
-                          {q.options && q.options.length > 0 && (
-                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                              {q.options.map((opt, optIdx) => (
-                                <div key={optIdx} className={`px-3 py-1.5 rounded-lg text-xs border transition break-words ${
-                                  q.correctAnswer === optIdx
-                                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-semibold'
-                                    : isDark ? 'bg-white/[0.03] border-white/5 text-gray-400' : 'bg-gray-100 border-gray-200 text-gray-700'
-                                }`}>
-                                  <span className="font-bold mr-1.5">{['A', 'B', 'C', 'D'][optIdx]})</span>
-                                  {opt}
-                                  {q.correctAnswer === optIdx && <FaCheck className="inline ml-1.5 text-[9px]" />}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </AnimatePresence>
-              </div>
+      {/* ── RIGHT: Execution Window ── */}
+      <div className="lg:col-span-2">
+        <div className={`p-8 sm:p-12 rounded-[2.5rem] min-h-full border ${isDark ? 'bg-[#0a0a0a] border-white/10' : 'bg-white border-gray-200'}`}>
+          <div className="border-b pb-8 mb-8 border-gray-100 dark:border-white/5 flex items-end justify-between">
+            <div>
+               <h2 className={`text-3xl font-black tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>Document Preview</h2>
+               <p className={`text-sm font-medium mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Verify output before executing print command.</p>
+            </div>
+            {questions.length > 0 && (
+              <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>{questions.length} Items</span>
             )}
           </div>
+
+          {error && (
+            <div className="p-5 rounded-2xl bg-red-50 border border-red-100 text-red-600 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400 font-bold text-sm shadow-sm mb-8">
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+             <div className="flex flex-col items-center justify-center py-40">
+                <FaSpinner className="animate-spin text-5xl mb-6 text-[#0061FF]" />
+                <p className={`text-base font-bold tracking-widest uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Auditing Database...</p>
+             </div>
+          ) : questions.length === 0 ? (
+             <div className={`flex flex-col items-center justify-center py-40 border-2 border-dashed rounded-3xl ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
+                <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center mb-6">
+                   <FaFilePdf className={`text-3xl ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
+                </div>
+                <p className={`text-lg font-black tracking-tight mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>No Data Validated</p>
+                <p className={`text-sm font-medium ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Configure the extraction matrix on the left to render preview.</p>
+             </div>
+          ) : (
+            <div className="space-y-6">
+               <AnimatePresence>
+                 {questions.map((q, index) => (
+                   <div key={q._id || index}
+                     className={`p-6 sm:p-8 rounded-3xl border transition-all ${isDark ? 'bg-[#05000a] border-white/5 hover:border-white/20' : 'bg-gray-50 border-gray-100 hover:border-gray-300'}`}>
+                     <div className="flex flex-col sm:flex-row gap-6">
+                        <div className="flex items-center sm:items-start gap-4 shrink-0 sm:w-32">
+                             <span className="w-10 h-10 rounded-full bg-gray-900 text-white dark:bg-white dark:text-gray-900 flex items-center justify-center text-sm font-black shadow-lg">
+                                 {index + 1}
+                             </span>
+                             <div className="flex flex-row sm:flex-col gap-2">
+                                <span className={`px-2 py-1 rounded border text-[9px] font-black uppercase tracking-widest ${isDark ? 'bg-white/5 border-white/5 text-gray-400' : 'bg-white border-gray-200 text-gray-500'}`}>
+                                  {q.difficulty}
+                                </span>
+                                {q.exam && (
+                                   <span className={`px-2 py-1 rounded border text-[9px] font-black uppercase tracking-widest ${isDark ? 'bg-[#0061FF]/10 text-[#0061FF] border-[#0061FF]/20' : 'bg-white border-gray-200 text-[#0061FF]'}`}>
+                                     {q.exam}
+                                   </span>
+                                )}
+                             </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                           <p className={`text-lg font-bold leading-relaxed break-words mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                              {q.question || q.content || 'Content Offline'}
+                           </p>
+                           {q.options && q.options.length > 0 && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                 {q.options.map((opt, optIdx) => (
+                                    <div key={optIdx} className={`p-4 rounded-xl border flex items-center gap-3 break-words ${
+                                       q.correctAnswer === optIdx
+                                         ? isDark ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-300' : 'border-emerald-500/40 bg-emerald-50 text-emerald-900'
+                                         : isDark ? 'border-white/5 bg-transparent text-gray-400' : 'border-gray-200 bg-white text-gray-600'
+                                    }`}>
+                                       <span className={`text-[10px] font-black shrink-0 ${q.correctAnswer === optIdx ? 'text-emerald-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}`}>
+                                          {String.fromCharCode(65 + optIdx)}
+                                       </span>
+                                       <span className="font-medium text-sm pt-0.5">{opt}</span>
+                                    </div>
+                                 ))}
+                              </div>
+                           )}
+                        </div>
+                     </div>
+                   </div>
+                 ))}
+               </AnimatePresence>
+            </div>
+          )}
         </div>
       </div>
     </div>

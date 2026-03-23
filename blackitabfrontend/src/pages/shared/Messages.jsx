@@ -334,7 +334,7 @@ const Messages = () => {
                                     >
                                         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden flex-shrink-0">
                                             {u.profileImage ? (
-                                                <img src={u.profileImage} alt={u.name} className="w-full h-full object-cover" />
+                                                <img src={u.profileImage.startsWith('http') ? u.profileImage : `${API_URL}${u.profileImage}`} alt={u.name} className="w-full h-full object-cover" />
                                             ) : (
                                                 <span className="text-white text-xs font-bold">{u.name?.charAt(0).toUpperCase()}</span>
                                             )}
@@ -373,11 +373,17 @@ const Messages = () => {
                                 className={`p-3 flex items-center gap-3 cursor-pointer rounded-xl transition-all border border-transparent ${currentChatUser?._id === conv._id ? 'bg-blue-600/20 border-blue-500/30 shadow-lg shadow-blue-900/20' : 'hover:border-gray-200 dark:border-white/5'}`}
                             >
                                 <div className="relative">
-                                    <img 
-                                        src={conv.profileImage?.startsWith('http') ? conv.profileImage : `${API_URL}${conv.profileImage}` || 'https://via.placeholder.com/40'} 
-                                        alt={conv.name} 
-                                        className="w-12 h-12 rounded-full object-cover ring-2 ring-white/10"
-                                    />
+                                    {conv.profileImage ? (
+                                        <img 
+                                            src={conv.profileImage.startsWith('http') ? conv.profileImage : `${API_URL}${conv.profileImage}`} 
+                                            alt={conv.name} 
+                                            className="w-12 h-12 rounded-full object-cover ring-2 ring-white/10 bg-white dark:bg-gray-800"
+                                        />
+                                    ) : (
+                                        <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center ring-2 ring-white/10 border border-gray-200 dark:border-gray-700">
+                                            <span className="text-xl font-black text-[#0061FF] dark:text-gray-300">{conv.name?.charAt(0).toUpperCase()}</span>
+                                        </div>
+                                    )}
                                     {(onlineUsers.includes(String(conv._id)) || onlineUsers.includes(String(conv.id))) && (
                                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black"></div>
                                     )}
@@ -406,11 +412,17 @@ const Messages = () => {
                                     <FaArrowLeft />
                                 </button>
                                 <div className="relative">
-                                    <img 
-                                        src={currentChatUser.profileImage?.startsWith('http') ? currentChatUser.profileImage : `${API_URL}${currentChatUser.profileImage}` || 'https://via.placeholder.com/40'} 
-                                        alt={currentChatUser.name} 
-                                        className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover ring-2 ring-white/10 bg-gray-50 dark:bg-gray-800"
-                                    />
+                                    {currentChatUser.profileImage ? (
+                                        <img 
+                                            src={currentChatUser.profileImage.startsWith('http') ? currentChatUser.profileImage : `${API_URL}${currentChatUser.profileImage}`} 
+                                            alt={currentChatUser.name} 
+                                            className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover ring-2 ring-white/10 bg-gray-50 dark:bg-gray-800"
+                                        />
+                                    ) : (
+                                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center ring-2 ring-white/10 border border-gray-200 dark:border-gray-700">
+                                            <span className="text-xl font-black text-[#0061FF] dark:text-gray-300">{currentChatUser.name?.charAt(0).toUpperCase()}</span>
+                                        </div>
+                                    )}
                                     {(onlineUsers.includes(String(currentChatUser._id)) || onlineUsers.includes(String(currentChatUser.id))) && (
                                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black animate-pulse"></div>
                                     )}
@@ -430,8 +442,6 @@ const Messages = () => {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 md:gap-4 text-gray-600 dark:text-gray-400">
-                                <button onClick={() => CustomToast.info('📞 Voice calls coming soon!')} className="p-3 hover:bg-white/10 rounded-full transition-colors" title="Voice call"><FaPhone /></button>
-                                <button onClick={() => CustomToast.info('📹 Video calls coming soon!')} className="p-3 hover:bg-white/10 rounded-full transition-colors" title="Video call"><FaVideo /></button>
                                 <button onClick={() => CustomToast.info('More options coming soon')} className="p-3 hover:bg-white/10 rounded-full transition-colors" title="More"><FaEllipsisV /></button>
                             </div>
                         </div>
