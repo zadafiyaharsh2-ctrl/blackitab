@@ -53,6 +53,9 @@ const userSchema = new mongoose.Schema({
   // Privacy
   isPrivate: { type: Boolean, default: false },
 
+  // Anti-spam cooldown (set by userRateLimit middleware)
+  restrictedUntil: { type: Date, default: null },
+
   // Profile
   bio: {
     type: String,
