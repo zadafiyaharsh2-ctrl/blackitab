@@ -157,19 +157,31 @@ const ExamQuestions = () => {
             const res = await axios.post(
                 `${API_URL}/api/problems/exam/${examId}/adaptive-question`,
                 { 
-                    failedQuestionId: focusQuestions[focusIndex]._id,
+                    failedQuestionId: focusQuestions[focusIndex]?._id,
                     targetDifficulty: difficultyMap[difficultyDiff]
                 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            if (res.data.success) {
+            if (res.data.success && res.data.data) {
                 setCurrentAdaptiveQuestion(res.data.data);
+            } else {
+                // AI returned no usable data — skip adaptive gracefully
+                setIsAdaptiveSequence(false);
+                if (focusIndex < focusQuestions.length - 1) {
+                    setFocusIndex(prev => prev + 1);
+                } else {
+                    stopFocusMode();
+                }
             }
         } catch (err) {
             console.error('Error fetching adaptive part', err);
             // Fallback if AI fails, just skip adaptive
             setIsAdaptiveSequence(false);
-            setFocusIndex(prev => prev + 1);
+            if (focusIndex < focusQuestions.length - 1) {
+                setFocusIndex(prev => prev + 1);
+            } else {
+                stopFocusMode();
+            }
         } finally {
             setIsGeneratingAdaptive(false);
         }
@@ -376,6 +388,17 @@ const ExamQuestions = () => {
 
     if (isFocusMode) {
         const q = focusQuestions[focusIndex];
+        // Guard: if no question data is available, exit focus mode gracefully
+        if (!q && !isAdaptiveSequence && !isGeneratingAdaptive && !showTheory) {
+            return (
+                <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center p-8 ${isDark ? 'bg-gray-950' : 'bg-white'}`}>
+                    <BookOpen className={`h-16 w-16 mb-4 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
+                    <h2 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>No More Questions Available</h2>
+                    <p className={`text-sm mb-6 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>You've completed all available questions, or the AI service is currently unavailable.</p>
+                    <button onClick={stopFocusMode} className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-all">Exit Focus Mode</button>
+                </div>
+            );
+        }
         return (
             <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 transition-colors duration-300 ${isDark ? 'bg-gray-950' : 'bg-gradient-to-br from-gray-50 via-white to-purple-50'}`}>
                 {/* Progress Bar */}
@@ -476,12 +499,12 @@ const ExamQuestions = () => {
 
                             {/* Question Text */}
                             <p className={`text-2xl font-medium leading-relaxed mb-8 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                {isAdaptiveSequence && currentAdaptiveQuestion ? currentAdaptiveQuestion.question : q.question}
+                                {isAdaptiveSequence && currentAdaptiveQuestion ? currentAdaptiveQuestion.question : (q?.question || 'Loading question...')}
                             </p>
 
                             {/* Options */}
                             <div className="space-y-3 mb-8">
-                                {(isAdaptiveSequence && currentAdaptiveQuestion ? currentAdaptiveQuestion.options : q.options).map((opt, i) => {
+                                {(isAdaptiveSequence && currentAdaptiveQuestion ? currentAdaptiveQuestion.options : (q?.options || [])).map((opt, i) => {
                                     const isSelected = focusSelectedOption === i;
                                     let optionStyle = isDark
                                         ? 'border-gray-700 text-gray-300 hover:border-gray-500 hover:bg-gray-800/60'
