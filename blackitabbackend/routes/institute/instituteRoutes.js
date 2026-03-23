@@ -58,6 +58,10 @@ router.post('/complaints', requireRole('student'), instituteController.submitCom
 router.get('/complaints', requireRole('institute', 'hod'), instituteController.getInstituteComplaints);
 router.put('/complaints/:id', requireRole('institute', 'hod'), instituteController.updateComplaintStatus);
 
+// ── Timetable Management ──
+router.post('/timetable/:batchId', requireRole('institute', 'hod'), instituteController.saveTimetable);
+router.get('/timetable/:batchId', instituteController.getTimetable);
+
 // ── Join Institute (any authenticated user without an institute) ──
 router.post('/join', instituteController.joinInstitute);
 
