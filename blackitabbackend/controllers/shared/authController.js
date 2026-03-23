@@ -4,6 +4,57 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) throw new Error('FATAL: JWT_SECRET environment variable is not set!');
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Campus Access Control — restrict account creation
+// Set in .env: ALLOWED_EMAIL_DOMAINS=college.edu,partner.edu
+//              MAX_SIGNUPS_PER_DAY=100
+//              REQUIRE_INSTITUTE_CODE=true
+// ──────────────────────────────────────────────────────────────────────────────
+
+const validateCampusAccess = async (email, instituteCode, res) => {
+    const normalizedEmail = email.toLowerCase();
+
+    // 1. Email domain restriction
+    const allowedDomains = process.env.ALLOWED_EMAIL_DOMAINS;
+    if (allowedDomains) {
+        const domains = allowedDomains.split(',').map(d => d.trim().toLowerCase());
+        const emailDomain = normalizedEmail.split('@')[1];
+        if (!domains.includes(emailDomain)) {
+            res.status(403).json({
+                success: false,
+                message: `Registration is restricted to campus emails (${domains.join(', ')}). Use your institutional email.`
+            });
+            return false;
+        }
+    }
+
+    // 2. Daily signup cap
+    const maxSignups = parseInt(process.env.MAX_SIGNUPS_PER_DAY);
+    if (maxSignups && !isNaN(maxSignups)) {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const todayCount = await User.countDocuments({ createdAt: { $gte: todayStart } });
+        if (todayCount >= maxSignups) {
+            res.status(429).json({
+                success: false,
+                message: 'Daily registration limit reached. Please try again tomorrow.'
+            });
+            return false;
+        }
+    }
+
+    // 3. Institute code requirement
+    if (process.env.REQUIRE_INSTITUTE_CODE === 'true' && !instituteCode) {
+        res.status(400).json({
+            success: false,
+            message: 'An institute code is required to register. Contact your institute admin for the code.'
+        });
+        return false;
+    }
+
+    return true;
+};
+
 const { OAuth2Client } = require('google-auth-library');
 // Note: We create the client dynamically or pass the token. 
 // We will use the VITE_GOOGLE_CLIENT_ID if it were full stack, 
@@ -46,6 +97,10 @@ exports.googleLogin = async (req, res) => {
                 await user.save();
             }
         } else {
+            // NEW USER — apply campus access control
+            const allowed = await validateCampusAccess(email, instituteCode, res);
+            if (!allowed) return;
+
             // Validate incoming role
             const validRoles = ['student', 'teacher', 'hod', 'institute'];
             const assignedRole = validRoles.includes(role) ? role : 'student';
@@ -121,6 +176,10 @@ exports.register = async (req, res) => {
         if (!email || !password || !name) {
             return res.status(400).json({ success: false, message: 'All fields are required' });
         }
+
+        // Campus access control
+        const allowed = await validateCampusAccess(email, instituteCode, res);
+        if (!allowed) return;
 
         const existingUser = await User.findOne({ email: email.toLowerCase() });
         if (existingUser) {
