@@ -1,89 +1,43 @@
 const { ChatOpenAI } = require("@langchain/openai");
 const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
 const { HumanMessage, AIMessage, SystemMessage } = require("@langchain/core/messages");
-
 const { getComprehensiveAnalytics } = require("./analyticsController");
+// Note: analytics builder is moved to a dedicated service to keep controller lean.
+const { getTeacherAnalyticsContext } = require("../services/teacherAnalyticsService");
 
-function getHistoryLimit() {
-    const parsed = Number(process.env.COPILOT_HISTORY_LIMIT || 6);
-    if (Number.isNaN(parsed)) {
-        return 6;
-    }
-    return Math.min(6, Math.max(4, parsed));
-}
+// ============================================================================
+// 1. CONFIGURATION & CONSTANTS
+// ============================================================================
+const COPILOT_HISTORY_LIMIT = Math.min(6, Math.max(4, Number(process.env.COPILOT_HISTORY_LIMIT) || 6));
+const DEBUG_ENABLED = process.env.COPILOT_DEBUG === "true";
 
-function isPerformanceQuery(text) {
-    if (!text || typeof text !== "string") {
-        return false;
-    }
-    const input = text.toLowerCase();
-    const keywords = [
-        "performance", "progress", "weak", "weakest", "strong", "strongest",
-        "accuracy", "score", "marks", "rank", "improve", "study", "subject",
-        "analytics", "analysis", "practice", "how am i doing", "what should i study",
-        "study plan", "study time", "optimize", "revise", "revision", "focus areas",
-        "where should i focus", "what to focus", "topics to practice"
-    ];
-    return keywords.some((keyword) => input.includes(keyword));
-}
+// ============================================================================
+// 2. INTENT CLASSIFIERS (Heuristics)
+// ============================================================================
+const INTENTS = {
+    performance: /performance|progress|weak|strong|accuracy|score|marks|rank|improve|study|analytics|focus/i,
+    teacherAnalytics: /student|class|batch|attendance|present|absent|topper|at risk/i,
+    institute: /institute|college|school|overview|dashboard|departments|staff|subscription/i,
+    directory: /list teachers|all teachers|teacher list|department teachers/i
+};
 
-function toEssentialAnalytics(data) {
-    const normalizeSubject = (subject) => {
-        if (!subject || typeof subject !== "object") {
-            return null;
-        }
-        return {
-            name: subject.subject || subject.name || null,
-            accuracy: subject.accuracyPercentage ?? subject.accuracy ?? null,
-        };
-    };
+const detectIntent = (text, intentRegex) => text ? intentRegex.test(text) : false;
 
-    const allSubjects = Array.isArray(data?.allSubjects)
-        ? data.allSubjects.map(normalizeSubject).filter((subject) => subject?.name)
-        : [];
-
-    return {
-        weakestSubject: normalizeSubject(data?.weakestSubject),
-        strongestSubject: normalizeSubject(data?.strongestSubject),
-        allSubjects,
-    };
-}
-
-function formatMessageForDebug(msg) {
-    const role = msg?._getType?.() || "unknown";
-    const content = Array.isArray(msg?.content) ? JSON.stringify(msg.content) : (msg?.content ?? "");
-    return {
-        role,
-        content,
-    };
-}
-
-function extractUsage(aiMessage) {
-    const usage = aiMessage?.usage_metadata;
-    if (!usage) {
-        return null;
-    }
-    return {
-        input_tokens: usage.input_tokens ?? 0,
-        output_tokens: usage.output_tokens ?? 0,
-        total_tokens: usage.total_tokens ?? 0,
-    };
-}
-
-function createModel() {
+// ============================================================================
+// 3. LLM FACTORY (Model Initialization)
+// ============================================================================
+const initializeLLM = () => {
     const provider = (process.env.LLM_PROVIDER || "openai").toLowerCase();
 
     if (provider === "gemini") {
         const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-        if (!apiKey) {
-            throw new Error("GEMINI_API_KEY or GOOGLE_API_KEY is required when LLM_PROVIDER=gemini");
-        }
+        if (!apiKey) throw new Error("Missing Gemini API Key");
         return {
             provider,
-            modelName: process.env.GEMINI_MODEL || "gemini-1.5-flash",
+            modelName: process.env.GEMINI_MODEL || "gemini-2.5-flash",
             model: new ChatGoogleGenerativeAI({
                 apiKey,
-                model: process.env.GEMINI_MODEL || "gemini-1.5-flash",
+                model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
                 temperature: 0.7,
             }),
         };
@@ -97,42 +51,89 @@ function createModel() {
             temperature: 0.7,
         }),
     };
-}
+};
 
+// ============================================================================
+// 4. PROMPT ENGINEERING ENGINE
+// ============================================================================
+const getRoleConfiguration = (role) => {
+    const configs = {
+        teacher: {
+            instruction: "You are Ranklen Copilot for teachers. Reply in 5 sentences or less. Answer only what the user asks based strictly on the provided context.",
+            template: "teacher"
+        },
+        hod: {
+            instruction: "You are Ranklen Copilot for HODs. Reply in 6 sentences or less. Provide department-level insights strictly based on the context.",
+            template: "hod"
+        },
+        institute: {
+            instruction: "You are Ranklen Copilot for institute admins. Reply in 6 sentences or less. Summarize high-level platform metrics.",
+            template: "institute"
+        },
+        student: {
+            instruction: "You are Ranklen Copilot. Reply in 4 sentences or less. Be brutally honest, actionable, and mathematically precise.",
+            template: "student"
+        }
+    };
+    return configs[role] || configs.student;
+};
+
+// ============================================================================
+// 5. THE MAIN CONTROLLER
+// ============================================================================
 exports.generateCopilotResponse = async (req, res) => {
     try {
         const { message, history = [] } = req.body;
-        const debugEnabled = process.env.COPILOT_DEBUG === "true";
-        const includeDebugInResponse = req.query.debug === "1";
-        
-        // Extract userId strictly from the JWT, NEVER from req.body
-        const userId = req.user?._id || req.user?.id; 
+        const userId = req.user?._id || req.user?.id;
+        const userRole = req.user?.role || "student";
+        const includeDebug = req.query.debug === "1";
 
+        // 1. Validation
         if (!userId || !message) {
-            return res.status(400).json({ success: false, error: "Unauthenticated or message missing." });
+            return res.status(401).json({ success: false, error: "Unauthorized or missing input." });
         }
 
-        const { model, provider, modelName } = createModel();
-
-        const historyLimit = getHistoryLimit();
-        const limitedHistory = Array.isArray(history) ? history.slice(-historyLimit) : [];
-        const chatHistory = limitedHistory.map(msg => {
-            if (msg.role === 'user' || msg.type === 'human') {
-                return new HumanMessage(msg.content);
-            } else {
-                return new AIMessage(msg.content);
-            }
-        });
-        const shouldUseAnalyticsContext = isPerformanceQuery(message);
+        // 2. Context Routing & Fetching
         let analyticsContext = null;
-        if (shouldUseAnalyticsContext) {
-            const analyticsData = await getComprehensiveAnalytics(userId);
-            analyticsContext = toEssentialAnalytics(analyticsData);
+        let contextType = "general";
+
+        if (["teacher", "hod", "institute"].includes(userRole)) {
+            if (
+                detectIntent(message, INTENTS.teacherAnalytics) ||
+                detectIntent(message, INTENTS.institute) ||
+                detectIntent(message, INTENTS.directory)
+            ) {
+                analyticsContext = await getTeacherAnalyticsContext(req.user);
+                contextType = "staff";
+            }
+        } else if (detectIntent(message, INTENTS.performance)) {
+            const rawData = await getComprehensiveAnalytics(userId);
+            const allSubjects = Array.isArray(rawData?.allSubjects) ? rawData.allSubjects : [];
+            const totalAccuracy = allSubjects.reduce((acc, curr) => acc + (Number(curr?.accuracy) || 0), 0);
+            const overallAccuracy = allSubjects.length > 0
+                ? Number((totalAccuracy / allSubjects.length).toFixed(1))
+                : 0;
+
+            // Token compression: pass only minimal fields.
+            analyticsContext = {
+                weakest: rawData?.weakestSubject?.subject || rawData?.weakestSubject?.name || null,
+                strongest: rawData?.strongestSubject?.subject || rawData?.strongestSubject?.name || null,
+                overallAccuracy,
+            };
+            contextType = "student";
         }
 
+        // 3. Prompt Construction
+        const { instruction, template } = getRoleConfiguration(userRole);
         const systemInstruction = analyticsContext
-            ? `You are Ranklen Copilot. Reply in 4 sentences or less with clear, actionable study advice. Personalize recommendations strictly using this student analytics context: ${JSON.stringify(analyticsContext)}`
-            : "You are Ranklen Copilot. Reply in 4 sentences or less with clear, actionable study advice.";
+            ? `${instruction} Personalize your response using this JSON context: ${JSON.stringify(analyticsContext)}`
+            : instruction;
+
+        const chatHistory = history
+            .slice(-COPILOT_HISTORY_LIMIT)
+            .map((msg) => ((msg.role === "user" || msg.type === "human")
+                ? new HumanMessage(msg.content)
+                : new AIMessage(msg.content)));
 
         const messages = [
             new SystemMessage(systemInstruction),
@@ -140,47 +141,35 @@ exports.generateCopilotResponse = async (req, res) => {
             new HumanMessage(message),
         ];
 
-        if (debugEnabled) {
-            console.log("[Copilot Debug] Outgoing payload (first invoke):", messages.map(formatMessageForDebug));
+        if (DEBUG_ENABLED) {
+            console.log(`[Copilot] Invoking ${userRole} intent: ${contextType}`);
         }
 
-        let response = await model.invoke(messages);
-        const firstCallUsage = extractUsage(response);
-        if (debugEnabled && firstCallUsage) {
-            console.log("[Copilot Debug] Token usage (first invoke):", firstCallUsage);
-        }
-        const secondCallUsage = null;
+        // 4. LLM Execution
+        const { model, provider, modelName } = initializeLLM();
+        const response = await model.invoke(messages);
 
         const reply = typeof response.content === "string"
-            ? response.content
-            : JSON.stringify(response.content);
+            ? response.content.trim()
+            : JSON.stringify(response.content).trim();
 
-        const debug = {
-            request_payload_first_invoke: messages.slice(0, 2 + chatHistory.length).map(formatMessageForDebug),
-            provider,
-            model: modelName,
-            analytics_context_included: shouldUseAnalyticsContext,
-            analytics_context: analyticsContext,
-            history_messages_sent: limitedHistory.length,
-            usage: {
-                first_invoke: firstCallUsage,
-                second_invoke: secondCallUsage,
-                total: {
-                    input_tokens: (firstCallUsage?.input_tokens || 0) + (secondCallUsage?.input_tokens || 0),
-                    output_tokens: (firstCallUsage?.output_tokens || 0) + (secondCallUsage?.output_tokens || 0),
-                    total_tokens: (firstCallUsage?.total_tokens || 0) + (secondCallUsage?.total_tokens || 0),
-                }
-            }
-        };
-
+        // 5. Response
         return res.status(200).json({
             success: true,
             reply,
-            ...(includeDebugInResponse ? { debug } : {})
+            ...(includeDebug && {
+                debug: {
+                    provider,
+                    model: modelName,
+                    role: userRole,
+                    template,
+                    contextType,
+                    tokens: response?.usage_metadata || null,
+                }
+            })
         });
-
     } catch (error) {
-        console.error("[Copilot Error]:", error); 
-        return res.status(500).json({ success: false, error: "AI failed to respond." });
+        console.error("[Copilot Error Fatal]:", error);
+        return res.status(500).json({ success: false, error: "AI failed to respond. Check server logs." });
     }
 };
