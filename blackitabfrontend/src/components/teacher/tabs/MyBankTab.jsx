@@ -328,6 +328,21 @@ const MyBankTab = ({ isDark }) => {
                                       Draft
                                     </span>
                                   )}
+                                  {q.isPYQ && (
+                                    <span className="px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400 flex items-center gap-1" title={q.sourceDate ? new Date(q.sourceDate).toLocaleDateString() : ''}>
+                                      🌟 {q.sourceExamName || q.exam} {q.sourceYear ? `• ${q.sourceYear}` : ''} {q.sourceShift && !q.sourcePart ? `• Shift ${q.sourceShift}` : ''} {q.sourcePart ? `• ${q.sourcePart}` : ''}
+                                    </span>
+                                  )}
+                                  {q.format === 'Digital' && (
+                                    <span className="px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-400">
+                                      Digital
+                                    </span>
+                                  )}
+                                  {q.format === 'Paper' && (
+                                    <span className="px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-orange-400">
+                                      Paper
+                                    </span>
+                                  )}
                                 </div>
                             </div>
 
