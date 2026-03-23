@@ -22,7 +22,8 @@ router.get('/departments/:deptName/details', requireRole('institute', 'hod'), in
 const { handleBannerUpload } = require('../../middleware/upload');
 router.put('/profile', requireRole('institute'), handleBannerUpload, instituteController.updateInstituteProfile);
 
-// ── Member Management ──
+// ── Member Management & Hierarchy ──
+router.get('/hierarchy', requireRole('institute', 'hod'), instituteController.getInstituteHierarchy);
 router.get('/members', requireRole('hod', 'institute', 'teacher'), instituteController.getMembers);
 router.post('/members', requireRole('institute'), instituteController.addMember);
 router.put('/members/:id/role', requireRole('hod', 'institute'), instituteController.changeMemberRole);
@@ -47,11 +48,15 @@ router.delete('/posts/:id', requireRole('institute'), instituteController.delete
 // ── Analytics ──
 router.get('/analytics', requireRole('institute', 'hod', 'teacher'), instituteController.getInstituteAnalytics);
 
-// ── Teacher Feedback & Monitoring ──
+// ── Teacher Feedback, Monitoring & Complaints ──
 router.get('/teachers', requireRole('institute', 'hod'), instituteController.listTeachersWithRatings);
 router.get('/teachers/:id/feedback', requireRole('institute', 'hod'), instituteController.getTeacherFeedback);
 router.get('/teacher/:id/details', requireRole('institute', 'hod'), instituteController.getTeacherFullDetails);
 router.post('/feedback', requireRole('student'), instituteController.submitFeedback);
+
+router.post('/complaints', requireRole('student'), instituteController.submitComplaint);
+router.get('/complaints', requireRole('institute', 'hod'), instituteController.getInstituteComplaints);
+router.put('/complaints/:id', requireRole('institute', 'hod'), instituteController.updateComplaintStatus);
 
 // ── Join Institute (any authenticated user without an institute) ──
 router.post('/join', instituteController.joinInstitute);
