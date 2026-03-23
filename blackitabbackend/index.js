@@ -175,6 +175,10 @@ app.use((req, res, next) => {
 });
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// Audit Logger — must be after security headers (for requestId) and before routes
+const auditLogger = require('./middleware/auditLogger');
+app.use(auditLogger);
+
 // --- Database ---
 
 connectDB();
@@ -184,8 +188,10 @@ connectDB();
 app.get("/", (req, res) => res.send("API is running..."));
 app.get("/favicon.ico", (req, res) => res.status(204).end());
 
-app.post("/api/register", authLimiter, authController.register);
-app.post("/api/register-institute", authLimiter, authController.registerInstitute);
+const { requireFeature } = require('./middleware/featureFlags');
+
+app.post("/api/register", authLimiter, requireFeature('registrations'), authController.register);
+app.post("/api/register-institute", authLimiter, requireFeature('registrations'), authController.registerInstitute);
 app.post("/api/login", authLimiter, authController.login);
 app.post("/api/auth/google", authLimiter, authController.googleLogin);
 
@@ -203,12 +209,14 @@ app.use("/api/social", socialRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/user", userRoutes);
-app.use("/api/ai", aiLimiter, aiRoutes);
-app.use("/api/ai-questions", aiQuestionRoutes);
+app.use("/api/ai", aiLimiter, requireFeature('ai'), aiRoutes);
+app.use("/api/ai-questions", requireFeature('ai'), aiQuestionRoutes);
 app.use("/api/institute", instituteRoutes);
 app.use("/api/attempts", attemptRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/admin", adminRoutes);
+const auditRoutes = require('./routes/admin/auditRoutes');
+app.use("/api/admin", auditRoutes);
 app.use("/api/exams", examRoutes);
 app.use("/api/contests", contestRoutes);
 app.use("/api/questions", questionRoutes);
