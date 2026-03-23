@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { FaBug, FaTimes, FaSpinner, FaPaperPlane } from 'react-icons/fa';
-import { AnimatePresence, motion } from 'framer-motion';
-import { CustomToast } from '../../utils/CustomToast';
-import api from '../../utils/api';
+import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
+import { FaBug, FaTimes, FaSpinner, FaPaperPlane } from "react-icons/fa";
+import { AnimatePresence, motion } from "framer-motion";
+import { CustomToast } from "../../utils/CustomToast";
+import api from "../../utils/api";
 
 const BugReporter = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('report'); // 'report' or 'my-reports'
-  const [description, setDescription] = useState('');
+  const [activeTab, setActiveTab] = useState("report"); // 'report' or 'my-reports'
+  const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [myReports, setMyReports] = useState([]);
   const [loadingReports, setLoadingReports] = useState(false);
@@ -17,13 +17,14 @@ const BugReporter = () => {
   // Listen for custom event to open bug reporter
   React.useEffect(() => {
     const handleOpenBugReporter = () => setIsOpen(true);
-    window.addEventListener('openBugReporter', handleOpenBugReporter);
-    return () => window.removeEventListener('openBugReporter', handleOpenBugReporter);
+    window.addEventListener("openBugReporter", handleOpenBugReporter);
+    return () =>
+      window.removeEventListener("openBugReporter", handleOpenBugReporter);
   }, []);
 
   // Fetch reports when tab changes
   React.useEffect(() => {
-    if (activeTab === 'my-reports' && isOpen) {
+    if (activeTab === "my-reports" && isOpen) {
       fetchMyReports();
     }
   }, [activeTab, isOpen]);
@@ -31,41 +32,45 @@ const BugReporter = () => {
   const fetchMyReports = async () => {
     try {
       setLoadingReports(true);
-      const res = await api.get('/bugs/my-reports');
+      const res = await api.get("/bugs/my-reports");
       if (res.data.success) {
         setMyReports(res.data.data);
       }
     } catch (error) {
-      console.error('Failed to fetch reports:', error);
+      console.error("Failed to fetch reports:", error);
     } finally {
       setLoadingReports(false);
     }
   };
 
   // Don't show on admin routes or login pages
-  if (location.pathname.startsWith('/admin') || location.pathname.includes('/login') || location.pathname.includes('/register')) {
+  if (
+    location.pathname.startsWith("/admin") ||
+    location.pathname.includes("/login") ||
+    location.pathname.includes("/register")
+  ) {
     return null;
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!description.trim()) {
-      CustomToast.error('Please describe the issue');
+      CustomToast.error("Please describe the issue");
       return;
     }
 
     try {
       setLoading(true);
-      await api.post('/bugs', {
+      await api.post("/bugs", {
         description,
-        pageContext: location.pathname + location.search
+        pageContext: location.pathname + location.search,
       });
-      CustomToast.success('Bug reported! Thank you for helping us improve.');
-      setDescription('');
-      setActiveTab('my-reports'); // Switch to view reports after submitting
+      CustomToast.success("Bug reported! Thank you for helping us improve.");
+      setDescription("");
+      setActiveTab("my-reports"); // Switch to view reports after submitting
     } catch (error) {
-      console.error('Bug report error:', error);
-      CustomToast.error('Failed to submit bug report. Please try again.');
+      console.error("Bug report error:", error);
+      CustomToast.error("Failed to submit bug report. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -108,14 +113,14 @@ const BugReporter = () => {
               {/* Tabs */}
               <div className="flex bg-gray-100 dark:bg-zinc-800 p-1 mx-4 mt-4 rounded-xl shrink-0">
                 <button
-                  onClick={() => setActiveTab('report')}
-                  className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-colors ${activeTab === 'report' ? 'bg-white dark:bg-zinc-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                  onClick={() => setActiveTab("report")}
+                  className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-colors ${activeTab === "report" ? "bg-white dark:bg-zinc-700 shadow-sm text-gray-900 dark:text-white" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"}`}
                 >
                   Report Issue
                 </button>
                 <button
-                  onClick={() => setActiveTab('my-reports')}
-                  className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-colors ${activeTab === 'my-reports' ? 'bg-white dark:bg-zinc-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                  onClick={() => setActiveTab("my-reports")}
+                  className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-colors ${activeTab === "my-reports" ? "bg-white dark:bg-zinc-700 shadow-sm text-gray-900 dark:text-white" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"}`}
                 >
                   My Reports
                 </button>
@@ -123,10 +128,15 @@ const BugReporter = () => {
 
               {/* Body */}
               <div className="p-4 overflow-y-auto flex-1 custom-scrollbar">
-                {activeTab === 'report' ? (
+                {activeTab === "report" ? (
                   <>
                     <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                      Found a bug or have a suggestion? Let us know what happened on <span className="font-bold text-rose-500 font-mono text-xs">{location.pathname}</span>.
+                      Found a bug or have a suggestion? Let us know what
+                      happened on{" "}
+                      <span className="font-bold text-rose-500 font-mono text-xs">
+                        {location.pathname}
+                      </span>
+                      .
                     </p>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
@@ -168,25 +178,36 @@ const BugReporter = () => {
                       </div>
                     ) : (
                       myReports.map((report) => (
-                        <div key={report._id} className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-3 flex flex-col gap-2 relative">
+                        <div
+                          key={report._id}
+                          className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-3 flex flex-col gap-2 relative"
+                        >
                           <div className="flex justify-between items-start">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                              report.status === 'Resolved' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400' :
-                              report.status === 'In Progress' ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-500/20 dark:text-yellow-400' :
-                              'bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400'
-                            }`}>
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                                report.status === "Resolved"
+                                  ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400"
+                                  : report.status === "In Progress"
+                                    ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-500/20 dark:text-yellow-400"
+                                    : "bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400"
+                              }`}
+                            >
                               {report.status}
                             </span>
                             <span className="text-[10px] text-gray-400">
                               {new Date(report.createdAt).toLocaleDateString()}
                             </span>
                           </div>
-                          
-                          <p className="text-sm text-gray-800 dark:text-gray-200">{report.description}</p>
-                          
+
+                          <p className="text-sm text-gray-800 dark:text-gray-200">
+                            {report.description}
+                          </p>
+
                           {report.adminFeedback && (
                             <div className="mt-2 bg-blue-50 dark:bg-blue-500/10 border-l-2 border-blue-500 p-2 text-sm text-gray-700 dark:text-gray-300 rounded-r-lg">
-                              <span className="text-[10px] font-bold text-blue-500 uppercase block mb-0.5">Admin Reply:</span>
+                              <span className="text-[10px] font-bold text-blue-500 uppercase block mb-0.5">
+                                Admin Reply:
+                              </span>
                               {report.adminFeedback}
                             </div>
                           )}
