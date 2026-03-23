@@ -115,30 +115,66 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
   }, []);
 
   const navItems = [
-    ...(canAccessTeacher ? [
-      { path: '/teacher-dashboard', label: 'Teacher Dashboard', icon: <FaSchool /> },
-      ...(hasInstitute ? [
-        { path: '/teacher/batches', label: 'Classes & Batches', icon: <FaUsers /> },
-        { path: '/teacher/attendance', label: 'Attendance', icon: <FaCalendarDay /> },
-      ] : []),
-      { path: '/question-management', label: 'Question Bank', icon: <FaListUl /> },
-      { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
-      { path: '/teacher/tests', label: 'Tests', icon: <FaListAlt /> },
-      { path: '/teacher/content', label: 'Theory Content', icon: <FaPenFancy /> },
-      ...(hasInstitute ? [
-        { path: '/teacher/feedback', label: 'Feedback', icon: <FaCommentDots /> },
-      ] : []),
-      { path: '/school-analytics', label: 'School Analytics', icon: <FaSchool /> },
-    ] : []),
-    ...( userRole === 'student' ? [
-      { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
-      { path: '/classes', label: 'My Classes', icon: <FaUsers /> },
-      { path: '/ask-ai', label: 'Ask AI', icon: <FaRobot /> },
-      { path: '/problems', label: 'Problems', icon: <MdReportProblem /> },
-      { path: '/contest', label: 'Contest', icon: <FaTrophy /> },
-      { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy /> },
-      { path: '/theory', label: 'Theory', icon: <FaBook /> },
-    ] : [])
+    ...(canAccessTeacher
+      ? [
+          {
+            path: "/teacher-dashboard",
+            label: "Teacher Dashboard",
+            icon: <FaSchool />,
+          },
+          ...(hasInstitute
+            ? [
+                {
+                  path: "/teacher/batches",
+                  label: "Classes & Batches",
+                  icon: <FaUsers />,
+                },
+                {
+                  path: "/teacher/attendance",
+                  label: "Attendance",
+                  icon: <FaCalendarDay />,
+                },
+              ]
+            : []),
+          {
+            path: "/question-management",
+            label: "Question Bank",
+            icon: <FaListUl />,
+          },
+          { path: "/ask-ai", label: "Ask AI", icon: <FaRobot /> },
+          { path: "/teacher/tests", label: "Tests", icon: <FaListAlt /> },
+          {
+            path: "/teacher/content",
+            label: "Theory Content",
+            icon: <FaPenFancy />,
+          },
+          ...(hasInstitute
+            ? [
+                {
+                  path: "/teacher/feedback",
+                  label: "Feedback",
+                  icon: <FaCommentDots />,
+                },
+              ]
+            : []),
+          {
+            path: "/school-analytics",
+            label: "School Analytics",
+            icon: <FaSchool />,
+          },
+        ]
+      : []),
+    ...(userRole === "student"
+      ? [
+          { path: "/dashboard", label: "Dashboard", icon: <FaHome /> },
+          { path: "/classes", label: "My Classes", icon: <FaUsers /> },
+          { path: "/ask-ai", label: "Ask AI", icon: <FaRobot /> },
+          { path: "/problems", label: "Problems", icon: <MdReportProblem /> },
+          { path: "/contest", label: "Contest", icon: <FaTrophy /> },
+          { path: "/leaderboard", label: "Leaderboard", icon: <FaTrophy /> },
+          { path: "/theory", label: "Theory", icon: <FaBook /> },
+        ]
+      : []),
   ];
 
   // HOD-only department management links
@@ -257,14 +293,18 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
       <div
         className={`fixed left-0 top-0 h-screen z-50 flex flex-col font-sans border-r border-gray-200 dark:border-white/10 shadow-sm dark:shadow-[4px_0_30px_-5px_rgba(255,255,255,0.02)] bg-white/95 dark:bg-[#000000]/80 backdrop-blur-xl overflow-hidden transition-[transform,width,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform ${
           isOpen
-            ? 'translate-x-0 opacity-100 w-[280px]'
-            : '-translate-x-full opacity-100 pointer-events-none md:pointer-events-auto md:translate-x-0 w-[80px]'
+            ? "translate-x-0 opacity-100 w-[280px]"
+            : "-translate-x-full opacity-100 pointer-events-none md:pointer-events-auto md:translate-x-0 w-[80px]"
         }`}
       >
         <div className="h-20 border-b border-gray-200/50 dark:border-white/10 flex items-center justify-between px-4 relative overflow-hidden">
           {isOpen && (
             <div className="flex items-center gap-2">
-              <Logo showText={true} className="w-8 h-8" textSize="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white" />
+              <Logo
+                showText={true}
+                className="w-8 h-8"
+                textSize="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white"
+              />
             </div>
           )}
           <button
@@ -279,14 +319,24 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
         <div className="px-4 pt-6 pb-2">
           <button
             onClick={() => setSearchOpen(true)}
-            className={`w-full flex items-center ${isOpen ? 'justify-between px-3 py-2.5' : 'justify-center py-2.5'} bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 dark:hover:text-white rounded-xl border border-gray-200/50 dark:border-white/10 transition-colors group flex-shrink-0 relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#0061FF]/20`}
+            className={`w-full flex items-center ${isOpen ? "justify-between px-3 py-2.5" : "justify-center py-2.5"} bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 dark:hover:text-white rounded-xl border border-gray-200/50 dark:border-white/10 transition-colors group flex-shrink-0 relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#0061FF]/20`}
             title="Search (Ctrl+K)"
           >
-            <div className={`flex items-center gap-3 ${!isOpen ? 'text-lg' : ''}`}>
+            <div
+              className={`flex items-center gap-3 ${!isOpen ? "text-lg" : ""}`}
+            >
               <FaSearch className="w-4 h-4 group-hover:text-gray-700 dark:group-hover:text-white transition-colors" />
-              {isOpen && <span className="text-[13px] font-semibold tracking-wide">Search...</span>}
+              {isOpen && (
+                <span className="text-[13px] font-semibold tracking-wide">
+                  Search...
+                </span>
+              )}
             </div>
-            {isOpen && <kbd className="text-[10px] bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 px-1.5 py-0.5 rounded font-mono font-bold text-gray-400 dark:text-gray-500 shadow-sm">Ctrl K</kbd>}
+            {isOpen && (
+              <kbd className="text-[10px] bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 px-1.5 py-0.5 rounded font-mono font-bold text-gray-400 dark:text-gray-500 shadow-sm">
+                Ctrl K
+              </kbd>
+            )}
           </button>
         </div>
 
@@ -294,9 +344,13 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
         {isOpen && userRole !== "student" && (
           <div className="px-4 pb-2">
             <div className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-gray-200 dark:border-white/10 text-gray-400 dark:text-gray-400 bg-gray-50 dark:bg-white/5">
-              {userRole === 'institute' ? '🏛 Institute Admin' :
-               userRole === 'hod' ? '🎓 Head of Department' :
-               userRole === 'teacher' ? '📚 Teacher' : userRole}
+              {userRole === "institute"
+                ? "🏛 Institute Admin"
+                : userRole === "hod"
+                  ? "🎓 Head of Department"
+                  : userRole === "teacher"
+                    ? "📚 Teacher"
+                    : userRole}
             </div>
           </div>
         )}
@@ -309,17 +363,26 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
                 (location.pathname.startsWith(item.path) && item.path !== "/");
               return (
                 <li key={item.path}>
-                  <Link to={item.path} onClick={(event) => handleNavItemClick(event, item.path)}>
-                    <div className={`relative flex items-center ${isOpen ? 'px-4 py-3' : 'px-0 py-3 justify-center'} rounded-xl text-[13px] overflow-hidden transition-all duration-200 ${
-                      isActive
-                        ? 'bg-[#0061FF]/10 text-[#0061FF] dark:bg-[#0061FF]/20 dark:text-[#a5c3ff] font-bold tracking-tight'
-                        : 'text-gray-500 font-semibold tracking-wide dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'
-                    }`}>
-                      <span className={`relative z-10 text-[16px] ${isOpen ? 'mr-3' : ''} ${isActive ? 'text-[#0061FF] dark:text-[#a5c3ff]' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white'}`}>
+                  <Link
+                    to={item.path}
+                    onClick={(event) => handleNavItemClick(event, item.path)}
+                  >
+                    <div
+                      className={`relative flex items-center ${isOpen ? "px-4 py-3" : "px-0 py-3 justify-center"} rounded-xl text-[13px] overflow-hidden transition-all duration-200 ${
+                        isActive
+                          ? "bg-[#0061FF]/10 text-[#0061FF] dark:bg-[#0061FF]/20 dark:text-[#a5c3ff] font-bold tracking-tight"
+                          : "text-gray-500 font-semibold tracking-wide dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
+                      }`}
+                    >
+                      <span
+                        className={`relative z-10 text-[16px] ${isOpen ? "mr-3" : ""} ${isActive ? "text-[#0061FF] dark:text-[#a5c3ff]" : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white"}`}
+                      >
                         {item.icon}
                       </span>
                       {isOpen && (
-                        <span className="flex-1 whitespace-nowrap z-10 leading-tight">{item.label}</span>
+                        <span className="flex-1 whitespace-nowrap z-10 leading-tight">
+                          {item.label}
+                        </span>
                       )}
                     </div>
                   </Link>
@@ -335,7 +398,8 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
                 <FaBuilding className="w-3 h-3" /> No Institute
               </p>
               <p className="text-[11px] text-blue-600/80 dark:text-[#a5c3ff]/70 leading-relaxed font-medium">
-                Link to your institute to access collaborative tools and attendance.
+                Link to your institute to access collaborative tools and
+                attendance.
               </p>
             </div>
           )}
@@ -345,10 +409,14 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
             <ul className="mt-6 space-y-1.5">
               {isOpen && (
                 <li className="px-4 pb-2">
-                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Department Control</span>
+                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                    Department Control
+                  </span>
                 </li>
               )}
-              {!isOpen && <li className="border-t border-gray-100 dark:border-white/10 mx-4 my-3" />}
+              {!isOpen && (
+                <li className="border-t border-gray-100 dark:border-white/10 mx-4 my-3" />
+              )}
               {hodNavItems.map((item) => {
                 const isActive =
                   location.pathname === item.path ||
@@ -357,16 +425,22 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
                 return (
                   <li key={item.path}>
                     <Link to={item.path}>
-                      <div className={`relative flex items-center ${isOpen ? 'px-4 py-3' : 'px-0 py-3 justify-center'} rounded-xl text-[13px] overflow-hidden transition-all duration-200 ${
-                        isActive
-                          ? 'bg-[#0061FF]/10 text-[#0061FF] dark:bg-[#0061FF]/20 dark:text-[#a5c3ff] font-bold tracking-tight'
-                          : 'text-gray-500 font-semibold tracking-wide dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'
-                      }`}>
-                        <span className={`relative z-10 text-[16px] ${isOpen ? 'mr-3' : ''} ${isActive ? 'text-[#0061FF] dark:text-[#a5c3ff]' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white'}`}>
+                      <div
+                        className={`relative flex items-center ${isOpen ? "px-4 py-3" : "px-0 py-3 justify-center"} rounded-xl text-[13px] overflow-hidden transition-all duration-200 ${
+                          isActive
+                            ? "bg-[#0061FF]/10 text-[#0061FF] dark:bg-[#0061FF]/20 dark:text-[#a5c3ff] font-bold tracking-tight"
+                            : "text-gray-500 font-semibold tracking-wide dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
+                        }`}
+                      >
+                        <span
+                          className={`relative z-10 text-[16px] ${isOpen ? "mr-3" : ""} ${isActive ? "text-[#0061FF] dark:text-[#a5c3ff]" : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white"}`}
+                        >
                           {item.icon}
                         </span>
                         {isOpen && (
-                          <span className="flex-1 whitespace-nowrap z-10 leading-tight">{item.label}</span>
+                          <span className="flex-1 whitespace-nowrap z-10 leading-tight">
+                            {item.label}
+                          </span>
                         )}
                       </div>
                     </Link>
@@ -381,10 +455,14 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
             <ul className="mt-6 space-y-1.5">
               {isOpen && (
                 <li className="px-4 pb-2">
-                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Console Admin</span>
+                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                    Console Admin
+                  </span>
                 </li>
               )}
-              {!isOpen && <li className="border-t border-gray-100 dark:border-white/10 mx-4 my-3" />}
+              {!isOpen && (
+                <li className="border-t border-gray-100 dark:border-white/10 mx-4 my-3" />
+              )}
               {instituteNavItems.map((item) => {
                 const isActive =
                   location.pathname === item.path ||
@@ -393,21 +471,33 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
                 return (
                   <li key={item.path}>
                     <Link to={item.path} onClick={handleNavClick}>
-                      <div className={`relative flex items-center ${isOpen ? 'px-4 py-3' : 'px-0 py-3 justify-center'} rounded-xl text-[13px] overflow-hidden transition-all duration-200 ${
-                        isActive
-                          ? 'bg-[#0061FF]/10 text-[#0061FF] dark:bg-[#0061FF]/20 dark:text-[#a5c3ff] font-bold tracking-tight'
-                          : 'text-gray-500 font-semibold tracking-wide dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'
-                      }`}>
-                        <span className={`relative z-10 text-[16px] ${isOpen ? 'mr-3' : ''} ${isActive ? 'text-[#0061FF] dark:text-[#a5c3ff]' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white'}`}>
+                      <div
+                        className={`relative flex items-center ${isOpen ? "px-4 py-3" : "px-0 py-3 justify-center"} rounded-xl text-[13px] overflow-hidden transition-all duration-200 ${
+                          isActive
+                            ? "bg-[#0061FF]/10 text-[#0061FF] dark:bg-[#0061FF]/20 dark:text-[#a5c3ff] font-bold tracking-tight"
+                            : "text-gray-500 font-semibold tracking-wide dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
+                        }`}
+                      >
+                        <span
+                          className={`relative z-10 text-[16px] ${isOpen ? "mr-3" : ""} ${isActive ? "text-[#0061FF] dark:text-[#a5c3ff]" : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white"}`}
+                        >
                           {item.icon}
                         </span>
                         {isOpen && (
                           <>
-                            <span className="flex-1 whitespace-nowrap z-10 leading-tight">{item.label}</span>
+                            <span className="flex-1 whitespace-nowrap z-10 leading-tight">
+                              {item.label}
+                            </span>
                             {item.badge > 0 && (
-                              <span className={`ml-auto text-[10px] font-extrabold px-1.5 py-0.5 rounded-md ${
-                                isActive ? 'bg-white text-[#0061FF]' : 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
-                              }`}>{item.badge}</span>
+                              <span
+                                className={`ml-auto text-[10px] font-extrabold px-1.5 py-0.5 rounded-md ${
+                                  isActive
+                                    ? "bg-white text-[#0061FF]"
+                                    : "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
+                                }`}
+                              >
+                                {item.badge}
+                              </span>
                             )}
                           </>
                         )}
@@ -428,14 +518,18 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
           <Link
             to="/profile"
             onClick={handleNavClick}
-            className={`w-full flex items-center ${isOpen ? 'px-3 py-3 justify-start gap-3' : 'px-0 py-3 justify-center'} text-[13px] font-semibold tracking-wide rounded-xl transition-colors ${
+            className={`w-full flex items-center ${isOpen ? "px-3 py-3 justify-start gap-3" : "px-0 py-3 justify-center"} text-[13px] font-semibold tracking-wide rounded-xl transition-colors ${
               isProfileActive
-                ? 'bg-[#0061FF]/10 text-[#0061FF] dark:bg-[#0061FF]/20 dark:text-[#a5c3ff] font-bold tracking-tight'
-                : 'text-gray-500 font-semibold tracking-wide dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
+                ? "bg-[#0061FF]/10 text-[#0061FF] dark:bg-[#0061FF]/20 dark:text-[#a5c3ff] font-bold tracking-tight"
+                : "text-gray-500 font-semibold tracking-wide dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5"
             }`}
             title="Profile"
           >
-            <span className={`text-[16px] ${isProfileActive ? 'text-[#0061FF] dark:text-[#a5c3ff]' : 'text-gray-400 dark:text-gray-500'}`}><FaUser /></span>
+            <span
+              className={`text-[16px] ${isProfileActive ? "text-[#0061FF] dark:text-[#a5c3ff]" : "text-gray-400 dark:text-gray-500"}`}
+            >
+              <FaUser />
+            </span>
             {isOpen && <span>Profile Settings</span>}
           </Link>
 
@@ -454,21 +548,23 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
           <div className="flex gap-2 mt-2 w-full">
             <button
               onClick={toggleTheme}
-              className={`flex-1 flex items-center ${isOpen ? 'justify-start gap-3 px-3 py-3' : 'justify-center py-3'} text-[13px] font-semibold tracking-wide text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white rounded-xl transition-colors`}
-              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className={`flex-1 flex items-center ${isOpen ? "justify-start gap-3 px-3 py-3" : "justify-center py-3"} text-[13px] font-semibold tracking-wide text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white rounded-xl transition-colors`}
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
               <span className="text-[16px] text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white">
                 {isDark ? <FaSun /> : <FaMoon />}
               </span>
-              {isOpen && <span>{isDark ? 'Light' : 'Dark'}</span>}
+              {isOpen && <span>{isDark ? "Light" : "Dark"}</span>}
             </button>
 
             <button
               onClick={onLogout}
-              className={`flex-1 flex items-center ${isOpen ? 'justify-start gap-3 px-3 py-3' : 'justify-center py-3'} text-[13px] font-semibold tracking-wide text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-white/5 hover:text-red-600 dark:hover:text-red-400 rounded-xl transition-colors`}
+              className={`flex-1 flex items-center ${isOpen ? "justify-start gap-3 px-3 py-3" : "justify-center py-3"} text-[13px] font-semibold tracking-wide text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-white/5 hover:text-red-600 dark:hover:text-red-400 rounded-xl transition-colors`}
               title="Logout"
             >
-              <span className="text-[16px] text-gray-400 dark:text-gray-500"><FaSignOutAlt /></span>
+              <span className="text-[16px] text-gray-400 dark:text-gray-500">
+                <FaSignOutAlt />
+              </span>
               {isOpen && <span>Log out</span>}
             </button>
           </div>
