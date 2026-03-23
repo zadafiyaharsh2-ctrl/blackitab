@@ -210,11 +210,20 @@ const DepartmentDetail = () => {
                                                     {batch.year} {batch.section}
                                                 </span>
                                             </div>
-                                            <div className="text-xs text-gray-500 flex items-center gap-1.5 mt-2">
-                                                <AcademicCapIcon className="w-3.5 h-3.5" />
-                                                Taught by: <span className="font-medium text-gray-700 dark:text-gray-300">{batch.teachers?.length > 0 ? batch.teachers.map(t => t.name).join(', ') : 'Unknown'}</span>
+                                            <div className="text-xs text-gray-500 flex flex-wrap items-center gap-3 mt-2">
+                                                <div className="flex items-center gap-1.5">
+                                                    <AcademicCapIcon className="w-3.5 h-3.5" />
+                                                    Taught by: <span className="font-medium text-gray-700 dark:text-gray-300">{batch.teachers?.length > 0 ? batch.teachers.map(t => t.name).join(', ') : 'Unknown'}</span>
+                                                </div>
+                                                <Link
+                                                    to={`/institute/batch/${batch._id}/timetable`}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded transition-colors"
+                                                >
+                                                    <CalendarDaysIcon className="w-3 h-3" /> Timetable
+                                                </Link>
                                             </div>
-                                        </Link>
+                                        </div>
                                     ))}
                                 </div>
                             ) : (
