@@ -245,7 +245,12 @@ exports.getExamQuestions = async (req, res) => {
     try {
         const { examId } = req.params;
         const { subject, source } = req.query;
-        const filter = { exam: examId, status: 'Published', isActive: true };
+        const filter = { status: 'Published', isActive: true };
+        
+        if (examId && examId.toLowerCase() !== 'all') {
+            filter.exam = examId;
+        }
+
         if (subject) filter.subject = subject;
 
         if (source === 'institute') {

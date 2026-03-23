@@ -34,7 +34,10 @@ const ExamQuestions = () => {
     const [questions, setQuestions] = useState([]);
     const [selectedAnswers, setSelectedAnswers] = useState({});
     const [results, setResults] = useState({});
-    const [activeSubject, setActiveSubject] = useState('All');
+    const [activeSubject, setActiveSubject] = useState(() => {
+        const params = new URLSearchParams(location.search);
+        return params.get('subject') || 'All';
+    });
     const [loading, setLoading] = useState(true);
     const [analyzing, setAnalyzing] = useState(false);
     // const [generating, setGenerating] = useState(false);
@@ -63,6 +66,7 @@ const ExamQuestions = () => {
     const [loadingTheory, setLoadingTheory] = useState(false);
     const [subjectHealth, setSubjectHealth] = useState(null);
     const [decayedDomains, setDecayedDomains] = useState(0);
+    const [dynamicSubjects, setDynamicSubjects] = useState([]);
 
     const difficultyMap = { 1: 'Easy', 2: 'Medium', 3: 'Hard' };
 
@@ -239,6 +243,7 @@ const ExamQuestions = () => {
     };
 
     const currentExam = examMeta[examId] || { name: examId?.toUpperCase(), subjects: [], color: 'purple' };
+    const subjectsToShow = Array.from(new Set([...dynamicSubjects, activeSubject !== 'All' ? activeSubject : null].filter(Boolean)));
 
     useEffect(() => {
         const fetchQuestions = async () => {
@@ -256,6 +261,12 @@ const ExamQuestions = () => {
                 const res = await axios.get(url, config);
                 if (res.data.success) {
                     setQuestions(res.data.data);
+                    
+                    if (activeSubject === 'All') {
+                         const fetchedSubjects = Array.from(new Set(res.data.data.map(q => q.subject).filter(Boolean)));
+                         setDynamicSubjects(fetchedSubjects);
+                    }
+                    
                     const responseMeta = res.data.meta || {};
                     setSubjectHealth(responseMeta.subjectHealth || null);
                     setDecayedDomains(Number.isFinite(Number(responseMeta.decayedDomains)) ? Number(responseMeta.decayedDomains) : 0);
@@ -658,7 +669,7 @@ const ExamQuestions = () => {
                         All Subjects
                     </div>
                 </button>
-                {currentExam.subjects.map((subject) => (
+                {subjectsToShow.map((subject) => (
                     <button
                         key={subject}
                         onClick={() => setActiveSubject(subject)}
