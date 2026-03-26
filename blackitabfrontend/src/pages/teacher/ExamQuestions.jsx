@@ -10,7 +10,11 @@ import {
     Loader2,
     BookOpen,
     Filter,
-    Maximize
+    Maximize,
+    CheckCircle,
+    XCircle,
+    BrainCircuit,
+    Book
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -339,6 +343,7 @@ const ExamQuestions = () => {
 
     // Focus Mode Overlay
     if (isFocusMode) {
+        const q = focusQuestions[focusIndex];
         // Guard: if no question data is available, exit focus mode gracefully
         if (!q && !isAdaptiveSequence && !isGeneratingAdaptive && !showTheory) {
             return (
@@ -351,6 +356,7 @@ const ExamQuestions = () => {
             );
         }
         return (
+            <>
             <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 transition-colors duration-300 ${isDark ? 'bg-gray-950' : 'bg-gradient-to-br from-gray-50 via-white to-purple-50'}`}>
                 {/* Progress Bar */}
                 <div className={`absolute top-0 left-0 right-0 h-1.5 ${isDark ? 'bg-gray-800' : 'bg-gray-200'}`}>
@@ -579,6 +585,7 @@ const ExamQuestions = () => {
                 handleFocusNext={handleFocusNext}
                 stopFocusMode={stopFocusMode}
             />
+            </>
         );
     }
 

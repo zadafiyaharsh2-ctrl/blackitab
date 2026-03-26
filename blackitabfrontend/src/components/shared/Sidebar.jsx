@@ -29,9 +29,6 @@ import {
   FaCommentDots,
   FaPenFancy,
   FaEnvelope,
-  FaExclamationTriangle,
-  FaBookmark,
-  FaBug,
 } from "react-icons/fa";
 import { MdReportProblem } from "react-icons/md";
 import { useTheme } from "../../context/ThemeContext";
