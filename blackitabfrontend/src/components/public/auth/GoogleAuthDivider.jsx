@@ -9,7 +9,7 @@ const GoogleAuthDivider = ({ onSuccess, onError, label = "continue_with" }) => {
       </div>
       
       <div className="flex justify-center flex-col items-center gap-2 w-full custom-google-btn-container">
-        <style jsx>{`
+        <style>{`
           .custom-google-btn-container > div {
             width: 100% !important;
             display: flex !important;

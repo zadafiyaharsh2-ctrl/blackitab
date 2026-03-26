@@ -150,7 +150,7 @@ const Login = ({ onLoginSuccess }) => {
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Lock className="w-5 h-5 text-gray-400 transition-colors group-focus-within:text-[#0061FF]" />
                 </div>
-                <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange} required
+                <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange} required autoComplete="current-password"
                   placeholder="Enter your password"
                   className="w-full pl-11 pr-12 py-3 bg-white border border-gray-200 rounded-xl focus:ring-4 text-gray-900 placeholder-gray-400 outline-none transition-all focus:border-[#0061FF] focus:ring-[#0061FF]/10 shadow-sm" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
