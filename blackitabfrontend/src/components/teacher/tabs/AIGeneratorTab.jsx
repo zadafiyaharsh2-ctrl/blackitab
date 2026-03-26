@@ -90,7 +90,7 @@ const AIGeneratorTab = ({ isDark }) => {
           <form onSubmit={handleGenerate} className="space-y-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
               <div className={`p-6 rounded-3xl border ${isDark ? 'bg-[#05000a] border-white/5' : 'bg-gray-50 border-gray-100'}`}>
-                <label className={`block text-xs font-black uppercase tracking-widest mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Target Schema</label>
+                <label className={`block text-xs font-black uppercase tracking-widest mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Target Exam</label>
                 <select value={exam} onChange={e => setExam(e.target.value)}
                   className={`w-full px-5 py-4 rounded-xl outline-none font-bold cursor-pointer transition-all focus:ring-2 focus:ring-[#0061FF]/30 ${isDark ? 'bg-[#0a0a0a] border border-white/10 text-white' : 'bg-white border border-gray-200 text-gray-900 hover:border-gray-300'}`}>
                   {EXAMS.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}
@@ -125,7 +125,7 @@ const AIGeneratorTab = ({ isDark }) => {
                 <label className={`block text-xs font-black uppercase tracking-widest mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Volume</label>
                 <select value={count} onChange={e => setCount(Number(e.target.value))}
                   className={`w-full px-5 py-4 rounded-xl outline-none font-bold cursor-pointer transition-all focus:ring-2 focus:ring-[#0061FF]/30 ${isDark ? 'bg-[#0a0a0a] border border-white/10 text-white' : 'bg-white border border-gray-200 text-gray-900 hover:border-gray-300'}`}>
-                  {[5, 10, 15, 20].map(n => <option key={n} value={n}>{n} Interrogations</option>)}
+                  {[5, 10, 15, 20].map(n => <option key={n} value={n}>{n} Questions</option>)}
                 </select>
               </div>
             </div>
@@ -139,7 +139,7 @@ const AIGeneratorTab = ({ isDark }) => {
 
             <button type="submit" disabled={!subject.trim() && !topic.trim()}
               className="w-full py-5 rounded-full bg-[#0061FF] hover:bg-[#004bca] dark:bg-white text-white dark:text-gray-900 font-black uppercase tracking-widest text-sm shadow-xl transition-transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 flex justify-center items-center gap-2">
-              <FaBolt className="text-lg" /> Initiate Neural Run
+              <FaBolt className="text-lg" /> Generate Questions
             </button>
           </form>
         </div>

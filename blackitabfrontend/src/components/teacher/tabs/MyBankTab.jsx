@@ -313,7 +313,12 @@ const MyBankTab = ({ isDark }) => {
                                   }`}>
                                     {q.difficulty}
                                   </span>
-                                  {q.isAiGenerated && (
+                                  {q.isPYQ && (
+                                  <span className="px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20" title={q.sourceDate ? new Date(q.sourceDate).toLocaleDateString() : ''}>
+                                    🌟 {q.sourceExamName || q.exam} {q.sourceYear ? `• ${q.sourceYear}` : ''} {q.sourceShift && !q.sourcePart ? `• Shift ${q.sourceShift}` : ''} {q.sourcePart ? `• ${q.sourcePart}` : ''}
+                                  </span>
+                                )}
+                                {q.isAiGenerated && (
                                     <span className="px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-500/20 dark:bg-purple-500/10 dark:text-purple-400 flex items-center gap-1">
                                       <FaRobot/> AI
                                     </span>

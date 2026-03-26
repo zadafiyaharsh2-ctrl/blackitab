@@ -68,6 +68,99 @@ const TeacherFeedback = () => {
     }
   };
 
+  const renderCard = (item) => (
+    <div
+      key={item._id || Math.random()}
+      className="group relative bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm hover:shadow-xl dark:hover:border-rose-500/50 transition-all duration-300 transform hover:-translate-y-1"
+    >
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-sm font-bold text-white shadow-inner border border-white/10">
+            {item.studentId?.name ? item.studentId.name[0].toUpperCase() : 'S'}
+          </div>
+          <div>
+            <h4 className="font-bold text-slate-900 dark:text-white text-sm">{item.studentId?.name || 'Anonymous Student'}</h4>
+            <div className="text-xs text-slate-500 dark:text-gray-500 font-mono mt-0.5">
+              {item.studentId?.email ? `${item.studentId.email} • ` : ''}
+              {new Date(item.createdAt).toLocaleDateString()}
+            </div>
+          </div>
+        </div>
+          
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-black/40 px-2 py-1 rounded-lg border border-slate-200 dark:border-white/5">
+          {renderStars(item.rating)}
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <p className="text-sm text-slate-700 dark:text-gray-300 italic">
+          "{item.comment || 'No written feedback provided.'}"
+        </p>
+      </div>
+
+      <div className="mt-auto pt-4 border-t border-slate-200 dark:border-white/10 flex flex-wrap gap-2">
+        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/20">
+          {getTypeLabel(item.feedbackType)}
+        </span>
+        {item.batchId && (
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+            Batch: {item.batchId.name} {item.batchId.classCode ? `(${item.batchId.classCode})` : ''}
+          </span>
+        )}
+        {item.questionId && (
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-500/20 flex items-center gap-1">
+            <FaQuestionCircle /> Question Ref
+          </span>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderClassFeedbacks = () => {
+    const grouped = {};
+    const unbatched = [];
+
+    filteredFeedbacks.forEach(f => {
+      if (f.batchId && (f.batchId.name || f.batchId.classCode)) {
+        const key = `${f.batchId.name || ''} ${f.batchId.classCode ? `(${f.batchId.classCode})` : ''}`.trim();
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(f);
+      } else {
+        unbatched.push(f);
+      }
+    });
+
+    return (
+      <div className="space-y-10 w-full">
+        {Object.entries(grouped).map(([className, classFeedbacks]) => (
+          <div key={className} className="space-y-4">
+            <div className="flex items-center gap-3 border-b border-slate-200 dark:border-white/10 pb-2">
+              <FaUserGraduate className="text-rose-500 text-xl" />
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">{className}</h3>
+              <span className="text-xs bg-slate-200 dark:bg-white/10 px-2 py-1 rounded-full">{classFeedbacks.length} Feedbacks</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {classFeedbacks.map(renderCard)}
+            </div>
+          </div>
+        ))}
+
+        {unbatched.length > 0 && (
+          <div className="space-y-4 mt-8">
+            <div className="flex items-center gap-3 border-b border-slate-200 dark:border-white/10 pb-2">
+              <FaQuestionCircle className="text-rose-500 text-xl" />
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Other Feedback</h3>
+              <span className="text-xs bg-slate-200 dark:bg-white/10 px-2 py-1 rounded-full">{unbatched.length} Feedbacks</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {unbatched.map(renderCard)}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#05000a] text-gray-900 dark:text-white p-6 sm:p-10 font-sans transition-colors selection:bg-[#0061FF]/20 selection:text-gray-900">
       
@@ -131,6 +224,7 @@ const TeacherFeedback = () => {
             />
           </div>
         </div>
+
 
         {/* Feedback List Grid grouped by batch */}
         <div className="min-h-[400px]">
@@ -228,6 +322,28 @@ const TeacherFeedback = () => {
             </div>
           )}
         </div>
+=========
+        {/* Feedback List */}
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-500"></div>
+          </div>
+        ) : filteredFeedbacks.length > 0 ? (
+          filterType === 'class' ? (
+            renderClassFeedbacks()
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredFeedbacks.map((item) => renderCard(item))}
+            </div>
+          )
+        ) : (
+          <div className="text-center py-24 glass-panel border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">
+            <FaCommentDots className="text-5xl text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Feedback Found</h3>
+            <p className="text-slate-500 dark:text-gray-400 max-w-sm mx-auto mb-6">You don't have any feedback matching your current filters.</p>
+          </div>
+        )}
+>>>>>>>>> Temporary merge branch 2
 
       </div>
     </div>

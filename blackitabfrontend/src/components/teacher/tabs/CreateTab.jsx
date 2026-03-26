@@ -221,6 +221,8 @@ const CreateTab = ({ isDark, setActiveTab }) => {
             )}
           </div>
 
+
+
           <div className={`p-8 rounded-3xl border ${isDark ? 'bg-[#05000a] border-white/5' : 'bg-gray-50 border-gray-100'}`}>
             <label className={`block text-xs font-black uppercase tracking-widest mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Didactic Explanation (Optional)</label>
             <textarea value={form.explanation} onChange={e => handleChange('explanation', e.target.value)}

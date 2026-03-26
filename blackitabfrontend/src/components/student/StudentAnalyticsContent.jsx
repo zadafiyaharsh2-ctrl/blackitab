@@ -10,6 +10,13 @@ import {
   ArrowRight, X, Lock, ChevronDown, ChevronUp, Sparkles, ShieldAlert
 } from 'lucide-react';
 
+import StudentHeader from './dashboard/StudentHeader';
+import { StudentDailyChallenge, StudentQuickActions, StudentUpcomingExams } from './dashboard/StudentWidgets';
+import StudentWeeklyActivity from './dashboard/StudentWeeklyActivity';
+import StudentStrengthsWeaknesses from './dashboard/StudentStrengthsWeaknesses';
+import StudentActivityFeed from './dashboard/StudentActivityFeed';
+import StudentTopTopics from './dashboard/StudentTopTopics';
+
 /* ── Helpers ─────────────────────────────────────────────── */
 
 const timeAgo = (dateStr) => {
@@ -971,15 +978,7 @@ const StudentAnalyticsContent = () => {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 pt-20 space-y-5">
-      <div className="border border-gray-200 dark:border-white/10 rounded-xl px-5 py-6 bg-white dark:bg-white/[0.02]">
-        <p className="text-sm text-gray-500 dark:text-gray-400">Student dashboard</p>
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">
-          Hey, {userName}
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-          Here is your progress at a glance.
-        </p>
-      </div>
+      <StudentHeader userName={userName} />
 
       {/* ── Stat Cards ─────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1024,187 +1023,21 @@ const StudentAnalyticsContent = () => {
       </div>
 
       {/* ── Upcoming Exams Announcement Widget ── */}
-      {upcomingExams.length > 0 && (
-        <div className="relative border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] overflow-hidden">
-          <div className="pointer-events-none absolute inset-0 opacity-70">
-            <div className="absolute -top-16 -right-12 w-44 h-44 rounded-full bg-blue-200/40 dark:bg-blue-500/10 blur-3xl" />
-            <div className="absolute -bottom-20 -left-16 w-56 h-56 rounded-full bg-cyan-200/40 dark:bg-cyan-500/10 blur-3xl" />
-          </div>
+      <StudentUpcomingExams 
+        upcomingExams={upcomingExams} 
+        isExamStartingSoon={isExamStartingSoon} 
+        getExamCountdownLabel={getExamCountdownLabel} 
+      />
 
-          <div className="relative">
-            <div className="flex items-center justify-between mb-4 gap-3">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                Upcoming Scheduled Exams
-              </h3>
-              <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 rounded-full px-2.5 py-1">
-                {upcomingExams.length} planned
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {upcomingExams.map((exam) => {
-                const soon = isExamStartingSoon(exam.scheduledAt);
-
-                return (
-                  <Link
-                    key={exam._id}
-                    to={`/classes/${exam.batchId._id}/exam/${exam._id}`}
-                    className="block border border-gray-200 dark:border-white/10 bg-white/85 dark:bg-white/[0.02] backdrop-blur-sm rounded-xl p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-blue-200 dark:hover:border-cyan-400/30 group"
-                  >
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 truncate max-w-[160px]">
-                          {exam.batchId?.name || 'Your Class'}
-                        </p>
-                        <h4 className="text-sm font-bold text-gray-900 dark:text-white capitalize truncate max-w-[190px] group-hover:text-blue-600 dark:group-hover:text-cyan-300 transition-colors">
-                          {exam.title}
-                        </h4>
-                      </div>
-
-                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-                        <Clock className="h-4 w-4" />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {exam.scheduledAt ? new Date(exam.scheduledAt).toLocaleString() : 'Schedule pending'}
-                      </p>
-
-                      <div className="flex items-center justify-between gap-2">
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                          soon
-                            ? 'text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10'
-                            : 'text-gray-600 dark:text-gray-300 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5'
-                        }`}>
-                          {getExamCountdownLabel(exam.scheduledAt)}
-                        </span>
-                        <span className="text-[10px] font-semibold text-blue-600 dark:text-cyan-300">Open →</span>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Daily Challenge (Interactive Card) + Quick Actions ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 group relative border-2 border-transparent rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-lg dark:hover:shadow-black/20"
-          style={{
-            background: 'linear-gradient(white, white) padding-box, linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899) border-box',
-          }}
-        >
-          {/* Dark mode gradient border override */}
-          <div className="absolute inset-0 rounded-xl border-2 border-transparent dark:block hidden pointer-events-none"
-            style={{
-              background: 'linear-gradient(rgb(0 0 0 / 0.95), rgb(0 0 0 / 0.95)) padding-box, linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899) border-box',
-            }}
-          />
-          <div className="relative p-5 bg-white dark:bg-transparent">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg">
-                  <Code className="h-4 w-4 text-white" />
-                </div>
-                <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Daily Challenge</h3>
-              </div>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                problemOfTheDay.difficulty === 'Easy'
-                  ? 'text-emerald-600 border-emerald-200 bg-emerald-50 dark:text-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/10'
-                  : problemOfTheDay.difficulty === 'Hard'
-                    ? 'text-red-600 border-red-200 bg-red-50 dark:text-red-400 dark:border-red-500/30 dark:bg-red-500/10'
-                    : 'text-amber-600 border-amber-200 bg-amber-50 dark:text-amber-400 dark:border-amber-500/30 dark:bg-amber-500/10'
-              }`}>
-                {problemOfTheDay.difficulty}
-              </span>
-            </div>
-            <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-4 leading-relaxed">{problemOfTheDay.title}</p>
-            <Link to={problemOfTheDay.link} className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg px-4 py-2.5 hover:from-blue-700 hover:to-purple-700 shadow-sm transition-all duration-200 group-hover:shadow-md">
-              Solve now
-              <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-          </div>
-        </div>
-
-        <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
-          <div className="px-5 py-3 border-b border-gray-100 dark:border-white/5">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Quick Actions</h3>
-          </div>
-          <div className="divide-y divide-gray-100 dark:divide-white/5">
-            {[
-              joinedBatchCount > 0
-                ? { title: 'My Classes', icon: Users, link: '/classes' }
-                : { title: 'Join Class', icon: Users, onClick: () => setShowJoinModal(true) },
-              { title: 'Practice', icon: Target, link: '/problems' },
-              { title: 'Profile', icon: Medal, link: '/profile' },
-              { title: 'Contest', icon: Trophy, link: '/contest' }
-            ].map((action) => {
-              const Icon = action.icon;
-              const content = (
-                <div className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-white/[0.02] text-gray-700 dark:text-gray-300">
-                  <Icon className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm font-medium">{action.title}</span>
-                  <ArrowRight className="h-4 w-4 text-gray-300 dark:text-gray-600 ml-auto" />
-                </div>
-              );
-
-              return action.link ? (
-                <Link key={action.title} to={action.link}>{content}</Link>
-              ) : (
-                <button key={action.title} onClick={action.onClick} className="w-full text-left">{content}</button>
-              );
-            })}
-          </div>
-        </div>
+        <StudentDailyChallenge problemOfTheDay={problemOfTheDay} />
+        <StudentQuickActions 
+          joinedBatchCount={joinedBatchCount} 
+          onJoinClick={() => setShowJoinModal(true)} 
+        />
       </div>
 
-      {/* ── Weekly Activity ────────────────────────────────── */}
-      <div className="border border-gray-200 dark:border-white/10 rounded-2xl p-5 bg-white dark:bg-white/[0.02]">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-            <Activity className="h-3.5 w-3.5 text-blue-500" /> Weekly Activity
-          </h3>
-          {data.weeklyActivity?.length > 0 && (
-            <span className="text-[10px] text-gray-400">{data.weeklyActivity.reduce((s, d) => s + d.count, 0)} problems this week</span>
-          )}
-        </div>
-        {data.weeklyActivity?.length > 0 ? (
-          <div className="flex items-end gap-2 h-28">
-            {data.weeklyActivity.map((day, index) => {
-              const max = Math.max(...data.weeklyActivity.map((item) => item.count), 1);
-              const pct = (day.count / max) * 100;
-              const isToday = index === data.weeklyActivity.length - 1;
-              return (
-                <div key={`${day.day}-${index}`} className="group flex flex-col items-center gap-1.5 flex-1">
-                  <div className="relative w-full flex items-end" style={{ height: '80px' }}>
-                    <div
-                      className={`w-full rounded-t-lg transition-all duration-700 ${
-                        isToday
-                          ? 'bg-gradient-to-t from-blue-600 to-cyan-400 shadow-sm shadow-blue-500/30'
-                          : 'bg-blue-200 dark:bg-blue-500/30 group-hover:bg-blue-300 dark:group-hover:bg-blue-500/50'
-                      }`}
-                      style={{ height: `${Math.max(pct, 5)}%`, minHeight: '4px' }}
-                    />
-                    {day.count > 0 && (
-                      <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-bold text-gray-500 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">{day.count}</span>
-                    )}
-                  </div>
-                  <span className={`text-[10px] font-semibold ${isToday ? 'text-blue-500' : 'text-gray-400'}`}>{day.day}</span>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="h-28 flex flex-col items-center justify-center text-gray-400">
-            <Activity className="h-6 w-6 mb-2 opacity-30" />
-            <p className="text-xs">Solve problems to see activity.</p>
-          </div>
-        )}
-      </div>
+      <StudentWeeklyActivity weeklyActivity={data.weeklyActivity} />
 
       {/* ── Domain Mastery (Elo-based) ───────────────────────── */}
       <div className="relative border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] overflow-hidden">
@@ -1337,185 +1170,23 @@ const StudentAnalyticsContent = () => {
         </div>
       </div>
 
-      {/* ── Strengths / Weaknesses ─────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="border border-gray-200 dark:border-emerald-500/20 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-4">
-            <Award className="h-3.5 w-3.5 text-emerald-500" /> Core Strengths
-          </h3>
-          {strengths.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {strengths.map((item) => (
-                <div key={item} className="flex items-center gap-2.5 p-2.5 border border-gray-100 dark:border-white/5 rounded-lg">
-                  <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">{item}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-center text-gray-400 py-6">Solve above 75% accuracy to reveal strengths.</p>
-          )}
-        </div>
+      <StudentStrengthsWeaknesses strengths={strengths} resolvedFocusAreas={resolvedFocusAreas} />
 
-        <div className="border border-gray-200 dark:border-red-500/20 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-4">
-            <Brain className="h-3.5 w-3.5 text-red-500" /> Focus Areas
-          </h3>
-          {resolvedFocusAreas.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {resolvedFocusAreas.map((item) => (
-                <div key={item} className="flex items-center gap-2.5 p-2.5 border border-gray-100 dark:border-white/5 rounded-lg">
-                  <Zap className="h-4 w-4 text-red-500 shrink-0" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">{item}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-center text-gray-400 py-6">Attempt harder problems to identify weak points.</p>
-          )}
-        </div>
-      </div>
-
-      {/* ── Recent Activity ────────────────────────────────── */}
-      <div className="relative border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02] overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 opacity-70">
-          <div className="absolute -top-14 -right-16 w-44 h-44 rounded-full bg-emerald-200/40 dark:bg-emerald-500/10 blur-3xl" />
-          <div className="absolute -bottom-20 -left-12 w-56 h-56 rounded-full bg-sky-200/40 dark:bg-sky-500/10 blur-3xl" />
-        </div>
-
-        <div className="relative">
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-              <Code className="h-3.5 w-3.5" /> Recent Activity
-            </h3>
-            <div className="flex items-center gap-2 text-[10px] font-semibold">
-              <span className="px-2 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
-                {activityCompletedCount} solved
-              </span>
-              <span className="px-2 py-1 rounded-full border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300">
-                {activityAttemptedCount} attempts
-              </span>
-            </div>
-          </div>
-
-          {recentActivityItems.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
-              <div className="lg:col-span-1 rounded-xl border border-gray-200 dark:border-white/10 bg-white/80 dark:bg-white/[0.02] backdrop-blur-sm p-4 space-y-3">
-                <div>
-                  <p className="text-[10px] uppercase tracking-wide text-gray-400">Latest update</p>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{recentActivityItems[0]?.timeLabel || '—'}</p>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs text-gray-500">Completion</span>
-                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{activityCompletionRate}%</span>
-                  </div>
-                  <div className="w-full h-2 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-cyan-500 to-sky-500 transition-all duration-700"
-                      style={{ width: `${activityCompletionRate}%` }}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-center">
-                  <div className="border border-gray-200 dark:border-white/10 rounded-lg py-2">
-                    <p className="text-[10px] text-gray-400">Solved</p>
-                    <p className="text-sm font-bold text-emerald-600 dark:text-emerald-300">{activityCompletedCount}</p>
-                  </div>
-                  <div className="border border-gray-200 dark:border-white/10 rounded-lg py-2">
-                    <p className="text-[10px] text-gray-400">Timeline</p>
-                    <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{recentActivityItems.length}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="lg:col-span-3 space-y-2.5">
-                {recentActivityItems.map((activity, index) => (
-                  <div
-                    key={activity.id}
-                    className="relative rounded-xl border border-gray-200 dark:border-white/10 bg-white/85 dark:bg-white/[0.02] backdrop-blur-sm px-4 py-3 pl-10"
-                  >
-                    {index < recentActivityItems.length - 1 && (
-                      <span className={`absolute left-[15px] top-8 bottom-[-13px] w-px bg-gradient-to-b ${activity.statusVisual.line}`} />
-                    )}
-                    <span className={`absolute left-3 top-3.5 w-4 h-4 rounded-full ring-2 ring-white dark:ring-gray-900 ${activity.statusVisual.dot} flex items-center justify-center`}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-white/95" />
-                    </span>
-
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{activity.title}</p>
-                        <div className="flex items-center gap-1.5 flex-wrap mt-1">
-                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${activity.visual.pill}`}>
-                            {activity.difficulty}
-                          </span>
-                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${activity.statusVisual.chip}`}>
-                            {activity.statusVisual.label}
-                          </span>
-                          <span className="text-[10px] text-gray-400">{activity.timeLabel}</span>
-                        </div>
-                      </div>
-                      <span className={`text-[11px] font-semibold shrink-0 ${activity.statusVisual.label === 'Solved' ? 'text-emerald-500' : 'text-rose-400'}`}>
-                        {activity.statusVisual.insight}
-                      </span>
-                    </div>
-
-                    <div className={`mt-2 h-1.5 rounded-full overflow-hidden ${activity.visual.track}`}>
-                      <div
-                        className={`h-full rounded-full bg-gradient-to-r ${activity.visual.bar} transition-all duration-700`}
-                        style={{ width: `${activity.intensity}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-10 text-gray-400">
-              <Activity className="h-6 w-6 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">No activity yet. Start solving.</p>
-            </div>
-          )}
-        </div>
-      </div>
+      <StudentActivityFeed 
+        recentActivityItems={recentActivityItems} 
+        activityCompletedCount={activityCompletedCount} 
+        activityAttemptedCount={activityAttemptedCount} 
+        activityCompletionRate={activityCompletionRate} 
+      />
 
       {/* ── Advanced Insights (Live) ────────────────────── */}
       <AdvancedInsightsSection insights={insights} loading={insightsLoading} />
 
-      {/* ── Top Performing Topics ───────────────────────────── */}
-      {masterySubjects.length > 0 && (
-        <div className="border border-gray-200 dark:border-white/10 rounded-xl p-5 bg-white dark:bg-white/[0.02]">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-1.5">
-            <Medal className="h-3.5 w-3.5" /> Top Performing Topics
-          </h3>
-          <p className="text-[11px] text-gray-400 mb-4">Click a topic to focus it on the mastery chart.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {masterySubjects.map((topic, index) => (
-              <button
-                type="button"
-                key={`${topic.id}-${index}`}
-                onClick={() => setSelectedMasteryId(topic.id)}
-                className={`w-full text-left border rounded-lg p-3 transition-all duration-200 ${
-                  selectedMasterySubject?.id === topic.id
-                    ? 'border-blue-300 dark:border-cyan-400/50 bg-blue-50/70 dark:bg-cyan-500/10 shadow-sm'
-                    : 'border-gray-100 dark:border-white/5 hover:border-blue-200 dark:hover:border-cyan-400/30'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">{topic.name}</span>
-                  <span className="text-xs text-gray-400">{topic.mastery}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
-                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${topic.progress}%` }} />
-                  </div>
-                  <span className="text-xs text-gray-400">{topic.progress}%</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <StudentTopTopics 
+        masterySubjects={masterySubjects} 
+        selectedMasterySubject={selectedMasterySubject} 
+        setSelectedMasteryId={setSelectedMasteryId} 
+      />
 
       {/* ── Join Class Modal ───────────────────────────────── */}
       {showJoinModal && (

@@ -1,44 +1,20 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-// import React, { useState, useEffect, useCallback } from 'react';
 import axios from "axios";
-import { toast, Toaster } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import {
-  FaCalendarDay,
-  FaSave,
-  FaHistory,
-  FaArrowLeft,
-  FaSpinner,
-  FaSearch,
-  FaUsers,
-  FaDownload,
-  FaTable,
-  FaPen,
-  FaChevronLeft,
-  FaChevronRight,
-  FaCalendarAlt,
-  FaInfoCircle,
-  FaBan,
-  FaCheckCircle,
-  FaTimesCircle,
-  FaClock,
+  FaCalendarDay, FaArrowLeft, FaSpinner, FaUsers,
+  FaChevronLeft, FaChevronRight,
+  FaCheckCircle, FaTimesCircle, FaClock, FaBan,
 } from "react-icons/fa";
-import * as XLSX from "xlsx";
 import API from "../../config";
-import AttendanceGrid from "../../components/shared/AttendanceGrid";
-
-const DUMMY_STUDENTS = [
-  { _id: "s1", name: "Alice Walker", email: "alice@example.com" },
-  { _id: "s2", name: "Bob Smith", email: "bob@example.com" },
-  { _id: "s3", name: "Charlie Davis", email: "charlie@example.com" },
-];
+import AttendanceTakeView from "../../components/teacher/pages/attendance/AttendanceTakeView";
+import AttendanceHistoryView from "../../components/teacher/pages/attendance/AttendanceHistoryView";
 
 export default function TeacherAttendance() {
   const [batches, setBatches] = useState([]);
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [students, setStudents] = useState([]);
-
-  // View states
-  const [viewMode, setViewMode] = useState("take"); // 'take' | 'history' | 'grid'
+  const [viewMode, setViewMode] = useState("take");
   const [selectedHistory, setSelectedHistory] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -52,7 +28,6 @@ export default function TeacherAttendance() {
     );
   }, [students, searchQuery]);
 
-  // Date handling
   const getLocalDateString = (offset = 0) => {
     const d = new Date();
     d.setDate(d.getDate() + offset);
@@ -61,209 +36,101 @@ export default function TeacherAttendance() {
   };
   const [attendanceDate, setAttendanceDate] = useState(getLocalDateString());
   const [sessionType, setSessionType] = useState('Class');
-
-  // Data states
   const [attendanceState, setAttendanceState] = useState({});
   const [historyRecords, setHistoryRecords] = useState([]);
   const [loadingBatches, setLoadingBatches] = useState(true);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [existingRecord, setExistingRecord] = useState(false); // true if editing an existing date
+  const [existingRecord, setExistingRecord] = useState(false);
 
   const token = localStorage.getItem("token");
-  const headers = useMemo(
-    () => (token ? { Authorization: `Bearer ${token}` } : {}),
-    [token],
-  );
-
-  const toLocalDateInputValue = useCallback((value) => {
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return getLocalDateString();
-    parsed.setMinutes(parsed.getMinutes() - parsed.getTimezoneOffset());
-    return parsed.toISOString().split("T")[0];
-  }, []);
+  const headers = useMemo(() => (token ? { Authorization: `Bearer ${token}` } : {}), [token]);
 
   const normalizeStudent = useCallback((student) => {
     if (!student) return null;
-    if (typeof student === "string") {
-      return { _id: student, name: "Unknown Student", email: "" };
-    }
-
+    if (typeof student === "string") return { _id: student, name: "Unknown Student", email: "" };
     const id = student._id || student.id;
     if (!id) return null;
-
-    return {
-      _id: id,
-      name: student.name || "Unknown Student",
-      email: student.email || "",
-    };
+    return { _id: id, name: student.name || "Unknown Student", email: student.email || "" };
   }, []);
 
   const fetchBatches = useCallback(async () => {
     try {
       setLoadingBatches(true);
       const res = await axios.get(`${API}/api/teacher/batches`, { headers });
-      const batchData = Array.isArray(res.data?.data) ? res.data.data : [];
-      setBatches(batchData);
-    } catch {
-      toast.error("Failed to load classes.");
-    } finally {
-      setLoadingBatches(false);
-    }
+      setBatches(Array.isArray(res.data?.data) ? res.data.data : []);
+    } catch { toast.error("Failed to load classes."); }
+    finally { setLoadingBatches(false); }
   }, [headers]);
 
-  const fetchStudents = useCallback(
-    async (batchId, date, currentSessionType) => {
-      try {
-        setLoadingStudents(true);
-        setExistingRecord(false);
-        const studentRes = await axios.get(
-          `${API}/api/teacher/batch/${batchId}`,
-          { headers },
-        );
-        const rawStudentData = Array.isArray(studentRes.data?.data?.studentIds)
-          ? studentRes.data.data.studentIds
-          : [];
-        const studentData = rawStudentData
-          .map(normalizeStudent)
-          .filter(Boolean);
-        setStudents(studentData);
+  const fetchStudents = useCallback(async (batchId, date, currentSessionType) => {
+    try {
+      setLoadingStudents(true);
+      setExistingRecord(false);
+      const studentRes = await axios.get(`${API}/api/teacher/batch/${batchId}`, { headers });
+      const rawStudentData = Array.isArray(studentRes.data?.data?.studentIds) ? studentRes.data.data.studentIds : [];
+      const studentData = rawStudentData.map(normalizeStudent).filter(Boolean);
+      setStudents(studentData);
 
-        // Check if attendance already exists for this date and session type
-        let savedRecords = [];
-        try {
-          const histRes = await axios.get(
-            `${API}/api/teacher/attendance/${batchId}?date=${date}&sessionType=${currentSessionType}`,
-            { headers },
-          );
-          if (histRes.data.data && histRes.data.data.length > 0) {
-            savedRecords = histRes.data.data[0].records;
-            setExistingRecord(true);
-          }
-        } catch (error) {
-          // No history for this date yet, which is fine.
+      let savedRecords = [];
+      try {
+        const histRes = await axios.get(`${API}/api/teacher/attendance/${batchId}?date=${date}&sessionType=${currentSessionType}`, { headers });
+        if (histRes.data.data && histRes.data.data.length > 0) {
+          savedRecords = histRes.data.data[0].records;
+          setExistingRecord(true);
         }
+      } catch (error) { /* No history for this date yet */ }
 
-        // Initialize state: use saved record if exists, otherwise default to Present
-        const init = {};
-        studentData.forEach((s) => {
-          const existing = savedRecords.find((r) => {
-            const recordStudentId =
-              typeof r.studentId === "object" ? r.studentId?._id : r.studentId;
-            return String(recordStudentId) === String(s._id);
-          });
-          init[s._id] = existing ? existing.status : "Present";
+      const init = {};
+      studentData.forEach((s) => {
+        const existing = savedRecords.find((r) => {
+          const recordStudentId = typeof r.studentId === "object" ? r.studentId?._id : r.studentId;
+          return String(recordStudentId) === String(s._id);
         });
-        setAttendanceState(init);
-      } catch (error) {
-        toast.error("Failed to load students.");
-      } finally {
-        setLoadingStudents(false);
-      }
-    },
-    [headers],
-  );
+        init[s._id] = existing ? existing.status : "Present";
+      });
+      setAttendanceState(init);
+    } catch { toast.error("Failed to load students."); }
+    finally { setLoadingStudents(false); }
+  }, [headers]);
 
-  useEffect(() => {
-    if (selectedBatch && (viewMode === "history" || viewMode === "grid"))
-      fetchHistory(selectedBatch._id);
-  }, [selectedBatch, viewMode]);
+  const fetchHistory = useCallback(async (batchId) => {
+    try {
+      setLoadingStudents(true);
+      const res = await axios.get(`${API}/api/teacher/attendance/${batchId}`, { headers });
+      setHistoryRecords(Array.isArray(res.data?.data) ? res.data.data : []);
+    } catch { toast.error("Failed to load session logs."); }
+    finally { setLoadingStudents(false); }
+  }, [headers]);
 
-  const getStatusPillClass = (status) => {
-    switch (status) {
-      case "Present":
-        return "border-emerald-500 bg-emerald-100 text-emerald-700";
-      case "Absent":
-        return "border-red-500 bg-red-100 text-red-700";
-      case "Late":
-        return "border-amber-500 bg-amber-100 text-amber-700";
-      case "No Class":
-        return "border-gray-500 bg-gray-100 text-gray-700";
-      default:
-        return "border-gray-300 bg-gray-50 text-gray-600";
-    }
-  };
+  useEffect(() => { fetchBatches(); }, [fetchBatches]);
 
-  const fetchHistory = useCallback(
-    async (batchId) => {
-      try {
-        setLoadingStudents(true);
-        const res = await axios.get(
-          `${API}/api/teacher/attendance/${batchId}`,
-          { headers },
-        );
-        const history = Array.isArray(res.data?.data) ? res.data.data : [];
-        setHistoryRecords(history);
-      } catch (error) {
-        toast.error("Failed to load session logs.");
-      } finally {
-        setLoadingStudents(false);
-      }
-    },
-    [headers],
-  );
-
-  // Initial load
-  useEffect(() => {
-    fetchBatches();
-  }, [fetchBatches]);
-
-  // Fetch data based on mode and batch selection
   useEffect(() => {
     if (selectedBatch) {
       if (viewMode === "take") fetchStudents(selectedBatch._id, attendanceDate, sessionType);
-      if (viewMode === "history") fetchHistory(selectedBatch._id);
+      if (viewMode === "history" || viewMode === "grid") fetchHistory(selectedBatch._id);
     }
   }, [selectedBatch, viewMode, attendanceDate, sessionType, fetchStudents, fetchHistory]);
 
   const submitAttendance = async () => {
     if (!selectedBatch) return;
-    const records = students.map((s) => ({
-      studentId: s._id,
-      status: attendanceState[s._id] || "Present",
-    }));
-
+    const records = students.map((s) => ({ studentId: s._id, status: attendanceState[s._id] || "Present" }));
     try {
       setSubmitting(true);
-      await axios.post(
-        `${API}/api/teacher/attendance`,
-        { classId: selectedBatch._id, date: attendanceDate, sessionType, records },
-        { headers },
-      );
-      toast.success(
-        existingRecord ? "Attendance updated!" : "Attendance saved!",
-      );
+      await axios.post(`${API}/api/teacher/attendance`, { classId: selectedBatch._id, date: attendanceDate, sessionType, records }, { headers });
+      toast.success(existingRecord ? "Attendance updated!" : "Attendance saved!");
       setViewMode("history");
-    } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Failed to submit attendance",
-      );
-    } finally {
-      setSubmitting(false);
-    }
+    } catch (error) { toast.error(error.response?.data?.message || "Failed to submit attendance"); }
+    finally { setSubmitting(false); }
   };
 
-  // Edit a specific history date
   const editHistoryRecord = (record) => {
     const dateStr = record.date?.split("T")[0] || getLocalDateString();
     setAttendanceDate(dateStr);
     setSessionType(record.sessionType || 'Class');
     setSelectedHistory(null);
-    setViewMode("take"); // This will trigger fetchStudents via useEffect
+    setViewMode("take");
   };
-
-  const presentCount = Object.values(attendanceState).filter(
-    (s) => s === "Present",
-  ).length;
-  const absentCount = Object.values(attendanceState).filter(
-    (s) => s === "Absent",
-  ).length;
-  const lateCount = Object.values(attendanceState).filter(
-    (s) => s === "Late",
-  ).length;
-  const noClassCount = Object.values(attendanceState).filter(
-    (s) => s === "No Class",
-  ).length;
 
   const setStudentStatus = (studentId, status) => {
     setAttendanceState((prev) => ({ ...prev, [studentId]: status }));
@@ -271,29 +138,16 @@ export default function TeacherAttendance() {
 
   const markAllPresent = () => {
     const newState = {};
-    students.forEach((s) => {
-      newState[s._id] = "Present";
-    });
+    students.forEach((s) => { newState[s._id] = "Present"; });
     setAttendanceState(newState);
   };
 
   const markAllAbsent = () => {
     const newState = {};
-    students.forEach((s) => {
-      newState[s._id] = "Absent";
-    });
+    students.forEach((s) => { newState[s._id] = "Absent"; });
     setAttendanceState(newState);
   };
 
-  const markAllNoClass = () => {
-    const newState = {};
-    students.forEach((s) => {
-      newState[s._id] = "No Class";
-    });
-    setAttendanceState(newState);
-  };
-
-  // Quick date helpers
   const shiftDate = (direction) => {
     const d = new Date(attendanceDate + "T00:00:00");
     d.setDate(d.getDate() + direction);
@@ -309,105 +163,50 @@ export default function TeacherAttendance() {
     if (isToday) return "Today";
     if (attendanceDate === getLocalDateString(-1)) return "Yesterday";
     const d = new Date(attendanceDate + "T00:00:00");
-    return d.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
+    return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
   })();
-
-  const statusConfig = {
-    Present: {
-      label: "Present",
-      short: "P",
-      icon: <FaCheckCircle />,
-      cls: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30",
-    },
-    Absent: {
-      label: "Absent",
-      short: "A",
-      icon: <FaTimesCircle />,
-      cls: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/30",
-    },
-    Late: {
-      label: "Late",
-      short: "L",
-      icon: <FaClock />,
-      cls: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30",
-    },
-    "No Class": {
-      label: "No Class",
-      short: "N",
-      icon: <FaBan />,
-      cls: "bg-gray-100 text-gray-600 border-gray-300 dark:bg-gray-500/10 dark:text-gray-400 dark:border-gray-500/30",
-    },
-  };
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#05000a] font-sans pb-24 transition-colors">
-
-
-      {/* Editorial Header Array */}
+      {/* Header */}
       <div className="relative pt-16 pb-12 sm:pt-24 sm:pb-16 px-6 sm:px-10 lg:px-14 max-w-[90rem] mx-auto border-b border-gray-200 dark:border-white/10">
         <div className="absolute top-0 right-0 w-[60%] h-full bg-gradient-to-l from-[#0061FF]/3 to-transparent blur-[120px] pointer-events-none rounded-bl-full -z-10" />
-
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 relative z-10">
           <div>
             <div className="flex items-center gap-2 mb-6">
               {selectedBatch && (
-                <button
-                  onClick={() => {
-                    setSelectedBatch(null);
-                    setSelectedHistory(null);
-                  }}
-                  className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 dark:border-white/10 text-gray-400 hover:text-[#0061FF] dark:hover:text-[#a5c3ff] hover:bg-white dark:hover:bg-white/5 transition-all shadow-sm"
-                >
+                <button onClick={() => { setSelectedBatch(null); setSelectedHistory(null); }}
+                  className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 dark:border-white/10 text-gray-400 hover:text-[#0061FF] dark:hover:text-[#a5c3ff] hover:bg-white dark:hover:bg-white/5 transition-all shadow-sm">
                   <FaArrowLeft className="text-sm" />
                 </button>
               )}
               <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-full shadow-sm">
                 <FaCalendarDay className="text-[#0061FF] dark:text-[#a5c3ff]" />
-                <span className="text-[11px] font-bold uppercase tracking-widest text-gray-600 dark:text-gray-300">
-                  Attendance Tracker
-                </span>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-gray-600 dark:text-gray-300">Attendance Tracker</span>
               </div>
             </div>
-            
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white leading-[1.1] tracking-tight">
               {selectedBatch ? selectedBatch.name : "Attendance Register"}
             </h1>
             <p className="text-sm font-medium text-gray-500 mt-4">
-              {selectedBatch
-                ? `${selectedBatch.year} · Section ${selectedBatch.section}`
-                : "Select a class to start taking attendance."}
+              {selectedBatch ? `${selectedBatch.year} · Section ${selectedBatch.section}` : "Select a class to start taking attendance."}
             </p>
           </div>
 
           {selectedBatch && (
             <div className="flex bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-full p-1.5 shadow-sm">
-              <button
-                onClick={() => setViewMode("take")}
-                className={`px-6 py-2.5 rounded-full text-[13px] font-bold transition-all ${viewMode === "take" ? "bg-[#0061FF] text-white shadow-md" : "text-gray-500 hover:text-gray-900 dark:hover:text-white"}`}
-              >
-                Take
-              </button>
-              <button
-                onClick={() => setViewMode("history")}
-                className={`px-6 py-2.5 rounded-full text-[13px] font-bold transition-all ${viewMode === "history" ? "bg-[#0061FF] text-white shadow-md" : "text-gray-500 hover:text-gray-900 dark:hover:text-white"}`}
-              >
-                History
-              </button>
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`px-6 py-2.5 rounded-full text-[13px] font-bold transition-all ${viewMode === "grid" ? "bg-[#0061FF] text-white shadow-md" : "text-gray-500 hover:text-gray-900 dark:hover:text-white"}`}
-              >
-                Grid View
-              </button>
+              {["take", "history", "grid"].map(mode => (
+                <button key={mode} onClick={() => setViewMode(mode)}
+                  className={`px-6 py-2.5 rounded-full text-[13px] font-bold transition-all ${viewMode === mode ? "bg-[#0061FF] text-white shadow-md" : "text-gray-500 hover:text-gray-900 dark:hover:text-white"}`}>
+                  {mode === "take" ? "Take" : mode === "history" ? "History" : "Grid View"}
+                </button>
+              ))}
             </div>
           )}
         </div>
       </div>
 
+      {/* Content */}
       <div className="max-w-[90rem] mx-auto px-6 sm:px-10 lg:px-14 py-10">
         {!selectedBatch ? (
           <div>
@@ -423,19 +222,12 @@ export default function TeacherAttendance() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {batches.map((batch) => (
-                  <button
-                    key={batch._id}
-                    onClick={() => setSelectedBatch(batch)}
-                    className="text-left p-8 rounded-[2rem] border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.02] hover:border-[#0061FF]/40 dark:hover:border-[#a5c3ff]/40 transition-all group shadow-sm hover:shadow-md hover:-translate-y-1"
-                  >
+                  <button key={batch._id} onClick={() => setSelectedBatch(batch)}
+                    className="text-left p-8 rounded-[2rem] border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.02] hover:border-[#0061FF]/40 dark:hover:border-[#a5c3ff]/40 transition-all group shadow-sm hover:shadow-md hover:-translate-y-1">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2 group-hover:text-[#0061FF] dark:group-hover:text-[#a5c3ff] transition-colors">
-                          {batch.name}
-                        </h3>
-                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
-                          {batch.year} · Sec {batch.section}
-                        </p>
+                        <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2 group-hover:text-[#0061FF] dark:group-hover:text-[#a5c3ff] transition-colors">{batch.name}</h3>
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">{batch.year} · Sec {batch.section}</p>
                       </div>
                       <div className="w-10 h-10 rounded-full border border-gray-100 dark:border-white/5 flex items-center justify-center group-hover:bg-[#0061FF]/5 dark:group-hover:bg-[#a5c3ff]/10 transition-colors">
                         <FaChevronRight className="text-gray-300 dark:text-gray-600 group-hover:text-[#0061FF] dark:group-hover:text-[#a5c3ff] text-xs transition-colors" />
@@ -448,7 +240,6 @@ export default function TeacherAttendance() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* ── Take / Edit Attendance Mode ── */}
             {viewMode === "take" ? (
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
                 

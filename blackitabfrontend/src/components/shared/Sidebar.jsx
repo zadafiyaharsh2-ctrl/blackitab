@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import {
-  FaHome,
+  FaBookmark, FaBug, FaHome,
   FaUsers,
   FaRobot,
   FaUser,
   FaListAlt,
-  FaSignOutAlt,
+ FaExclamationTriangle, FaSignOutAlt,
   FaBars,
   FaBook,
   FaTrophy,
@@ -56,9 +56,9 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     }
   })();
 
-  const canAccessTeacher = userRole === "teacher";
-  const canAccessHod = userRole === "hod";
-  const canAccessInstitute = userRole === "institute";
+  const canAccessTeacher = ['teacher', 'hod'].includes(userRole);
+  const canAccessHod = userRole === 'hod';
+  const canAccessInstitute = userRole === 'institute';
   const hasInstitute = Boolean(instituteId);
   const INSTITUTE_REQUIRED_FOR_CLASSES_MESSAGE =
     "You must join an institute before joining any class.";
