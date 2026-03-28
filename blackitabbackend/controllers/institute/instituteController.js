@@ -175,8 +175,71 @@ exports.getDepartmentStats = async (req, res) => {
 };
 
 // ══════════════════════════════════════════════════════════════
-// MEMBER MANAGEMENT
+// MEMBER MANAGEMENT & HIERARCHY
 // ══════════════════════════════════════════════════════════════
+
+// GET /api/institute/hierarchy — Build Dept -> Teacher -> Batch -> Student hierarchy
+exports.getInstituteHierarchy = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+
+        const institute = await Institute.findById(instId);
+        const depts = institute.departments || [];
+
+        const staff = await User.find({ instituteId: instId, role: { $in: ['teacher', 'hod'] } }).select('_id name email role departments profileImage');
+        const Batch = require('../../models/Batch');
+        const batches = await Batch.find({ instituteId: instId }).select('_id name year section department studentIds teacherIds studentCount').lean();
+        const students = await User.find({ instituteId: instId, role: 'student' }).select('_id name email departments batchYear profileImage').lean();
+
+        const hierarchy = depts.map(dept => {
+            const deptStaff = staff.filter(s => s.departments && s.departments.includes(dept));
+            const deptStudents = students.filter(s => s.departments && s.departments.includes(dept));
+            
+            const teachers = deptStaff.map(t => {
+                const tBatches = batches.filter(b => b.teacherIds && b.teacherIds.map(id => id.toString()).includes(t._id.toString()) && (!b.department || b.department === dept));
+                const populatedBatches = tBatches.map(b => {
+                    const batchStudents = students.filter(s => b.studentIds && b.studentIds.map(id => id.toString()).includes(s._id.toString()));
+                    return { ...b, students: batchStudents, studentCount: batchStudents.length };
+                });
+                return { _id: t._id, name: t.name, email: t.email, role: t.role, profileImage: t.profileImage, batches: populatedBatches };
+            });
+
+            const deptBatches = batches.filter(b => b.department === dept || deptStaff.some(t => b.teacherIds && b.teacherIds.map(id => id.toString()).includes(t._id.toString())));
+            const batchedStudentIds = new Set();
+            deptBatches.forEach(b => { if (b.studentIds) b.studentIds.forEach(id => batchedStudentIds.add(id.toString())); });
+            const unassignedStudents = deptStudents.filter(s => !batchedStudentIds.has(s._id.toString()));
+
+            return { department: dept, teachers, unassignedStudents };
+        });
+
+        const unassignedStaff = staff.filter(s => !s.departments || s.departments.length === 0);
+        const unassignedStudents = students.filter(s => !s.departments || s.departments.length === 0);
+        
+        if (unassignedStaff.length > 0 || unassignedStudents.length > 0) {
+            const teachers = unassignedStaff.map(t => {
+                const tBatches = batches.filter(b => b.teacherIds && b.teacherIds.map(id => id.toString()).includes(t._id.toString()));
+                const populatedBatches = tBatches.map(b => {
+                    const batchStudents = students.filter(s => b.studentIds && b.studentIds.map(id => id.toString()).includes(s._id.toString()));
+                    return { ...b, students: batchStudents, studentCount: batchStudents.length };
+                });
+                return { _id: t._id, name: t.name, email: t.email, role: t.role, profileImage: t.profileImage, batches: populatedBatches };
+            });
+
+            const unassignedBatches = batches.filter(b => unassignedStaff.some(t => b.teacherIds && b.teacherIds.map(id => id.toString()).includes(t._id.toString())));
+            const batchedStudentIds = new Set();
+            unassignedBatches.forEach(b => { if (b.studentIds) b.studentIds.forEach(id => batchedStudentIds.add(id.toString())); });
+            const finalUnassignedStudents = unassignedStudents.filter(s => !batchedStudentIds.has(s._id.toString()));
+
+            hierarchy.push({ department: 'Unassigned / Independent', teachers, unassignedStudents: finalUnassignedStudents });
+        }
+
+        res.json({ success: true, data: hierarchy });
+    } catch (error) {
+        console.error('Hierarchy Error:', error);
+        res.status(500).json({ success: false, message: 'Server error fetching hierarchy' });
+    }
+};
 
 // GET /api/institute/members
 exports.getMembers = async (req, res) => {
@@ -748,6 +811,138 @@ exports.submitFeedback = async (req, res) => {
 };
 
 // ══════════════════════════════════════════════════════════════
+// COMPLAINTS SYSTEM
+// ══════════════════════════════════════════════════════════════
+const Complaint = require('../../models/Complaint');
+
+// POST /api/institute/complaints — Student submits a complaint
+exports.submitComplaint = async (req, res) => {
+    try {
+        const { title, description, category, isAnonymous } = req.body;
+        const studentId = req.user._id;
+        const instId = req.user.instituteId;
+
+        if (!title || !description) {
+            return res.status(400).json({ success: false, message: 'Title and description are required' });
+        }
+
+        const newComplaint = new Complaint({
+            title,
+            description,
+            category: category || 'Other',
+            isAnonymous: Boolean(isAnonymous),
+            studentId,
+            instituteId: instId
+        });
+
+        await newComplaint.save();
+        res.status(201).json({ success: true, message: 'Complaint submitted successfully' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error submitting complaint' });
+    }
+};
+
+// GET /api/institute/complaints — Admins/HODs view complaints
+exports.getInstituteComplaints = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        if (!instId) return res.status(400).json({ success: false, message: 'Not linked to an institute' });
+
+        const complaints = await Complaint.find({ instituteId: instId })
+            .populate('studentId', 'name email profileImage')
+            .sort({ createdAt: -1 });
+
+        // If complaint is anonymous, strip identifying info before sending to frontend
+        const sanitizedComplaints = complaints.map(c => {
+            const doc = c.toObject();
+            if (doc.isAnonymous && doc.studentId) {
+                doc.studentId = { _id: doc.studentId._id, name: 'Anonymous Student', email: 'hidden' };
+            }
+            return doc;
+        });
+
+        res.json({ success: true, data: sanitizedComplaints });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error fetching complaints' });
+    }
+};
+
+// PUT /api/institute/complaints/:id — Update complaint status
+exports.updateComplaintStatus = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        const { status, resolutionNotes } = req.body;
+
+        const complaint = await Complaint.findById(req.params.id);
+        if (!complaint || !complaint.instituteId || complaint.instituteId.toString() !== instId.toString()) {
+            return res.status(404).json({ success: false, message: 'Complaint not found in your institute' });
+        }
+
+        if (status) complaint.status = status;
+        if (resolutionNotes !== undefined) complaint.resolutionNotes = resolutionNotes;
+
+        await complaint.save();
+        res.json({ success: true, message: 'Complaint updated', data: complaint });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error updating complaint' });
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
+// TIMETABLE SYSTEM
+// ══════════════════════════════════════════════════════════════
+const Timetable = require('../../models/Timetable');
+
+// POST /api/institute/timetable/:batchId - Create or update timetable
+exports.saveTimetable = async (req, res) => {
+    try {
+        const instId = req.user.instituteId;
+        const { batchId } = req.params;
+        const { schedule } = req.body;
+
+        if (!schedule || !Array.isArray(schedule)) {
+            return res.status(400).json({ success: false, message: 'Invalid schedule format' });
+        }
+
+        let timetable = await Timetable.findOne({ batchId, instituteId: instId });
+        
+        if (timetable) {
+            timetable.schedule = schedule;
+            await timetable.save();
+        } else {
+            timetable = new Timetable({
+                batchId,
+                instituteId: instId,
+                schedule
+            });
+            await timetable.save();
+        }
+
+        res.json({ success: true, message: 'Timetable saved successfully', data: timetable });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error saving timetable' });
+    }
+};
+
+// GET /api/institute/timetable/:batchId - View timetable
+exports.getTimetable = async (req, res) => {
+    try {
+        const { batchId } = req.params;
+        
+        const timetable = await Timetable.findOne({ batchId })
+            .populate('schedule.periods.teacherId', 'name profileImage email');
+            
+        if (!timetable) {
+            return res.json({ success: true, data: null });
+        }
+
+        res.json({ success: true, data: timetable });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error fetching timetable' });
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
 // JOIN INSTITUTE
 // ══════════════════════════════════════════════════════════════
 
@@ -1146,13 +1341,23 @@ exports.getTeacherFullDetails = async (req, res) => {
         
         const Batch = require('../../models/Batch');
         const ExamQuestion = require('../../models/ExamQuestion');
+        const ClassMaterial = require('../../models/ClassMaterial');
+        const Assignment = require('../../models/Assignment');
 
-        const [batches, questionsCount] = await Promise.all([
+        const [batches, questionsCount, materials, assignments] = await Promise.all([
             Batch.find({ instituteId: instId, teacherIds: teacherId })
                 .populate('teacherIds', 'name profileImage email departments')
                 .populate('departmentId', 'name')
                 .lean(),
-            ExamQuestion.countDocuments({ createdBy: teacherId, instituteId: instId })
+            ExamQuestion.countDocuments({ createdBy: teacherId, instituteId: instId }),
+            ClassMaterial.find({ teacherId, instituteId: instId })
+                .populate('batchId', 'name year section')
+                .sort({ createdAt: -1 })
+                .lean(),
+            Assignment.find({ teacherId, instituteId: instId })
+                .populate('batchId', 'name year section')
+                .sort({ createdAt: -1 })
+                .lean()
         ]);
 
         // Attach student counts per batch
@@ -1169,9 +1374,13 @@ exports.getTeacherFullDetails = async (req, res) => {
             data: {
                 teacher,
                 batches: batchesWithCounts,
+                materials,
+                assignments,
                 stats: {
                     questionsCreated: questionsCount,
-                    totalBatches: batches.length
+                    totalBatches: batches.length,
+                    totalMaterials: materials.length,
+                    totalAssignments: assignments.length
                 }
             }
         });

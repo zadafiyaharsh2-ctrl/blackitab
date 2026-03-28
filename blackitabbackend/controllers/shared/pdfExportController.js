@@ -13,6 +13,7 @@
 
 const PDFDocument = require('pdfkit');
 const ExamQuestion = require('../../models/ExamQuestion');
+const QuestionPaper = require('../../models/QuestionPaper');
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const OPTION_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -22,6 +23,7 @@ const DIFFICULTY_MARKS = { Easy: 1, Medium: 2, Hard: 3 };
 exports.exportQuestionPaper = async (req, res) => {
     try {
         const {
+            paperId = '',
             exam = '',
             subject = '',
             difficulty = '',
@@ -29,29 +31,46 @@ exports.exportQuestionPaper = async (req, res) => {
             includeAnswers = 'true',
             title = ''} = req.query;
 
-        // Build query filter
-        const filter = {};
-        if (exam) filter.exam = exam.toLowerCase();
-        if (subject) filter.subject = { $regex: new RegExp(subject, 'i') };
-        if (difficulty) filter.difficulty = difficulty;
+        let questions = [];
+        let paperTitle = title;
+        let showAnswers = includeAnswers === 'true';
 
-        // Scope: if not admin, only show public questions + own institute's
-        const user = req.user;
-        if (user.role !== 'institute') {
-            filter.$or = [
-                { isPublic: true },
-                ...(user.instituteId ? [{ instituteId: user.instituteId }] : []),
-                { createdBy: user._id }
-            ];
+        if (paperId) {
+            // Priority to paper ID
+            const paper = await QuestionPaper.findById(paperId).populate('questions').lean();
+            if (!paper) {
+                return res.status(404).json({ success: false, message: 'Paper not found.' });
+            }
+            questions = paper.questions;
+            paperTitle = title || paper.title;
+            showAnswers = includeAnswers === 'true' && paper.includeAnswers !== false;
+        } else {
+            // Build query filter
+            const filter = {};
+            if (exam) filter.exam = exam.toLowerCase();
+            if (subject) filter.subject = { $regex: new RegExp(subject, 'i') };
+            if (difficulty) filter.difficulty = difficulty;
+
+            // Scope: if not admin, only show public questions + own institute's
+            const user = req.user;
+            if (user.role !== 'institute') {
+                filter.$or = [
+                    { isPublic: true },
+                    ...(user.instituteId ? [{ instituteId: user.instituteId }] : []),
+                    { createdBy: user._id }
+                ];
+            }
+
+            // Fetch questions
+            questions = await ExamQuestion.find(filter)
+                .limit(parseInt(limit) || 20)
+                .sort({ difficulty: 1, createdAt: -1 })
+                .lean();
+
+            paperTitle = title || `${(exam || 'General').toUpperCase()} - ${subject || 'Mixed'} Question Paper`;
         }
 
-        // Fetch questions
-        const questions = await ExamQuestion.find(filter)
-            .limit(parseInt(limit) || 20)
-            .sort({ difficulty: 1, createdAt: -1 })
-            .lean();
-
-        if (questions.length === 0) {
+        if (!questions || questions.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'No questions found with the given filters.'
@@ -59,9 +78,7 @@ exports.exportQuestionPaper = async (req, res) => {
         }
 
         // Calculate totals
-        const totalMarks = questions.reduce((sum, q) => sum + (DIFFICULTY_MARKS[q.difficulty] || 1), 0);
-        const paperTitle = title || `${(exam || 'General').toUpperCase()} - ${subject || 'Mixed'} Question Paper`;
-        const showAnswers = includeAnswers === 'true';
+        const totalMarks = questions.reduce((sum, q) => sum + (DIFFICULTY_MARKS[q?.difficulty] || 1), 0);
 
         // ── Generate PDF ─────────────────────────────────────────────────────
         const doc = new PDFDocument({

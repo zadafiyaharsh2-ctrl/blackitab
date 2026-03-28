@@ -129,7 +129,7 @@ const TeacherPanel = () => {
   const inputCls = 'w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20';
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-6xl mx-auto px-4 py-8 space-y-8 font-sans">
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -143,7 +143,7 @@ const TeacherPanel = () => {
         {user?.role === 'institute' && (
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="px-3 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold flex items-center gap-1.5 self-start md:self-auto"
+            className="px-5 py-2.5 bg-gradient-to-br from-[#063669] to-[#274e82] hover:opacity-90 text-white rounded-xl text-sm font-bold tracking-wide flex items-center justify-center gap-2 shadow-md transition-all self-start md:self-auto"
           >
             <PlusIcon className="w-4 h-4" /> Add Teacher
           </button>
@@ -151,26 +151,26 @@ const TeacherPanel = () => {
       </div>
 
       {/* Table */}
-      <div className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-white/[0.02]">
+      <div className="rounded-2xl overflow-hidden bg-white/70 dark:bg-white/[0.03] backdrop-blur-xl shadow-[0_20px_40px_rgba(0,0,0,0.04)] dark:shadow-none">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="border-b border-gray-100 dark:border-white/5">
-              <tr className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <thead className="border-b border-gray-100/50 dark:border-white/5">
+              <tr className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
                 <th className="px-5 py-3">Teacher</th>
                 <th className="px-5 py-3">Role</th>
                 <th className="px-5 py-3">Departments</th>
                 <th className="px-5 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+            <tbody className="divide-y divide-gray-100/50 dark:divide-white/5">
               {teachers.length === 0 ? (
                 <tr>
                   <td colSpan="4" className="px-5 py-10 text-center text-sm text-gray-500">No teachers found in the institute.</td>
                 </tr>
               ) : (
                 teachers.map(t => (
-                  <tr key={t._id} onClick={() => navigate(`/institute/teacher/${t._id}`)} className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer">
-                    <td className="px-5 py-3">
+                  <tr key={t._id} onClick={() => navigate(`/institute/teacher/${t._id}`)} className="hover:bg-white/50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer group">
+                    <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-gray-900 dark:bg-white flex items-center justify-center text-white dark:text-gray-900 text-sm font-bold shrink-0">
                           {t.name.charAt(0).toUpperCase()}
@@ -181,17 +181,17 @@ const TeacherPanel = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-3">
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded border ${
+                    <td className="px-5 py-4">
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-md border ${
                         t.role === 'hod'
-                          ? 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400'
-                          : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400'
+                          ? 'bg-blue-50/50 dark:bg-blue-500/10 border-blue-200/50 dark:border-blue-500/20 text-blue-700 dark:text-blue-400'
+                          : 'bg-gray-50/50 dark:bg-white/5 border-gray-200/50 dark:border-white/10 text-gray-600 dark:text-gray-400'
                       }`}>
                         {t.role === 'hod' ? 'HOD' : 'Teacher'}
                       </span>
                     </td>
-                    <td className="px-5 py-3">
-                      <div className="flex flex-wrap gap-1">
+                    <td className="px-5 py-4">
+                      <div className="flex flex-wrap gap-1.5">
                         {t.departments?.length > 0 ? (
                           t.departments.map(d => (
                             <span key={d} className="px-2 py-0.5 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded text-xs text-gray-600 dark:text-gray-400">{d}</span>
@@ -201,9 +201,9 @@ const TeacherPanel = () => {
                         )}
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-right">
+                    <td className="px-5 py-4 text-right">
                       {user?.role === 'institute' && (
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={(e) => { e.stopPropagation(); setEditTeacher(t); setIsEditModalOpen(true); }}
                             className="p-1.5 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 hover:text-blue-600 hover:border-blue-200 dark:hover:border-blue-500/30 transition-colors"

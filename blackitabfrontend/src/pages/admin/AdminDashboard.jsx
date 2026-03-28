@@ -4,12 +4,16 @@ import { AnimatePresence } from 'framer-motion';
 import {
   FaUsers, FaSchool, FaChartLine, FaSignOutAlt, FaShieldAlt,
   FaTrophy, FaExclamationTriangle, FaChevronLeft, FaChevronRight, FaQuestion, FaNewspaper,
-  FaStar, FaUserGraduate, FaSpinner, FaComments, FaTimes, FaCheck, FaBan
+  FaStar, FaUserGraduate, FaSpinner, FaComments, FaTimes, FaCheck, FaBan, FaBug
 } from 'react-icons/fa';
 import { CustomToast } from '../../utils/CustomToast';
 import axios from 'axios';
 import API_URL from '../../config';
 import DeleteConfirmationModal from '../../components/shared/DeleteConfirmationModal';
+
+import AdminSidebar from '../../components/admin/layout/AdminSidebar';
+import AdminHeader from '../../components/admin/layout/AdminHeader';
+import AdminFooter from '../../components/admin/layout/AdminFooter';
 
 // ── Lazy-loaded Tab Components ──────────────────────────────────────────────
 const OverviewTab   = lazy(() => import('../../components/admin/tabs/OverviewTab'));
@@ -19,6 +23,7 @@ const QuestionsTab  = lazy(() => import('../../components/admin/tabs/QuestionsTa
 const PostsTab      = lazy(() => import('../../components/admin/tabs/PostsTab'));
 const ContestsTab   = lazy(() => import('../../components/admin/tabs/ContestsTab'));
 const AnalyticsTab  = lazy(() => import('../../components/admin/tabs/AnalyticsTab'));
+const BugsTab       = lazy(() => import('../../components/admin/tabs/BugsTab'));
 
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -386,6 +391,7 @@ const AdminDashboard = () => {
     { id: 'posts', label: 'Posts', icon: FaNewspaper },
     { id: 'contests', label: 'Contests', icon: FaTrophy },
     { id: 'analytics', label: 'Analytics', icon: FaChartLine },
+    { id: 'bugs', label: 'Bugs', icon: FaBug },
   ];
 
   const filteredUsers = userSearch
@@ -407,47 +413,30 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="admin-theme app-mobile-type min-h-screen bg-slate-50 dark:bg-[#0a0a0a] text-slate-900 dark:text-white">
-      {/* Ambient BG Orbs */}
+    <div className="admin-theme app-mobile-type min-h-screen bg-admin-surface text-admin-on-surface flex font-['Inter']">
+      {/* Ambient BG Orbs from original */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="hidden dark:block absolute top-[-10%] left-[5%] w-[500px] h-[500px] bg-red-600/20 rounded-full blur-[120px] mix-blend-screen" />
-        <div className="hidden dark:block absolute bottom-[-5%] right-[5%] w-[450px] h-[450px] bg-orange-600/15 rounded-full blur-[120px] mix-blend-screen" />
+        <div className="absolute top-[-10%] left-[5%] w-[500px] h-[500px] bg-admin-primary/20 rounded-full blur-[120px] mix-blend-screen" />
+        <div className="absolute bottom-[-5%] right-[5%] w-[450px] h-[450px] bg-admin-secondary/15 rounded-full blur-[120px] mix-blend-screen" />
       </div>
 
-      {/* Admin Top Bar */}
-      <div className="bg-white/90 dark:bg-black/50 border-b border-gray-200 dark:border-white/5 px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          <FaShieldAlt className="text-red-500 text-xl" />
-          <span className="font-bold text-lg">RANKLEN Admin</span>
-          <span className="text-xs bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 px-2 py-0.5 rounded-full font-bold">SYSTEM</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-slate-500 dark:text-gray-400 text-sm">{admin?.username || 'admin'}</span>
-          <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 text-sm font-bold transition-colors">
-            <FaSignOutAlt /> Logout
-          </button>
-        </div>
-      </div>
+      {/* SideNavBar from layout components */}
+      <AdminSidebar 
+        admin={admin} 
+        tabs={tabs} 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        handleLogout={handleLogout} 
+      />
 
-      <div className="max-w-7xl mx-auto p-6 md:p-10 relative z-10">
-        {/* Tabs */}
-        <div className="flex gap-1 mb-8 bg-white border border-slate-200 shadow-sm dark:bg-white/5 dark:border-white/10 p-1 rounded-xl w-fit flex-wrap">
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)}
-              className={`px-4 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 relative ${activeTab === t.id ? 'bg-slate-900 text-white dark:bg-white dark:text-gray-900' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/10'}`}>
-              <t.icon className="text-xs" />
-              {t.label}
-              {t.badge > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold animate-pulse">
-                  {t.badge > 99 ? '99+' : t.badge}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+      {/* Main Canvas */}
+      <main className="flex-1 ml-64 min-h-screen flex flex-col relative overflow-x-hidden bg-admin-background">
+        {/* TopAppBar from layout components */}
+        <AdminHeader tabs={tabs} activeTab={activeTab} />
 
-        {/* ── TAB CONTENT — lazy loaded ── */}
-        <Suspense fallback={
+        <div className="p-8 md:p-10 flex flex-col gap-10 relative z-10 w-full max-w-7xl mx-auto">
+          {/* ── TAB CONTENT — lazy loaded ── */}
+          <Suspense fallback={
           <div className="flex items-center justify-center py-24">
             <FaSpinner className="animate-spin text-3xl text-blue-500 opacity-60" />
           </div>
@@ -530,13 +519,16 @@ const AdminDashboard = () => {
               teacherAnalytics={teacherAnalytics}
             />
           )}
+
+          {activeTab === 'bugs' && (
+            <BugsTab API_URL={API_URL} headers={headers} />
+          )}
         </Suspense>
-
-
-
       </div>
 
-
+      {/* Footer from layout components */}
+      <AdminFooter />
+      </main>
 
       {/* ── QUESTION PREVIEW MODAL ── */}
       <AnimatePresence>

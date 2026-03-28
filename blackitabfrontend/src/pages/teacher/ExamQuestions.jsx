@@ -5,22 +5,22 @@ import axios from 'axios';
 import { motion } from 'framer-motion'
 import {
     ArrowLeft,
-    CheckCircle,
-    XCircle,
     AlertTriangle,
     Sparkles,
     Loader2,
     BookOpen,
     Filter,
-    ChevronLeft,
-    ChevronRight,
+    Maximize,
+    CheckCircle,
+    XCircle,
     BrainCircuit,
-    Book,
-    Maximize
+    Book
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import API_URL from '../../config';
+import FocusModeOverlay from '../../components/teacher/pages/examQuestions/FocusModeOverlay';
+import QuestionCard from '../../components/teacher/pages/examQuestions/QuestionCard';
 
 const ExamQuestions = () => {
     const { examId } = useParams();
@@ -28,16 +28,17 @@ const ExamQuestions = () => {
     const location = useLocation();
     const { isDark } = useTheme();
 
-    // Detect institute mode from URL path
     const isInstituteMode = location.pathname.endsWith('/institute');
 
     const [questions, setQuestions] = useState([]);
     const [selectedAnswers, setSelectedAnswers] = useState({});
     const [results, setResults] = useState({});
-    const [activeSubject, setActiveSubject] = useState('All');
+    const [activeSubject, setActiveSubject] = useState(() => {
+        const params = new URLSearchParams(location.search);
+        return params.get('subject') || 'All';
+    });
     const [loading, setLoading] = useState(true);
     const [analyzing, setAnalyzing] = useState(false);
-    // const [generating, setGenerating] = useState(false);
     const [checkingId, setCheckingId] = useState(null);
     const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -47,15 +48,14 @@ const ExamQuestions = () => {
     const [focusQuestions, setFocusQuestions] = useState([]);
     const [focusIndex, setFocusIndex] = useState(0);
     const [focusSelectedOption, setFocusSelectedOption] = useState();
-    const [focusResultIndicator, setFocusResultIndicator] = useState(null); // 'correct' | 'wrong' | null
+    const [focusResultIndicator, setFocusResultIndicator] = useState(null);
     const [focusResults, setFocusResults] = useState([]); 
     
-    // Adaptive Sequence States
     const [isAdaptiveSequence, setIsAdaptiveSequence] = useState(false);
-    const [adaptiveStage, setAdaptiveStage] = useState(0); // Max 8
-    const [adaptiveFailedCount, setAdaptiveFailedCount] = useState(0); // Max 3
+    const [adaptiveStage, setAdaptiveStage] = useState(0);
+    const [adaptiveFailedCount, setAdaptiveFailedCount] = useState(0);
     const [currentAdaptiveQuestion, setCurrentAdaptiveQuestion] = useState(null);
-    const [currentAdaptiveDifficulty, setCurrentAdaptiveDifficulty] = useState(1); // 1: Easy, 2: Medium, 3: Hard
+    const [currentAdaptiveDifficulty, setCurrentAdaptiveDifficulty] = useState(1);
     const [isGeneratingAdaptive, setIsGeneratingAdaptive] = useState(false);
 
     const [showTheory, setShowTheory] = useState(false);
@@ -63,6 +63,7 @@ const ExamQuestions = () => {
     const [loadingTheory, setLoadingTheory] = useState(false);
     const [subjectHealth, setSubjectHealth] = useState(null);
     const [decayedDomains, setDecayedDomains] = useState(0);
+    const [dynamicSubjects, setDynamicSubjects] = useState([]);
 
     const difficultyMap = { 1: 'Easy', 2: 'Medium', 3: 'Hard' };
 
@@ -73,7 +74,7 @@ const ExamQuestions = () => {
     };
 
     const startFocusMode = () => {
-        const selectedQuestions = questions.slice(0, 8); // Limit to 8
+        const selectedQuestions = questions.slice(0, 8);
         setFocusQuestions(selectedQuestions);
         setFocusIndex(0);
         setFocusResults([]);
@@ -104,13 +105,9 @@ const ExamQuestions = () => {
         try {
             setCheckingId(qId);
             const token = localStorage.getItem('token');
-            // Check answer (If it's adaptive, we might just validate client-side since correctAnswer is in the object, but let's be consistent or use local)
-            // Wait, for adaptive, `correctAnswer` is strictly local to `currentAdaptiveQuestion`.
-            // Let's do local validation for adaptive to save a DB trip since it's not saved in DB anyway.
             let isCorrect = false;
             if (isAdaptiveSequence) {
                 isCorrect = focusSelectedOption === currentAdaptiveQuestion.correctAnswer;
-                // Wait 500ms for UX
                 await new Promise(r => setTimeout(r, 500));
             } else {
                 const res = await axios.post(
@@ -135,11 +132,10 @@ const ExamQuestions = () => {
                 }
             } else {
                 if (!isCorrect) {
-                    // Start Adaptive Sequence because original was wrong
                     setIsAdaptiveSequence(true);
                     setAdaptiveStage(0);
                     setAdaptiveFailedCount(0);
-                    setCurrentAdaptiveDifficulty(1); // Start Easy
+                    setCurrentAdaptiveDifficulty(1);
                 }
             }
         } catch (err) {
@@ -157,19 +153,30 @@ const ExamQuestions = () => {
             const res = await axios.post(
                 `${API_URL}/api/problems/exam/${examId}/adaptive-question`,
                 { 
-                    failedQuestionId: focusQuestions[focusIndex]._id,
+                    failedQuestionId: focusQuestions[focusIndex]?._id,
                     targetDifficulty: difficultyMap[difficultyDiff]
                 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            if (res.data.success) {
+            if (res.data.success && res.data.data) {
                 setCurrentAdaptiveQuestion(res.data.data);
+            } else {
+                // AI returned no usable data — skip adaptive gracefully
+                setIsAdaptiveSequence(false);
+                if (focusIndex < focusQuestions.length - 1) {
+                    setFocusIndex(prev => prev + 1);
+                } else {
+                    stopFocusMode();
+                }
             }
         } catch (err) {
             console.error('Error fetching adaptive part', err);
-            // Fallback if AI fails, just skip adaptive
             setIsAdaptiveSequence(false);
-            setFocusIndex(prev => prev + 1);
+            if (focusIndex < focusQuestions.length - 1) {
+                setFocusIndex(prev => prev + 1);
+            } else {
+                stopFocusMode();
+            }
         } finally {
             setIsGeneratingAdaptive(false);
         }
@@ -180,7 +187,6 @@ const ExamQuestions = () => {
         setLoadingTheory(true);
         try {
             const token = localStorage.getItem('token');
-            // Just use the current original question for theory
             const failedIds = [focusQuestions[focusIndex]._id];
             const res = await axios.post(
                 `${API_URL}/api/problems/exam/${examId}/theory`,
@@ -209,7 +215,6 @@ const ExamQuestions = () => {
             if (adaptiveFailedCount >= 3) {
                 fetchTheory();
             } else if (nextStage >= 8) {
-                // Adaptive sequence finished successfully
                 setIsAdaptiveSequence(false);
                 if (focusIndex < focusQuestions.length - 1) {
                     setFocusIndex(prev => prev + 1);
@@ -217,11 +222,9 @@ const ExamQuestions = () => {
                     stopFocusMode();
                 }
             } else {
-                // Fetch next adaptive question
                 fetchAdaptiveQuestion(currentAdaptiveDifficulty);
             }
         } else {
-            // we got it right, move to next original
             if (focusIndex < focusQuestions.length - 1) {
                 setFocusIndex(prev => prev + 1);
             } else {
@@ -239,6 +242,7 @@ const ExamQuestions = () => {
     };
 
     const currentExam = examMeta[examId] || { name: examId?.toUpperCase(), subjects: [], color: 'purple' };
+    const subjectsToShow = Array.from(new Set([...dynamicSubjects, activeSubject !== 'All' ? activeSubject : null].filter(Boolean)));
 
     useEffect(() => {
         const fetchQuestions = async () => {
@@ -256,11 +260,16 @@ const ExamQuestions = () => {
                 const res = await axios.get(url, config);
                 if (res.data.success) {
                     setQuestions(res.data.data);
+                    
+                    if (activeSubject === 'All') {
+                         const fetchedSubjects = Array.from(new Set(res.data.data.map(q => q.subject).filter(Boolean)));
+                         setDynamicSubjects(fetchedSubjects);
+                    }
+                    
                     const responseMeta = res.data.meta || {};
                     setSubjectHealth(responseMeta.subjectHealth || null);
                     setDecayedDomains(Number.isFinite(Number(responseMeta.decayedDomains)) ? Number(responseMeta.decayedDomains) : 0);
                     
-                    // Pre-fill past attempts
                     const initialResults = {};
                     const initialAnswers = {};
                     
@@ -306,6 +315,7 @@ const ExamQuestions = () => {
             return next;
         });
     };
+
     const handleSubmitAnswer = async (questionId) => {
         const selectedOption = selectedAnswers[questionId];
         if (selectedOption === undefined) return;
@@ -324,7 +334,6 @@ const ExamQuestions = () => {
                     [questionId]: { correct: res.data.isCorrect, correctAnswer: res.data.correctAnswer } 
                 }));
             }
-            // Logic removed: don't auto-start tutor on wrong answer. User must click "Get Help"
         } catch (err) {
             console.error('Error checking answer:', err);
         } finally {
@@ -332,51 +341,22 @@ const ExamQuestions = () => {
         }
     };
 
-    // const handleAIGenerate = async () => {
-    //     try {
-    //         setGenerating(true);
-    //         const token = localStorage.getItem('token');
-    //         const res = await axios.post(
-    //             `${API_URL}/api/problems/exam/${examId}/generate`,
-    //             {
-    //                 subject: activeSubject === 'All' ? currentExam.subjects[0] : activeSubject,
-    //                 count: 3,
-    //                 difficulty: 'Medium'
-    //             },
-    //             { headers: { Authorization: `Bearer ${token}` } }
-    //         );
-    //         if (res.data.success) {
-    //             setQuestions(prev => [...res.data.data, ...prev]);
-    //         }
-    //     } catch (err) {
-    //         console.error('Error generating questions:', err);
-    //     } finally {
-    //         setGenerating(false);
-    //     }
-    // };
-
-    const getOptionStyle = (questionId, optionIndex) => {
-        const result = results[questionId];
-        const isSelected = selectedAnswers[questionId] === optionIndex;
-
-         if (!result) {
-            return isSelected
-                ? isDark ? 'border-purple-500 bg-purple-500/20 text-white' : 'border-purple-500 bg-purple-50 text-purple-900'
-                : isDark ? 'border-gray-700 bg-gray-800/30 text-gray-300 hover:border-gray-500 hover:bg-gray-700/30' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50';
-        }
-
-        if (optionIndex === result.correctAnswer) {
-            return isDark ? 'border-green-500 bg-green-500/20 text-green-300' : 'border-green-500 bg-green-100 text-green-800';
-        }
-        if (isSelected && !result.correct) {
-            return isDark ? 'border-red-500 bg-red-500/20 text-red-300' : 'border-red-500 bg-red-100 text-red-800';
-        }
-        return isDark ? 'border-gray-700/50 bg-gray-800/20 text-gray-500' : 'border-gray-200 bg-gray-50 text-gray-400';
-    };
-
+    // Focus Mode Overlay
     if (isFocusMode) {
         const q = focusQuestions[focusIndex];
+        // Guard: if no question data is available, exit focus mode gracefully
+        if (!q && !isAdaptiveSequence && !isGeneratingAdaptive && !showTheory) {
+            return (
+                <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center p-8 ${isDark ? 'bg-gray-950' : 'bg-white'}`}>
+                    <BookOpen className={`h-16 w-16 mb-4 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
+                    <h2 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>No More Questions Available</h2>
+                    <p className={`text-sm mb-6 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>You've completed all available questions, or the AI service is currently unavailable.</p>
+                    <button onClick={stopFocusMode} className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-all">Exit Focus Mode</button>
+                </div>
+            );
+        }
         return (
+            <>
             <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 transition-colors duration-300 ${isDark ? 'bg-gray-950' : 'bg-gradient-to-br from-gray-50 via-white to-purple-50'}`}>
                 {/* Progress Bar */}
                 <div className={`absolute top-0 left-0 right-0 h-1.5 ${isDark ? 'bg-gray-800' : 'bg-gray-200'}`}>
@@ -476,12 +456,12 @@ const ExamQuestions = () => {
 
                             {/* Question Text */}
                             <p className={`text-2xl font-medium leading-relaxed mb-8 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                {isAdaptiveSequence && currentAdaptiveQuestion ? currentAdaptiveQuestion.question : q.question}
+                                {isAdaptiveSequence && currentAdaptiveQuestion ? currentAdaptiveQuestion.question : (q?.question || 'Loading question...')}
                             </p>
 
                             {/* Options */}
                             <div className="space-y-3 mb-8">
-                                {(isAdaptiveSequence && currentAdaptiveQuestion ? currentAdaptiveQuestion.options : q.options).map((opt, i) => {
+                                {(isAdaptiveSequence && currentAdaptiveQuestion ? currentAdaptiveQuestion.options : (q?.options || [])).map((opt, i) => {
                                     const isSelected = focusSelectedOption === i;
                                     let optionStyle = isDark
                                         ? 'border-gray-700 text-gray-300 hover:border-gray-500 hover:bg-gray-800/60'
@@ -585,6 +565,27 @@ const ExamQuestions = () => {
                     )}
                 </div>
             </div>
+            <FocusModeOverlay
+                focusQuestions={focusQuestions}
+                focusIndex={focusIndex}
+                focusSelectedOption={focusSelectedOption}
+                setFocusSelectedOption={setFocusSelectedOption}
+                focusResultIndicator={focusResultIndicator}
+                isAdaptiveSequence={isAdaptiveSequence}
+                adaptiveStage={adaptiveStage}
+                adaptiveFailedCount={adaptiveFailedCount}
+                currentAdaptiveQuestion={currentAdaptiveQuestion}
+                currentAdaptiveDifficulty={currentAdaptiveDifficulty}
+                isGeneratingAdaptive={isGeneratingAdaptive}
+                showTheory={showTheory}
+                loadingTheory={loadingTheory}
+                theoryContent={theoryContent}
+                checkingId={checkingId}
+                handleFocusSubmit={handleFocusSubmit}
+                handleFocusNext={handleFocusNext}
+                stopFocusMode={stopFocusMode}
+            />
+            </>
         );
     }
 
@@ -601,6 +602,7 @@ const ExamQuestions = () => {
                     </div>
                 </div>
             )}
+
             {/* Header */}
             <div className="mb-8">
                 <button
@@ -631,7 +633,6 @@ const ExamQuestions = () => {
                         )}
                     </div>
 
-                    {/* Focus Mode Button */}
                     {questions.length > 0 && (
                         <button
                             onClick={startFocusMode}
@@ -658,7 +659,7 @@ const ExamQuestions = () => {
                         All Subjects
                     </div>
                 </button>
-                {currentExam.subjects.map((subject) => (
+                {subjectsToShow.map((subject) => (
                     <button
                         key={subject}
                         onClick={() => setActiveSubject(subject)}
@@ -701,176 +702,22 @@ const ExamQuestions = () => {
                     <BookOpen className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
                     <p className="text-gray-600 dark:text-gray-400 text-lg mb-2">No questions found for this exam yet.</p>
                     <p className="text-gray-500 text-sm mb-6">Click the button above to generate some AI questions!</p>
-                    {/* <button
-                        onClick={handleAIGenerate}
-                        disabled={generating}
-                        className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-purple-500/30"
-                    >
-                        <div className="flex items-center gap-2">
-                            <Sparkles className="h-5 w-5" />
-                            Generate Questions
-                        </div>
-                    </button> */}
                 </div>
             ) : (
                 <motion.div initial="hidden" animate="visible">
-                    {(() => {
-                        const q = questions[currentIndex];
-                        return (
-                            <div
-                                key={q._id}
-                                className="bg-white/80 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 p-6 transition-all shadow-sm dark:shadow-none"
-                            >
-                                {/* Question Header */}
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <span className="px-3 py-1 bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 text-xs font-semibold rounded-full">
-                                                Q{currentIndex + 1} of {questions.length}
-                                            </span>
-                                            {q.subject && (
-                                                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 text-xs rounded-full">
-                                                    {q.subject}
-                                                </span>
-                                            )}
-                                            {q.difficulty && (
-                                                <span className={`px-3 py-1 text-xs rounded-full ${q.difficulty === 'Easy' ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400' :
-                                                    q.difficulty === 'Hard' ? 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400' :
-                                                        'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400'
-                                                    }`}>
-                                                    {q.difficulty}
-                                                </span>
-                                            )}
-                                            {Number.isFinite(q.eloGap) && (
-                                                <span className="px-3 py-1 bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 text-xs rounded-full">
-                                                    Elo gap {q.eloGap}
-                                                </span>
-                                            )}
-                                            {q.isAIGenerated && (
-                                                <span className="px-3 py-1 bg-pink-100 dark:bg-pink-500/20 text-pink-700 dark:text-pink-300 text-xs rounded-full flex items-center gap-1">
-                                                    <Sparkles className="h-3 w-3" /> AI
-                                                </span>
-                                            )}
-                                            {q.format === 'Digital' && (
-                                                <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs rounded-full">
-                                                    Digital
-                                                </span>
-                                            )}
-                                            {q.format === 'Paper' && (
-                                                <span className="px-3 py-1 bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300 text-xs rounded-full">
-                                                    Paper
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className="text-gray-900 dark:text-white text-lg font-medium leading-relaxed">
-                                            {q.question}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Options */}
-                                <div className="space-y-3 mb-4">
-                                    {q.options.map((opt, optIdx) => (
-                                        <button
-                                            key={optIdx}
-                                            onClick={() => handleSelectOption(q._id, optIdx)}
-                                            disabled={results[q._id] !== undefined}
-                                            className={`w-full text-left px-4 py-3 rounded-xl border transition-all duration-200 flex items-center gap-3 ${getOptionStyle(q._id, optIdx)} ${results[q._id] ? 'cursor-default' : 'cursor-pointer'
-                                                }`}
-                                        >
-                                            <span className="w-8 h-8 flex items-center justify-center rounded-full border border-current/30 text-sm font-semibold shrink-0">
-                                                {String.fromCharCode(65 + optIdx)}
-                                            </span>
-                                            <span className="flex-1">{opt}</span>
-                                            {results[q._id] && optIdx === results[q._id].correctAnswer && (
-                                                <CheckCircle className="h-5 w-5 text-green-400 shrink-0" />
-                                            )}
-                                            {results[q._id] && selectedAnswers[q._id] === optIdx && !results[q._id].correct && (
-                                                <XCircle className="h-5 w-5 text-red-400 shrink-0" />
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
-
-                                {/* Submit / Result */}
-                                {!results[q._id] ? (
-                                    <button
-                                        onClick={() => handleSubmitAnswer(q._id)}
-                                        disabled={selectedAnswers[q._id] === undefined || checkingId === q._id}
-                                        className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-medium rounded-xl transition-all duration-200 flex items-center gap-2"
-                                    >
-                                        {checkingId === q._id ? (
-                                            <>
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                Checking...
-                                            </>
-                                        ) : (
-                                            'Submit Answer'
-                                        )}
-                                    </button>
-                                ) : (
-                                    <>
-                                        <div className={`p-4 rounded-xl border ${results[q._id].correct
-                                            ? 'bg-green-100 dark:bg-green-500/10 border-green-200 dark:border-green-500/30'
-                                            : 'bg-red-100 dark:bg-red-500/10 border-red-200 dark:border-red-500/30'
-                                            }`}>
-                                            <div className="flex items-center gap-2">
-                                                {results[q._id].correct ? (
-                                                    <>
-                                                        <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                                                        <span className="text-green-700 dark:text-green-400 font-semibold">Correct!</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                                                        <span className="text-red-700 dark:text-red-400 font-semibold">Not quite right</span>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Action Button: Reattempt (Manual Trigger) */}
-                                        {!results[q._id].correct && (
-                                            <div className="mt-4 flex justify-end">
-                                                <button
-                                                    onClick={() => handleReattempt(q._id)}
-                                                    className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-600 hover:bg-gray-700 text-gray-300 rounded-lg transition-all"
-                                                >
-                                                    <ArrowLeft className="h-4 w-4" />
-                                                    Reattempt Question
-                                                </button>
-                                            </div>
-                                        )}
-                                    </>
-                                )}
-                            </div>
-                        );
-                    })()}
-
-                    {/* Navigation */}
-                    <div className="flex items-center justify-between mt-6">
-                        <button
-                            onClick={() => setCurrentIndex(prev => prev - 1)}
-                            disabled={currentIndex === 0}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:border-gray-500 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600 dark:text-gray-300 rounded-xl transition-all"
-                        >
-                            <ChevronLeft className="h-5 w-5" />
-                            Previous
-                        </button>
-
-                        <span className="text-gray-500 dark:text-gray-400 text-sm">
-                            {currentIndex + 1} / {questions.length}
-                        </span>
-
-                        <button
-                            onClick={() => setCurrentIndex(prev => prev + 1)}
-                            disabled={currentIndex === questions.length - 1}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:border-gray-500 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600 dark:text-gray-300 rounded-xl transition-all"
-                        >
-                            Next
-                            <ChevronRight className="h-5 w-5" />
-                        </button>
-                    </div>
+                    <QuestionCard
+                        question={questions[currentIndex]}
+                        currentIndex={currentIndex}
+                        totalQuestions={questions.length}
+                        selectedAnswer={selectedAnswers[questions[currentIndex]._id]}
+                        result={results[questions[currentIndex]._id]}
+                        checkingId={checkingId}
+                        onSelectOption={handleSelectOption}
+                        onSubmitAnswer={handleSubmitAnswer}
+                        onReattempt={handleReattempt}
+                        onPrev={() => setCurrentIndex(prev => prev - 1)}
+                        onNext={() => setCurrentIndex(prev => prev + 1)}
+                    />
                 </motion.div>
             )}
         </div>

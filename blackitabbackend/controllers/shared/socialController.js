@@ -2,6 +2,7 @@ const User = require('../../models/User');
 const Connection = require('../../models/Connection');
 const Notification = require('../../models/Notification');
 const Post = require('../../models/Post');
+const { escapeRegex } = require('../../middleware/accessControl');
 
 // --- Search ---
 
@@ -11,14 +12,15 @@ exports.searchUsers = async (req, res) => {
         const { query } = req.query;
         const currentUserId = req.user ? req.user._id : null;
 
-        if (!query) {
+        const escaped = escapeRegex(query);
+        if (!escaped) {
             return res.status(400).json({ success: false, message: 'Search query required' });
         }
 
         const users = await User.find({
             $or: [
-                { name: { $regex: query, $options: 'i' } },
-                { email: { $regex: query, $options: 'i' } }
+                { name: { $regex: escaped, $options: 'i' } },
+                { email: { $regex: escaped, $options: 'i' } }
             ]
         }).select('name email role followerCount subscriberCount profileImage bio').limit(20);
 
@@ -304,7 +306,8 @@ exports.getFollowers = async (req, res) => {
             }));
 
         if (search) {
-            const re = new RegExp(search, 'i');
+            const safeSearch = escapeRegex(search);
+            const re = new RegExp(safeSearch, 'i');
             users = users.filter(u => re.test(u.name));
         }
 
@@ -423,34 +426,44 @@ exports.getUserProfile = async (req, res) => {
             ? await Post.find({ user: userId, contentType: 'post' }).sort({ createdAt: -1 }).select('_id').lean()
             : [];
 
+        // Data minimization: hide internal fields from non-followers of private accounts
+        const profileData = {
+            _id: user._id,
+            id: user._id,
+            name: user.name,
+            role: user.role,
+            bio: user.bio || '',
+            profileImage: user.profileImage || '',
+            isPrivate: !!user.isPrivate,
+            isVerified: !!user.isVerified,
+            followerCount: user.followerCount || 0,
+            followingCount: user.followingCount || 0,
+            subscriberCount: user.subscriberCount || 0,
+            createdAt: user.createdAt,
+            isFollowing: !!isFollowing,
+            isRequested: !!isRequested,
+            isFollower: !!isFollower,
+            isOwnProfile,
+            canViewPrivateContent,
+            publicPostIds: publicPostIds.map((p) => p._id)
+        };
+
+        // Only expose institute/academic details to: self, followers of private accounts, or public accounts
+        if (canViewPrivateContent) {
+            profileData.instituteId = user.instituteId || null;
+            profileData.institute = instituteInfo;
+            profileData.departments = Array.isArray(user.departments) ? user.departments.filter(Boolean) : [];
+            profileData.batchYear = user.batchYear;
+            profileData.division = user.division;
+            profileData.specialization = user.specialization;
+        } else {
+            // Private account viewed by non-follower: hide academic details
+            profileData.institute = instituteInfo ? { name: instituteInfo.name } : null;
+        }
+
         res.json({
             success: true,
-            user: {
-                _id: user._id,
-                id: user._id,
-                name: user.name,
-                role: user.role,
-                bio: user.bio || '',
-                profileImage: user.profileImage || '',
-                isPrivate: !!user.isPrivate,
-                isVerified: !!user.isVerified,
-                followerCount: user.followerCount || 0,
-                followingCount: user.followingCount || 0,
-                subscriberCount: user.subscriberCount || 0,
-                instituteId: user.instituteId || null,
-                institute: instituteInfo,
-                departments: Array.isArray(user.departments) ? user.departments.filter(Boolean) : [],
-                batchYear: user.batchYear,
-                division: user.division,
-                specialization: user.specialization,
-                createdAt: user.createdAt,
-                isFollowing: !!isFollowing,
-                isRequested: !!isRequested,
-                isFollower: !!isFollower,
-                isOwnProfile,
-                canViewPrivateContent,
-                publicPostIds: publicPostIds.map((p) => p._id)
-            }
+            user: profileData
         });
     } catch (error) {
         

@@ -53,6 +53,9 @@ const userSchema = new mongoose.Schema({
   // Privacy
   isPrivate: { type: Boolean, default: false },
 
+  // Anti-spam cooldown (set by userRateLimit middleware)
+  restrictedUntil: { type: Date, default: null },
+
   // Profile
   bio: {
     type: String,
@@ -132,7 +135,7 @@ const userSchema = new mongoose.Schema({
 
   // --- MODERATION ---
   isBanned: { type: Boolean, default: false }
-}, { strict: false });
+}, { strict: true });
 
 // Hash password before saving (skip for OAuth users with no password)
 userSchema.pre('save', async function (next) {

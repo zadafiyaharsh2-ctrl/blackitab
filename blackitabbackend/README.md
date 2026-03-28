@@ -6,6 +6,7 @@ Node.js/Express backend with MongoDB database for user authentication.
 
 ### 1. Install Dependencies
 ```bash
+# 1. Install dependencies
 npm install
 ```
 

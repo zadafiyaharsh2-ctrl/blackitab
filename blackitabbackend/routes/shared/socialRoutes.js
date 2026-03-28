@@ -2,12 +2,13 @@ const express = require('express');
 const router = express.Router();
 const socialController = require('../../controllers/shared/socialController');
 const authMiddleware = require('../../middleware/auth');
+const { perUserLimit } = require('../../middleware/userRateLimit');
 
 // Protect all social routes with authentication
 router.use(authMiddleware);
 
 // Search
-router.get('/search', socialController.searchUsers);
+router.get('/search', perUserLimit({ max: 30, windowMs: 60000, feature: 'search' }), socialController.searchUsers);
 router.get('/user/:id', socialController.getUserProfile);
 
 // Notifications
@@ -18,8 +19,8 @@ router.delete('/notifications/:id', socialController.deleteNotification);
 router.delete('/notifications', socialController.clearAllNotifications);
 
 // Follow/Unfollow
-router.post('/follow/:id', socialController.followUser);
-router.post('/unfollow/:id', socialController.unfollowUser);
+router.post('/follow/:id', perUserLimit({ max: 30, windowMs: 60000, feature: 'follows' }), socialController.followUser);
+router.post('/unfollow/:id', perUserLimit({ max: 30, windowMs: 60000, feature: 'follows' }), socialController.unfollowUser);
 router.post('/accept-follow/:senderId', socialController.acceptFollowRequest);
 router.post('/reject-follow/:senderId', socialController.rejectFollowRequest);
 

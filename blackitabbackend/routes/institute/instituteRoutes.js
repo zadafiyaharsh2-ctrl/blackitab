@@ -3,6 +3,7 @@ const router = express.Router();
 const instituteController = require('../../controllers/institute/instituteController');
 const protect = require('../../middleware/auth');
 const { requireRole, requireSameInstitute } = require('../../middleware/roleMiddleware');
+const { validateObjectId } = require('../../middleware/accessControl');
 
 // Public: Verify institute code for registration preview
 router.get('/verify/:code', instituteController.verifyCode);
@@ -22,36 +23,45 @@ router.get('/departments/:deptName/details', requireRole('institute', 'hod'), in
 const { handleBannerUpload } = require('../../middleware/upload');
 router.put('/profile', requireRole('institute'), handleBannerUpload, instituteController.updateInstituteProfile);
 
-// ── Member Management ──
+// ── Member Management & Hierarchy ──
+router.get('/hierarchy', requireRole('institute', 'hod'), instituteController.getInstituteHierarchy);
 router.get('/members', requireRole('hod', 'institute', 'teacher'), instituteController.getMembers);
 router.post('/members', requireRole('institute'), instituteController.addMember);
-router.put('/members/:id/role', requireRole('hod', 'institute'), instituteController.changeMemberRole);
-router.put('/members/:id/ban', requireRole('institute'), instituteController.toggleBanMember);
-router.delete('/members/:id', requireRole('institute'), instituteController.removeMember);
+router.put('/members/:id/role', requireRole('hod', 'institute'), validateObjectId('id'), instituteController.changeMemberRole);
+router.put('/members/:id/ban', requireRole('institute'), validateObjectId('id'), instituteController.toggleBanMember);
+router.delete('/members/:id', requireRole('institute'), validateObjectId('id'), instituteController.removeMember);
 
 // ── Theory Management ──
 router.get('/theory', requireRole('institute', 'hod', 'teacher', 'student'), instituteController.listInstituteTheory);
 router.post('/theory', requireRole('institute', 'hod', 'teacher'), instituteController.addTheory);
-router.put('/theory/:id', requireRole('institute', 'hod', 'teacher'), instituteController.updateTheory);
-router.delete('/theory/:id', requireRole('institute', 'hod', 'teacher'), instituteController.deleteTheory);
+router.put('/theory/:id', requireRole('institute', 'hod', 'teacher'), validateObjectId('id'), instituteController.updateTheory);
+router.delete('/theory/:id', requireRole('institute', 'hod', 'teacher'), validateObjectId('id'), instituteController.deleteTheory);
 
 // ── Question Management (institute-scoped) ──
 router.get('/questions', requireRole('institute', 'hod', 'teacher'), instituteController.listInstituteQuestions);
-router.put('/questions/:id', requireRole('institute', 'hod'), instituteController.updateInstituteQuestion);
-router.delete('/questions/:id', requireRole('institute', 'hod'), instituteController.deleteInstituteQuestion);
+router.put('/questions/:id', requireRole('institute', 'hod'), validateObjectId('id'), instituteController.updateInstituteQuestion);
+router.delete('/questions/:id', requireRole('institute', 'hod'), validateObjectId('id'), instituteController.deleteInstituteQuestion);
 
 // ── Post Moderation (institute-scoped) ──
 router.get('/posts', requireRole('institute', 'hod'), instituteController.listInstitutePosts);
-router.delete('/posts/:id', requireRole('institute'), instituteController.deleteInstitutePost);
+router.delete('/posts/:id', requireRole('institute'), validateObjectId('id'), instituteController.deleteInstitutePost);
 
 // ── Analytics ──
 router.get('/analytics', requireRole('institute', 'hod', 'teacher'), instituteController.getInstituteAnalytics);
 
-// ── Teacher Feedback & Monitoring ──
+// ── Teacher Feedback, Monitoring & Complaints ──
 router.get('/teachers', requireRole('institute', 'hod'), instituteController.listTeachersWithRatings);
 router.get('/teachers/:id/feedback', requireRole('institute', 'hod'), instituteController.getTeacherFeedback);
 router.get('/teacher/:id/details', requireRole('institute', 'hod'), instituteController.getTeacherFullDetails);
 router.post('/feedback', requireRole('student'), instituteController.submitFeedback);
+
+router.post('/complaints', requireRole('student'), instituteController.submitComplaint);
+router.get('/complaints', requireRole('institute', 'hod'), instituteController.getInstituteComplaints);
+router.put('/complaints/:id', requireRole('institute', 'hod'), validateObjectId('id'), instituteController.updateComplaintStatus);
+
+// ── Timetable Management ──
+router.post('/timetable/:batchId', requireRole('institute', 'hod'), instituteController.saveTimetable);
+router.get('/timetable/:batchId', instituteController.getTimetable);
 
 // ── Join Institute (any authenticated user without an institute) ──
 router.post('/join', instituteController.joinInstitute);
@@ -68,6 +78,6 @@ router.put('/material/:id', requireRole('institute', 'hod'), instituteController
 router.delete('/material/:id', requireRole('institute', 'hod'), instituteController.deleteInstituteMaterial);
 
 // ── Student Detail View ──
-router.get('/student/:id/detail', requireRole('institute', 'hod'), instituteController.getStudentDetail);
+router.get('/student/:id/detail', requireRole('institute', 'hod'), validateObjectId('id'), instituteController.getStudentDetail);
 
 module.exports = router;

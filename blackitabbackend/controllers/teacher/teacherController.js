@@ -1024,14 +1024,22 @@ exports.getDepartmentTeacherDetail = async (req, res) => {
         const teacher = await User.findById(req.params.id).select('-password');
         if (!teacher) return res.status(404).json({ success: false, message: 'Teacher not found' });
 
-        const [batches, questionCount, assignmentCount, examCount, feedback, scores] = await Promise.all([
+        const [batches, questionCount, assignmentCount, examCount, rawFeedback, scores] = await Promise.all([
             Batch.find({ teacherIds: teacher._id }).select('name year section'),
             ExamQuestion.countDocuments({ createdBy: teacher._id }),
             Assignment.countDocuments({ teacherId: teacher._id }),
             Exam.countDocuments({ teacherId: teacher._id }),
-            TeacherFeedback.find({ teacherId: teacher._id }).populate('studentId', 'name').sort({ createdAt: -1 }).limit(20),
+            TeacherFeedback.find({ teacherId: teacher._id }).populate('studentId', 'name').sort({ createdAt: -1 }).limit(20).lean(),
             TeacherScore.find({ teacherId: teacher._id })
         ]);
+
+        // Anonymize feedback where student chose to remain anonymous
+        const feedback = rawFeedback.map(f => {
+            if (f.isAnonymous) {
+                return { ...f, studentId: { _id: null, name: 'Anonymous Student' } };
+            }
+            return f;
+        });
 
         res.json({
             success: true,
@@ -1057,11 +1065,21 @@ exports.getDepartmentFeedback = async (req, res) => {
         const teachers = await User.find(userFilter).select('_id');
         const teacherIds = teachers.map(t => t._id);
 
-        const feedback = await TeacherFeedback.find({ teacherId: { $in: teacherIds } })
+        const rawFeedback = await TeacherFeedback.find({ teacherId: { $in: teacherIds } })
             .populate('teacherId', 'name email')
-            .populate('studentId', 'name email')
+            .populate('studentId', 'name email profileImage')
+            .populate('batchId', 'name classCode')
             .sort({ createdAt: -1 })
-            .limit(100);
+            .limit(100)
+            .lean();
+
+        // Anonymize feedback where student chose to remain anonymous
+        const feedback = rawFeedback.map(f => {
+            if (f.isAnonymous) {
+                return { ...f, studentId: { _id: null, name: 'Anonymous Student', email: null, profileImage: null } };
+            }
+            return f;
+        });
 
         res.json({ success: true, data: feedback });
     } catch (error) {
@@ -1102,7 +1120,7 @@ exports.getDepartmentContent = async (req, res) => {
 // POST /api/teacher/attendance (Saves or updates attendance for a class on a specific date)
 exports.submitAttendance = async (req, res) => {
     try {
-        const { classId, date, records } = req.body;
+        const { classId, date, sessionType = 'Class', records } = req.body;
         if (!classId || !date || !records || !Array.isArray(records)) {
             return res.status(400).json({ success: false, message: 'classId, date, and records array are required' });
         }
@@ -1119,7 +1137,7 @@ exports.submitAttendance = async (req, res) => {
 
         // upsert completely blocks duplicate logs and automatically handles updates on mistakes
         const attendance = await Attendance.findOneAndUpdate(
-            { classId, date: attendanceDate },
+            { classId, date: attendanceDate, sessionType },
             {
                 instituteId: req.user.instituteId,
                 teacherId: req.user._id,
@@ -1153,6 +1171,9 @@ exports.getAttendanceHistory = async (req, res) => {
             const date = new Date(req.query.date);
             date.setHours(0, 0, 0, 0);
             filter.date = date;
+        }
+        if (req.query.sessionType) {
+            filter.sessionType = req.query.sessionType;
         }
 
         const history = await Attendance.find(filter)

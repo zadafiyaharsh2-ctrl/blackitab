@@ -33,4 +33,8 @@ const attemptSchema = new mongoose.Schema({
 // Indexing for fast specific-question lookups
 attemptSchema.index({ userId: 1, questionId: 1 });
 
+// Compound indexes for high-read analytics (leaderboard, dashboard, weekly activity)
+attemptSchema.index({ userId: 1, isCorrect: 1 });
+attemptSchema.index({ userId: 1, attemptedAt: -1 });
+
 module.exports = mongoose.model('Attempt', attemptSchema);

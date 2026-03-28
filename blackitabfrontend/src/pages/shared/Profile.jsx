@@ -215,6 +215,8 @@ const Profile = () => {
               onOpenClass={handleOpenClass}
               onOpenClasses={handleOpenClasses}
               onOpenProfile={(targetId) => navigate(`/profile/${targetId}`)}
+              onOpenPosts={() => setActiveTab('posts')}
+              onOpenStudyContent={() => navigate(`/study-content?author=${user?._id || user?.id}`)}
             />
           )}
 

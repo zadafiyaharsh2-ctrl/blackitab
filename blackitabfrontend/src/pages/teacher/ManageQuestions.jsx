@@ -18,64 +18,68 @@ const ManageQuestions = () => {
   const [activeTab, setActiveTab] = useState('my-bank');
 
   return (
-    <div className={`min-h-screen relative p-3 sm:p-4 md:p-8 lg:p-10 font-sans transition-colors ${
-      isDark ? 'text-gray-100 bg-[#05000a]' : 'text-gray-900 bg-gray-50'
-    } overflow-x-hidden pt-20`}>
-      <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
-        {/* Header & Tabs */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className={`min-h-screen relative p-4 sm:p-8 lg:p-12 font-sans transition-colors ${
+      isDark ? 'bg-[#05000a] text-gray-100' : 'bg-[#f8f9fa] text-gray-900'
+    } overflow-x-hidden pt-24`}>
+      <div className="max-w-7xl mx-auto space-y-10">
+        
+        {/* Curated Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b pb-8 border-gray-200 dark:border-white/10">
           <div>
-            <h1 className={`text-3xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Question Management
+            <h1 className={`text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Question Intelligence
             </h1>
-            <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Manage your question bank, create new ones, or use AI generation.
+            <p className={`text-base font-medium mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              Manage and curate your scholarly assessments within the grand registry.
             </p>
           </div>
 
-          <div className={`flex w-full md:w-auto flex-wrap p-1 rounded-xl glass-panel ${isDark ? 'border-white/10' : 'border-gray-200 shadow-sm'}`}>
+          {/* Segmented Control - Pill Style */}
+          <div className={`inline-flex p-1.5 rounded-full ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white border border-gray-200 shadow-sm'}`}>
             <button onClick={() => setActiveTab('my-bank')}
-              className={`min-w-0 flex-1 sm:flex-none justify-center flex items-center gap-2 px-3 sm:px-5 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all ${
+              className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all ${
                 activeTab === 'my-bank'
-                  ? 'bg-blue-500 text-white shadow-md'
-                  : isDark ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-[#0061FF] text-white shadow-md'
+                  : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
               }`}>
-              <FaList /> My Bank
+              My Bank
             </button>
             <button onClick={() => setActiveTab('create')}
-              className={`min-w-0 flex-1 sm:flex-none justify-center flex items-center gap-2 px-3 sm:px-5 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all ${
+              className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all ${
                 activeTab === 'create'
-                  ? 'bg-emerald-500 text-white shadow-md'
-                  : isDark ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-[#0061FF] text-white shadow-md'
+                  : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
               }`}>
-              <FaPlus /> Create Manually
+              Manual
             </button>
             <button onClick={() => setActiveTab('ai')}
-              className={`min-w-0 flex-1 sm:flex-none justify-center flex items-center gap-2 px-3 sm:px-5 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all ${
+              className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all ${
                 activeTab === 'ai'
-                  ? 'bg-purple-500 text-white shadow-md'
-                  : isDark ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-[#0061FF] text-white shadow-md'
+                  : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
               }`}>
-              <FaRobot /> AI Generator
+              AI Gen
             </button>
             <button onClick={() => setActiveTab('paper')}
-              className={`min-w-0 flex-1 sm:flex-none justify-center flex items-center gap-2 px-3 sm:px-5 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all ${
+              className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all ${
                 activeTab === 'paper'
-                  ? 'bg-rose-500 text-white shadow-md'
-                  : isDark ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-[#0061FF] text-white shadow-md'
+                  : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
               }`}>
-              <FaFilePdf /> Generate Paper
+              Papers
             </button>
           </div>
         </div>
 
-        {/* Tab Content */}
-        <AnimatePresence mode="wait">
-          {activeTab === 'my-bank' && <MyBankTab key="my-bank" isDark={isDark} />}
-          {activeTab === 'create' && <CreateTab key="create" isDark={isDark} setActiveTab={setActiveTab} />}
-          {activeTab === 'ai' && <AIGeneratorTab key="ai" isDark={isDark} />}
-          {activeTab === 'paper' && <GeneratePaperTab key="paper" isDark={isDark} />}
-        </AnimatePresence>
+        {/* Dynamic Canvas */}
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <AnimatePresence mode="wait">
+            {activeTab === 'my-bank' && <MyBankTab key="my-bank" isDark={isDark} />}
+            {activeTab === 'create' && <CreateTab key="create" isDark={isDark} setActiveTab={setActiveTab} />}
+            {activeTab === 'ai' && <AIGeneratorTab key="ai" isDark={isDark} />}
+            {activeTab === 'paper' && <GeneratePaperTab key="paper" isDark={isDark} />}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );

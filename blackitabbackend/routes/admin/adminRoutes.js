@@ -64,4 +64,8 @@ router.get('/materials', adminController.getAllMaterials);
 router.put('/material/:id', adminController.updateMaterial);
 router.delete('/material/:id', adminController.deleteMaterial);
 
+// ── Bug Reports ──
+router.get('/bugs', adminController.getAllBugs);
+router.put('/bugs/:id', adminController.updateBug);
+
 module.exports = router;

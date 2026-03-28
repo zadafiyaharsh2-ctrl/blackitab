@@ -56,6 +56,7 @@ import Theory from './pages/student/Theory';
 import SocialListPage from './pages/student/SocialListPage';
 import Messages from './pages/shared/Messages';
 import Notifications from './pages/shared/Notifications';
+import Contact from './pages/public/Contact';
 import CreatePost from './pages/student/CreatePost';
 import StudyContent from './pages/student/StudyContent';
 import ContentDetail from './pages/student/ContentDetail';
@@ -83,6 +84,7 @@ import HodDepartmentTeachers from './pages/hod/HodDepartmentTeachers';
 import TeacherPerformance from './pages/hod/TeacherPerformance';
 import HodContentReview from './pages/hod/HodContentReview';
 import HodAttendanceView from './pages/hod/HodAttendanceView';
+import HodFeedbackOverview from './pages/hod/HodFeedbackOverview';
 import TeacherBatchMaterialForm from './pages/teacher/TeacherBatchMaterialForm';
 import TeacherBatchAssignmentForm from './pages/teacher/TeacherBatchAssignmentForm';
 
@@ -98,8 +100,12 @@ import TheoryChecking from './pages/institute/TheoryChecking';
 import QuestionChecker from './pages/institute/QuestionChecker';
 import JoinRequestsPanel from './pages/institute/JoinRequestsPanel';
 import InstituteNotifications from './pages/institute/InstituteNotifications';
+import InstituteHierarchy from './pages/institute/InstituteHierarchy';
+import InstituteComplaints from './pages/institute/InstituteComplaints';
+import InstituteTimetable from './pages/institute/InstituteTimetable';
 
 import TeacherAttendance from './pages/teacher/TeacherAttendance';
+import SubmitComplaint from './pages/student/SubmitComplaint';
 import AdminLogin from './pages/public/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 // ============================================================================
@@ -108,6 +114,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import Sidebar from './components/shared/Sidebar';
 import ProtectedRoute from './components/auth/ProtectedRoute'; // Wrapper that checks if user is logged in
 import PublicRoute from './components/auth/PublicRoute';     // Wrapper for pages accessible only when logged out (like Login)
+import BugReporter from './components/shared/BugReporter'; // Global bug reporter
 
 const SIDEBAR_BREAKPOINT = 768;
 
@@ -269,6 +276,7 @@ function App() {
       {/* BrowserRouter enables URL-based routing */}
       <SocketContextProvider authUser={user}>
         <BrowserRouter>
+          <BugReporter />
           <Routes>
 
             {/* ===== PUBLIC ROUTES ===== */}
@@ -299,6 +307,12 @@ function App() {
                   <LandingPage />
                 </PublicRoute>
               }
+            />
+
+            {/* ===== CONTACT PAGE ===== */}
+            <Route
+              path="/contact"
+              element={<Contact />}
             />
 
             {/* ===== PROTECTED ROUTES ===== */}
@@ -367,7 +381,7 @@ function App() {
             <Route
               path="/school-analytics"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <SchoolAnalytics />
                   </MainLayout>
@@ -425,7 +439,7 @@ function App() {
             <Route
               path="/question-management"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <ManageQuestions />
                   </MainLayout>
@@ -721,9 +735,20 @@ function App() {
 
             {/* Teacher / HOD Dashboard */}
             <Route
+              path="/student/complaints"
+              element={
+                <ProtectedRoute requiredRoles={['student']}>
+                  <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
+                    <SubmitComplaint />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
               path="/teacher-dashboard"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherDashboard />
                   </MainLayout>
@@ -738,7 +763,7 @@ function App() {
             <Route
               path="/teacher/batches"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherBatches />
                   </MainLayout>
@@ -750,7 +775,7 @@ function App() {
             <Route
               path="/teacher/batch/:batchId"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherBatchDetail />
                   </MainLayout>
@@ -762,7 +787,7 @@ function App() {
             <Route
               path="/teacher/batch/:batchId/materials/new"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherBatchMaterialForm />
                   </MainLayout>
@@ -772,7 +797,7 @@ function App() {
             <Route
               path="/teacher/batch/:batchId/materials/edit/:materialId"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherBatchMaterialForm />
                   </MainLayout>
@@ -784,7 +809,7 @@ function App() {
             <Route
               path="/teacher/batch/:batchId/assignments/new"
               element={
-                <ProtectedRoute requiredRoles={['teacher', 'hod', 'institute']}>
+                <ProtectedRoute requiredRoles={['teacher', 'hod']}>
                   <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}>
                     <TeacherBatchAssignmentForm />
                   </MainLayout>
@@ -924,6 +949,15 @@ function App() {
             <Route path="/institute/join-requests"
               element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><JoinRequestsPanel /></MainLayout></ProtectedRoute>}
             />
+            <Route path="/institute/batch/:batchId/timetable"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteTimetable /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/complaints"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteComplaints /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/institute/hierarchy"
+              element={<ProtectedRoute requiredRoles={['institute', 'hod']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteHierarchy /></MainLayout></ProtectedRoute>}
+            />
             <Route path="/institute/notifications"
               element={<ProtectedRoute requiredRoles={['institute', 'hod', 'teacher']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><InstituteNotifications /></MainLayout></ProtectedRoute>}
             />
@@ -940,6 +974,9 @@ function App() {
             />
             <Route path="/hod/attendance"
               element={<ProtectedRoute requiredRoles={['hod', 'institute']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><HodAttendanceView /></MainLayout></ProtectedRoute>}
+            />
+            <Route path="/hod/feedback"
+              element={<ProtectedRoute requiredRoles={['hod', 'institute']}><MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout}><HodFeedbackOverview /></MainLayout></ProtectedRoute>}
             />
 
             {/* Institute — Teacher Performance (reuses same component) */}
@@ -984,9 +1021,12 @@ function App() {
 
 import FloatingSocialButton from './components/student/FloatingSocialButton';
 import NotificationBell from './components/shared/NotificationBell';
+import CopilotDrawer from './components/student/CopilotDrawer';
+import { FaRobot } from 'react-icons/fa';
 
 function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout }) {
   const location = useLocation();
+  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
 
   // Track last visited page for "Resume Last Session" on Dashboard
   useEffect(() => {
@@ -1050,6 +1090,17 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout }) {
           {children}
         </div>
       </div>
+
+      {/* Floating Copilot Trigger Button */}
+      <button
+        onClick={() => setIsCopilotOpen(true)}
+        className="fixed bottom-24 right-6 w-14 h-14 bg-[#0061FF] text-white rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 hover:scale-110 transition-all z-40 group border-2 border-[#0061FF]/50"
+        title="Ask Ranklen Copilot"
+      >
+        <FaRobot className="text-2xl group-hover:rotate-12 transition-transform" />
+      </button>
+
+      <CopilotDrawer isOpen={isCopilotOpen} onClose={() => setIsCopilotOpen(false)} />
 
       {/* Floating Social Button — Bottom Right */}
       <FloatingSocialButton />

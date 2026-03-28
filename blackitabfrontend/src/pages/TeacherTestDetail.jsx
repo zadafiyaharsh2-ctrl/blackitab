@@ -34,133 +34,170 @@ const TeacherTestDetail = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#05000a]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-      </div>
-    );
-  }
-
-  if (!exam) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#05000a] text-white">
-        <FaFileAlt className="text-6xl text-slate-600 mb-4" />
-        <h2 className="text-2xl font-bold">Test Not Found</h2>
-        <button onClick={() => navigate('/teacher/tests')} className="mt-4 text-green-400 hover:underline">
-          Go back to Tests
-        </button>
-      </div>
-    );
-  }
+  if (loading) return <div className="flex justify-center items-center min-h-screen"><div className="animate-spin w-10 h-10 border-4 border-[#0061FF] border-t-transparent rounded-full" /></div>;
 
   return (
-    <div className="min-h-screen bg-[#05000a] text-white p-4 md:p-8 relative overflow-hidden">
-      {/* Background Orbs */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-green-600/10 blur-[150px] mix-blend-screen" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-emerald-600/10 blur-[120px] mix-blend-screen" />
-      </div>
-
-      <div className="max-w-6xl mx-auto relative z-10 space-y-8">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#05000a] text-gray-900 dark:text-white p-6 sm:p-10 font-sans transition-colors selection:bg-[#0061FF]/20 selection:text-gray-900">
+      
+      <div className="max-w-[72rem] mx-auto space-y-10">
         
-        {/* Back navigation & Header */}
-        <div className="flex items-center gap-4">
+        {/* Top Navigation & Header */}
+        <div>
           <button 
             onClick={() => navigate('/teacher/tests')}
-            className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-colors border border-white/10"
+            className="group flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-gray-500 hover:text-[#0061FF] dark:hover:text-[#a5c3ff] transition-colors mb-6 focus:outline-none"
           >
-            <FaArrowLeft />
+            <span className="w-8 h-8 rounded-full border border-gray-200 dark:border-white/10 flex items-center justify-center group-hover:bg-[#0061FF]/5 group-hover:border-[#0061FF]/30 transition-all">
+              <FaArrowLeft className="text-xs" />
+            </span>
+            Back to Dashboard
           </button>
-          <h1 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500">
-            Test Dashboard
-          </h1>
-        </div>
-
-        {/* Exam Info Card */}
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">{exam.title}</h2>
-              <p className="text-gray-400 text-sm max-w-2xl">{exam.description || 'No description provided.'}</p>
+              <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white leading-[1.1] tracking-tight">
+                {exam.title}
+              </h1>
+              <p className="text-sm font-medium text-gray-500 mt-3 max-w-2xl leading-relaxed">
+                {exam.description || 'No additional instructions provided for this assessment.'}
+              </p>
             </div>
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="text-center">
-                <div className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Status</div>
-                <div className={`font-bold px-3 py-1 rounded-lg text-sm ${
-                  exam.status === 'ongoing' ? 'bg-red-500/20 text-red-400 border border-red-500/20' :
-                  exam.status === 'completed' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/20' :
-                  'bg-green-500/20 text-green-400 border border-green-500/20'
+            
+            <div className="flex-shrink-0">
+               <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest shadow-sm ${
+                  exam.status === 'ongoing' ? 'bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20' :
+                  exam.status === 'completed' ? 'bg-sky-50 text-sky-600 border border-sky-200 dark:bg-sky-500/10 dark:text-sky-400 dark:border-sky-500/20' :
+                  'bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20'
                 }`}>
-                  {exam.status.toUpperCase()}
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Scheduled</div>
-                <div className="font-mono text-gray-300 font-bold bg-white/5 px-3 py-1 rounded-lg flex items-center gap-2">
-                  <FaCalendarAlt className="text-emerald-500" /> {exam.scheduledAt ? new Date(exam.scheduledAt).toLocaleDateString() : 'N/A'}
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Duration</div>
-                <div className="font-mono text-gray-300 font-bold bg-white/5 px-3 py-1 rounded-lg flex items-center gap-2">
-                  <FaClock className="text-emerald-500" /> {exam.duration}m
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Marks</div>
-                <div className="font-mono text-emerald-400 font-bold bg-emerald-400/10 px-3 py-1 rounded-lg text-xl">
-                  {exam.totalMarks}
-                </div>
-              </div>
+                  {exam.status}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Results List */}
-        <div>
-          <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-            <FaUserGraduate className="text-emerald-500" />
-            Student Results ({results.length})
-          </h3>
+        {/* Master Info Card */}
+        <div className="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/10 rounded-[2.5rem] p-8 sm:p-10 shadow-sm animate-in fade-in slide-in-from-bottom-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            
+            {/* Scheduled */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-gray-400">
+                <FaCalendarAlt className="text-xs" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Scheduled Date</span>
+              </div>
+              <p className="text-lg font-extrabold text-gray-900 dark:text-white tracking-tight">
+                {exam.scheduledAt ? new Date(exam.scheduledAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
+              </p>
+            </div>
+
+            {/* Time */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-gray-400">
+                <FaClock className="text-xs" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Duration</span>
+              </div>
+              <p className="text-lg font-extrabold text-gray-900 dark:text-white tracking-tight">
+                {exam.duration} <span className="text-sm font-medium text-gray-500">Mins</span>
+              </p>
+            </div>
+
+            {/* Total Marks */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-gray-400">
+                <FaFileAlt className="text-xs" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Max Score</span>
+              </div>
+              <p className="text-lg font-extrabold text-gray-900 dark:text-white tracking-tight">
+                {exam.totalMarks} <span className="text-sm font-medium text-gray-500">Pts</span>
+              </p>
+            </div>
+            
+            {/* Participants */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-gray-400">
+                <FaUserGraduate className="text-xs" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Participants</span>
+              </div>
+              <p className="text-lg font-extrabold text-gray-900 dark:text-white tracking-tight">
+                {results.length} <span className="text-sm font-medium text-gray-500">Submissions</span>
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Results Section */}
+        <div className="pt-6">
+          <div className="flex items-center justify-between mb-8">
+             <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
+              Performance Roster
+              <span className="px-3 py-1 bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 rounded-full text-xs font-bold">
+                {results.length}
+              </span>
+            </h3>
+          </div>
 
           {results.length === 0 ? (
-            <div className="text-center py-16 bg-white/5 border border-white/10 border-dashed rounded-2xl">
-              <p className="text-gray-400">No results available yet. Students may not have taken this test.</p>
+            <div className="text-center py-20 px-6 bg-white dark:bg-white/[0.02] border border-dashed border-gray-300 dark:border-white/10 rounded-[3rem] shadow-sm flex flex-col items-center justify-center animate-in fade-in">
+              <div className="w-16 h-16 bg-gray-50 dark:bg-white/5 rounded-full flex items-center justify-center mb-6 shadow-sm border border-gray-100 dark:border-white/5">
+                <FaUserGraduate className="text-2xl text-gray-300 dark:text-gray-600" />
+              </div>
+              <h4 className="text-xl font-extrabold text-gray-900 dark:text-white mb-2">No Submissions Yet</h4>
+              <p className="text-sm font-medium text-gray-500 max-w-sm mx-auto">
+                Students have not completed this assessment. Results will populate here automatically.
+              </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr animate-in fade-in slide-in-from-bottom-4">
               {results.map((res) => (
                 <div
                   key={res._id || Math.random()}
-                  className="bg-white/5 backdrop-blur-md border border-white/10 hover:border-emerald-500/30 rounded-2xl p-5 transition-all shadow-lg flex flex-col justify-between relative overflow-hidden"
+                  className="group relative bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/10 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:border-[#0061FF]/30 dark:hover:border-[#a5c3ff]/30 transition-all duration-300 flex flex-col justify-between overflow-hidden"
                 >
-                  {/* Rank indicator (if any) */}
-                  {res.rank === 1 && <div className="absolute top-0 right-0 bg-yellow-500 text-black text-[10px] font-black px-2 py-1 rounded-bl-lg">Rank #1</div>}
+                  {/* Rank 1 Crown */}
+                  {res.rank === 1 && (
+                    <div className="absolute top-0 right-0 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-bl-[1.5rem] shadow-sm flex items-center gap-1.5 border-b border-l border-amber-200 dark:border-amber-500/30">
+                      Rank #1
+                    </div>
+                  )}
 
-                  <div>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold shadow-inner ${res.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-black' : 'bg-gradient-to-br from-gray-700 to-gray-900'}`}>
+                  <div className="mb-8">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg shadow-sm ${
+                          res.rank === 1 
+                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30' 
+                            : 'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300 border border-gray-200 dark:border-white/10'
+                        }`}>
                         {res.studentId?.name ? res.studentId.name[0].toUpperCase() : 'S'}
                       </div>
-                      <div>
-                        <h4 className="font-bold text-white">{res.studentId?.name || 'Unknown Student'}</h4>
-                        <p className="text-xs text-gray-400">{res.studentId?.email || 'No email'}</p>
+                      <div className="min-w-0 pr-12">
+                        <h4 className="font-extrabold text-gray-900 dark:text-white tracking-tight truncate">{res.studentId?.name || 'Unknown Student'}</h4>
+                        <p className="text-[11px] font-medium text-gray-500 truncate">{res.studentId?.email || 'No email provided'}</p>
                       </div>
                     </div>
                     
-                    <div className="text-xs text-gray-500 mb-4 font-mono">
-                      Submitted: {res.submittedAt ? new Date(res.submittedAt).toLocaleString() : 'N/A'}
+                    <div className="flex items-center gap-2 text-xs font-medium text-gray-500 bg-gray-50 dark:bg-white/5 rounded-lg px-3 py-2 w-fit">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      <span>Submitted {res.submittedAt ? new Date(res.submittedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'N/A'}</span>
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
-                    <div className="text-sm">
-                      <span className="text-gray-400">Score: </span>
-                      <span className="font-black text-2xl text-emerald-400">{res.score || 0} <span className="text-xs text-gray-500 font-normal">/ {exam.totalMarks}</span></span>
+                  <div className="pt-6 border-t border-gray-100 dark:border-white/5 flex items-end justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Final Score</p>
+                      <div className="flex items-baseline gap-1">
+                        <span className={`text-4xl font-black tracking-tight leading-none ${
+                           (res.score / exam.totalMarks) >= 0.8 ? 'text-emerald-500' :
+                           (res.score / exam.totalMarks) >= 0.5 ? 'text-amber-500' : 'text-red-500'
+                        }`}>
+                          {res.score || 0}
+                        </span>
+                        <span className="text-sm font-bold text-gray-400">/ {exam.totalMarks}</span>
+                      </div>
                     </div>
-                    {res.rank && (
-                      <div className="text-sm text-gray-400 font-bold bg-white/5 px-3 py-1 rounded">
+                    
+                    {res.rank && res.rank !== 1 && (
+                      <div className="text-[11px] font-bold text-gray-500 bg-gray-100 dark:bg-white/10 px-3 py-1.5 rounded-lg uppercase tracking-widest">
                         Rank #{res.rank}
                       </div>
                     )}
@@ -170,6 +207,7 @@ const TeacherTestDetail = () => {
             </div>
           )}
         </div>
+
       </div>
     </div>
   );

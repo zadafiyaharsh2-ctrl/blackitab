@@ -457,13 +457,18 @@ exports.updateQuestion = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Question not found' });
         }
 
-        const updates = req.body;
-        if (updates.correctAnswer !== undefined) updates.correctAnswer = parseInt(updates.correctAnswer);
-
-        // Update the isProblem flag directly
-        if (updates.isProblem !== undefined) {
-             updates.isProblem = updates.isProblem;
+        const allowedQuestionFields = [
+            'exam', 'subject', 'question', 'options', 'correctAnswer',
+            'difficulty', 'explanation', 'tags', 'format', 'status',
+            'isGlobal', 'isModerated', 'isActive', 'isProblem'
+        ];
+        const updates = {};
+        for (const field of allowedQuestionFields) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
         }
+        if (updates.correctAnswer !== undefined) updates.correctAnswer = parseInt(updates.correctAnswer);
 
         const updated = await ExamQuestion.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true, context: 'query' });
 
@@ -495,10 +500,19 @@ exports.getUserFullDetails = async (req, res) => {
 // PUT /api/admin/users/full/:id
 exports.editUserFull = async (req, res) => {
     try {
-        // We only explicitly block password from being updated here (requires a separate flow if needed)
-        // All other fields from the body will be applied directly for the Super Admin
-        const updates = { ...req.body };
-        delete updates.password;
+        // Super Admin allowlist — expanded set of fields compared to regular editUser
+        const superAdminAllowedFields = [
+            'name', 'email', 'role', 'bio', 'points', 'xp', 'streak',
+            'isVerified', 'isPrivate', 'isBanned', 'batchYear', 'division',
+            'departmentId', 'departments', 'specialization', 'globalRank',
+            'longestStreak', 'rating', 'followerCount', 'followingCount', 'subscriberCount'
+        ];
+        const updates = {};
+        for (const field of superAdminAllowedFields) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        }
 
         const existingUser = await User.findById(req.params.id);
         if (!existingUser) {
@@ -802,17 +816,13 @@ exports.editContest = async (req, res) => {
 
         // Handle question IDs update
         if (req.body.questionIds !== undefined) {
-            updates.questions = req.body.questionIds;
-        }
-
-        if (Object.keys(updates).length === 0) {
-            return res.status(400).json({ success: false, message: 'No valid fields to update' });
+             updates.questions = req.body.questionIds;
         }
 
         const contest = await Contest.findByIdAndUpdate(
             req.params.id,
             { $set: updates },
-            { new: true }
+            { new: true, runValidators: true }
         );
 
         if (!contest) {
@@ -825,6 +835,7 @@ exports.editContest = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
 
 // ══════════════════════════════════════════════════════════════
 // PHASE E: GLOBAL PARITY (INSTITUTES & ANALYTICS)
@@ -994,5 +1005,43 @@ exports.deleteMaterial = async (req, res) => {
     } catch (error) {
         console.error('Delete Admin Material Error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
+// BUG REPORT / TICKET MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+const BugReport = require('../../models/BugReport');
+
+// GET /api/admin/bugs
+exports.getAllBugs = async (req, res) => {
+    try {
+        const bugs = await BugReport.find()
+            .populate('user', 'name email role profileImage')
+            .sort({ status: 1, createdAt: -1 }); // Open bugs first, then newest
+        res.json({ success: true, data: bugs });
+    } catch (error) {
+        console.error('Error fetching bugs:', error);
+        res.status(500).json({ success: false, message: 'Server error fetching bugs' });
+    }
+};
+
+// PUT /api/admin/bugs/:id
+exports.updateBug = async (req, res) => {
+    try {
+        const { status, adminFeedback } = req.body;
+        const bug = await BugReport.findById(req.params.id);
+        
+        if (!bug) return res.status(404).json({ success: false, message: 'Bug not found' });
+
+        if (status) bug.status = status;
+        if (adminFeedback !== undefined) bug.adminFeedback = adminFeedback;
+
+        await bug.save();
+
+        res.json({ success: true, message: 'Bug updated successfully', data: bug });
+    } catch (error) {
+        console.error('Error updating bug:', error);
+        res.status(500).json({ success: false, message: 'Server error updating bug' });
     }
 };

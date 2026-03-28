@@ -3,6 +3,7 @@ const router = express.Router();
 const teacherController = require('../../controllers/teacher/teacherController');
 const protect = require('../../middleware/auth');
 const { requireMinRole } = require('../../middleware/roleMiddleware');
+const { validateObjectId, requireBatchOwner } = require('../../middleware/accessControl');
 
 // All teacher routes require auth + minimum teacher role
 router.use(protect);
@@ -15,28 +16,28 @@ router.get('/ratings', teacherController.getRatings);
 // ── Phase 4: Batch Management ──
 router.post('/batch', teacherController.createBatch);
 router.get('/batches', teacherController.getMyBatches);
-router.get('/batch/:id', teacherController.getBatchDetail);
-router.put('/batch/:id', teacherController.updateBatch);
-router.delete('/batch/:id', teacherController.deleteBatch);
-router.get('/batch/:id/students', teacherController.getBatchStudents);
-router.post('/batch/:id/students', teacherController.addStudentsToBatch);
-router.delete('/batch/:batchId/students/:studentId', teacherController.removeStudentFromBatch);
+router.get('/batch/:id', validateObjectId('id'), teacherController.getBatchDetail);
+router.put('/batch/:id', validateObjectId('id'), requireBatchOwner, teacherController.updateBatch);
+router.delete('/batch/:id', validateObjectId('id'), requireBatchOwner, teacherController.deleteBatch);
+router.get('/batch/:id/students', validateObjectId('id'), requireBatchOwner, teacherController.getBatchStudents);
+router.post('/batch/:id/students', validateObjectId('id'), requireBatchOwner, teacherController.addStudentsToBatch);
+router.delete('/batch/:batchId/students/:studentId', validateObjectId('batchId', 'studentId'), requireBatchOwner, teacherController.removeStudentFromBatch);
 
 // ── Batch Join Requests & Student Search ──
-router.get('/batch/:id/requests', teacherController.getBatchJoinRequests);
-router.put('/batch/:id/requests/:requestId/approve', teacherController.approveBatchJoinRequest);
-router.put('/batch/:id/requests/:requestId/reject', teacherController.rejectBatchJoinRequest);
+router.get('/batch/:id/requests', validateObjectId('id'), requireBatchOwner, teacherController.getBatchJoinRequests);
+router.put('/batch/:id/requests/:requestId/approve', validateObjectId('id', 'requestId'), requireBatchOwner, teacherController.approveBatchJoinRequest);
+router.put('/batch/:id/requests/:requestId/reject', validateObjectId('id', 'requestId'), requireBatchOwner, teacherController.rejectBatchJoinRequest);
 router.get('/students/search', teacherController.searchStudentsInInstitute);
 
 // ── Phase 5: Assignments ──
 router.post('/assignment', teacherController.createAssignment);
 router.get('/assignments', teacherController.getMyAssignments);
-router.get('/assignment/:id', teacherController.getAssignmentDetail);
-router.put('/assignment/:id', teacherController.updateAssignment);
-router.delete('/assignment/:id', teacherController.deleteAssignment);
-router.get('/assignment/:id/submissions', teacherController.getAssignmentSubmissions);
-router.put('/assignment/:id/submissions/:subId/grade', teacherController.gradeSubmission);
-router.get('/student/:studentId/marks', teacherController.getStudentMarks);
+router.get('/assignment/:id', validateObjectId('id'), teacherController.getAssignmentDetail);
+router.put('/assignment/:id', validateObjectId('id'), teacherController.updateAssignment);
+router.delete('/assignment/:id', validateObjectId('id'), teacherController.deleteAssignment);
+router.get('/assignment/:id/submissions', validateObjectId('id'), teacherController.getAssignmentSubmissions);
+router.put('/assignment/:id/submissions/:subId/grade', validateObjectId('id', 'subId'), teacherController.gradeSubmission);
+router.get('/student/:studentId/marks', validateObjectId('studentId'), teacherController.getStudentMarks);
 
 // ── Phase 6: Feedback & Announcements ──
 router.get('/feedback', teacherController.getMyFeedback);

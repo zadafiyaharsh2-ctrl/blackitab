@@ -238,64 +238,79 @@ const UsersTab = ({
       )}
       </>
 
-      <div className="glass-panel overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-white/[0.02] border-b border-white/5">
-            <tr className="text-xs text-gray-500 uppercase tracking-wider">
-              <th className="text-left px-4 py-3">User</th>
-              <th className="text-left px-4 py-3">Role</th>
-              <th className="text-left px-4 py-3">Institute</th>
-              <th className="text-left px-4 py-3">Actions</th>
+      {/* Table Section Redesigned */}
+      <div className="bg-admin-surface-container-high/40 backdrop-blur-xl border border-admin-outline-variant/20 rounded-[2rem] overflow-hidden shadow-xl mt-8">
+        <div className="p-6 border-b border-admin-outline-variant/10 flex justify-between items-center bg-admin-surface-container-highest/20">
+          <div>
+            <h3 className="text-xl font-bold text-admin-on-surface tracking-tight">Active Roster</h3>
+            <p className="text-xs text-admin-on-surface-variant mt-1">Manage platform access and privileges</p>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+        <table className="w-full text-left">
+          <thead>
+            <tr className="bg-admin-surface-container-high/50 border-b border-admin-outline-variant/10">
+              <th className="px-8 py-5 text-[10px] uppercase tracking-[0.1em] font-black text-admin-on-surface-variant">User Entity</th>
+              <th className="px-8 py-5 text-[10px] uppercase tracking-[0.1em] font-black text-admin-on-surface-variant">Role Tier</th>
+              <th className="px-8 py-5 text-[10px] uppercase tracking-[0.1em] font-black text-admin-on-surface-variant">Institute</th>
+              <th className="px-8 py-5 text-[10px] uppercase tracking-[0.1em] font-black text-admin-on-surface-variant text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody className="divide-y divide-admin-outline-variant/10">
             {filteredUsers.map(u => (
-              <tr key={u._id} className="hover:bg-white/[0.02]">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+              <tr key={u._id} className="hover:bg-admin-surface-container-highest/60 transition-colors group">
+                <td className="px-8 py-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-admin-primary/20 flex items-center justify-center border border-admin-primary/20 overflow-hidden text-admin-primary font-bold shadow-[0_0_10px_rgba(0,0,0,0.5)]">
                       {u.name?.[0]?.toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-white text-sm font-medium">{u.name} {u.isBanned && <span className="text-red-400 text-[10px] ml-1">BANNED</span>}</p>
-                      <p className="text-gray-500 text-xs">{u.email}</p>
+                      <p className="text-sm font-bold text-admin-on-surface flex items-center gap-2">
+                        {u.name}
+                        {u.isBanned && <span className="px-2 py-0.5 rounded text-[8px] font-bold bg-admin-error/20 text-admin-error tracking-wider uppercase">Banned</span>}
+                      </p>
+                      <p className="text-xs text-admin-on-surface-variant">{u.email}</p>
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-8 py-5">
                   <select
                     value={u.role}
                     disabled={isRoleLocked(u.role)}
                     onChange={e => handleRoleChange(u._id, e.target.value)}
-                    className={`px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-300 outline-none ${isRoleLocked(u.role) ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`px-3 py-1.5 bg-admin-surface-container-lowest/50 border border-admin-outline-variant/20 rounded-lg text-xs font-semibold text-admin-primary outline-none focus:border-admin-primary/50 ${isRoleLocked(u.role) ? 'opacity-70 cursor-not-allowed text-admin-on-surface-variant' : 'cursor-pointer'}`}
                   >
                     {getRoleOptions(u.role).map(r => (
-                      <option key={r} value={r} className="bg-gray-900">{formatRoleLabel(r)}</option>
+                      <option key={r} value={r} className="bg-admin-surface-container-highest">{formatRoleLabel(r)}</option>
                     ))}
                   </select>
                   {isRoleLocked(u.role) && (
-                    <p className="text-[10px] text-amber-400 mt-1">Locked</p>
+                    <p className="text-[10px] text-amber-500/80 mt-1 font-bold tracking-wider">LOCKED</p>
                   )}
                 </td>
-                <td className="px-4 py-3 text-gray-400 text-xs">{u.instituteId?.name || '— Independent —'}</td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
+                <td className="px-8 py-5">
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-admin-secondary/10 text-admin-secondary border border-admin-secondary/20 truncate max-w-[150px] inline-block">
+                    {u.instituteId?.name || '— Independent —'}
+                  </span>
+                </td>
+                <td className="px-8 py-5">
+                  <div className="flex items-center justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
                     <button onClick={() => handleBan(u._id)}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${u.isBanned ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' : 'bg-red-500/10 text-red-400 hover:bg-red-500/20'}`}>
-                      {u.isBanned ? 'Unban' : 'Ban'}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${u.isBanned ? 'bg-admin-secondary/10 text-admin-secondary hover:bg-admin-secondary/20' : 'bg-admin-error/10 text-admin-error hover:bg-admin-error/20'}`}>
+                      {u.isBanned ? 'Restore' : 'Ban'}
                     </button>
                     <button onClick={() => setEditUserModal(u)}
-                      className="px-3 py-1 rounded-lg text-xs font-bold bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors">
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-admin-primary/10 text-admin-primary hover:bg-admin-primary/20 transition-colors">
                       Edit
                     </button>
                     {['teacher', 'hod'].includes(u.role) && (
                       <button onClick={() => { setSelectedTeacherForFeedback(u); setIsFeedbackModalOpen(true); }}
-                        className="px-3 py-1 rounded-lg text-xs font-bold bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors" title="View Feedback">
+                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-admin-tertiary/10 text-admin-tertiary hover:bg-admin-tertiary/20 transition-colors" title="View Feedback">
                         Feedback
                       </button>
                     )}
                     <button onClick={() => openDeleteModal(u._id, u.email, 'User', 'All their data, XP, submissions, and history will be permanently deleted.', 'user')}
-                      className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors" title="Delete user">
+                      className="p-1.5 rounded-lg bg-admin-error/10 text-admin-error hover:bg-admin-error/20 transition-colors" title="Delete user">
                       <FaTrash className="text-xs" />
                     </button>
                   </div>
@@ -303,11 +318,14 @@ const UsersTab = ({
               </tr>
             ))}
             {filteredUsers.length === 0 && (
-              <tr><td colSpan={4} className="text-center py-12 text-gray-500">No users found</td></tr>
+              <tr><td colSpan={4} className="text-center py-16 text-admin-on-surface-variant">No users found in this query...</td></tr>
             )}
           </tbody>
         </table>
+        </div>
+        <div className="bg-admin-surface-container-high/30">
         <Pagination pagination={userPagination} current={userPage} onPageChange={p => { setUserPage(p); fetchUsers(null, p, userSearch); }} />
+        </div>
       </div>
     </div>
   );
