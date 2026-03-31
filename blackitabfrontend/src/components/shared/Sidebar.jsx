@@ -33,7 +33,6 @@ import {
 import { MdReportProblem } from "react-icons/md";
 import { useTheme } from "../../context/ThemeContext";
 import Logo from "./Logo";
-import GlobalSearch from "./GlobalSearch";
 import axios from "axios";
 import API_URL from "../../config";
 
@@ -42,7 +41,6 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
   const navigate = useNavigate();
   const { toggleTheme, isDark } = useTheme();
   const [, setUnreadCount] = useState(0);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [pendingJoinRequests, setPendingJoinRequests] = useState(0);
 
   const { role: userRole = "student", instituteId = null } = (() => {
@@ -99,17 +97,6 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
     const interval = setInterval(fetchJoinRequests, 60000);
     return () => clearInterval(interval);
   }, [canAccessInstitute]);
-
-  useEffect(() => {
-    const handler = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-        e.preventDefault();
-        setSearchOpen(true);
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
 
   const navItems = [
     ...(canAccessTeacher
@@ -285,7 +272,6 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
 
   return (
     <>
-      <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
 
       <div
         className={`fixed left-0 top-0 h-screen z-50 flex flex-col font-sans border-r border-gray-200 dark:border-white/10 shadow-sm dark:shadow-[4px_0_30px_-5px_rgba(255,255,255,0.02)] bg-white/95 dark:bg-[#000000]/80 backdrop-blur-xl overflow-hidden transition-[transform,width,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform ${
@@ -309,31 +295,6 @@ const Sidebar = ({ onLogout, isOpen, setIsOpen }) => {
             className="p-2.5 bg-gray-50/80 dark:bg-white/5 text-gray-500 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white hover:text-gray-900 rounded-xl transition-colors relative z-10 mx-auto md:mx-0"
           >
             <FaBars className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Search */}
-        <div className="px-4 pt-6 pb-2">
-          <button
-            onClick={() => setSearchOpen(true)}
-            className={`w-full flex items-center ${isOpen ? "justify-between px-3 py-2.5" : "justify-center py-2.5"} bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 dark:hover:text-white rounded-xl border border-gray-200/50 dark:border-white/10 transition-colors group flex-shrink-0 relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#0061FF]/20`}
-            title="Search (Ctrl+K)"
-          >
-            <div
-              className={`flex items-center gap-3 ${!isOpen ? "text-lg" : ""}`}
-            >
-              <FaSearch className="w-4 h-4 group-hover:text-gray-700 dark:group-hover:text-white transition-colors" />
-              {isOpen && (
-                <span className="text-[13px] font-semibold tracking-wide">
-                  Search...
-                </span>
-              )}
-            </div>
-            {isOpen && (
-              <kbd className="text-[10px] bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 px-1.5 py-0.5 rounded font-mono font-bold text-gray-400 dark:text-gray-500 shadow-sm">
-                Ctrl K
-              </kbd>
-            )}
           </button>
         </div>
 

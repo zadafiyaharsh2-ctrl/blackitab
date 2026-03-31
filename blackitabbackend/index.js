@@ -198,6 +198,7 @@ app.post("/api/auth/google", authLimiter, authController.googleLogin);
 
 // --- Theory Routes (inline) ---
 
+app.get("/api/theory/search", theoryController.searchTheory);
 app.get("/api/subjects", theoryController.getSubjects);
 app.get("/api/subjects/:subjectId/topics", theoryController.getTopicsBySubject);
 app.get("/api/topics/:id/full", theoryController.getTopicFullContent);

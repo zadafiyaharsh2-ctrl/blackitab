@@ -134,13 +134,13 @@ const NotificationBell = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setOpen(false)}
-            className="fixed inset-0 z-[997]"
+            className="fixed inset-0 z-[9998]"
           />
         )}
       </AnimatePresence>
 
       {/* Bell Button — Fixed top-right */}
-      <div className="fixed top-4 right-4 md:top-5 md:right-8 z-[998]">
+      <div className={`fixed top-4 right-4 md:top-5 md:right-8 ${open ? 'z-[9999]' : 'z-[90]'}`}>
         <motion.button
           onClick={handleOpen}
           whileHover={{ scale: 1.05 }}

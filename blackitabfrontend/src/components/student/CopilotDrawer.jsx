@@ -71,7 +71,7 @@ const CopilotDrawer = ({ isOpen, onClose }) => {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity"
+                        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998] transition-opacity"
                     />
 
                     {/* Sliding Drawer */}
@@ -80,7 +80,7 @@ const CopilotDrawer = ({ isOpen, onClose }) => {
                         animate={{ x: 0, opacity: 1 }}
                         exit={{ x: "100%", opacity: 0 }}
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        className="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white dark:bg-[#0a0a0a] shadow-2xl border-l border-gray-200 dark:border-white/10 z-50 flex flex-col font-sans"
+                        className="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white dark:bg-[#0a0a0a] shadow-2xl border-l border-gray-200 dark:border-white/10 z-[9999] flex flex-col font-sans"
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-white/10 bg-[#f8f9fa] dark:bg-white/[0.02]">

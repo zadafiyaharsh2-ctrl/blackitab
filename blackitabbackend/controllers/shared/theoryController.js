@@ -180,3 +180,110 @@ exports.getTopicFullContent = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+// GET /api/theory/search
+exports.searchTheory = async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q || q.length < 2) return res.json({ success: true, data: [] });
+
+        const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const terms = q.split(/\s+/).filter(t => t.length > 0).map(t => new RegExp(escapeRegExp(t), 'i'));
+
+        if (terms.length === 0) return res.json({ success: true, data: [] });
+
+        const results = [];
+
+        // 1. Search Subjects (match ALL terms in either name or description)
+        const subjectQuery = {
+            $and: terms.map(term => ({
+                $or: [{ name: term }, { description: term }]
+            }))
+        };
+        const subjects = await Subject.find(subjectQuery).limit(5).lean();
+
+        for (const s of subjects) {
+            results.push({
+                _id: 'sub_' + s._id,
+                type: 'subject',
+                subjectId: s._id,
+                subjectName: s.name,
+                name: s.name,
+                description: s.description || 'Subject Match',
+            });
+        }
+
+        // 2. Search Topics (match ALL terms in topic name)
+        const topicQuery = {
+            $and: terms.map(term => ({ name: term }))
+        };
+        const topics = await Topic.find(topicQuery).limit(5).lean();
+        
+        const subjectIds = [...new Set(topics.map(t => t.subjectId))];
+        const topicsSubjects = await Subject.find({ _id: { $in: subjectIds } }).lean();
+        const subMap = {};
+        topicsSubjects.forEach(s => subMap[s._id.toString()] = s.name);
+
+        for (const t of topics) {
+            results.push({
+                _id: 'top_' + t._id,
+                type: 'topic',
+                subjectId: t.subjectId,
+                topicId: t._id,
+                subjectName: subMap[t.subjectId?.toString()] || 'Unknown Subject',
+                name: t.name,
+                description: 'Topic heading match',
+                matchWord: q
+            });
+        }
+
+        // 3. Search FullTopicData (match ALL terms deeply within content.text)
+        const fullDataQuery = {
+            $and: terms.map(term => ({ "content.text": term }))
+        };
+        const fullData = await FullTopicData.find(fullDataQuery).limit(8).lean();
+
+        for (const fd of fullData) {
+            // Find a block that matches at least the first term for the snippet
+            let snippet = '';
+            for (const block of fd.content) {
+                if (block.text && terms[0].test(block.text)) {
+                    // Quick and dirty snippet around the first matched term
+                    const matchStr = q.split(/\s+/)[0]; 
+                    const matchIndex = block.text.toLowerCase().indexOf(matchStr.toLowerCase());
+                    if (matchIndex !== -1) {
+                        const start = Math.max(0, matchIndex - 35);
+                        const end = Math.min(block.text.length, matchIndex + matchStr.length + 35);
+                        snippet = (start > 0 ? '...' : '') + block.text.substring(start, end) + (end < block.text.length ? '...' : '');
+                        break;
+                    }
+                }
+            }
+
+            const parentTopic = await Topic.findById(fd.topicId).lean();
+            let subName = 'Unknown Subject';
+            let subId = null;
+            if (parentTopic) {
+                subId = parentTopic.subjectId;
+                subName = subMap[subId?.toString()] || (await Subject.findById(subId).lean())?.name || 'Unknown Subject';
+            }
+
+            results.push({
+                _id: 'deep_' + fd._id,
+                type: 'content',
+                subjectId: subId,
+                topicId: fd.topicId,
+                subjectName: subName,
+                name: fd.title || parentTopic?.name || 'Deep Content Match',
+                description: snippet || 'Matched inside topic content',
+                matchWord: q
+            });
+        }
+
+        // Return up to 15 best matches
+        res.json({ success: true, data: results.slice(0, 15) });
+    } catch (error) {
+        console.error("Theory Search Error:", error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};

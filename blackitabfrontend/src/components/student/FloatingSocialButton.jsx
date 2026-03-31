@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaUsers, FaEnvelope, FaPlusSquare, FaTimes, FaComment } from 'react-icons/fa';
+import { FaUsers, FaEnvelope, FaPlusSquare, FaTimes, FaComment, FaUser, FaUserFriends, FaUserCheck } from 'react-icons/fa';
 
 /**
  * FloatingSocialButton — A floating bottom-right button that opens
@@ -18,14 +18,23 @@ const FloatingSocialButton = () => {
     return () => cancelAnimationFrame(frame);
   }, [location.pathname]);
 
+  const currentUser = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem('user') || '{}'); } 
+    catch { return {}; }
+  }, []);
+  const currentUserId = currentUser?._id || currentUser?.id;
+
   const socialLinks = [
+    { path: '/profile', label: 'My Profile', icon: <FaUser />, color: 'from-amber-400 to-orange-500' },
+    { path: `/network/${currentUserId}/followers`, label: 'Followers', icon: <FaUserFriends />, color: 'from-teal-400 to-emerald-500' },
+    { path: `/network/${currentUserId}/following`, label: 'Following', icon: <FaUserCheck />, color: 'from-cyan-400 to-blue-500' },
     { path: '/social', label: 'Social Feed', icon: <FaUsers />, color: 'from-blue-500 to-indigo-600' },
     { path: '/messages', label: 'Messages', icon: <FaEnvelope />, color: 'from-emerald-500 to-teal-600' },
     { path: '/create-post', label: 'Create Post', icon: <FaPlusSquare />, color: 'from-rose-500 to-pink-600' },
   ];
 
   // Check if we're on a social page
-  const isSocialPage = ['/social', '/messages', '/create-post', '/network'].some(p => location.pathname.startsWith(p));
+  const isSocialPage = ['/social', '/messages', '/create-post', '/network', '/profile'].some(p => location.pathname.startsWith(p));
 
   return (
     <>
@@ -37,7 +46,7 @@ const FloatingSocialButton = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setOpen(false)}
-            className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[998]"
+            className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[9998]"
           />
         )}
       </AnimatePresence>
@@ -50,7 +59,7 @@ const FloatingSocialButton = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-            className="fixed bottom-20 sm:bottom-24 right-4 sm:right-6 w-[280px] sm:w-72 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl dark:shadow-[0_0_40px_rgba(0,0,0,0.5)] z-[999] overflow-hidden"
+            className="fixed bottom-20 sm:bottom-24 right-4 sm:right-6 w-[280px] sm:w-72 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl dark:shadow-[0_0_40px_rgba(0,0,0,0.5)] z-[9999] overflow-hidden"
           >
             {/* Header */}
             <div className="px-5 py-4 border-b border-gray-200/50 dark:border-white/10 bg-gradient-to-r from-blue-600 to-indigo-600">
@@ -95,7 +104,7 @@ const FloatingSocialButton = () => {
         onClick={() => setOpen(!open)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        className={`fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-[999] w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ${
+        className={`fixed bottom-4 sm:bottom-6 right-4 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ${open ? 'z-[9999]' : 'z-[90]'} ${
           open
             ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30'
             : isSocialPage

@@ -1023,10 +1023,14 @@ import FloatingSocialButton from './components/student/FloatingSocialButton';
 import NotificationBell from './components/shared/NotificationBell';
 import CopilotDrawer from './components/student/CopilotDrawer';
 import { FaRobot } from 'react-icons/fa';
+import { useLenis } from './hooks/useLenis';
 
 function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout }) {
   const location = useLocation();
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
+
+  // 🌊 Lenis — luxury smooth scroll globally
+  useLenis();
 
   // Track last visited page for "Resume Last Session" on Dashboard
   useEffect(() => {
@@ -1074,7 +1078,7 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout }) {
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 transition-all duration-300 w-full min-h-screen ${location.pathname.startsWith('/messages') ? '' : 'p-4 md:p-8'} ${contentMarginClass}`}
+        className={`flex-1 transition-all duration-300 w-full min-h-screen ${(location.pathname.startsWith('/messages') || location.pathname.startsWith('/theory')) ? '' : 'p-4 md:p-8'} ${contentMarginClass}`}
       >
         {/* Mobile Hamburger Header */}
         <div className="md:hidden flex items-center justify-between mb-4 sticky top-0 z-30 bg-white/80 dark:bg-black/80 backdrop-blur-md p-4 -mx-4 -mt-4 border-b border-gray-200 dark:border-white/10">
@@ -1091,22 +1095,24 @@ function MainLayout({ children, sidebarOpen, setSidebarOpen, onLogout }) {
         </div>
       </div>
 
-      {/* Floating Copilot Trigger Button */}
-      <button
-        onClick={() => setIsCopilotOpen(true)}
-        className="fixed bottom-24 right-6 w-14 h-14 bg-[#0061FF] text-white rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 hover:scale-110 transition-all z-40 group border-2 border-[#0061FF]/50"
-        title="Ask Ranklen Copilot"
-      >
-        <FaRobot className="text-2xl group-hover:rotate-12 transition-transform" />
-      </button>
+      {/* Floating Copilot Trigger Button — hidden on /theory */}
+      {!location.pathname.startsWith('/theory') && (
+        <button
+          onClick={() => setIsCopilotOpen(true)}
+          className={`fixed bottom-24 right-6 w-14 h-14 bg-[#0061FF] text-white rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 hover:scale-110 transition-all group border-2 border-[#0061FF]/50 ${isCopilotOpen ? 'z-[9999]' : 'z-[90]'}`}
+          title="Ask Ranklen Copilot"
+        >
+          <FaRobot className="text-2xl group-hover:rotate-12 transition-transform" />
+        </button>
+      )}
 
       <CopilotDrawer isOpen={isCopilotOpen} onClose={() => setIsCopilotOpen(false)} />
 
-      {/* Floating Social Button — Bottom Right */}
-      <FloatingSocialButton />
+      {/* Floating Social Button — hidden on /theory */}
+      {!location.pathname.startsWith('/theory') && <FloatingSocialButton />}
 
-      {/* Notification Bell — Top Right (hidden on profile pages) */}
-      {!location.pathname.startsWith('/profile') && <NotificationBell />}
+      {/* Notification Bell — hidden on /profile and /theory */}
+      {!location.pathname.startsWith('/profile') && !location.pathname.startsWith('/theory') && <NotificationBell />}
     </div>
   );
 }

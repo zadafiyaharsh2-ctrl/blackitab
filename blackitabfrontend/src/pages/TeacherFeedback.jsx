@@ -322,28 +322,6 @@ const TeacherFeedback = () => {
             </div>
           )}
         </div>
-=========
-        {/* Feedback List */}
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-500"></div>
-          </div>
-        ) : filteredFeedbacks.length > 0 ? (
-          filterType === 'class' ? (
-            renderClassFeedbacks()
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredFeedbacks.map((item) => renderCard(item))}
-            </div>
-          )
-        ) : (
-          <div className="text-center py-24 glass-panel border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">
-            <FaCommentDots className="text-5xl text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Feedback Found</h3>
-            <p className="text-slate-500 dark:text-gray-400 max-w-sm mx-auto mb-6">You don't have any feedback matching your current filters.</p>
-          </div>
-        )}
->>>>>>>>> Temporary merge branch 2
 
       </div>
     </div>
